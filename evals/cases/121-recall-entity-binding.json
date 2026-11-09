@@ -1,0 +1,56 @@
+{
+  "id": "recall-entity-binding",
+  "name": "Recall 实体绑定记忆（seed memoryItems[].entityRefs → recall 命中且不因 SQLite 单连接自锁超时）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-recall-binding-{{runId}}",
+    "entity": "ent-recall-binding-{{runId}}",
+    "mem": "mem-recall-binding-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/debug/recall/seed",
+      "expectStatus": [200],
+      "body": {
+        "entities": [
+          { "id": "{{entity}}", "kind": "item", "canonical_name": "绑定召回物", "aliases": ["绑定召回"] }
+        ],
+        "memoryItems": [
+          {
+            "id": "{{mem}}",
+            "content": "这是一条带实体绑定的记忆正文。",
+            "type": "semantic",
+            "version": 1,
+            "layer": 1,
+            "status": "active",
+            "entityRefs": ["{{entity}}"]
+          }
+        ]
+      },
+      "saveAs": "seeded"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/debug/recall",
+      "expectStatus": 200,
+      "timeoutMs": 2000,
+      "body": {
+        "query": "绑定召回",
+        "sessionId": "main",
+        "agentId": "agent:simo",
+        "trace": "summary"
+      },
+      "saveAs": "recall"
+    },
+    { "type": "capture", "from": "recall.json.items", "mode": "array", "saveAs": "items" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "seeded.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "regex", "target": "recall.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "count", "target": "items", "pattern": "\"itemId\"", "atLeast": 1 },
+    { "type": "regex", "target": "recall.body", "pattern": "{{mem}}" }
+  ]
+}

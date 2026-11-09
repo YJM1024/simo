@@ -1,0 +1,136 @@
+{
+  "id": "memory-v3-conflict",
+  "name": "记忆冲突（改成 → 两条 disputed + conflicts 记录，不覆盖；ask/defer 字段）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-mem-conf-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/sessions",
+      "body": {
+        "title": "{{caseSession}}"
+      },
+      "expectStatus": [
+        200,
+        201
+      ],
+      "saveAs": "created"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions",
+      "expectStatus": 200,
+      "saveAs": "sessions"
+    },
+    {
+      "type": "capture",
+      "from": "sessions.json.sessions",
+      "whereContains": {
+        "title": "{{caseSession}}"
+      },
+      "pick": "id",
+      "saveAs": "sid"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": {
+        "sessionId": "{{@sid}}",
+        "text": "记住：项目代号是 Orion。"
+      },
+      "expectStatus": [
+        200,
+        202
+      ],
+      "saveAs": "chat1"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/memory/items?all=1",
+      "saveAs": "firstItem",
+      "intervalMs": 300,
+      "timeoutMs": 20000,
+      "until": {
+        "path": "json.items",
+        "matchSome": {
+          "content": "项目代号是 Orion"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": {
+        "sessionId": "{{@sid}}",
+        "text": "改成：项目代号是 Vega。"
+      },
+      "expectStatus": [
+        200,
+        202
+      ],
+      "saveAs": "chat2"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/memory/conflicts?status=all",
+      "saveAs": "conflicts",
+      "intervalMs": 300,
+      "timeoutMs": 20000,
+      "until": {
+        "path": "json.conflicts",
+        "matchSome": {
+          "status": "disputed"
+        }
+      }
+    }
+  ],
+  "graders": [
+    {
+      "type": "count",
+      "target": "conflicts.json.conflicts",
+      "pattern": "\"status\"\\s*:\\s*\"disputed\"",
+      "atLeast": 1
+    },
+    {
+      "type": "regex",
+      "target": "conflicts.body",
+      "pattern": "Orion"
+    },
+    {
+      "type": "regex",
+      "target": "conflicts.body",
+      "pattern": "Vega"
+    },
+    {
+      "type": "regex",
+      "target": "conflicts.body",
+      "pattern": "\"items\"\\s*:\\s*\\["
+    },
+    {
+      "type": "count",
+      "target": "conflicts.body",
+      "pattern": "\"content\"\\s*:\\s*\"",
+      "atLeast": 2
+    },
+    {
+      "type": "regex",
+      "target": "conflicts.body",
+      "pattern": "\"(ask_count|askCount|ask_policy|askPolicy|defer)\"\\s*:"
+    },
+    {
+      "type": "forbidden",
+      "target": "conflicts.body",
+      "patterns": [
+        "\"status\"\\s*:\\s*\"active\"[^}]*Orion"
+      ]
+    }
+  ]
+}

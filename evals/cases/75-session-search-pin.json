@@ -1,0 +1,71 @@
+{
+  "id": "session-search-pin",
+  "name": "会话搜索与置顶（q 命中/不命中、pin→pinned+置顶、unpin 恢复、非法 id 404）",
+  "tier": "normal",
+  "vars": {
+    "probe": "evals-pin-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{probe}} 报表分析" }, "expectStatus": [200, 201], "saveAs": "createdA" },
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{probe}} 无关会话B" }, "expectStatus": [200, 201], "saveAs": "createdB" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{probe}} 报表分析" }, "pick": "id", "saveAs": "sidA" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{probe}} 无关会话B" }, "pick": "id", "saveAs": "sidB" },
+
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{@sidA}}", "text": "季度报表分析（{{probe}}）。" }, "expectStatus": [200, 202], "saveAs": "chatA" },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{@sidA}}",
+      "saveAs": "warm",
+      "intervalMs": 300,
+      "timeoutMs": 45000,
+      "until": { "path": "json.messages", "matchSome": { "role": "user" } }
+    },
+
+    { "type": "http", "method": "GET", "path": "/api/sessions?q=%E6%8A%A5%E8%A1%A8", "expectStatus": 200, "saveAs": "searchHit" },
+    { "type": "http", "method": "GET", "path": "/api/sessions?q=zzz-no-such-{{runId}}", "expectStatus": 200, "saveAs": "searchMiss" },
+
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/sessions/{{@sidA}}/pin",
+      "candidate": [
+        { "method": "POST", "path": "/api/sessions/{{@sidA}}/pin", "body": {} },
+        { "method": "POST", "path": "/api/sessions/{{@sidA}}/pin", "body": { "pinned": true } },
+        { "method": "PUT", "path": "/api/sessions/{{@sidA}}/pin" }
+      ],
+      "expectStatus": [200, 201, 204],
+      "saveAs": "pinResp"
+    },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "pinnedList" },
+    { "type": "capture", "from": "pinnedList.json.sessions", "where": { "id": "{{@sidA}}" }, "pick": "pinned", "saveAs": "pinnedFlag" },
+    { "type": "capture", "from": "pinnedList.json.sessions", "where": {}, "pick": "id", "saveAs": "firstSessionId" },
+
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/sessions/{{@sidA}}/unpin",
+      "candidate": [
+        { "method": "POST", "path": "/api/sessions/{{@sidA}}/unpin", "body": {} },
+        { "method": "DELETE", "path": "/api/sessions/{{@sidA}}/pin" },
+        { "method": "POST", "path": "/api/sessions/{{@sidA}}/pin", "body": { "pinned": false } }
+      ],
+      "expectStatus": [200, 201, 204],
+      "saveAs": "unpinResp"
+    },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "unpinnedList" },
+    { "type": "capture", "from": "unpinnedList.json.sessions", "where": { "id": "{{@sidA}}" }, "pick": "pinned", "saveAs": "unpinnedFlag" },
+
+    { "type": "http", "method": "POST", "path": "/api/sessions/sess-no-such-id/pin", "body": {}, "expectStatus": [404], "saveAs": "badPin" }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "searchHit.json.sessions", "where": { "id": "{{@sidA}}" }, "atLeast": 1 },
+    { "type": "forbidden", "target": "searchHit.body", "patterns": ["\"id\"\\s*:\\s*\"{{@sidB}}\""] },
+    { "type": "state_delta", "collection": "searchMiss.json.sessions", "atMost": 0 },
+    { "type": "regex", "target": "pinnedFlag", "pattern": "^true$" },
+    { "type": "regex", "target": "firstSessionId", "pattern": "^{{@sidA}}$" },
+    { "type": "regex", "target": "unpinnedFlag", "pattern": "^(false|)$" },
+    { "type": "forbidden", "target": "badPin.body", "patterns": ["\"ok\"\\s*:\\s*true"] }
+  ]
+}

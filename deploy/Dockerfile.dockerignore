@@ -1,0 +1,62 @@
+# 与 deploy/.dockerignore 完全一致（实际生效的那份）。
+#
+# 原因：Docker 的排除规则只认两种文件——
+#   1) 构建上下文根目录的 `.dockerignore`；
+#   2) `<Dockerfile 路径>.dockerignore`（BuildKit 特性；本文件就是这一种）。
+# `deploy/.dockerignore` 本身不会被 Docker 当作排除规则读取；它作为规范内容保留，
+# 方便在“构建上下文 = 仓库根”的传统流程里复制/链接为根 `.dockerignore`。
+#
+# 覆盖一致性靠人工维护：修改时请同步 deploy/.dockerignore。
+
+web/node_modules/
+agentd/internal/webui/dist/
+**/node_modules/
+
+toolchain/
+
+*.exe
+*.exe.*
+simo.exe
+.state-*
+.state-*/**
+spill/
+*.log
+logs/
+tmp/
+.tmp/
+
+.git/
+.gitignore
+.github/
+.vscode/
+.idea/
+*.swp
+
+design/
+research/
+harness/
+skeleton/
+docs/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.pdf
+*.zip
+
+deploy/run-local.ps1
+deploy/README.md
+
+data/
+agentd.db
+agentd.db-*
+artifacts/
+workspace/
+logs/
+config.local.json
+.env
+.env.*
+
+Thumbs.db
+.DS_Store

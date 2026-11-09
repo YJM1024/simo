@@ -1,0 +1,71 @@
+{
+  "id": "task-retry",
+  "name": "任务重试（cancel 后 retry → 新 attempt，最终 done）",
+  "tier": "normal",
+  "vars": {
+    "marker": "evals-retry-{{runId}}",
+    "tmsg": "{{marker}} 帮我整理一份多阶段的年度回顾报告。"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{marker}}",
+      "chat": { "text": "{{tmsg}}" },
+      "saveAs": "stream",
+      "until": { "type": "task.created", "timeoutMs": 25000 },
+      "drainMs": 500
+    },
+    { "type": "capture", "from": "stream.frames", "where": { "type": "task.created" }, "pick": "data.id", "saveAs": "taskId" },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/tasks?sessionId={{caseSession}}",
+      "saveAs": "running",
+      "intervalMs": 200,
+      "timeoutMs": 15000,
+      "until": { "path": "json.tasks", "matchSome": { "id": "{{@taskId}}", "status": "running" } }
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/tasks/{{@taskId}}/cancel",
+      "body": {},
+      "expectStatus": [200, 202, 204],
+      "saveAs": "cancelResp"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/tasks?sessionId={{caseSession}}",
+      "saveAs": "cancelled",
+      "intervalMs": 200,
+      "timeoutMs": 15000,
+      "until": { "path": "json.tasks", "matchSome": { "id": "{{@taskId}}", "status": "cancelled" } }
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/tasks/{{@taskId}}/retry",
+      "body": {},
+      "expectStatus": [200, 202, 204],
+      "saveAs": "retryResp"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/tasks?sessionId={{caseSession}}",
+      "saveAs": "afterRetry",
+      "intervalMs": 300,
+      "timeoutMs": 30000,
+      "until": { "path": "json.tasks", "matchSome": { "id": "{{@taskId}}", "status": "done" } }
+    },
+    { "type": "capture", "from": "afterRetry.json.tasks", "where": { "id": "{{@taskId}}" }, "saveAs": "retriedNode" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "retriedNode", "pattern": "\"status\"\\s*:\\s*\"done\"" },
+    { "type": "regex", "target": "retriedNode", "pattern": "\"attempt\"\\s*:\\s*[2-9]" },
+    { "type": "state_delta", "collection": "cancelled.json.tasks", "where": { "id": "{{@taskId}}", "status": "cancelled" }, "atLeast": 1 }
+  ]
+}

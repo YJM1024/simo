@@ -1,0 +1,58 @@
+{
+  "id": "reply-cross-session",
+  "name": "跨会话引用（在会话 Y 回复会话 X 的消息：replyTo.sessionId=X、快照带 sessionTitle）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-replycross-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}-X" }, "expectStatus": [200, 201], "saveAs": "createdX" },
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}-Y" }, "expectStatus": [200, 201], "saveAs": "createdY" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}-X" }, "pick": "id", "saveAs": "sidX" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}-Y" }, "pick": "id", "saveAs": "sidY" },
+
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{@sidX}}", "text": "{{probe}} 这是会话 X 里的一条消息。" }, "expectStatus": [200, 202], "saveAs": "chatX" },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{@sidX}}",
+      "saveAs": "warmX",
+      "intervalMs": 300,
+      "timeoutMs": 45000,
+      "until": { "path": "json.messages", "matchSome": { "text": "{{probe}} 这是会话 X 里的一条消息。" } }
+    },
+    { "type": "http", "method": "GET", "path": "/api/messages?sessionId={{@sidX}}", "expectStatus": 200, "saveAs": "msgsX" },
+    { "type": "capture", "from": "msgsX.json.messages", "whereContains": { "text": "{{probe}} 这是会话 X 里的一条消息。" }, "pick": "id", "saveAs": "xMsgId" },
+
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": { "sessionId": "{{@sidY}}", "text": "{{probe}} 引用会话 X 的那条消息。", "replyToMessageId": "{{@xMsgId}}" },
+      "expectStatus": [200, 202],
+      "saveAs": "chatY"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{@sidY}}",
+      "saveAs": "warmY",
+      "intervalMs": 300,
+      "timeoutMs": 45000,
+      "until": { "path": "json.messages", "matchSome": { "text": "{{probe}} 引用会话 X 的那条消息。" } }
+    },
+    { "type": "http", "method": "GET", "path": "/api/messages?sessionId={{@sidY}}", "expectStatus": 200, "saveAs": "msgsY" },
+    { "type": "capture", "from": "msgsY.json.messages", "whereContains": { "text": "{{probe}} 引用会话 X 的那条消息。" }, "pick": "replyTo", "saveAs": "replyTo" },
+    { "type": "capture", "from": "replyTo", "where": {}, "pick": "id", "saveAs": "replyToId" },
+    { "type": "capture", "from": "replyTo", "where": {}, "pick": "sessionId", "saveAs": "replyToSessionId" },
+    { "type": "capture", "from": "replyTo", "where": {}, "pick": "sessionTitle", "saveAs": "replyToSessionTitle" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "replyToId", "pattern": "^{{@xMsgId}}$" },
+    { "type": "regex", "target": "replyToSessionId", "pattern": "^{{@sidX}}$" },
+    { "type": "regex", "target": "replyToSessionTitle", "pattern": "^.{1,}$" },
+    { "type": "forbidden", "target": "replyToSessionTitle", "patterns": ["^{{@sidX}}$", "^$"] },
+    { "type": "regex", "target": "msgsY.body", "pattern": "\"sessionId\"\\s*:\\s*\"{{@sidY}}\"" }
+  ]
+}

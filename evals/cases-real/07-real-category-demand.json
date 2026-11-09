@@ -1,0 +1,106 @@
+{
+  "id": "real-category-demand",
+  "name": "真实模型：新需求 → 首条 agent 回复分类非空且合理 + sessionPath 末项=当前会话（分类缺失时最多重试 1 次）",
+  "tier": "normal",
+  "vars": {
+    "prompt": "帮我整理一份本周待办清单，列成 3 条。"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "chat": {
+        "text": "{{prompt}}"
+      },
+      "saveAs": "stream",
+      "until": {
+        "type": [
+          "reply.done",
+          "message.done"
+        ],
+        "timeoutMs": 120000
+      },
+      "drainMs": 1200
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{caseSession}}",
+      "expectStatus": 200,
+      "saveAs": "msgs"
+    },
+    {
+      "type": "capture",
+      "from": "msgs.json.messages",
+      "where": {
+        "role": "agent"
+      },
+      "pick": "category",
+      "saveAs": "agentCategory"
+    },
+    {
+      "type": "capture",
+      "from": "msgs.json.messages",
+      "where": {
+        "role": "agent"
+      },
+      "pick": "sessionPath",
+      "saveAs": "agentPath"
+    },
+    {
+      "type": "capture",
+      "from": "agentPath",
+      "last": true,
+      "where": {},
+      "pick": "id",
+      "saveAs": "pathLastId"
+    }
+  ],
+  "graders": [
+    {
+      "type": "regex",
+      "id": "reply-done",
+      "target": "stream.trace",
+      "pattern": "(reply|message)\\.done"
+    },
+    {
+      "type": "regex",
+      "id": "category-nonempty",
+      "target": "agentCategory",
+      "pattern": "^(requirement|clarification|progress|consultation)$"
+    },
+    {
+      "type": "regex",
+      "id": "path-last",
+      "target": "pathLastId",
+      "pattern": "^{{caseSession}}$"
+    },
+    {
+      "type": "regex",
+      "id": "sessionpath-present",
+      "target": "msgs.body",
+      "pattern": "\"sessionPath\"\\s*:\\s*\\["
+    },
+    {
+      "type": "forbidden",
+      "id": "no-error",
+      "target": "stream.raw",
+      "patterns": [
+        "\"type\"\\s*:\\s*\"error\""
+      ]
+    }
+  ],
+  "retry": {
+    "max": 1,
+    "ifFailedSubsetOf": [
+      "category-nonempty"
+    ],
+    "requirePassed": [
+      "reply-done",
+      "path-last",
+      "sessionpath-present",
+      "no-error"
+    ]
+  }
+}

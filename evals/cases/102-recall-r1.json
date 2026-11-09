@@ -1,0 +1,55 @@
+{
+  "id": "recall-r1",
+  "name": "Recall R1（debug seed → entities/items 带 cite/paths 1 跳/trace/budgetReport；无向量标 no_semantic_path）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-recall-{{runId}}",
+    "kyoto": "ent-place-kyoto-{{runId}}",
+    "seisui": "ent-org-seisui-{{runId}}",
+    "mem": "mem-042-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/debug/recall/seed",
+      "expectStatus": [200],
+      "body": {
+        "entities": [
+          { "id": "{{kyoto}}", "kind": "place", "entity_class": "semantic", "name": "京都纪念品店", "canonical_name": "京都纪念品店", "aliases": ["京都纪念品", "seisui"] },
+          { "id": "{{seisui}}", "kind": "org", "entity_class": "semantic", "name": "清水商店", "canonical_name": "清水商店", "aliases": ["清水"] }
+        ],
+        "relations": [
+          { "id": "rel-souvenir-{{runId}}", "from_entity": "{{kyoto}}", "to_entity": "{{seisui}}", "rel_type": "purchased_at", "source_item": "{{mem}}", "source_version": 1, "confidence": 0.9 }
+        ],
+        "memoryItems": [
+          { "id": "{{mem}}", "content": "在京都纪念品店买的纪念品是清水商店的", "type": "scene", "sub_type": "experience", "version": 1, "layer": 1, "status": "active" }
+        ]
+      },
+      "saveAs": "seeded"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/debug/recall",
+      "expectStatus": 200,
+      "body": { "query": "京都纪念品", "sessionId": "main", "agentId": "agent:simo", "budget": { "maxEntities": 5, "perEntityN": 3, "maxHop": 1, "tokenBudget": 8000 }, "trace": "summary" },
+      "saveAs": "recall"
+    },
+    { "type": "capture", "from": "recall.json.items", "mode": "array", "saveAs": "items" },
+    { "type": "capture", "from": "recall.json.paths", "mode": "array", "saveAs": "paths" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "seeded.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "regex", "target": "recall.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "regex", "target": "recall.body", "pattern": "{{kyoto}}" },
+    { "type": "count", "target": "items", "pattern": "\"itemId\"", "atLeast": 1 },
+    { "type": "regex", "target": "recall.body", "pattern": "\"cite\"\\s*:\\s*\"(\\[mem:|mem-)" },
+    { "type": "regex", "target": "recall.body", "pattern": "\"paths\"\\s*:\\s*\\[\\s*\\{" },
+    { "type": "regex", "target": "recall.body", "pattern": "\"entities\"\\s*:\\s*\\[" },
+    { "type": "regex", "target": "recall.body", "pattern": "\"trace\"\\s*:" },
+    { "type": "regex", "target": "recall.body", "pattern": "\"budgetReport\"\\s*:\\s*\\{" },
+    { "type": "regex", "target": "recall.body", "pattern": "no_semantic_path" },
+    { "type": "regex", "target": "recall.body", "pattern": "\"scoreBreakdown\"\\s*:\\s*\\{" }
+  ]
+}

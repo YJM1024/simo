@@ -1,0 +1,37 @@
+{
+  "id": "real-approval-allow",
+  "name": "真实模型：一次写审批（pending → allow → 文件真的落盘）",
+  "tier": "normal",
+  "vars": {
+    "probe": "evals-real-write-{{runId}}",
+    "target": "{{agentdHome}}/workspace/real-notes.txt"
+  },
+  "steps": [
+    { "type": "fs", "op": "remove", "path": "{{target}}", "saveAs": "cleanup" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "chat": { "text": "用 write 工具把 hello 写进 real-notes.txt。" },
+      "saveAs": "stream",
+      "until": { "type": ["reply.done", "message.done", "error"], "timeoutMs": 120000 },
+      "drainMs": 1500
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "pending",
+      "intervalMs": 300,
+      "timeoutMs": 30000,
+      "until": { "path": "json.approvals", "matchSome": { "status": "pending" } }
+    },
+    { "type": "capture", "from": "pending.json.approvals", "where": { "status": "pending" }, "pick": "id", "saveAs": "approvalId" },
+    { "type": "http", "method": "POST", "path": "/api/approvals/{{@approvalId}}", "body": { "decision": "allow" }, "expectStatus": 200, "saveAs": "allowResp" },
+    { "type": "fs", "path": "{{target}}", "saveAs": "written" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "allowResp.body", "pattern": "\"status\"\\s*:\\s*\"approved\"" },
+    { "type": "regex", "target": "written.exists", "pattern": "^true$" }
+  ]
+}

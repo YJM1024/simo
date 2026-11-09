@@ -1,0 +1,131 @@
+{
+  "id": "card-action-approval",
+  "name": "M41 卡片动作权限：route=action 不能绕过审批/提权（R4 session.delete 被拒，会话仍在）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-card-approval-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/sessions",
+      "body": {
+        "title": "card-approval-{{runId}}"
+      },
+      "expectStatus": [
+        200,
+        201
+      ],
+      "saveAs": "created"
+    },
+    {
+      "type": "capture",
+      "from": "created.json.session",
+      "pick": "id",
+      "saveAs": "sid"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/chat.send_card",
+      "expectStatus": [
+        200,
+        201
+      ],
+      "saveAs": "sent",
+      "body": {
+        "sessionId": "{{@sid}}",
+        "fallbackText": "危险动作卡片（兜底）。",
+        "schema": {
+          "schemaVersion": 1,
+          "title": "危险动作",
+          "blocks": [
+            {
+              "id": "t1",
+              "type": "text",
+              "props": {
+                "text": "删除会话"
+              }
+            }
+          ],
+          "actions": [
+            {
+              "id": "del",
+              "label": "删除",
+              "route": "action",
+              "action": "session.delete",
+              "args": {
+                "sessionId": "{{@sid}}"
+              },
+              "variant": "danger",
+              "confirm": "always"
+            }
+          ],
+          "equivalence": {
+            "chatPrompt": "删除这个会话"
+          },
+          "layout": {
+            "kind": "rows"
+          }
+        }
+      }
+    },
+    {
+      "type": "capture",
+      "from": "sent.json.data",
+      "pick": "cardId",
+      "saveAs": "cardId"
+    },
+    {
+      "type": "capture",
+      "from": "sent.json.data",
+      "pick": "messageId",
+      "saveAs": "messageId"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/cards/{{@cardId}}/actions/del",
+      "expectStatus": 403,
+      "saveAs": "action",
+      "body": {
+        "messageId": "{{@messageId}}",
+        "baseVersion": 1,
+        "payload": {},
+        "idempotencyKey": "approval-{{runId}}"
+      }
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions",
+      "expectStatus": 200,
+      "saveAs": "stillThere"
+    }
+  ],
+  "graders": [
+    {
+      "type": "regex",
+      "target": "sent.body",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    },
+    {
+      "type": "regex",
+      "target": "action.body",
+      "pattern": "DENIED_R4|CARD_FORBIDDEN|CARD_ACTION_FAILED"
+    },
+    {
+      "type": "regex",
+      "target": "stillThere.body",
+      "pattern": "\"ok\"\\s*:\\s*true|\"id\"\\s*:\\s*\"{{@sid}}\""
+    },
+    {
+      "type": "forbidden",
+      "target": "stillThere.body",
+      "patterns": [
+        "\"deleted\"\\s*:\\s*true"
+      ]
+    }
+  ]
+}

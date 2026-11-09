@@ -1,0 +1,70 @@
+{
+  "id": "perm-modes",
+  "name": "权限模式切换（read-only 拒写；danger-full-access 需确认；切回 workspace-write）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-modes-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "GET", "path": "/api/permissions?sessionId={{caseSession}}", "expectStatus": 200, "saveAs": "p0" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/permissions",
+      "body": { "sessionId": "{{caseSession}}", "mode": "read-only" },
+      "expectStatus": [200, 204],
+      "saveAs": "setRO"
+    },
+    { "type": "http", "method": "GET", "path": "/api/permissions?sessionId={{caseSession}}", "expectStatus": 200, "saveAs": "p1" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}} mock:write 写一条不该被允许的内容。" },
+      "saveAs": "writeInRO",
+      "until": { "type": ["reply.done", "message.done", "error"], "timeoutMs": 30000 },
+      "drainMs": 1500
+    },
+    { "type": "http", "method": "GET", "path": "/api/approvals", "expectStatus": 200, "saveAs": "apprRO" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/permissions",
+      "body": { "sessionId": "{{caseSession}}", "mode": "danger-full-access" },
+      "expectStatus": [400, 403, 409],
+      "saveAs": "fullNoConfirm"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/permissions",
+      "bodies": [
+        { "sessionId": "{{caseSession}}", "mode": "danger-full-access", "confirm": true },
+        { "sessionId": "{{caseSession}}", "mode": "danger-full-access", "confirm": "danger-full-access" },
+        { "sessionId": "{{caseSession}}", "mode": "danger-full-access", "confirm": "CONFIRM" },
+        { "sessionId": "{{caseSession}}", "mode": "danger-full-access", "ack": true }
+      ],
+      "expectStatus": [200, 204],
+      "saveAs": "full"
+    },
+    { "type": "http", "method": "GET", "path": "/api/permissions?sessionId={{caseSession}}", "expectStatus": 200, "saveAs": "p2" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/permissions",
+      "body": { "sessionId": "{{caseSession}}", "mode": "workspace-write" },
+      "expectStatus": [200, 204],
+      "saveAs": "back"
+    },
+    { "type": "http", "method": "GET", "path": "/api/permissions?sessionId={{caseSession}}", "expectStatus": 200, "saveAs": "p3" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "p0.body", "pattern": "workspace-write" },
+    { "type": "regex", "target": "p1.body", "pattern": "read-only" },
+    { "type": "state_delta", "collection": "apprRO.json.approvals", "where": { "tool": "write_file", "status": "pending" }, "atMost": 0 },
+    { "type": "regex", "target": "fullNoConfirm.body", "pattern": "(confirm|确认|ack)" },
+    { "type": "regex", "target": "p2.body", "pattern": "danger-full-access" },
+    { "type": "regex", "target": "p3.body", "pattern": "workspace-write" }
+  ]
+}

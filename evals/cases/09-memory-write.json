@@ -1,0 +1,49 @@
+{
+  "id": "memory-write",
+  "name": "记忆写入（\"记住\" → source=user / authority=user_confirmed / active，二次读取仍在）",
+  "tier": "critical",
+  "vars": {
+    "memo": "evals-mem-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{memo}}",
+      "chat": { "text": "记住：{{memo}} 我的项目代号是 Atlas。" },
+      "saveAs": "stream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 20000 },
+      "drainMs": 1500
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/memory?q={{memo}}",
+      "saveAs": "search",
+      "intervalMs": 150,
+      "timeoutMs": 8000,
+      "until": { "path": "json.items", "matchSome": {} }
+    },
+    { "type": "http", "method": "GET", "path": "/api/memory/items?scope=global", "expectStatus": 200, "saveAs": "items" }
+  ],
+  "graders": [
+    {
+      "type": "state_delta",
+      "collection": "search.json.items",
+      "where": { "authority": "user_confirmed" },
+      "expect": { "source": "user", "status": "active" },
+      "atLeast": 1
+    },
+    { "type": "regex", "target": "search.json.items.0.content", "pattern": "{{memo}}" },
+    {
+      "type": "regex",
+      "target": "search.body",
+      "pattern": "\"kind\"\\s*:\\s*\"(fact|decision|preference|requirement|experience|progress)\""
+    },
+    { "type": "regex", "target": "search.body", "pattern": "\"version\"\\s*:\\s*[1-9]" },
+    { "type": "regex", "target": "search.body", "pattern": "\"createdAt\"\\s*:\\s*\\d{10,}" },
+    { "type": "state_delta", "collection": "items.json.items", "where": { "authority": "user_confirmed" }, "atLeast": 1 },
+    { "type": "forbidden", "target": "search.body", "patterns": ["\"status\"\\s*:\\s*\"retracted\""] }
+  ]
+}

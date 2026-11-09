@@ -1,0 +1,24 @@
+{
+  "id": "memory-consolidate-idempotent",
+  "name": "M30 记忆巩固：同源消息重复调用 → 同一 job、idempotent:true、不重复写",
+  "tier": "normal",
+  "vars": {
+    "p": "konsol-idem-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "记住：项目代号是 Idem-{{p}}，负责数据整理。" }, "expectStatus": [200, 202], "saveAs": "c1" },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "项目代号是 IdemB-{{p}}，这个说法也要保留。" }, "expectStatus": [200, 202], "saveAs": "c2" },
+    { "type": "http", "method": "POST", "path": "/api/debug/memory/consolidate", "body": { "sessionId": "{{caseSession}}", "agentId": "agent:simo", "maxMessages": 20 }, "expectStatus": 200, "saveAs": "first" },
+    { "type": "capture", "from": "first.json.data.job", "pick": "id", "saveAs": "jobId" },
+    { "type": "http", "method": "POST", "path": "/api/debug/memory/consolidate", "body": { "sessionId": "{{caseSession}}", "agentId": "agent:simo", "maxMessages": 20 }, "expectStatus": 200, "saveAs": "second" },
+    { "type": "http", "method": "GET", "path": "/api/debug/memory/consolidation?sessionId={{caseSession}}", "expectStatus": 200, "saveAs": "status" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "first.body", "pattern": "\"idempotent\"\\s*:\\s*false" },
+    { "type": "regex", "target": "first.body", "pattern": "\"conflictCount\"\\s*:\\s*1" },
+    { "type": "regex", "target": "second.body", "pattern": "\"idempotent\"\\s*:\\s*true" },
+    { "type": "regex", "target": "second.body", "pattern": "{{@jobId}}" },
+    { "type": "regex", "target": "status.body", "pattern": "\"total\"\\s*:\\s*1" },
+    { "type": "regex", "target": "status.body", "pattern": "{{@jobId}}" }
+  ]
+}

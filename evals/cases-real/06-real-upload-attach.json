@@ -1,0 +1,43 @@
+{
+  "id": "real-upload-attach",
+  "name": "真实模型：带附件的对话（结构断言：消息带 attachments + 有回复）",
+  "tier": "normal",
+  "vars": {
+    "probe": "evals-real-upl-{{runId}}",
+    "fname": "real-{{runId}}.txt"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/uploads?sessionId={{caseSession}}",
+      "multipart": { "files": [{ "filename": "{{fname}}", "mime": "text/plain", "content": "phone: 555-0100" }] },
+      "expectStatus": [200, 201],
+      "saveAs": "upload"
+    },
+    { "type": "capture", "from": "upload.json.attachments", "where": {}, "pick": "id", "saveAs": "attachmentId" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "chat": { "text": "附件里的电话号码是多少？用一行回答。", "attachments": ["{{@attachmentId}}"] },
+      "saveAs": "stream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 120000 },
+      "drainMs": 1500
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{caseSession}}",
+      "saveAs": "msgs",
+      "intervalMs": 300,
+      "timeoutMs": 15000,
+      "until": { "path": "json.messages", "matchSome": { "role": "agent" } }
+    }
+  ],
+  "graders": [
+    { "type": "regex", "target": "msgs.body", "pattern": "\"attachments\"\\s*:\\s*\\[\\s*\\{" },
+    { "type": "regex", "target": "msgs.body", "pattern": "\"name\"\\s*:\\s*\"{{fname}}\"" },
+    { "type": "regex", "target": "stream.trace", "pattern": "(reply|message)\\.done" }
+  ]
+}

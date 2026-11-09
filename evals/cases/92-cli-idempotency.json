@@ -1,0 +1,29 @@
+{
+  "id": "cli-idempotency",
+  "name": "CLI 幂等语义（非幂等动作两次=两个实体；幂等动作两次=同一实体、不重复副作用）",
+  "tier": "normal",
+  "vars": {
+    "probe": "evals-cli-idem-{{runId}}",
+    "title": "evals-cli-idem-{{runId}}"
+  },
+  "steps": [
+    { "type": "cli", "args": ["session", "create", "--title", "{{title}}", "--json"], "expectExit": 0, "saveAs": "create1" },
+    { "type": "cli", "args": ["session", "create", "--title", "{{title}}", "--json"], "expectExit": 0, "saveAs": "create2" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "afterCreate" },
+
+    { "type": "cli", "args": ["session", "create", "--title", "evals-cli-idem-target-{{runId}}", "--json"], "expectExit": 0, "saveAs": "targetCreate" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "targetList" },
+    { "type": "capture", "from": "targetList.json.sessions", "whereContains": { "title": "evals-cli-idem-target-{{runId}}" }, "pick": "id", "saveAs": "targetId" },
+    { "type": "cli", "args": ["session", "rename", "--id", "{{@targetId}}", "--title", "evals-cli-idem-renamed-{{runId}}", "--json"], "expectExit": 0, "saveAs": "rename1" },
+    { "type": "cli", "args": ["session", "rename", "--id", "{{@targetId}}", "--title", "evals-cli-idem-renamed-{{runId}}", "--json"], "expectExit": 0, "saveAs": "rename2" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "afterRename" }
+  ],
+  "graders": [
+    { "type": "count", "target": "afterCreate.json.sessions", "pattern": "\"title\"\\s*:\\s*\"{{title}}\"", "exactly": 2 },
+    { "type": "regex", "target": "create1.stdout", "pattern": "\"action\"\\s*:\\s*\"session.create\"" },
+    { "type": "regex", "target": "create2.stdout", "pattern": "\"action\"\\s*:\\s*\"session.create\"" },
+    { "type": "count", "target": "afterRename.json.sessions", "pattern": "\"title\"\\s*:\\s*\"evals-cli-idem-renamed-{{runId}}\"", "exactly": 1 },
+    { "type": "regex", "target": "rename1.stdout", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "regex", "target": "rename2.stdout", "pattern": "\"ok\"\\s*:\\s*true" }
+  ]
+}

@@ -1,0 +1,148 @@
+{
+  "id": "python-env",
+  "name": "Python 环境隔离（子进程 env 白名单：AGENTD_HOME 可见、无任何 API key/sk- 密钥）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-pyenv-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": {
+        "text": "{{probe}} mock:python-env"
+      },
+      "saveAs": "stream",
+      "until": {
+        "type": [
+          "reply.done",
+          "message.done",
+          "error"
+        ],
+        "timeoutMs": 45000
+      },
+      "drainMs": 1200
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "pending",
+      "intervalMs": 200,
+      "timeoutMs": 15000,
+      "until": {
+        "path": "json.approvals",
+        "matchSome": {
+          "tool": "run_python",
+          "status": "pending"
+        }
+      }
+    },
+    {
+      "type": "capture",
+      "from": "pending.json.approvals",
+      "where": {
+        "tool": "run_python",
+        "status": "pending"
+      },
+      "pick": "id",
+      "saveAs": "approvalId"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/approvals/{{@approvalId}}",
+      "body": {
+        "decision": "allow"
+      },
+      "expectStatus": 200,
+      "timeoutMs": 60000,
+      "saveAs": "allowResp"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "approved",
+      "intervalMs": 200,
+      "timeoutMs": 30000,
+      "until": {
+        "path": "json.approvals",
+        "matchSome": {
+          "id": "{{@approvalId}}",
+          "status": "approved"
+        }
+      }
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "approved",
+      "intervalMs": 200,
+      "timeoutMs": 30000,
+      "until": {
+        "path": "json.approvals",
+        "matchSome": {
+          "id": "{{@approvalId}}",
+          "status": "approved"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/approvals",
+      "expectStatus": 200,
+      "saveAs": "finalBody"
+    },
+    {
+      "type": "capture",
+      "from": "finalBody.json.approvals",
+      "where": {
+        "id": "{{@approvalId}}"
+      },
+      "pick": "result",
+      "saveAs": "resultText"
+    }
+  ],
+  "graders": [
+    {
+      "type": "regex",
+      "target": "resultText",
+      "pattern": "ENV_START"
+    },
+    {
+      "type": "regex",
+      "target": "resultText",
+      "pattern": "AGENTD_HOME=[^ \\r\\n]+"
+    },
+    {
+      "type": "regex",
+      "target": "resultText",
+      "pattern": "PATH_SET=True"
+    },
+    {
+      "type": "regex",
+      "target": "resultText",
+      "pattern": "ENV_END"
+    },
+    {
+      "type": "regex",
+      "target": "resultText",
+      "pattern": "\\[exit code:\\s*0\\]"
+    },
+    {
+      "type": "forbidden",
+      "target": "resultText",
+      "patterns": [
+        "DEEPSEEK_API_KEY",
+        "AGENTD_API_KEY",
+        "OPENAI_API_KEY",
+        "sk-[A-Za-z0-9]{10,}"
+      ]
+    }
+  ]
+}

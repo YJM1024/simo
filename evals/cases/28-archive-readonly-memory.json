@@ -1,0 +1,54 @@
+{
+  "id": "archive-readonly-memory",
+  "name": "归档会记忆只读（归档会话里 POST chat 被拒 → 不写入记忆；unarchive 后可写入）",
+  "tier": "normal",
+  "vars": {
+    "title": "evals-amem-{{runId}}",
+    "memo": "evals-amem-{{runId}}",
+    "tmsg": "记住：{{memo}} 归档会话里的这条不该被记住。"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{title}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{title}}" }, "pick": "id", "saveAs": "sessionId" },
+    { "type": "http", "candidate": [{ "method": "POST", "path": "/api/sessions/{{@sessionId}}/archive", "body": {} }], "expectStatus": [200, 202, 204], "saveAs": "archived" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": { "sessionId": "{{@sessionId}}", "text": "{{tmsg}}" },
+      "expectStatus": [403, 409],
+      "saveAs": "memRejected"
+    },
+    { "type": "http", "method": "GET", "path": "/api/memory?q={{memo}}", "expectStatus": 200, "saveAs": "memAfterArchived" },
+    { "type": "http", "candidate": [{ "method": "POST", "path": "/api/sessions/{{@sessionId}}/unarchive", "body": {} }], "expectStatus": [200, 202, 204], "saveAs": "unarchived" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": { "sessionId": "{{@sessionId}}", "text": "{{tmsg}}" },
+      "expectStatus": [200, 202],
+      "saveAs": "memAccepted"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/memory?q={{memo}}",
+      "saveAs": "memAfterUnarchive",
+      "intervalMs": 200,
+      "timeoutMs": 10000,
+      "until": { "path": "json.items", "matchSome": {} }
+    }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "memAfterArchived.json.items", "atMost": 0 },
+    { "type": "state_delta", "collection": "memAfterUnarchive.json.items", "atLeast": 1 },
+    {
+      "type": "state_delta",
+      "collection": "memAfterUnarchive.json.items",
+      "where": { "authority": "user_confirmed" },
+      "expect": { "source": "user" },
+      "atLeast": 1
+    }
+  ]
+}

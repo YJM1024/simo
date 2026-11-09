@@ -1,0 +1,57 @@
+{
+  "id": "artifact-preview",
+  "name": "产物预览（列表 + /content 的 Content-Type 与内容；路径穿越被拒）",
+  "tier": "normal",
+  "vars": {
+    "marker": "evals-artifact-{{runId}}",
+    "tmsg": "{{marker}} 把上面的结论导出成一个 markdown 报告文件。"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{marker}}",
+      "chat": { "text": "{{tmsg}}" },
+      "saveAs": "stream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 30000 },
+      "drainMs": 4000
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/artifacts",
+      "saveAs": "artifacts",
+      "intervalMs": 300,
+      "timeoutMs": 20000,
+      "until": { "path": "json.artifacts", "matchSome": {} }
+    },
+    {
+      "type": "capture",
+      "from": ["artifacts.json.artifacts", "artifacts.json.items"],
+      "mode": "array",
+      "saveAs": "artifactList"
+    },
+    { "type": "capture", "from": "artifactList", "where": {}, "pick": "id", "saveAs": "artifactId" },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/artifacts/{{@artifactId}}/content",
+      "expectStatus": 200,
+      "saveAs": "content"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/artifacts/..%2F..%2Fsecret/content",
+      "expectStatus": [400, 404],
+      "saveAs": "traversal"
+    }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "artifactList", "atLeast": 1 },
+    { "type": "regex", "target": "content.headers", "pattern": "(text/|application/(markdown|json))" },
+    { "type": "regex", "target": "content.body", "pattern": "[\\s\\S]{8,}" },
+    { "type": "forbidden", "target": "traversal.body", "patterns": ["root:", "passwd"] }
+  ]
+}

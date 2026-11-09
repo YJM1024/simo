@@ -1,0 +1,67 @@
+{
+  "id": "view-rollback",
+  "name": "M26 视图版本：patch → rollback 逐字一致 + 版本数 3 + baseVersion 过期 409",
+  "tier": "critical",
+  "vars": {
+    "title1": "版本一-{{runId}}",
+    "title2": "版本二-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/ui.set_view",
+      "body": {
+        "sessionId": "main", "mode": "create", "reason": "创建 v1",
+        "schema": { "schemaVersion": 1, "id": "view-main-rollback-{{runId}}", "sessionId": "main", "title": "{{title1}}", "meta": { "createdBy": "agent" }, "layout": { "kind": "rows", "areas": [ { "block": "t" } ] },
+          "blocks": [ { "id": "t", "type": "text", "props": { "text": "v1" } } ],
+          "equivalence": { "chatPrompt": "请给我看版本一的内容。" } }
+      },
+      "expectStatus": 200,
+      "saveAs": "created"
+    },
+    { "type": "capture", "from": "created.json.data", "pick": "pageId", "saveAs": "pageId" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/ui.set_view",
+      "body": { "sessionId": "main", "mode": "patch", "pageId": "{{@pageId}}", "baseVersion": 1, "reason": "改标题",
+        "patch": { "ops": [ { "op": "set_page_props", "title": "{{title2}}" } ] } },
+      "expectStatus": 200,
+      "saveAs": "patched"
+    },
+    { "type": "http", "method": "GET", "path": "/api/views/{{@pageId}}", "expectStatus": 200, "saveAs": "v2page" },
+    { "type": "http", "method": "GET", "path": "/api/views/{{@pageId}}/versions", "expectStatus": 200, "saveAs": "versions2" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/ui.view.rollback",
+      "body": { "sessionId": "main", "mode": "rollback", "pageId": "{{@pageId}}", "baseVersion": 2, "targetVersion": 1, "reason": "回滚到 v1" },
+      "expectStatus": 200,
+      "saveAs": "rollback"
+    },
+    { "type": "http", "method": "GET", "path": "/api/views/{{@pageId}}", "expectStatus": 200, "saveAs": "after" },
+    { "type": "http", "method": "GET", "path": "/api/views/{{@pageId}}/versions/1", "expectStatus": 200, "saveAs": "v1" },
+    { "type": "http", "method": "GET", "path": "/api/views/{{@pageId}}/versions", "expectStatus": 200, "saveAs": "versions3" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/ui.set_view",
+      "body": { "sessionId": "main", "mode": "patch", "pageId": "{{@pageId}}", "baseVersion": 1, "reason": "过期 baseVersion",
+        "patch": { "ops": [ { "op": "set_page_props", "title": "不该生效" } ] } },
+      "expectStatus": 409,
+      "saveAs": "conflict"
+    }
+  ],
+  "graders": [
+    { "type": "regex", "target": "patched.body", "pattern": "\"version\"\\s*:\\s*2" },
+    { "type": "regex", "target": "v2page.body", "pattern": "\"title\"\\s*:\\s*\"{{title2}}\"" },
+    { "type": "count", "target": "versions2.json.versions", "pattern": "\"version\"", "exactly": 2 },
+    { "type": "regex", "target": "rollback.body", "pattern": "\"version\"\\s*:\\s*3" },
+    { "type": "regex", "target": "after.body", "pattern": "\"title\"\\s*:\\s*\"{{title1}}\"" },
+    { "type": "regex", "target": "after.body", "pattern": "\"version\"\\s*:\\s*3" },
+    { "type": "regex", "target": "v1.body", "pattern": "\"title\"\\s*:\\s*\"{{title1}}\"" },
+    { "type": "count", "target": "versions3.json.versions", "pattern": "\"version\"", "exactly": 3 },
+    { "type": "regex", "target": "conflict.body", "pattern": "VIEW_BASE_CONFLICT" }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "id": "parallel-tasks",
+  "name": "并行任务（连发 3 条 → ≥3 回复 + ≥3 任务，互不阻塞）",
+  "tier": "normal",
+  "vars": {
+    "probe": "evals-parallel-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}} 任务一：把本月待办按优先级排序。" },
+      "afterHello": [
+        { "type": "chat", "data": { "text": "{{probe}} 任务二：整理上周会议纪要的三个要点。" } },
+        { "type": "chat", "data": { "text": "{{probe}} 任务三：列一个本周学习计划。" } }
+      ],
+      "saveAs": "stream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 25000 },
+      "drainMs": 12000
+    }
+  ],
+  "graders": [
+    {
+      "type": "regex",
+      "target": "stream.trace",
+      "pattern": "(reply|message)\\.created.*?(reply|message)\\.created.*?(reply|message)\\.created"
+    },
+    { "type": "state_delta", "collection": "stream.frames", "where": { "type": "task.created" }, "atLeast": 3 },
+    { "type": "forbidden", "target": "stream.raw", "patterns": ["\"type\":\"error\""] }
+  ]
+}

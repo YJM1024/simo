@@ -1,0 +1,26 @@
+{
+  "id": "real-read-tool",
+  "name": "真实模型：一次 read 工具调用（用 debug 请求快照证明发生过工具回环）",
+  "tier": "normal",
+  "vars": {
+    "probe": "evals-real-read-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "GET", "path": "/api/messages?sessionId={{caseSession}}", "expectStatus": 200, "saveAs": "before" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "chat": { "text": "读取 README.md 的前 5 行，然后用一句话总结。" },
+      "saveAs": "stream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 120000 },
+      "drainMs": 1500
+    },
+    { "type": "http", "method": "GET", "path": "/api/debug/last-llm-request", "expectStatus": 200, "saveAs": "snapshot" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "stream.trace", "pattern": "(reply|message)\\.done" },
+    { "type": "regex", "target": "snapshot.body", "pattern": "(\"tool_calls\"|(\"role\"\\s*:\\s*\"tool\"))" },
+    { "type": "forbidden", "target": "stream.raw", "patterns": ["\"type\"\\s*:\\s*\"error\""] }
+  ]
+}

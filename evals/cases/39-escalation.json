@@ -1,0 +1,69 @@
+{
+  "id": "escalation",
+  "name": "单次提权（sandbox_permissions+justification → 审批后生效并留痕；跨档跳级被拒）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-esc-{{runId}}",
+    "target": "{{agentdHome}}/workspace/escalated-{{runId}}.txt"
+  },
+  "steps": [
+    { "type": "fs", "op": "remove", "path": "{{target}}", "saveAs": "cleanup" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}} mock:escalate" },
+      "saveAs": "escStream",
+      "until": { "type": ["reply.done", "message.done", "error"], "timeoutMs": 30000 },
+      "drainMs": 1500
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "pendingEsc",
+      "intervalMs": 200,
+      "timeoutMs": 10000,
+      "until": { "path": "json.approvals", "matchSome": { "status": "pending" } }
+    },
+    { "type": "capture", "from": "pendingEsc.json.approvals", "where": { "status": "pending" }, "pick": "id", "saveAs": "escId" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/approvals/{{@escId}}",
+      "body": { "decision": "allow" },
+      "expectStatus": 200,
+      "saveAs": "escAllow"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "approvedEsc",
+      "intervalMs": 200,
+      "timeoutMs": 15000,
+      "until": { "path": "json.approvals", "matchSome": { "id": "{{@escId}}", "status": "approved" } }
+    },
+    { "type": "fs", "path": "{{target}}", "saveAs": "escFile" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}} mock:escalate-jump" },
+      "saveAs": "jumpStream",
+      "until": { "type": ["reply.done", "message.done", "error"], "timeoutMs": 30000 },
+      "drainMs": 2000
+    },
+    { "type": "http", "method": "GET", "path": "/api/approvals", "expectStatus": 200, "saveAs": "apprJump" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "pendingEsc.body", "pattern": "(justification|reason)" },
+    { "type": "regex", "target": "pendingEsc.body", "pattern": "(sandbox|workspace-write|danger-full-access)" },
+    { "type": "regex", "target": "approvedEsc.body", "pattern": "\"status\"\\s*:\\s*\"approved\"" },
+    { "type": "regex", "target": "escFile.exists", "pattern": "^true$" },
+    { "type": "state_delta", "collection": "apprJump.json.approvals", "where": { "status": "pending" }, "atMost": 0 },
+    { "type": "forbidden", "target": "jumpStream.raw", "patterns": ["\"type\"\\s*:\\s*\"error\"[^\\n]*sk-"] }
+  ]
+}

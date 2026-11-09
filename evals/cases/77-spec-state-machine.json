@@ -1,0 +1,52 @@
+{
+  "id": "spec-state-machine",
+  "name": "Spec 状态机（draft→confirmed→planning→executing 合法迁移 version+1；非法迁移 409 状态不变；reopen）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-spec-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}" }, "pick": "id", "saveAs": "sid" },
+
+    { "type": "http", "method": "GET", "path": "/api/debug/spec?sessionId={{@sid}}", "expectStatus": 200, "saveAs": "spec0" },
+    { "type": "capture", "from": "spec0.json.spec", "where": {}, "pick": "status", "saveAs": "st0" },
+    { "type": "capture", "from": "spec0.json.spec", "where": {}, "pick": "version", "saveAs": "v0" },
+
+    { "type": "http", "method": "POST", "path": "/api/debug/spec/transition", "body": { "sessionId": "{{@sid}}", "to": "confirmed", "reason": "evals T1" }, "expectStatus": [200], "saveAs": "t1" },
+    { "type": "capture", "from": "t1.json.spec", "where": {}, "pick": "status", "saveAs": "st1" },
+    { "type": "capture", "from": "t1.json.spec", "where": {}, "pick": "version", "saveAs": "v1" },
+
+    { "type": "http", "method": "POST", "path": "/api/debug/spec/transition", "body": { "sessionId": "{{@sid}}", "to": "planning", "reason": "evals T2" }, "expectStatus": [200], "saveAs": "t2" },
+    { "type": "capture", "from": "t2.json.spec", "where": {}, "pick": "status", "saveAs": "st2" },
+    { "type": "capture", "from": "t2.json.spec", "where": {}, "pick": "version", "saveAs": "v2" },
+
+    { "type": "http", "method": "POST", "path": "/api/debug/spec/transition", "body": { "sessionId": "{{@sid}}", "to": "executing", "reason": "evals T3" }, "expectStatus": [200], "saveAs": "t3" },
+    { "type": "capture", "from": "t3.json.spec", "where": {}, "pick": "status", "saveAs": "st3" },
+    { "type": "capture", "from": "t3.json.spec", "where": {}, "pick": "version", "saveAs": "v3" },
+
+    { "type": "http", "method": "POST", "path": "/api/debug/spec/transition", "body": { "sessionId": "{{@sid}}", "to": "verified", "reason": "evals illegal" }, "expectStatus": [400, 409], "saveAs": "illegal" },
+    { "type": "http", "method": "GET", "path": "/api/debug/spec?sessionId={{@sid}}", "expectStatus": 200, "saveAs": "specAfterIllegal" },
+    { "type": "capture", "from": "specAfterIllegal.json.spec", "where": {}, "pick": "status", "saveAs": "stAfterIllegal" },
+
+    { "type": "http", "method": "POST", "path": "/api/debug/spec/reopen", "body": { "sessionId": "{{@sid}}", "reason": "evals reopen" }, "expectStatus": [200], "saveAs": "reopen" },
+    { "type": "capture", "from": "reopen.json.spec", "where": {}, "pick": "status", "saveAs": "stReopen" },
+    { "type": "capture", "from": "reopen.json.spec", "where": {}, "pick": "version", "saveAs": "vReopen" },
+    { "type": "capture", "from": "reopen.json.spec", "where": {}, "pick": "reopenedCount", "saveAs": "reopenCount" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "st0", "pattern": "^draft$" },
+    { "type": "numeric", "left": "v0", "op": "gte", "value": 1 },
+    { "type": "regex", "target": "st1", "pattern": "^confirmed$" },
+    { "type": "numeric", "left": "v1", "op": "gt", "right": "v0" },
+    { "type": "regex", "target": "st2", "pattern": "^planning$" },
+    { "type": "numeric", "left": "v2", "op": "gt", "right": "v1" },
+    { "type": "regex", "target": "st3", "pattern": "^executing$" },
+    { "type": "numeric", "left": "v3", "op": "gt", "right": "v2" },
+    { "type": "forbidden", "target": "illegal.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "regex", "target": "stAfterIllegal", "pattern": "^executing$" },
+    { "type": "numeric", "left": "reopenCount", "op": "gte", "value": 1 },
+    { "type": "numeric", "left": "vReopen", "op": "gt", "right": "v3" }
+  ]
+}

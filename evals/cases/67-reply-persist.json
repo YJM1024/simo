@@ -1,0 +1,15 @@
+{
+  "id": "reply-persist",
+  "name": "引用回复持久化（重启后 replyTo 快照仍在：id/role/text/sessionId 完整）",
+  "tier": "critical",
+  "pending": "需要重启被测服务进程，单次 run.mjs 做不到 → 由 evals/reply-persist.ps1 真实执行（建会话 → 发 A → 带 replyToMessageId 回复 → 杀进程 → 重启同一 home → GET /api/messages 断言 replyTo 快照仍完整）。脚本自建端口+临时 AGENTD_HOME，不碰 8787。",
+  "vars": {
+    "probe": "evals-replypersist-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "GET", "path": "/api/messages?sessionId=main", "expectStatus": 200, "saveAs": "msgs" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "msgs.body", "pattern": "messages" }
+  ]
+}

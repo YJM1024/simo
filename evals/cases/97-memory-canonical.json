@@ -1,0 +1,167 @@
+{
+  "id": "memory-canonical",
+  "name": "canonical 落库与溯源（rawRefs/mentions、raw 不可变、重复写幂等）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-mem-can-{{runId}}",
+    "text": "记住：项目代号是 Orion（{{probe}}）。"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/sessions",
+      "body": {
+        "title": "{{caseSession}}"
+      },
+      "expectStatus": [
+        200,
+        201
+      ],
+      "saveAs": "created"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions",
+      "expectStatus": 200,
+      "saveAs": "sessions"
+    },
+    {
+      "type": "capture",
+      "from": "sessions.json.sessions",
+      "whereContains": {
+        "title": "{{caseSession}}"
+      },
+      "pick": "id",
+      "saveAs": "sid"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": {
+        "sessionId": "{{@sid}}",
+        "text": "{{text}}"
+      },
+      "expectStatus": [
+        200,
+        202
+      ],
+      "saveAs": "chat1"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/memory/items?all=1",
+      "saveAs": "items1",
+      "intervalMs": 300,
+      "timeoutMs": 20000,
+      "until": {
+        "path": "json.items",
+        "matchSome": {
+          "content": "项目代号是 Orion（{{probe}}）"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/memory/items?all=1",
+      "expectStatus": 200,
+      "saveAs": "list1"
+    },
+    {
+      "type": "capture",
+      "from": "list1.json.items",
+      "where": {
+        "content": "项目代号是 Orion（{{probe}}）"
+      },
+      "pick": "canonicalRefs",
+      "saveAs": "canonicalRefs"
+    },
+    {
+      "type": "capture",
+      "from": "canonicalRefs",
+      "last": true,
+      "where": {},
+      "saveAs": "canonicalId"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/memory/canonical/{{@canonicalId}}",
+      "expectStatus": 200,
+      "saveAs": "canonical"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": {
+        "sessionId": "{{@sid}}",
+        "text": "{{text}}"
+      },
+      "expectStatus": [
+        200,
+        202
+      ],
+      "saveAs": "chat2"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/memory/items?all=1",
+      "expectStatus": 200,
+      "saveAs": "list2"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/memory/canonical/{{@canonicalId}}",
+      "expectStatus": 200,
+      "saveAs": "canonical2"
+    }
+  ],
+  "graders": [
+    {
+      "type": "regex",
+      "target": "canonical.body",
+      "pattern": "\"rawRefs\"\\s*:\\s*\\["
+    },
+    {
+      "type": "regex",
+      "target": "canonical.body",
+      "pattern": "\"canonical\"\\s*:\\s*\\{"
+    },
+    {
+      "type": "regex",
+      "target": "canonical.body",
+      "pattern": "\"text\"\\s*:\\s*\"[^\"]*(Orion|orion)"
+    },
+    {
+      "type": "regex",
+      "target": "canonical.body",
+      "pattern": "\"status\"\\s*:\\s*\"(ok|active)\""
+    },
+    {
+      "type": "count",
+      "target": "list2.json.items",
+      "pattern": "\"content\"\\s*:\\s*\"项目代号是 Orion（{{probe}}）\"",
+      "atMost": 1
+    },
+    {
+      "type": "state_delta",
+      "collection": "list1.json.items",
+      "where": {
+        "content": "项目代号是 Orion（{{probe}}）"
+      },
+      "atLeast": 1
+    },
+    {
+      "type": "regex",
+      "target": "canonical2.body",
+      "pattern": "\"canonicalKey\"\\s*:"
+    }
+  ]
+}

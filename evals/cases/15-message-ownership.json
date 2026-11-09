@@ -1,0 +1,60 @@
+{
+  "id": "message-ownership",
+  "name": "消息归属（子会话消息只属子会话；main includeChildren=false 不含它）",
+  "tier": "critical",
+  "vars": {
+    "marker": "evals-own-{{runId}}",
+    "cmsg": "evals-own-msg-{{runId}} 子会话里的消息"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "main",
+      "collectAfterText": "{{marker}}",
+      "chat": { "text": "我想创建一个新的需求：{{marker}} 统计上月差旅费用。" },
+      "saveAs": "createStream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 20000 },
+      "drainMs": 2000
+    },
+    { "type": "http", "method": "GET", "path": "/api/sessions/tree", "expectStatus": 200, "saveAs": "tree" },
+    {
+      "type": "capture",
+      "from": ["tree.json.sessions", "tree.json.tree"],
+      "mode": "array",
+      "saveAs": "allSessions"
+    },
+    { "type": "capture", "from": "allSessions", "where": { "id": "main" }, "pick": "children", "saveAs": "mainChildren" },
+    { "type": "capture", "from": "mainChildren", "whereContains": { "title": "{{marker}}" }, "pick": "id", "saveAs": "childId" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@childId}}",
+      "collectAfterText": "{{cmsg}}",
+      "chat": { "text": "{{cmsg}}" },
+      "saveAs": "childStream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 20000 },
+      "drainMs": 1000
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{@childId}}",
+      "expectStatus": 200,
+      "saveAs": "childMsgs"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/messages?sessionId=main&includeChildren=false",
+      "expectStatus": 200,
+      "saveAs": "mainMsgs"
+    }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "childMsgs.json.messages", "where": { "sessionId": "{{@childId}}" }, "atLeast": 1 },
+    { "type": "regex", "target": "childMsgs.body", "pattern": "{{cmsg}}" },
+    { "type": "forbidden", "target": "mainMsgs.body", "patterns": ["{{cmsg}}"] },
+    { "type": "forbidden", "target": "mainMsgs.body", "patterns": ["\"sessionId\"\\s*:\\s*\"{{@childId}}\""] }
+  ]
+}

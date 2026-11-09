@@ -1,0 +1,53 @@
+{
+  "id": "make-pdf",
+  "name": "生成 PDF（make_pdf 审批后落盘：%PDF 魔数 + application/pdf + 可下载）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-pdf-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}" }, "pick": "id", "saveAs": "sid" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@sid}}",
+      "chat": { "text": "mock:make-pdf 生成一份关于季度总结的文档。" },
+      "saveAs": "stream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 60000 },
+      "drainMs": 800
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "pending",
+      "intervalMs": 300,
+      "timeoutMs": 20000,
+      "until": { "path": "json.approvals", "matchSome": { "tool": "make_pdf", "status": "pending" } }
+    },
+    { "type": "capture", "from": "pending.json.approvals", "where": { "tool": "make_pdf", "status": "pending" }, "pick": "id", "saveAs": "approvalId" },
+    { "type": "http", "method": "POST", "path": "/api/approvals/{{@approvalId}}", "body": { "decision": "allow" }, "expectStatus": 200, "timeoutMs": 60000, "saveAs": "allowResp" },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/artifacts?sessionId={{@sid}}",
+      "saveAs": "arts",
+      "intervalMs": 300,
+      "timeoutMs": 20000,
+      "until": { "path": "json.artifacts", "matchSome": { "mime": "application/pdf" } }
+    },
+    { "type": "capture", "from": "arts.json.artifacts", "where": { "mime": "application/pdf" }, "pick": "id", "saveAs": "pdfId" },
+    { "type": "http", "method": "GET", "path": "/api/artifacts/{{@pdfId}}", "expectStatus": 200, "saveAs": "meta" },
+    { "type": "http", "method": "GET", "path": "/api/artifacts/{{@pdfId}}/content", "expectStatus": 200, "saveAs": "content" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "allowResp.body", "pattern": "\"status\"\\s*:\\s*\"approved\"" },
+    { "type": "state_delta", "collection": "arts.json.artifacts", "where": { "mime": "application/pdf" }, "atLeast": 1 },
+    { "type": "regex", "target": "meta.body", "pattern": "\"mime\"\\s*:\\s*\"application/pdf\"" },
+    { "type": "regex", "target": "meta.body", "pattern": "\"size\"\\s*:\\s*[1-9][0-9]{2,}" },
+    { "type": "regex", "target": "content.raw", "pattern": "\"data\"\\s*:\\s*\\[\\s*37\\s*,\\s*80\\s*,\\s*68\\s*,\\s*70" },
+    { "type": "forbidden", "target": "meta.body", "patterns": ["\"mime\"\\s*:\\s*\"text/"] }
+  ]
+}

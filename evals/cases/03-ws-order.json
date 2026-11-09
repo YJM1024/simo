@@ -1,0 +1,30 @@
+{
+  "id": "ws-order",
+  "name": "WebSocket 帧顺序（hello→created→status→delta→done）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-ws-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}}" },
+      "saveAs": "stream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 15000 }
+    }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "stream.allFrames", "where": { "type": "hello" }, "atLeast": 1 },
+    {
+      "type": "regex",
+      "target": "stream.trace",
+      "pattern": "^(reply|message)\\.created.*?status.*?(reply|message)\\.delta.*?(reply|message)\\.done"
+    },
+    { "type": "regex", "target": "stream.raw", "pattern": "\"delta\"\\s*:\\s*\"[^\"]+\"" },
+    { "type": "forbidden", "target": "stream.raw", "patterns": ["\"type\":\"error\"", "\"state\":\"error\""] }
+  ]
+}

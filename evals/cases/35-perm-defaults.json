@@ -1,0 +1,63 @@
+{
+  "id": "perm-defaults",
+  "name": "权限默认（GET /api/permissions = workspace-write+auto；read 免批；write 待批、拒绝不落盘）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-perm-{{runId}}",
+    "target": "{{agentdHome}}/workspace/mock-write.txt"
+  },
+  "steps": [
+    { "type": "http", "method": "GET", "path": "/api/permissions", "expectStatus": 200, "saveAs": "perms" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}} 请读取 README.md 并总结成一句话。" },
+      "saveAs": "readStream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 30000 },
+      "drainMs": 1500
+    },
+    { "type": "http", "method": "GET", "path": "/api/approvals", "expectStatus": 200, "saveAs": "apprAfterRead" },
+    { "type": "fs", "op": "remove", "path": "{{target}}", "saveAs": "cleanup" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}} mock:write 帮我把 TODO 写进文件。" },
+      "saveAs": "writeStream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 30000 },
+      "drainMs": 1500
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "pending",
+      "intervalMs": 200,
+      "timeoutMs": 10000,
+      "until": { "path": "json.approvals", "matchSome": { "tool": "write_file", "status": "pending" } }
+    },
+    { "type": "capture", "from": "pending.json.approvals", "where": { "tool": "write_file", "status": "pending" }, "pick": "id", "saveAs": "approvalId" },
+    { "type": "fs", "path": "{{target}}", "saveAs": "beforeAllow" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/approvals/{{@approvalId}}",
+      "body": { "decision": "deny" },
+      "expectStatus": 200,
+      "saveAs": "denyResp"
+    },
+    { "type": "fs", "path": "{{target}}", "saveAs": "afterDeny" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "perms.body", "pattern": "workspace-write" },
+    { "type": "regex", "target": "perms.body", "pattern": "\"auto\"" },
+    { "type": "state_delta", "collection": "apprAfterRead.json.approvals", "where": { "tool": "read_file", "status": "pending" }, "atMost": 0 },
+    { "type": "state_delta", "collection": "pending.json.approvals", "where": { "tool": "write_file", "status": "pending" }, "atLeast": 1 },
+    { "type": "regex", "target": "beforeAllow.exists", "pattern": "^false$" },
+    { "type": "regex", "target": "denyResp.body", "pattern": "denied" },
+    { "type": "regex", "target": "afterDeny.exists", "pattern": "^false$" }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "id": "recall-r2-twohop",
+  "name": "M27 召回 R2：实体 2 跳路径 + hopLimit=2 + agentic steps + edgeVisits + cite",
+  "tier": "critical",
+  "vars": {
+    "p": "evals-r2hop-{{runId}}",
+    "a": "ent-a-{{runId}}",
+    "b": "ent-b-{{runId}}",
+    "c": "ent-c-{{runId}}",
+    "ma": "mem-a-{{runId}}",
+    "mb": "mem-b-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http", "method": "POST", "path": "/api/debug/recall/seed", "expectStatus": 200, "saveAs": "seeded",
+      "body": {
+        "entities": [
+          { "id": "{{a}}", "kind": "place", "entity_class": "semantic", "name": "Alpha城{{p}}", "canonical_name": "Alpha城{{p}}", "aliases": ["Alpha{{p}}"] },
+          { "id": "{{b}}", "kind": "org", "entity_class": "semantic", "name": "Beta店{{p}}", "canonical_name": "Beta店{{p}}" },
+          { "id": "{{c}}", "kind": "item", "entity_class": "semantic", "name": "Gamma物{{p}}", "canonical_name": "Gamma物{{p}}" }
+        ],
+        "relations": [
+          { "id": "rel-ab-{{runId}}", "from_entity": "{{a}}", "to_entity": "{{b}}", "rel_type": "located_in", "source_item": "{{ma}}", "source_version": 1, "confidence": 0.9 },
+          { "id": "rel-bc-{{runId}}", "from_entity": "{{b}}", "to_entity": "{{c}}", "rel_type": "purchased_at", "source_item": "{{mb}}", "source_version": 1, "confidence": 0.9 }
+        ],
+        "memoryItems": []
+      }
+    },
+    {
+      "type": "http", "method": "POST", "path": "/api/debug/recall", "expectStatus": 200, "saveAs": "recall",
+      "body": { "query": "Alpha城{{p}}", "sessionId": "main", "agentId": "agent:simo", "trace": "full", "budget": { "maxEntities": 5, "perEntityN": 3, "maxHop": 2, "tokenBudget": 8000 } }
+    },
+    { "type": "capture", "from": "recall.json.trace.steps", "mode": "array", "saveAs": "steps" },
+    { "type": "capture", "from": "recall.json.paths", "mode": "array", "saveAs": "paths" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "seeded.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "regex", "target": "recall.body", "pattern": "\"hopLimit\"\\s*:\\s*2" },
+    { "type": "regex", "target": "recall.body", "pattern": "\"entities\"\\s*:\\s*\\[\\s*\"{{a}}\"\\s*,\\s*\"{{b}}\"\\s*,\\s*\"{{c}}\"" },
+    { "type": "regex", "target": "recall.body", "pattern": "\"relType\"\\s*:\\s*\"located_in\"" },
+    { "type": "regex", "target": "recall.body", "pattern": "\"relType\"\\s*:\\s*\"purchased_at\"" },
+    { "type": "regex", "target": "recall.body", "pattern": "\"edgeVisits\"\\s*:\\s*[1-9]" },
+    { "type": "regex", "target": "recall.body", "pattern": "\"steps\"\\s*:\\s*\\[\\s*\\{" },
+    { "type": "count", "target": "steps", "pattern": "\"action\"", "atLeast": 1 },
+    { "type": "regex", "target": "recall.body", "pattern": "\"cite\"\\s*:" },
+    { "type": "count", "target": "paths", "pattern": "\"entities\"", "atLeast": 1 }
+  ]
+}

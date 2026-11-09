@@ -1,0 +1,26 @@
+{
+  "id": "overview-readonly",
+  "name": "概览只读（GET 200；除 refresh 外的写方法一律 404/405）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-ovro-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}" }, "pick": "id", "saveAs": "sid" },
+    { "type": "http", "method": "GET", "path": "/api/sessions/{{@sid}}/overview", "expectStatus": 200, "saveAs": "get1" },
+    { "type": "http", "method": "POST", "path": "/api/sessions/{{@sid}}/overview", "body": { "goal": "x" }, "expectStatus": [404, 405], "saveAs": "postPlain" },
+    { "type": "http", "method": "PUT", "path": "/api/sessions/{{@sid}}/overview", "body": { "goal": "x" }, "expectStatus": [404, 405], "saveAs": "putPlain" },
+    { "type": "http", "method": "PATCH", "path": "/api/sessions/{{@sid}}/overview", "body": { "goal": "x" }, "expectStatus": [404, 405], "saveAs": "patchPlain" },
+    { "type": "http", "method": "DELETE", "path": "/api/sessions/{{@sid}}/overview", "expectStatus": [404, 405], "saveAs": "deletePlain" },
+    { "type": "http", "method": "GET", "path": "/api/sessions/{{@sid}}/overview", "expectStatus": 200, "saveAs": "get2" }
+  ],
+  "graders": [
+    { "type": "forbidden", "target": "postPlain.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "putPlain.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "patchPlain.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "deletePlain.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "regex", "target": "get2.body", "pattern": "\"overview\"|\"goal\"" }
+  ]
+}

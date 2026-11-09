@@ -1,0 +1,46 @@
+{
+  "id": "reply-retraction",
+  "name": "流式中撤回（correct → reply.retracted，历史标记 retracted）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-retract-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}}：请分句慢慢写一段约 300 字的产品介绍，每句一行。" },
+      "onDelta": [{ "type": "correct", "data": { "text": "停，先别写了" } }],
+      "saveAs": "stream",
+      "until": { "type": "reply.retracted", "timeoutMs": 20000 }
+    },
+    {
+      "type": "capture",
+      "from": "stream.frames",
+      "where": { "type": "reply.retracted" },
+      "pick": "data.id",
+      "saveAs": "retractedId"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{caseSession}}",
+      "expectStatus": 200,
+      "saveAs": "after"
+    }
+  ],
+  "graders": [
+    { "type": "regex", "target": "stream.trace", "pattern": "(reply|message)\\.created.*?reply\\.retracted" },
+    {
+      "type": "state_delta",
+      "collection": "after.json.messages",
+      "where": { "id": "{{@retractedId}}" },
+      "expect": { "status": "retracted" },
+      "exactly": 1
+    },
+    { "type": "forbidden", "target": "stream.raw", "patterns": ["\"type\":\"error\""] }
+  ]
+}

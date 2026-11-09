@@ -1,0 +1,121 @@
+{
+  "id": "python-spill",
+  "name": "Python 大输出（>64KB → 截断/spill：Omitted + full result at，门禁不比对全文）",
+  "tier": "normal",
+  "vars": {
+    "probe": "evals-pyspill-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": {
+        "text": "{{probe}} mock:python-big"
+      },
+      "saveAs": "stream",
+      "until": {
+        "type": [
+          "reply.done",
+          "message.done",
+          "error"
+        ],
+        "timeoutMs": 60000
+      },
+      "drainMs": 1200
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "pending",
+      "intervalMs": 200,
+      "timeoutMs": 15000,
+      "until": {
+        "path": "json.approvals",
+        "matchSome": {
+          "tool": "run_python",
+          "status": "pending"
+        }
+      }
+    },
+    {
+      "type": "capture",
+      "from": "pending.json.approvals",
+      "where": {
+        "tool": "run_python",
+        "status": "pending"
+      },
+      "pick": "id",
+      "saveAs": "approvalId"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/approvals/{{@approvalId}}",
+      "body": {
+        "decision": "allow"
+      },
+      "expectStatus": 200,
+      "timeoutMs": 60000,
+      "saveAs": "allowResp"
+    },
+    {
+      "type": "wait",
+      "ms": 3000
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "approved",
+      "intervalMs": 200,
+      "timeoutMs": 30000,
+      "until": {
+        "path": "json.approvals",
+        "matchSome": {
+          "id": "{{@approvalId}}",
+          "status": "approved"
+        }
+      }
+    },
+    {
+      "type": "wait",
+      "ms": 3000
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/approvals",
+      "expectStatus": 200,
+      "saveAs": "finalBody"
+    },
+    {
+      "type": "capture",
+      "from": "finalBody.json.approvals",
+      "where": {
+        "id": "{{@approvalId}}"
+      },
+      "pick": "result",
+      "saveAs": "resultText"
+    }
+  ],
+  "graders": [
+    {
+      "type": "regex",
+      "target": "resultText",
+      "pattern": "(Omitted|omitted|truncated|full result at|spill)"
+    },
+    {
+      "type": "regex",
+      "target": "resultText",
+      "pattern": "\\[exit code:\\s*0\\]"
+    },
+    {
+      "type": "regex",
+      "target": "resultText",
+      "pattern": "\\d+\\s*(bytes|B)"
+    }
+  ]
+}

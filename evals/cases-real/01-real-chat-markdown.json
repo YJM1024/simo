@@ -1,0 +1,26 @@
+{
+  "id": "real-chat-markdown",
+  "name": "真实模型：短问答 + Markdown 列表输出（结构断言：回复非空且含列表标记）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-real-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "chat": { "text": "用 Markdown 列出 3 个要点，每行以 - 开头。" },
+      "saveAs": "stream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 90000 },
+      "drainMs": 1200
+    },
+    { "type": "http", "method": "GET", "path": "/api/messages?sessionId={{caseSession}}", "expectStatus": 200, "saveAs": "msgs" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "stream.trace", "pattern": "(reply|message)\\.done" },
+    { "type": "state_delta", "collection": "msgs.json.messages", "where": { "role": "agent" }, "atLeast": 1 },
+    { "type": "regex", "target": "msgs.body", "pattern": "- " },
+    { "type": "forbidden", "target": "stream.raw", "patterns": ["\"type\"\\s*:\\s*\"error\""] }
+  ]
+}

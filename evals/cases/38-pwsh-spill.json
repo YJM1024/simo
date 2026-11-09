@@ -1,0 +1,94 @@
+{
+  "id": "pwsh-spill",
+  "name": "pwsh 大输出落盘（>64KB → Omitted + spill 文件）与超时终止",
+  "tier": "normal",
+  "vars": {
+    "probe": "evals-spill-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}} mock:pwsh-big" },
+      "saveAs": "bigStream",
+      "until": { "type": ["reply.done", "message.done", "error"], "timeoutMs": 60000 },
+      "drainMs": 1500
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "pendingBig",
+      "intervalMs": 200,
+      "timeoutMs": 15000,
+      "until": { "path": "json.approvals", "matchSome": { "tool": "pwsh", "status": "pending" } }
+    },
+    { "type": "capture", "from": "pendingBig.json.approvals", "where": { "tool": "pwsh", "status": "pending" }, "pick": "id", "saveAs": "bigId" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/approvals/{{@bigId}}",
+      "body": { "decision": "allow" },
+      "expectStatus": 200,
+      "timeoutMs": 60000,
+      "saveAs": "bigAllow"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "approvedBig",
+      "intervalMs": 200,
+      "timeoutMs": 20000,
+      "until": { "path": "json.approvals", "matchSome": { "id": "{{@bigId}}", "status": "approved" } }
+    },
+    { "type": "fs", "path": "{{agentdHome}}/artifacts/spill", "saveAs": "spillDir" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}} mock:pwsh-sleep" },
+      "saveAs": "sleepStream",
+      "until": { "type": ["reply.done", "message.done", "error"], "timeoutMs": 60000 },
+      "drainMs": 1500
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "pendingSleep",
+      "intervalMs": 200,
+      "timeoutMs": 15000,
+      "until": { "path": "json.approvals", "matchSome": { "tool": "pwsh", "status": "pending" } }
+    },
+    { "type": "capture", "from": "pendingSleep.json.approvals", "where": { "tool": "pwsh", "status": "pending" }, "pick": "id", "saveAs": "sleepId" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/approvals/{{@sleepId}}",
+      "body": { "decision": "allow" },
+      "expectStatus": 200,
+      "timeoutMs": 60000,
+      "saveAs": "sleepAllow"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "approvedSleep",
+      "intervalMs": 500,
+      "timeoutMs": 30000,
+      "until": { "path": "json.approvals", "matchSome": { "id": "{{@sleepId}}", "status": "approved" } }
+    }
+  ],
+  "graders": [
+    { "type": "regex", "target": "approvedBig.body", "pattern": "Omitted" },
+    { "type": "regex", "target": "approvedBig.body", "pattern": "bytes" },
+    { "type": "regex", "target": "approvedBig.body", "pattern": "spill" },
+    { "type": "regex", "target": "spillDir.isDir", "pattern": "^true$" },
+    { "type": "regex", "target": "approvedSleep.body", "pattern": "(timeout|timed out|超时|terminated|killed)" }
+  ]
+}

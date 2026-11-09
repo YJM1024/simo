@@ -1,0 +1,62 @@
+{
+  "id": "session-path",
+  "name": "会话路径（主›子›孙：sessionPath 从根到当前、末项=当前、sessionTitle 兼容、WS 帧也带）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-path-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "main",
+      "chat": { "text": "我想创建一个新的需求：{{probe}}-child 整理报销单。" },
+      "saveAs": "s1",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 45000 },
+      "drainMs": 1200
+    },
+    { "type": "http", "method": "GET", "path": "/api/sessions/tree", "expectStatus": 200, "saveAs": "tree1" },
+    { "type": "capture", "from": ["tree1.json.sessions", "tree1.json.tree"], "mode": "array", "saveAs": "allSessions1" },
+    { "type": "capture", "from": "allSessions1", "where": { "id": "main" }, "pick": "children", "saveAs": "mainChildren1" },
+    { "type": "capture", "from": "mainChildren1", "whereContains": { "title": "{{probe}}-child" }, "pick": "id", "saveAs": "childId" },
+
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@childId}}",
+      "chat": { "text": "我想创建一个新的需求：{{probe}}-grand 统计差旅费用。" },
+      "saveAs": "s2",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 45000 },
+      "drainMs": 1200
+    },
+    { "type": "http", "method": "GET", "path": "/api/sessions/tree", "expectStatus": 200, "saveAs": "tree2" },
+    { "type": "capture", "from": ["tree2.json.sessions", "tree2.json.tree"], "mode": "array", "saveAs": "allSessions2" },
+    { "type": "capture", "from": "allSessions2", "where": { "id": "main" }, "pick": "children", "saveAs": "mainChildren2" },
+    { "type": "capture", "from": "mainChildren2", "where": { "id": "{{@childId}}" }, "pick": "children", "saveAs": "grandChildren" },
+    { "type": "capture", "from": "grandChildren", "whereContains": { "title": "{{probe}}-grand" }, "pick": "id", "saveAs": "grandId" },
+
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@grandId}}",
+      "chat": { "text": "{{probe}}-grand 这个会话的路径应该有三层。" },
+      "saveAs": "s3",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 45000 },
+      "drainMs": 800
+    },
+    { "type": "http", "method": "GET", "path": "/api/messages?sessionId={{@grandId}}", "expectStatus": 200, "saveAs": "msgs" },
+    { "type": "capture", "from": "msgs.json.messages", "where": { "role": "user" }, "pick": "sessionPath", "saveAs": "pathArr" },
+    { "type": "capture", "from": "pathArr", "where": {}, "pick": "id", "saveAs": "pathFirstId" },
+    { "type": "capture", "from": "pathArr", "last": true, "where": {}, "pick": "id", "saveAs": "pathLastId" }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "msgs.json.messages", "where": { "role": "user" }, "atLeast": 1 },
+    { "type": "regex", "target": "msgs.body", "pattern": "\"sessionPath\"\\s*:\\s*\\[" },
+    { "type": "regex", "target": "msgs.body", "pattern": "\"sessionTitle\"" },
+    { "type": "count", "target": "pathArr", "pattern": "\"id\"", "atLeast": 3 },
+    { "type": "regex", "target": "pathFirstId", "pattern": "^main$" },
+    { "type": "regex", "target": "pathLastId", "pattern": "^{{@grandId}}$" },
+    { "type": "regex", "target": "pathArr", "pattern": "\"title\"\\s*:\\s*\"[^\"]{1,}\"" },
+    { "type": "regex", "target": "s3.raw", "pattern": "\"sessionPath\"" }
+  ]
+}

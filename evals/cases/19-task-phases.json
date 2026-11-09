@@ -1,0 +1,49 @@
+{
+  "id": "task-phases",
+  "name": "任务阶段（task.updated 含 phases/steps/progress；GET /api/tasks/{id} 可查明细；最终 done）",
+  "tier": "critical",
+  "vars": {
+    "marker": "evals-phases-{{runId}}",
+    "tmsg": "{{marker}} 帮我做一件耗时的整理：分阶段生成季度总结报告，每阶段给出进度。"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{marker}}",
+      "chat": { "text": "{{tmsg}}" },
+      "saveAs": "stream",
+      "until": { "type": "task.created", "timeoutMs": 25000 },
+      "drainMs": 1500
+    },
+    { "type": "capture", "from": "stream.frames", "where": { "type": "task.created" }, "pick": "data.id", "saveAs": "taskId" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "subscribe": true,
+      "saveAs": "updates",
+      "until": { "type": "task.updated", "timeoutMs": 20000 },
+      "drainMs": 500
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/tasks?sessionId={{caseSession}}",
+      "saveAs": "tasks",
+      "intervalMs": 300,
+      "timeoutMs": 30000,
+      "until": { "path": "json.tasks", "matchSome": { "id": "{{@taskId}}", "status": "done" } }
+    },
+    { "type": "capture", "from": "tasks.json.tasks", "where": { "id": "{{@taskId}}" }, "saveAs": "taskNode" },
+    { "type": "http", "method": "GET", "path": "/api/tasks/{{@taskId}}", "expectStatus": 200, "saveAs": "detail" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "taskNode", "pattern": "\"status\"\\s*:\\s*\"done\"" },
+    { "type": "regex", "target": "taskNode", "pattern": "\"phases\"\\s*:" },
+    { "type": "regex", "target": "taskNode", "pattern": "\"(steps|progress)\"\\s*:" },
+    { "type": "regex", "target": "detail.body", "pattern": "\"phases\"\\s*:" },
+    { "type": "state_delta", "collection": "updates.frames", "where": { "type": "task.updated" }, "atLeast": 1 }
+  ]
+}

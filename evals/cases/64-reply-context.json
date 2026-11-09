@@ -1,0 +1,63 @@
+{
+  "id": "reply-context",
+  "name": "回复 agent 消息（replyTo 快照 id/role/text/sessionId/sessionTitle；模型上下文含 [引用回复]）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-reply-{{runId}}",
+    "replyText": "上面这条再展开说说。"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}" }, "pick": "id", "saveAs": "sid" },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{@sid}}", "text": "{{probe}} 今天有点热。" }, "expectStatus": [200, 202], "saveAs": "chatA" },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{@sid}}",
+      "saveAs": "afterA",
+      "intervalMs": 300,
+      "timeoutMs": 45000,
+      "until": { "path": "json.messages", "matchSome": { "role": "agent" } }
+    },
+    { "type": "wait", "ms": 1500 },
+    { "type": "http", "method": "GET", "path": "/api/messages?sessionId={{@sid}}", "expectStatus": 200, "saveAs": "msgsA" },
+    { "type": "capture", "from": "msgsA.json.messages", "where": { "role": "agent" }, "pick": "id", "saveAs": "agentMsgId" },
+
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": { "sessionId": "{{@sid}}", "text": "{{replyText}}", "replyToMessageId": "{{@agentMsgId}}" },
+      "expectStatus": [200, 202],
+      "saveAs": "chatB"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{@sid}}",
+      "saveAs": "afterB",
+      "intervalMs": 300,
+      "timeoutMs": 45000,
+      "until": { "path": "json.messages", "matchSome": { "role": "user", "text": "{{replyText}}" } }
+    },
+    { "type": "wait", "ms": 2000 },
+    { "type": "http", "method": "GET", "path": "/api/messages?sessionId={{@sid}}", "expectStatus": 200, "saveAs": "msgsB" },
+    { "type": "capture", "from": "msgsB.json.messages", "where": { "role": "user", "text": "{{replyText}}" }, "pick": "replyTo", "saveAs": "replyToB" },
+    { "type": "capture", "from": "replyToB", "where": {}, "pick": "id", "saveAs": "replyToId" },
+    { "type": "capture", "from": "replyToB", "where": {}, "pick": "role", "saveAs": "replyToRole" },
+    { "type": "capture", "from": "replyToB", "where": {}, "pick": "sessionId", "saveAs": "replyToSessionId" },
+    { "type": "capture", "from": "replyToB", "where": {}, "pick": "text", "saveAs": "replyToText" },
+    { "type": "capture", "from": "replyToB", "where": {}, "pick": "sessionTitle", "saveAs": "replyToSessionTitle" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "replyToId", "pattern": "^{{@agentMsgId}}$" },
+    { "type": "regex", "target": "replyToRole", "pattern": "^agent$" },
+    { "type": "regex", "target": "replyToSessionId", "pattern": "^{{@sid}}$" },
+    { "type": "regex", "target": "replyToText", "pattern": "^.{2,}$" },
+    { "type": "regex", "target": "replyToSessionTitle", "pattern": "^.{1,}$" },
+    { "type": "regex", "target": "msgsB.body", "pattern": "\\[引用回复\\]" },
+    { "type": "count", "target": "msgsB.json.messages", "pattern": "\"role\"\\s*:\\s*\"agent\"", "atLeast": 2 },
+    { "type": "count", "target": "msgsB.json.messages", "pattern": "\"replyTo\"\\s*:\\s*\\{", "atLeast": 1 }
+  ]
+}

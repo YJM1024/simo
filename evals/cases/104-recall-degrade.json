@@ -1,0 +1,114 @@
+{
+  "id": "recall-degrade",
+  "name": "Recall 降级（空命中不编造：ok+空集+no_semantic_path；空 query → 400 invalid_argument）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-recall-degrade-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/debug/recall",
+      "expectStatus": 200,
+      "body": {
+        "query": "zzz-no-such-{{runId}}",
+        "budget": {
+          "maxEntities": 5,
+          "perEntityN": 3,
+          "maxHop": 1,
+          "tokenBudget": 8000
+        }
+      },
+      "saveAs": "emptyHit"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/debug/recall",
+      "expectStatus": [
+        400
+      ],
+      "body": {
+        "query": "   "
+      },
+      "saveAs": "emptyQuery"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/debug/recall?q=zzz-no-such-{{runId}}&trace=summary",
+      "expectStatus": 200,
+      "saveAs": "getRecall"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/debug/recall",
+      "expectStatus": 200,
+      "body": {
+        "query": "zzz-no-such-{{runId}}",
+        "includeDisputed": true,
+        "budget": {
+          "tokenBudget": 64,
+          "maxEntities": 1,
+          "perEntityN": 1,
+          "maxHop": 1
+        }
+      },
+      "saveAs": "tinyBudget"
+    }
+  ],
+  "graders": [
+    {
+      "type": "regex",
+      "target": "emptyHit.body",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    },
+    {
+      "type": "state_delta",
+      "collection": "emptyHit.json.entities",
+      "atMost": 0
+    },
+    {
+      "type": "state_delta",
+      "collection": "emptyHit.json.items",
+      "atMost": 0
+    },
+    {
+      "type": "regex",
+      "target": "emptyHit.body",
+      "pattern": "no_semantic_path"
+    },
+    {
+      "type": "forbidden",
+      "target": "emptyHit.body",
+      "patterns": [
+        "\"recallId\"\\s*:\\s*\"\"",
+        "编造|fabricat"
+      ]
+    },
+    {
+      "type": "forbidden",
+      "target": "emptyQuery.body",
+      "patterns": [
+        "\"ok\"\\s*:\\s*true"
+      ]
+    },
+    {
+      "type": "regex",
+      "target": "emptyQuery.body",
+      "pattern": "invalid_argument"
+    },
+    {
+      "type": "regex",
+      "target": "getRecall.body",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    },
+    {
+      "type": "regex",
+      "target": "tinyBudget.body",
+      "pattern": "\"budgetReport\"\\s*:\\s*\\{"
+    }
+  ]
+}

@@ -1,0 +1,154 @@
+{
+  "id": "python-file",
+  "name": "Python 读写 workspace 文件（cwd=workspace；[exit code: 0] 且文件真的落盘）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-pyfile-{{runId}}",
+    "target": "{{agentdHome}}/workspace/python-written.txt"
+  },
+  "steps": [
+    {
+      "type": "fs",
+      "op": "remove",
+      "path": "{{target}}",
+      "saveAs": "cleanup"
+    },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": {
+        "text": "{{probe}} mock:python-file"
+      },
+      "saveAs": "stream",
+      "until": {
+        "type": [
+          "reply.done",
+          "message.done",
+          "error"
+        ],
+        "timeoutMs": 45000
+      },
+      "drainMs": 1200
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "pending",
+      "intervalMs": 200,
+      "timeoutMs": 15000,
+      "until": {
+        "path": "json.approvals",
+        "matchSome": {
+          "tool": "run_python",
+          "status": "pending"
+        }
+      }
+    },
+    {
+      "type": "capture",
+      "from": "pending.json.approvals",
+      "where": {
+        "tool": "run_python",
+        "status": "pending"
+      },
+      "pick": "id",
+      "saveAs": "approvalId"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/approvals/{{@approvalId}}",
+      "body": {
+        "decision": "allow"
+      },
+      "expectStatus": 200,
+      "timeoutMs": 60000,
+      "saveAs": "allowResp"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "approved",
+      "intervalMs": 200,
+      "timeoutMs": 30000,
+      "until": {
+        "path": "json.approvals",
+        "matchSome": {
+          "id": "{{@approvalId}}",
+          "status": "approved"
+        }
+      }
+    },
+    {
+      "type": "fs",
+      "path": "{{target}}",
+      "saveAs": "written"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "approved",
+      "intervalMs": 200,
+      "timeoutMs": 30000,
+      "until": {
+        "path": "json.approvals",
+        "matchSome": {
+          "id": "{{@approvalId}}",
+          "status": "approved"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/approvals",
+      "expectStatus": 200,
+      "saveAs": "finalBody"
+    },
+    {
+      "type": "capture",
+      "from": "finalBody.json.approvals",
+      "where": {
+        "id": "{{@approvalId}}"
+      },
+      "pick": "result",
+      "saveAs": "resultText"
+    }
+  ],
+  "graders": [
+    {
+      "type": "regex",
+      "target": "resultText",
+      "pattern": "\\[exit code:\\s*0\\]"
+    },
+    {
+      "type": "regex",
+      "target": "resultText",
+      "pattern": "written|evals-py-file"
+    },
+    {
+      "type": "regex",
+      "target": "written.exists",
+      "pattern": "^true$"
+    },
+    {
+      "type": "numeric",
+      "left": "written.size",
+      "op": "gt",
+      "value": 0
+    },
+    {
+      "type": "forbidden",
+      "target": "resultText",
+      "patterns": [
+        "code=TIMEOUT",
+        "code=path_denied"
+      ]
+    }
+  ]
+}

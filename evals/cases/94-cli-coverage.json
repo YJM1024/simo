@@ -1,0 +1,216 @@
+{
+  "id": "cli-coverage",
+  "name": "动作目录覆盖率（actions list ≥60 且字段齐全；describe 可用；命名空间齐全）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-cli-cov-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "cli",
+      "args": [
+        "actions",
+        "list",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "catalog"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/actions",
+      "expectStatus": 200,
+      "saveAs": "httpCatalog"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "actions",
+        "describe",
+        "session.list",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "desc1"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "actions",
+        "describe",
+        "chat.send",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "desc2"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "actions",
+        "describe",
+        "workflow.start",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "desc3"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "actions",
+        "describe",
+        "config.get",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "desc4"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "actions",
+        "describe",
+        "system.health",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "desc5"
+    }
+  ],
+  "graders": [
+    {
+      "type": "count",
+      "target": "catalog.stdout",
+      "pattern": "\"name\"\\s*:\\s*\"[a-z]+\\.[a-z._-]+\"",
+      "atLeast": 60
+    },
+    {
+      "type": "regex",
+      "target": "catalog.stdout",
+      "pattern": "\"toolName\"\\s*:\\s*\"simo_"
+    },
+    {
+      "type": "regex",
+      "target": "catalog.stdout",
+      "pattern": "\"inputSchema\"\\s*:\\s*\\{"
+    },
+    {
+      "type": "regex",
+      "target": "catalog.stdout",
+      "pattern": "\"risk\"\\s*:\\s*\"R[0-9]\""
+    },
+    {
+      "type": "regex",
+      "target": "catalog.stdout",
+      "pattern": "\"confirmation\"\\s*:\\s*\"(none|confirm|approval|destructive)\""
+    },
+    {
+      "type": "regex",
+      "target": "catalog.stdout",
+      "pattern": "\"readOnly\"\\s*:\\s*(true|false)"
+    },
+    {
+      "type": "regex",
+      "target": "catalog.stdout",
+      "pattern": "\"idempotent\"\\s*:\\s*(true|false)"
+    },
+    {
+      "type": "regex",
+      "target": "catalog.stdout",
+      "pattern": "\"httpRoute\"\\s*:\\s*\"[A-Z]+ /api/"
+    },
+    {
+      "type": "numeric",
+      "left": "httpCatalog.json.count",
+      "op": "gte",
+      "value": 60
+    },
+    {
+      "type": "regex",
+      "target": "httpCatalog.body",
+      "pattern": "\"namespace\"\\s*:\\s*\"session\""
+    },
+    {
+      "type": "regex",
+      "target": "httpCatalog.body",
+      "pattern": "\"namespace\"\\s*:\\s*\"agent\""
+    },
+    {
+      "type": "regex",
+      "target": "httpCatalog.body",
+      "pattern": "\"namespace\"\\s*:\\s*\"chat\""
+    },
+    {
+      "type": "regex",
+      "target": "httpCatalog.body",
+      "pattern": "\"namespace\"\\s*:\\s*\"task\""
+    },
+    {
+      "type": "regex",
+      "target": "httpCatalog.body",
+      "pattern": "\"namespace\"\\s*:\\s*\"workflow\""
+    },
+    {
+      "type": "regex",
+      "target": "httpCatalog.body",
+      "pattern": "\"namespace\"\\s*:\\s*\"schedule\""
+    },
+    {
+      "type": "regex",
+      "target": "httpCatalog.body",
+      "pattern": "\"namespace\"\\s*:\\s*\"memory\""
+    },
+    {
+      "type": "regex",
+      "target": "httpCatalog.body",
+      "pattern": "\"namespace\"\\s*:\\s*\"file\""
+    },
+    {
+      "type": "regex",
+      "target": "httpCatalog.body",
+      "pattern": "\"namespace\"\\s*:\\s*\"permission\""
+    },
+    {
+      "type": "regex",
+      "target": "httpCatalog.body",
+      "pattern": "\"namespace\"\\s*:\\s*\"ui\""
+    },
+    {
+      "type": "regex",
+      "target": "httpCatalog.body",
+      "pattern": "\"namespace\"\\s*:\\s*\"config\""
+    },
+    {
+      "type": "regex",
+      "target": "httpCatalog.body",
+      "pattern": "\"namespace\"\\s*:\\s*\"system\""
+    },
+    {
+      "type": "regex",
+      "target": "desc1.stdout",
+      "pattern": "\"action\"\\s*:\\s*\\{"
+    },
+    {
+      "type": "regex",
+      "target": "desc2.stdout",
+      "pattern": "\"action\"\\s*:\\s*\\{"
+    },
+    {
+      "type": "regex",
+      "target": "desc3.stdout",
+      "pattern": "\"action\"\\s*:\\s*\\{"
+    },
+    {
+      "type": "regex",
+      "target": "desc4.stdout",
+      "pattern": "\"action\"\\s*:\\s*\\{"
+    },
+    {
+      "type": "regex",
+      "target": "desc5.stdout",
+      "pattern": "\"action\"\\s*:\\s*\\{"
+    }
+  ]
+}

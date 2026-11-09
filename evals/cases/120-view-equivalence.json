@@ -1,0 +1,84 @@
+{
+  "id": "view-equivalence",
+  "name": "M26 对话等价校验：动作页必须 chatPrompt、禁 UI 操作词、actionSequence 必须与绑定一致、合法 prompt 可创建",
+  "tier": "critical",
+  "vars": {},
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/ui.set_view",
+      "body": {
+        "sessionId": "main", "mode": "create", "reason": "缺等价",
+        "schema": { "schemaVersion": 1, "id": "view-main-eq1-{{runId}}", "sessionId": "main", "title": "缺等价", "meta": { "createdBy": "agent" }, "layout": { "kind": "rows", "areas": [ { "block": "a" } ] },
+          "blocks": [ { "id": "a", "type": "action", "props": { "label": "重试" }, "actions": [ { "id": "r", "action": "task.retry" } ] } ] }
+      },
+      "expectStatus": 400,
+      "saveAs": "noPrompt"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/ui.set_view",
+      "body": {
+        "sessionId": "main", "mode": "create", "reason": "UI 操作词",
+        "schema": { "schemaVersion": 1, "id": "view-main-eq2-{{runId}}", "sessionId": "main", "title": "UI 词", "meta": { "createdBy": "agent" }, "layout": { "kind": "rows", "areas": [ { "block": "a" } ] },
+          "blocks": [ { "id": "a", "type": "action", "props": { "label": "重试" }, "actions": [ { "id": "r", "action": "task.retry" } ] } ],
+          "equivalence": { "chatPrompt": "点击按钮重试这个任务。" } }
+      },
+      "expectStatus": 400,
+      "saveAs": "uiWords"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/ui.set_view",
+      "body": {
+        "sessionId": "main", "mode": "create", "reason": "序列不一致",
+        "schema": { "schemaVersion": 1, "id": "view-main-eq3-{{runId}}", "sessionId": "main", "title": "序列不一致", "meta": { "createdBy": "agent" }, "layout": { "kind": "rows", "areas": [ { "block": "a" } ] },
+          "blocks": [ { "id": "a", "type": "action", "props": { "label": "重试" }, "actions": [ { "id": "r", "action": "task.retry" } ] } ],
+          "equivalence": { "chatPrompt": "请重试这个任务。", "actionSequence": [ { "action": "session.delete" } ] } }
+      },
+      "expectStatus": 400,
+      "saveAs": "mismatch"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/ui.set_view",
+      "body": {
+        "sessionId": "main", "mode": "create", "reason": "未知动作序列",
+        "schema": { "schemaVersion": 1, "id": "view-main-eq4-{{runId}}", "sessionId": "main", "title": "未知动作", "meta": { "createdBy": "agent" }, "layout": { "kind": "rows", "areas": [ { "block": "a" } ] },
+          "blocks": [ { "id": "a", "type": "action", "props": { "label": "重试" }, "actions": [ { "id": "r", "action": "task.retry" } ] } ],
+          "equivalence": { "chatPrompt": "请重试这个任务。", "actionSequence": [ { "action": "task.nope" } ] } }
+      },
+      "expectStatus": 400,
+      "saveAs": "unknownAction"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/ui.set_view",
+      "body": {
+        "sessionId": "main", "mode": "create", "reason": "合法等价",
+        "schema": { "schemaVersion": 1, "id": "view-main-eqok-{{runId}}", "sessionId": "main", "title": "合法等价", "meta": { "createdBy": "agent" }, "layout": { "kind": "rows", "areas": [ { "block": "a" } ] },
+          "blocks": [ { "id": "a", "type": "action", "props": { "label": "重试" }, "actions": [ { "id": "r", "action": "task.retry" } ] } ],
+          "equivalence": { "chatPrompt": "请把这个任务重新执行一次，并告诉我进度。", "actionSequence": [ { "action": "task.retry" } ] } }
+      },
+      "expectStatus": 200,
+      "saveAs": "ok"
+    },
+    { "type": "capture", "from": "ok.json.data", "pick": "pageId", "saveAs": "pageId" },
+    { "type": "http", "method": "GET", "path": "/api/views/{{@pageId}}", "expectStatus": 200, "saveAs": "page" },
+    { "type": "http", "method": "GET", "path": "/api/views/view-main-eq1-{{runId}}", "expectStatus": 404, "saveAs": "gone1" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "noPrompt.body", "pattern": "VIEW_EQUIVALENCE_MISSING" },
+    { "type": "regex", "target": "uiWords.body", "pattern": "VIEW_EQUIVALENCE_MISSING" },
+    { "type": "regex", "target": "mismatch.body", "pattern": "VIEW_EQUIVALENCE_MISMATCH" },
+    { "type": "regex", "target": "unknownAction.body", "pattern": "VIEW_ACTION_UNKNOWN" },
+    { "type": "regex", "target": "ok.body", "pattern": "\"version\"\\s*:\\s*1" },
+    { "type": "regex", "target": "page.body", "pattern": "\"chatPrompt\"\\s*:\\s*\"请把这个任务重新执行一次" },
+    { "type": "regex", "target": "gone1.body", "pattern": "VIEW_NOT_FOUND|not_found" }
+  ]
+}

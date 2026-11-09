@@ -1,0 +1,393 @@
+{
+  "id": "stats",
+  "name": "统计聚合（day/week/month 分桶、sessionId 过滤、tokens 口径含 reasoning）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-stats-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/sessions",
+      "body": {
+        "title": "{{probe}} S1"
+      },
+      "expectStatus": [
+        200,
+        201
+      ],
+      "saveAs": "createdS1"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/sessions",
+      "body": {
+        "title": "{{probe}} S2"
+      },
+      "expectStatus": [
+        200,
+        201
+      ],
+      "saveAs": "createdS2"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions",
+      "expectStatus": 200,
+      "saveAs": "sessions"
+    },
+    {
+      "type": "capture",
+      "from": "sessions.json.sessions",
+      "whereContains": {
+        "title": "{{probe}} S1"
+      },
+      "pick": "id",
+      "saveAs": "sid1"
+    },
+    {
+      "type": "capture",
+      "from": "sessions.json.sessions",
+      "whereContains": {
+        "title": "{{probe}} S2"
+      },
+      "pick": "id",
+      "saveAs": "sid2"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": {
+        "sessionId": "{{@sid1}}",
+        "text": "{{probe}} 第一条。"
+      },
+      "expectStatus": [
+        200,
+        202
+      ]
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{@sid1}}",
+      "saveAs": "warm1",
+      "intervalMs": 300,
+      "timeoutMs": 45000,
+      "until": {
+        "path": "json.messages",
+        "matchSome": {
+          "role": "agent"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": {
+        "sessionId": "{{@sid1}}",
+        "text": "{{probe}} 第二条。"
+      },
+      "expectStatus": [
+        200,
+        202
+      ]
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{@sid1}}",
+      "saveAs": "warm2",
+      "intervalMs": 300,
+      "timeoutMs": 45000,
+      "until": {
+        "path": "json.messages",
+        "matchSome": {
+          "text": "{{probe}} 第二条。"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": {
+        "sessionId": "{{@sid2}}",
+        "text": "{{probe}} 另一会话。"
+      },
+      "expectStatus": [
+        200,
+        202
+      ]
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{@sid2}}",
+      "saveAs": "warm3",
+      "intervalMs": 300,
+      "timeoutMs": 45000,
+      "until": {
+        "path": "json.messages",
+        "matchSome": {
+          "role": "agent"
+        }
+      }
+    },
+    {
+      "type": "wait",
+      "ms": 1200
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/stats?granularity=day",
+      "expectStatus": 200,
+      "saveAs": "day"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/stats?granularity=week",
+      "expectStatus": 200,
+      "saveAs": "week"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/stats?granularity=month",
+      "expectStatus": 200,
+      "saveAs": "month"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/stats?granularity=day&sessionId={{@sid1}}",
+      "expectStatus": 200,
+      "saveAs": "scoped"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/stats?granularity=bogus",
+      "expectStatus": [
+        400
+      ],
+      "saveAs": "badGranularity"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/stats?granularity=day",
+      "expectStatus": 200,
+      "saveAs": "day"
+    },
+    {
+      "type": "capture",
+      "from": "day.json.totals",
+      "where": {},
+      "pick": "messages",
+      "saveAs": "dayMessages"
+    },
+    {
+      "type": "capture",
+      "from": "day.json.totals",
+      "where": {},
+      "pick": "tokens",
+      "saveAs": "dayTokens"
+    },
+    {
+      "type": "capture",
+      "from": "day.json.totals",
+      "where": {},
+      "pick": "promptTokens",
+      "saveAs": "dayPrompt"
+    },
+    {
+      "type": "capture",
+      "from": "day.json.totals",
+      "where": {},
+      "pick": "completionTokens",
+      "saveAs": "dayCompletion"
+    },
+    {
+      "type": "capture",
+      "from": "day.json.totals",
+      "where": {},
+      "pick": "reasoningTokens",
+      "saveAs": "dayReasoning"
+    },
+    {
+      "type": "capture",
+      "from": "day.json.buckets",
+      "last": true,
+      "where": {},
+      "pick": "messages",
+      "saveAs": "todayMessages"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/stats?granularity=week",
+      "expectStatus": 200,
+      "saveAs": "week"
+    },
+    {
+      "type": "capture",
+      "from": "week.json.totals",
+      "where": {},
+      "pick": "messages",
+      "saveAs": "weekMessages"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/stats?granularity=month",
+      "expectStatus": 200,
+      "saveAs": "month"
+    },
+    {
+      "type": "capture",
+      "from": "month.json.totals",
+      "where": {},
+      "pick": "messages",
+      "saveAs": "monthMessages"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/stats?granularity=day&metric=tokens",
+      "expectStatus": 200,
+      "saveAs": "tokensMetric"
+    },
+    {
+      "type": "capture",
+      "from": "tokensMetric.json.buckets",
+      "last": true,
+      "where": {},
+      "pick": "tokens",
+      "saveAs": "todayTokens"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/stats?granularity=day&sessionId={{@sid1}}",
+      "expectStatus": 200,
+      "saveAs": "scoped"
+    },
+    {
+      "type": "capture",
+      "from": "scoped.json.totals",
+      "where": {},
+      "pick": "messages",
+      "saveAs": "scopedMessages"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/stats?granularity=bogus",
+      "expectStatus": [
+        400
+      ],
+      "saveAs": "badGranularity"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/stats?granularity=day&metric=bogus",
+      "expectStatus": [
+        400
+      ],
+      "saveAs": "badMetric"
+    }
+  ],
+  "graders": [
+    {
+      "type": "numeric",
+      "left": "dayMessages",
+      "op": "gte",
+      "value": 6
+    },
+    {
+      "type": "numeric",
+      "left": "todayMessages",
+      "op": "gte",
+      "value": 6
+    },
+    {
+      "type": "numeric",
+      "left": "dayPrompt",
+      "op": "gt",
+      "value": 0
+    },
+    {
+      "type": "numeric",
+      "left": "dayReasoning",
+      "op": "gt",
+      "value": 0
+    },
+    {
+      "type": "numeric",
+      "left": "dayTokens",
+      "op": "gt",
+      "value": 0
+    },
+    {
+      "type": "sum_eq",
+      "total": "dayTokens",
+      "parts": [
+        "dayPrompt",
+        "dayCompletion",
+        "dayReasoning"
+      ]
+    },
+    {
+      "type": "numeric",
+      "left": "todayTokens",
+      "op": "eq",
+      "right": "dayTokens"
+    },
+    {
+      "type": "numeric",
+      "left": "weekMessages",
+      "op": "eq",
+      "right": "dayMessages"
+    },
+    {
+      "type": "numeric",
+      "left": "monthMessages",
+      "op": "eq",
+      "right": "dayMessages"
+    },
+    {
+      "type": "numeric",
+      "left": "scopedMessages",
+      "op": "lt",
+      "right": "dayMessages"
+    },
+    {
+      "type": "numeric",
+      "left": "scopedMessages",
+      "op": "gte",
+      "value": 4
+    },
+    {
+      "type": "forbidden",
+      "target": "badGranularity.body",
+      "patterns": [
+        "\"ok\"\\s*:\\s*true"
+      ]
+    },
+    {
+      "type": "forbidden",
+      "target": "badMetric.body",
+      "patterns": [
+        "\"ok\"\\s*:\\s*true"
+      ]
+    }
+  ]
+}

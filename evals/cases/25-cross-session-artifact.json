@@ -1,0 +1,63 @@
+{
+  "id": "cross-session-artifact",
+  "name": "跨会话产物（子会话产生的 artifact 父会话可见、同一 id 不复制）",
+  "tier": "normal",
+  "vars": {
+    "marker": "evals-cross-{{runId}}",
+    "amsg": "把结论导出成 markdown 报告文件（{{marker}}）。"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "main",
+      "collectAfterText": "{{marker}}",
+      "chat": { "text": "我想创建一个新的需求：{{marker}} 生成一份可下载的报告。" },
+      "saveAs": "createStream",
+      "until": { "type": "task.created", "timeoutMs": 25000 },
+      "drainMs": 2000
+    },
+    { "type": "http", "method": "GET", "path": "/api/sessions/tree", "expectStatus": 200, "saveAs": "tree" },
+    { "type": "capture", "from": ["tree.json.sessions", "tree.json.tree"], "mode": "array", "saveAs": "allSessions" },
+    { "type": "capture", "from": "allSessions", "where": { "id": "main" }, "pick": "children", "saveAs": "mainChildren" },
+    { "type": "capture", "from": "mainChildren", "whereContains": { "title": "{{marker}}" }, "pick": "id", "saveAs": "childId" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@childId}}",
+      "collectAfterText": "{{amsg}}",
+      "chat": { "text": "{{amsg}}" },
+      "saveAs": "artifactStream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 30000 },
+      "drainMs": 4000
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/artifacts?sessionId={{@childId}}",
+      "saveAs": "childArts",
+      "intervalMs": 300,
+      "timeoutMs": 15000,
+      "until": { "path": "json.artifacts", "matchSome": {} }
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/artifacts?sessionId=main&includeChildren=true",
+      "expectStatus": 200,
+      "saveAs": "parentArts"
+    },
+    {
+      "type": "capture",
+      "from": ["childArts.json.artifacts", "childArts.json.items"],
+      "where": {},
+      "pick": "id",
+      "saveAs": "artifactId"
+    }
+  ],
+  "graders": [
+    { "type": "regex", "target": "parentArts.body", "pattern": "\"id\"\\s*:\\s*\"{{@artifactId}}\"" },
+    { "type": "state_delta", "collection": "childArts.json.artifacts", "atLeast": 1 },
+    { "type": "forbidden", "target": "parentArts.body", "patterns": ["\"duplicated\"\\s*:\\s*true", "\"copied\"\\s*:\\s*true"] }
+  ]
+}

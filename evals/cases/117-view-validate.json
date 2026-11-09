@@ -1,0 +1,108 @@
+{
+  "id": "view-validate",
+  "name": "M26 视图校验：未知块/可执行内容/未知字段/缺 chatPrompt/动作越权/跨会话/超限 → 4xx 且不落版本",
+  "tier": "critical",
+  "vars": {
+    "badIdBase": "view-main-bad-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/ui.set_view",
+      "body": {
+        "sessionId": "main", "mode": "create", "reason": "非法块类型",
+        "schema": { "schemaVersion": 1, "id": "view-main-bad1-{{runId}}", "sessionId": "main", "title": "坏块", "meta": { "createdBy": "agent" }, "layout": { "kind": "rows" },
+          "blocks": [ { "id": "x", "type": "script", "props": {} } ] }
+      },
+      "expectStatus": 400,
+      "saveAs": "badBlock"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/ui.set_view",
+      "body": {
+        "sessionId": "main", "mode": "create", "reason": "可执行内容",
+        "schema": { "schemaVersion": 1, "id": "view-main-bad2-{{runId}}", "sessionId": "main", "title": "坏内容", "meta": { "createdBy": "agent" }, "layout": { "kind": "rows" },
+          "blocks": [ { "id": "t", "type": "text", "props": { "text": "<script>alert(1)</script>" } } ] }
+      },
+      "expectStatus": 400,
+      "saveAs": "badScript"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/ui.set_view",
+      "body": {
+        "sessionId": "main", "mode": "create", "reason": "未知顶层字段",
+        "schema": { "schemaVersion": 1, "id": "view-main-bad3-{{runId}}", "sessionId": "main", "title": "未知字段", "meta": { "createdBy": "agent" }, "layout": { "kind": "rows" }, "extraNote": "x",
+          "blocks": [ { "id": "t", "type": "text", "props": { "text": "hi" } } ] }
+      },
+      "expectStatus": 400,
+      "saveAs": "badField"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/ui.set_view",
+      "body": {
+        "sessionId": "main", "mode": "create", "reason": "缺 chatPrompt",
+        "schema": { "schemaVersion": 1, "id": "view-main-bad4-{{runId}}", "sessionId": "main", "title": "缺等价", "meta": { "createdBy": "agent" }, "layout": { "kind": "rows", "areas": [ { "block": "a" } ] },
+          "blocks": [ { "id": "a", "type": "action", "props": { "label": "重试" }, "actions": [ { "id": "r", "action": "task.retry", "args": { "taskId": "$row.id" } } ] } ] }
+      },
+      "expectStatus": 400,
+      "saveAs": "badEquiv"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/ui.set_view",
+      "body": {
+        "sessionId": "main", "mode": "create", "reason": "动作越权",
+        "schema": { "schemaVersion": 1, "id": "view-main-bad5-{{runId}}", "sessionId": "main", "title": "越权动作", "meta": { "createdBy": "agent" }, "layout": { "kind": "rows", "areas": [ { "block": "p" } ] },
+          "blocks": [ { "id": "p", "type": "progress", "props": { "title": "进度" }, "actions": [ { "id": "x", "action": "session.delete" } ] } ],
+          "equivalence": { "chatPrompt": "请删除这个会话。" } }
+      },
+      "expectStatus": 400,
+      "saveAs": "badAction"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/ui.set_view",
+      "body": {
+        "sessionId": "main", "mode": "create", "reason": "跨会话绑定",
+        "schema": { "schemaVersion": 1, "id": "view-main-bad6-{{runId}}", "sessionId": "main", "title": "跨会话", "meta": { "createdBy": "agent" }, "layout": { "kind": "rows", "areas": [ { "block": "p" } ] },
+          "blocks": [ { "id": "p", "type": "progress", "props": { "title": "进度" }, "data": { "action": "task.list", "args": { "sessionId": "sess-other" } } } ] }
+      },
+      "expectStatus": 403,
+      "saveAs": "badCross"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/ui.set_view",
+      "body": {
+        "sessionId": "main", "mode": "create", "reason": "超限",
+        "schema": { "schemaVersion": 1, "id": "view-main-bad7-{{runId}}", "sessionId": "main", "title": "超限", "meta": { "createdBy": "agent" }, "layout": { "kind": "grid", "columns": 13 },
+          "blocks": [ { "id": "t", "type": "text", "props": { "text": "hi" } } ] }
+      },
+      "expectStatus": 400,
+      "saveAs": "badLimit"
+    },
+    { "type": "http", "method": "GET", "path": "/api/views/{{badIdBase}}1", "expectStatus": 404, "saveAs": "gone1" },
+    { "type": "http", "method": "GET", "path": "/api/views/{{badIdBase}}2", "expectStatus": 404, "saveAs": "gone2" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "badBlock.body", "pattern": "VIEW_UNKNOWN_BLOCK" },
+    { "type": "regex", "target": "badScript.body", "pattern": "VIEW_UNSAFE_CONTENT" },
+    { "type": "regex", "target": "badField.body", "pattern": "VIEW_UNKNOWN_FIELD" },
+    { "type": "regex", "target": "badEquiv.body", "pattern": "VIEW_EQUIVALENCE_MISSING" },
+    { "type": "regex", "target": "badAction.body", "pattern": "VIEW_ACTION_NOT_ALLOWED" },
+    { "type": "regex", "target": "badCross.body", "pattern": "VIEW_CROSS_SESSION_DENIED" },
+    { "type": "regex", "target": "badLimit.body", "pattern": "VIEW_LIMIT_EXCEEDED" },
+    { "type": "regex", "target": "gone1.body", "pattern": "VIEW_NOT_FOUND|not_found" },
+    { "type": "regex", "target": "gone2.body", "pattern": "VIEW_NOT_FOUND|not_found" }
+  ]
+}

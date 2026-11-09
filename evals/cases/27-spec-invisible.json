@@ -1,0 +1,46 @@
+{
+  "id": "spec-invisible",
+  "name": "Spec 不可见（公开 /api/specs → 404；用户可见接口不含 spec 字段）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-spec-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "GET", "path": "/api/specs", "expectStatus": 404, "saveAs": "specsRoot" },
+    { "type": "http", "method": "GET", "path": "/api/specs/main", "expectStatus": 404, "saveAs": "specsOne" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "http", "method": "GET", "path": "/api/messages?sessionId=main", "expectStatus": 200, "saveAs": "msgs" },
+    { "type": "http", "method": "GET", "path": "/api/tasks", "expectStatus": 200, "saveAs": "tasks" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}} 普通对话：今天适合做什么？" },
+      "saveAs": "stream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 20000 },
+      "drainMs": 500
+    }
+  ],
+  "graders": [
+    { "type": "forbidden", "target": "specsRoot.body", "patterns": ["\"specs\"\\s*:\\s*\\["] },
+    { "type": "forbidden", "target": "specsOne.body", "patterns": ["\"spec\"\\s*:\\s*\\{"] },
+    {
+      "type": "forbidden",
+      "target": "sessions.body",
+      "patterns": ["\"specId\"\\s*:", "\"specVersion\"\\s*:", "\"specCore\"\\s*:"]
+    },
+    {
+      "type": "forbidden",
+      "target": "msgs.body",
+      "patterns": ["\"specId\"\\s*:", "\"specVersion\"\\s*:", "\"specCore\"\\s*:"]
+    },
+    {
+      "type": "forbidden",
+      "target": "tasks.body",
+      "patterns": ["\"specId\"\\s*:", "\"specVersion\"\\s*:", "\"specCore\"\\s*:"]
+    },
+    { "type": "forbidden", "target": "stream.raw", "patterns": ["\"specId\"\\s*:", "\"specVersion\"\\s*:"] },
+    { "type": "regex", "target": "stream.trace", "pattern": "(reply|message)\\.done" }
+  ]
+}

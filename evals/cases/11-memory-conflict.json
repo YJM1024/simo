@@ -1,0 +1,50 @@
+{
+  "id": "memory-conflict",
+  "name": "记忆冲突（\"记住 A\"→\"改成 B\" → conflicts 同一对象内 A、B 都在且 disputed）",
+  "tier": "normal",
+  "vars": {
+    "pa": "evals-conflict-{{runId}}",
+    "v1": "Atlas-{{runId}}",
+    "v2": "Borealis-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{pa}}",
+      "chat": { "text": "记住：{{pa}} 我的项目代号是 {{v1}}。" },
+      "saveAs": "stream1",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 20000 },
+      "drainMs": 800
+    },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{pa}}",
+      "chat": { "text": "改成：{{pa}} 我的项目代号是 {{v2}}。" },
+      "saveAs": "stream2",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 20000 },
+      "drainMs": 1500
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/memory/conflicts",
+      "saveAs": "conflicts",
+      "intervalMs": 150,
+      "timeoutMs": 8000,
+      "until": { "path": "json.conflicts", "matchSome": {} }
+    },
+    { "type": "capture", "from": "conflicts.json.conflicts", "where": {}, "saveAs": "conflict0" },
+    { "type": "http", "method": "GET", "path": "/api/memory/items?status=disputed", "expectStatus": 200, "saveAs": "disputed" }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "conflicts.json.conflicts", "atLeast": 1 },
+    { "type": "regex", "target": "conflict0", "pattern": "{{v1}}" },
+    { "type": "regex", "target": "conflict0", "pattern": "{{v2}}" },
+    { "type": "state_delta", "collection": "disputed.json.items", "where": { "status": "disputed" }, "atLeast": 2 },
+    { "type": "forbidden", "target": "conflicts.body", "patterns": ["\"conflicts\"\\s*:\\s*\\[\\s*\\]"] }
+  ]
+}

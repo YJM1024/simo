@@ -1,0 +1,52 @@
+{
+  "id": "reasoning-echo",
+  "name": "推理回传（工具回环内回传 reasoning_content；reasoning 不进正文）",
+  "tier": "normal",
+  "vars": {
+    "probe": "evals-reasoning-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}}：请读取 README.md 的前 20 行，然后总结成两句话。" },
+      "saveAs": "stream1",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 30000 },
+      "drainMs": 800
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/debug/last-llm-request",
+      "expectStatus": 200,
+      "saveAs": "snapshot1"
+    },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}}：把刚才的总结再压缩成一句话。" },
+      "saveAs": "stream2",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 30000 },
+      "drainMs": 800
+    }
+  ],
+  "graders": [
+    { "type": "regex", "target": "snapshot1.body", "pattern": "\"reasoning_content\"\\s*:\\s*\"[^\"]+\"" },
+    { "type": "regex", "target": "snapshot1.body", "pattern": "\"tool_calls\"\\s*:\\s*\\[" },
+    { "type": "state_delta", "collection": "stream1.frames", "where": { "type": "trace.reasoning" }, "atLeast": 1 },
+    {
+      "type": "forbidden",
+      "target": "stream1.raw",
+      "patterns": [
+        "\"type\":\"reply.delta\",\"data\":{\"reasoning\"",
+        "\"type\":\"message.delta\",\"data\":{\"reasoning\""
+      ]
+    },
+    { "type": "regex", "target": "stream2.trace", "pattern": "(reply|message)\\.done" }
+  ]
+}

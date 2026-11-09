@@ -1,0 +1,45 @@
+{
+  "id": "recall-vector",
+  "name": "M32 本地向量召回（AGENTD_RECALL_VECTOR=1：seed/rebuild → trace.paths 含 vector、items 非空、vector_used）",
+  "tier": "critical",
+  "pending": "需要以 AGENTD_RECALL_VECTOR=1 启动被测服务，单次 run.mjs 不能改 env → 由 evals/m32-vector-env.ps1 真实执行（起服→seed/rebuild→recall 命中向量路径→停止）；默认关闭（无 vector 路径、FTS 可用）由 m27-m30-env.ps1 覆盖。",
+  "vars": {
+    "probe": "VectorProbe-{{runId}}",
+    "entity": "ent-vector-{{runId}}",
+    "mem": "mem-vector-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http", "method": "POST", "path": "/api/debug/recall/seed", "expectStatus": 200, "saveAs": "seeded",
+      "body": {
+        "entities": [
+          { "id": "{{entity}}", "kind": "item", "entity_class": "semantic", "canonical_name": "{{probe}}" }
+        ],
+        "memoryItems": [
+          { "id": "{{mem}}", "content": "{{probe}} 是一条向量召回探针记忆", "type": "semantic", "version": 1, "layer": 1, "status": "active" }
+        ]
+      }
+    },
+    {
+      "type": "http", "method": "POST", "path": "/api/debug/recall/rebuild", "expectStatus": 200, "saveAs": "rebuilt",
+      "body": {}
+    },
+    {
+      "type": "http", "method": "POST", "path": "/api/debug/recall", "expectStatus": 200, "saveAs": "recall",
+      "body": { "query": "{{probe}}", "sessionId": "main", "agentId": "agent:simo", "trace": "full" }
+    },
+    { "type": "capture", "from": "recall.json.items", "mode": "array", "saveAs": "items" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "seeded.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "regex", "target": "seeded.body", "pattern": "\"documents\"\\s*:\\s*[1-9]" },
+    { "type": "regex", "target": "rebuilt.body", "pattern": "\"vectors\"\\s*:\\s*\\{" },
+    { "type": "regex", "target": "rebuilt.body", "pattern": "\"documents\"\\s*:\\s*[1-9]" },
+    { "type": "regex", "target": "recall.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "count", "target": "items", "pattern": "\"itemId\"", "atLeast": 1 },
+    { "type": "regex", "target": "recall.body", "pattern": "{{mem}}" },
+    { "type": "regex", "target": "recall.body", "pattern": "\"name\"\\s*:\\s*\"vector\"" },
+    { "type": "regex", "target": "recall.body", "pattern": "vector_used" },
+    { "type": "regex", "target": "recall.body", "pattern": "\"hopLimit\"\\s*:\\s*2" }
+  ]
+}

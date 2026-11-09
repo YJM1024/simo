@@ -1,0 +1,67 @@
+{
+  "id": "team-v2-owner",
+  "name": "M25 团队负责人切换：team.owner.set 生效（team 成员 agentId + session owner 可查）+ 非成员报错",
+  "tier": "critical",
+  "vars": {
+    "tplName": "负责人模板-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/team.template.upsert",
+      "body": {
+        "name": "{{tplName}}",
+        "roles": [
+          { "roleKey": "researcher", "title": "研究员", "roleType": "generic", "agentId": "researcher" },
+          { "roleKey": "reviewer", "title": "审校", "roleType": "template" }
+        ]
+      },
+      "expectStatus": 200,
+      "saveAs": "tpl"
+    },
+    { "type": "capture", "from": "tpl.json.data", "pick": "id", "saveAs": "tplId" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/team.create",
+      "body": { "sessionId": "main", "templateId": "{{@tplId}}" },
+      "expectStatus": 200,
+      "saveAs": "created"
+    },
+    { "type": "capture", "from": "created.json.data", "pick": "team.id", "saveAs": "teamId" },
+    {
+      "type": "capture",
+      "from": "created.json.data.members",
+      "where": { "roleType": "template" },
+      "pick": "sessionId",
+      "saveAs": "memberSession"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/team.owner.set",
+      "body": { "teamId": "{{@teamId}}", "sessionId": "{{@memberSession}}", "agentId": "reviewer" },
+      "expectStatus": 200,
+      "saveAs": "ownerSet"
+    },
+    { "type": "http", "method": "GET", "path": "/api/teams/{{@teamId}}", "expectStatus": 200, "saveAs": "after" },
+    { "type": "http", "method": "GET", "path": "/api/sessions/{{@memberSession}}/owner", "expectStatus": 200, "saveAs": "ownerGet" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/team.owner.set",
+      "body": { "teamId": "{{@teamId}}", "sessionId": "sess-not-a-member", "agentId": "reviewer" },
+      "expectStatus": [400, 500],
+      "saveAs": "badOwner"
+    }
+  ],
+  "graders": [
+    { "type": "regex", "target": "created.body", "pattern": "\"agentId\"\\s*:\\s*\"agent:reviewer-[0-9a-f]+\"" },
+    { "type": "regex", "target": "ownerSet.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "regex", "target": "after.body", "pattern": "\"agentId\"\\s*:\\s*\"agent:reviewer\"" },
+    { "type": "count", "target": "after.json.members", "pattern": "\"agentId\"\\s*:\\s*\"agent:reviewer\"", "atLeast": 1 },
+    { "type": "regex", "target": "ownerGet.body", "pattern": "reviewer" },
+    { "type": "regex", "target": "badOwner.body", "pattern": "成员不存在" }
+  ]
+}

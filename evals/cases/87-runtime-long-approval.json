@@ -1,0 +1,15 @@
+{
+  "id": "runtime-long-approval",
+  "name": "长时审批（等待跨重启保持、批准后执行；超时 fail-closed：expired 不自动放行）",
+  "tier": "critical",
+  "pending": "需要跨重启 + 超时模拟，单次 run.mjs 做不到 → 由 evals/runtime-long-approval.ps1 真实执行（phase1：mock:write 产生 pending → 杀进程 → 重启 → 审批仍 pending → allow 后执行；phase2：debug 配置缩短审批 TTL → 触发 → 到期后 status=expired、decidedBy=timeout、不执行/不自动放行）。脚本自建端口+临时 home，只停自己 PID，不碰 8787。",
+  "vars": {
+    "probe": "evals-longappr-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "GET", "path": "/api/approvals", "expectStatus": 200, "saveAs": "approvals" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "approvals.body", "pattern": "approvals" }
+  ]
+}

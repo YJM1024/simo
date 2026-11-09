@@ -1,0 +1,52 @@
+{
+  "id": "view-create",
+  "name": "M26 视图创建：ui.set_view create → GET 校验 schema/version + list 可见 + versions=1 + render-state",
+  "tier": "critical",
+  "vars": {
+    "title": "验收工作台-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/ui.set_view",
+      "body": {
+        "sessionId": "main",
+        "mode": "create",
+        "reason": "M26 验收：创建工作台视图",
+        "schema": {
+          "schemaVersion": 1,
+          "id": "view-main-accept-{{runId}}",
+          "sessionId": "main",
+          "title": "{{title}}",
+          "layout": { "kind": "grid", "columns": 12, "areas": [ { "block": "progress-main", "colSpan": 12 }, { "block": "retry-action", "colSpan": 4 } ] },
+          "blocks": [
+            { "id": "progress-main", "type": "progress", "props": { "title": "本周进度" }, "data": { "action": "task.list", "args": { "sessionId": "$session" } } },
+            { "id": "retry-action", "type": "action", "props": { "label": "重试任务" }, "actions": [ { "id": "retry", "action": "task.retry", "args": { "taskId": "$row.id" } } ] }
+          ],
+          "equivalence": { "chatPrompt": "请重试这个任务，并告诉我本周进度。", "actionSequence": [ { "action": "task.list" }, { "action": "task.retry" } ] },
+          "meta": { "createdBy": "agent", "reason": "M26 验收" }
+        }
+      },
+      "expectStatus": 200,
+      "saveAs": "created"
+    },
+    { "type": "capture", "from": "created.json.data", "pick": "pageId", "saveAs": "pageId" },
+    { "type": "http", "method": "GET", "path": "/api/views/{{@pageId}}", "expectStatus": 200, "saveAs": "page" },
+    { "type": "http", "method": "GET", "path": "/api/views?sessionId=main", "expectStatus": 200, "saveAs": "list" },
+    { "type": "http", "method": "GET", "path": "/api/views/{{@pageId}}/versions", "expectStatus": 200, "saveAs": "versions" },
+    { "type": "http", "method": "GET", "path": "/api/views/{{@pageId}}/render-state", "expectStatus": 200, "saveAs": "renderState" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "created.body", "pattern": "\"version\"\\s*:\\s*1" },
+    { "type": "regex", "target": "created.body", "pattern": "\"schemaHash\"\\s*:\\s*\"[0-9a-f]+\"" },
+    { "type": "regex", "target": "page.body", "pattern": "\"schemaVersion\"\\s*:\\s*1" },
+    { "type": "regex", "target": "page.body", "pattern": "\"version\"\\s*:\\s*1" },
+    { "type": "regex", "target": "page.body", "pattern": "\"title\"\\s*:\\s*\"{{title}}\"" },
+    { "type": "regex", "target": "page.body", "pattern": "\"blocks\"\\s*:\\s*\\[" },
+    { "type": "regex", "target": "list.body", "pattern": "{{@pageId}}" },
+    { "type": "count", "target": "versions.json.versions", "pattern": "\"version\"", "exactly": 1 },
+    { "type": "regex", "target": "renderState.body", "pattern": "\"bindings\"\\s*:\\s*\\[" },
+    { "type": "regex", "target": "renderState.body", "pattern": "\"asOfSeq\"\\s*:\\s*[0-9]+" }
+  ]
+}

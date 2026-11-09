@@ -1,0 +1,76 @@
+{
+  "id": "session-archive",
+  "name": "会话归档只读（归档后 POST /api/chat 与改名均 409、消息仍可读；unarchive 后可写）",
+  "tier": "critical",
+  "vars": {
+    "title": "evals-archive-{{runId}}",
+    "pmsg": "evals-archive-msg-{{runId}} 归档前的消息",
+    "wmsg": "evals-archive-new-{{runId}} 归档后不该被接受",
+    "nmsg": "evals-archive-after-{{runId}} 取消归档后可以写"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{title}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{title}}" }, "pick": "id", "saveAs": "sessionId" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": { "sessionId": "{{@sessionId}}", "text": "{{pmsg}}" },
+      "expectStatus": [200, 202],
+      "saveAs": "chatBefore"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{@sessionId}}",
+      "saveAs": "beforeMsgs",
+      "intervalMs": 200,
+      "timeoutMs": 10000,
+      "until": { "path": "json.messages", "matchSome": { "text": "{{pmsg}}" } }
+    },
+    { "type": "http", "candidate": [{ "method": "POST", "path": "/api/sessions/{{@sessionId}}/archive", "body": {} }], "expectStatus": [200, 202, 204], "saveAs": "archived" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": { "sessionId": "{{@sessionId}}", "text": "{{wmsg}}" },
+      "expectStatus": [403, 409],
+      "saveAs": "chatRejected"
+    },
+    {
+      "type": "http",
+      "method": "PATCH",
+      "path": "/api/sessions/{{@sessionId}}",
+      "body": { "title": "改名应被拒-{{runId}}" },
+      "expectStatus": [403, 409],
+      "saveAs": "renameRejected"
+    },
+    { "type": "http", "method": "GET", "path": "/api/messages?sessionId={{@sessionId}}", "expectStatus": 200, "saveAs": "msgs" },
+    { "type": "http", "candidate": [{ "method": "POST", "path": "/api/sessions/{{@sessionId}}/unarchive", "body": {} }], "expectStatus": [200, 202, 204], "saveAs": "unarchived" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": { "sessionId": "{{@sessionId}}", "text": "{{nmsg}}" },
+      "expectStatus": [200, 202],
+      "saveAs": "chatAfter"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{@sessionId}}",
+      "saveAs": "afterMsgs",
+      "intervalMs": 200,
+      "timeoutMs": 10000,
+      "until": { "path": "json.messages", "matchSome": { "text": "{{nmsg}}" } }
+    }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "msgs.json.messages", "where": { "sessionId": "{{@sessionId}}" }, "atLeast": 1 },
+    { "type": "regex", "target": "msgs.body", "pattern": "{{pmsg}}" },
+    { "type": "forbidden", "target": "msgs.body", "patterns": ["{{wmsg}}"] },
+    { "type": "regex", "target": "afterMsgs.body", "pattern": "{{nmsg}}" },
+    { "type": "forbidden", "target": "sessions.body", "patterns": ["\"title\"\\s*:\\s*\"改名应被拒"] }
+  ]
+}

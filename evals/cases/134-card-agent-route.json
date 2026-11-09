@@ -1,0 +1,128 @@
+{
+  "id": "card-agent-route",
+  "name": "M41 卡片 route=agent：交互生成用户消息并触发 Agent 回复",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-card-agent-route-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/chat.send_card",
+      "expectStatus": [
+        200,
+        201
+      ],
+      "saveAs": "sent",
+      "body": {
+        "sessionId": "{{caseSession}}",
+        "fallbackText": "确认卡片（兜底）。",
+        "schema": {
+          "schemaVersion": 1,
+          "title": "确认卡片",
+          "blocks": [
+            {
+              "id": "t1",
+              "type": "text",
+              "props": {
+                "text": "请确认"
+              }
+            }
+          ],
+          "actions": [
+            {
+              "id": "confirm",
+              "label": "确认",
+              "route": "agent",
+              "action": "chat.send",
+              "prompt": "确认执行",
+              "variant": "primary"
+            }
+          ],
+          "equivalence": {
+            "chatPrompt": "确认执行"
+          },
+          "layout": {
+            "kind": "rows"
+          }
+        }
+      }
+    },
+    {
+      "type": "capture",
+      "from": "sent.json.data",
+      "pick": "cardId",
+      "saveAs": "cardId"
+    },
+    {
+      "type": "capture",
+      "from": "sent.json.data",
+      "pick": "messageId",
+      "saveAs": "messageId"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/cards/{{@cardId}}/actions/confirm",
+      "expectStatus": [
+        200,
+        202
+      ],
+      "saveAs": "action",
+      "body": {
+        "messageId": "{{@messageId}}",
+        "baseVersion": 1,
+        "payload": {
+          "choice": "yes"
+        },
+        "idempotencyKey": "agent-route-{{runId}}"
+      }
+    },
+    {
+      "type": "wait",
+      "ms": 6000
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{caseSession}}",
+      "expectStatus": 200,
+      "saveAs": "after"
+    }
+  ],
+  "graders": [
+    {
+      "type": "regex",
+      "target": "sent.body",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    },
+    {
+      "type": "regex",
+      "target": "action.body",
+      "pattern": "\"route\"\\s*:\\s*\"agent\""
+    },
+    {
+      "type": "regex",
+      "target": "action.body",
+      "pattern": "\"messageId\"\\s*:\\s*\"msg-"
+    },
+    {
+      "type": "regex",
+      "target": "after.body",
+      "pattern": "actionId=confirm"
+    },
+    {
+      "type": "count",
+      "target": "after.json.messages",
+      "pattern": "\"role\"\\s*:\\s*\"user\"",
+      "atLeast": 1
+    },
+    {
+      "type": "count",
+      "target": "after.json.messages",
+      "pattern": "\"role\"\\s*:\\s*\"agent\"",
+      "atLeast": 2
+    }
+  ]
+}

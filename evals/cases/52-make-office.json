@@ -1,0 +1,119 @@
+{
+  "id": "make-office",
+  "name": "生成 Office（docx/xlsx/pptx：各自审批 → MIME 正确 + ZIP(PK) 魔数 + 可下载）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-office-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}" }, "pick": "id", "saveAs": "sid" },
+
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@sid}}",
+      "chat": { "text": "mock:make-docx 生成一份 Word 文档。" },
+      "saveAs": "s1",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 60000 },
+      "drainMs": 500
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "p1",
+      "intervalMs": 300,
+      "timeoutMs": 20000,
+      "until": { "path": "json.approvals", "matchSome": { "tool": "make_docx", "status": "pending" } }
+    },
+    { "type": "capture", "from": "p1.json.approvals", "where": { "tool": "make_docx", "status": "pending" }, "pick": "id", "saveAs": "a1" },
+    { "type": "http", "method": "POST", "path": "/api/approvals/{{@a1}}", "body": { "decision": "allow" }, "expectStatus": 200, "timeoutMs": 60000 },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/artifacts?sessionId={{@sid}}",
+      "saveAs": "arts1",
+      "intervalMs": 300,
+      "timeoutMs": 20000,
+      "until": { "path": "json.artifacts", "matchSome": { "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document" } }
+    },
+
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@sid}}",
+      "chat": { "text": "mock:make-xlsx 生成一份表格。" },
+      "saveAs": "s2",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 60000 },
+      "drainMs": 500
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "p2",
+      "intervalMs": 300,
+      "timeoutMs": 20000,
+      "until": { "path": "json.approvals", "matchSome": { "tool": "make_xlsx", "status": "pending" } }
+    },
+    { "type": "capture", "from": "p2.json.approvals", "where": { "tool": "make_xlsx", "status": "pending" }, "pick": "id", "saveAs": "a2" },
+    { "type": "http", "method": "POST", "path": "/api/approvals/{{@a2}}", "body": { "decision": "allow" }, "expectStatus": 200, "timeoutMs": 60000 },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/artifacts?sessionId={{@sid}}",
+      "saveAs": "arts2",
+      "intervalMs": 300,
+      "timeoutMs": 20000,
+      "until": { "path": "json.artifacts", "matchSome": { "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" } }
+    },
+
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@sid}}",
+      "chat": { "text": "mock:make-pptx 生成一份演示文稿。" },
+      "saveAs": "s3",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 60000 },
+      "drainMs": 500
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "p3",
+      "intervalMs": 300,
+      "timeoutMs": 20000,
+      "until": { "path": "json.approvals", "matchSome": { "tool": "make_pptx", "status": "pending" } }
+    },
+    { "type": "capture", "from": "p3.json.approvals", "where": { "tool": "make_pptx", "status": "pending" }, "pick": "id", "saveAs": "a3" },
+    { "type": "http", "method": "POST", "path": "/api/approvals/{{@a3}}", "body": { "decision": "allow" }, "expectStatus": 200, "timeoutMs": 60000 },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/artifacts?sessionId={{@sid}}",
+      "saveAs": "arts3",
+      "intervalMs": 300,
+      "timeoutMs": 20000,
+      "until": { "path": "json.artifacts", "matchSome": { "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation" } }
+    },
+
+    { "type": "capture", "from": "arts3.json.artifacts", "where": { "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }, "pick": "id", "saveAs": "docxId" },
+    { "type": "capture", "from": "arts3.json.artifacts", "where": { "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }, "pick": "id", "saveAs": "xlsxId" },
+    { "type": "capture", "from": "arts3.json.artifacts", "where": { "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation" }, "pick": "id", "saveAs": "pptxId" },
+    { "type": "http", "method": "GET", "path": "/api/artifacts/{{@docxId}}/content", "expectStatus": 200, "saveAs": "docx" },
+    { "type": "http", "method": "GET", "path": "/api/artifacts/{{@xlsxId}}/content", "expectStatus": 200, "saveAs": "xlsx" },
+    { "type": "http", "method": "GET", "path": "/api/artifacts/{{@pptxId}}/content", "expectStatus": 200, "saveAs": "pptx" }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "arts3.json.artifacts", "where": { "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }, "atLeast": 1 },
+    { "type": "state_delta", "collection": "arts3.json.artifacts", "where": { "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }, "atLeast": 1 },
+    { "type": "state_delta", "collection": "arts3.json.artifacts", "where": { "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation" }, "atLeast": 1 },
+    { "type": "regex", "target": "docx.raw", "pattern": "\"data\"\\s*:\\s*\\[\\s*80\\s*,\\s*75\\s*,\\s*3\\s*,\\s*4" },
+    { "type": "regex", "target": "xlsx.raw", "pattern": "\"data\"\\s*:\\s*\\[\\s*80\\s*,\\s*75\\s*,\\s*3\\s*,\\s*4" },
+    { "type": "regex", "target": "pptx.raw", "pattern": "\"data\"\\s*:\\s*\\[\\s*80\\s*,\\s*75\\s*,\\s*3\\s*,\\s*4" },
+    { "type": "regex", "target": "arts3.body", "pattern": "\"size\"\\s*:\\s*[1-9][0-9]{2,}" }
+  ]
+}

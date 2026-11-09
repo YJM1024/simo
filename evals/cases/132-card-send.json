@@ -1,0 +1,120 @@
+{
+  "id": "card-send",
+  "name": "M41 卡片发送：chat.send_card → 消息 cards[]（schema/version/fallback）可查",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-card-send-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/chat.send_card",
+      "expectStatus": [
+        200,
+        201
+      ],
+      "saveAs": "sent",
+      "body": {
+        "sessionId": "{{caseSession}}",
+        "fallbackText": "确认卡片：请确认执行（纯文本兜底）。",
+        "schema": {
+          "schemaVersion": 1,
+          "title": "确认卡片",
+          "blocks": [
+            {
+              "id": "t1",
+              "type": "text",
+              "props": {
+                "text": "请确认执行"
+              }
+            }
+          ],
+          "actions": [
+            {
+              "id": "confirm",
+              "label": "确认执行",
+              "route": "agent",
+              "action": "chat.send",
+              "prompt": "确认执行这个任务",
+              "variant": "primary"
+            }
+          ],
+          "equivalence": {
+            "chatPrompt": "确认执行这个任务"
+          },
+          "layout": {
+            "kind": "rows"
+          }
+        }
+      }
+    },
+    {
+      "type": "capture",
+      "from": "sent.json.data",
+      "pick": "cardId",
+      "saveAs": "cardId"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/cards/{{@cardId}}",
+      "expectStatus": 200,
+      "saveAs": "card"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{caseSession}}",
+      "expectStatus": 200,
+      "saveAs": "after"
+    }
+  ],
+  "graders": [
+    {
+      "type": "regex",
+      "target": "sent.body",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    },
+    {
+      "type": "regex",
+      "target": "sent.body",
+      "pattern": "\"cardId\"\\s*:\\s*\"card-"
+    },
+    {
+      "type": "regex",
+      "target": "sent.body",
+      "pattern": "\"version\"\\s*:\\s*1"
+    },
+    {
+      "type": "regex",
+      "target": "card.body",
+      "pattern": "\"version\"\\s*:\\s*1"
+    },
+    {
+      "type": "regex",
+      "target": "card.body",
+      "pattern": "fallbackText"
+    },
+    {
+      "type": "regex",
+      "target": "after.body",
+      "pattern": "\"cards\"\\s*:\\s*\\["
+    },
+    {
+      "type": "regex",
+      "target": "after.body",
+      "pattern": "{{@cardId}}"
+    },
+    {
+      "type": "regex",
+      "target": "after.body",
+      "pattern": "fallbackText"
+    },
+    {
+      "type": "regex",
+      "target": "after.body",
+      "pattern": "\"schemaVersion\"\\s*:\\s*1"
+    }
+  ]
+}

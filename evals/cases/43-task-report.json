@@ -1,0 +1,44 @@
+{
+  "id": "task-report",
+  "name": "逐任务汇报（每个任务 done 后都有独立 agent 汇报消息，不是最后才汇报）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-wfrep-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}} mock:workflow 请拆解任务并逐个汇报。" },
+      "saveAs": "createStream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 30000 },
+      "drainMs": 300
+    },
+    { "type": "http", "method": "GET", "path": "/api/workflows?sessionId={{caseSession}}", "expectStatus": 200, "saveAs": "wfList" },
+    { "type": "capture", "from": "wfList.json.workflows", "where": {}, "pick": "id", "saveAs": "workflowId" },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/workflows/{{@workflowId}}",
+      "saveAs": "detail",
+      "intervalMs": 500,
+      "timeoutMs": 90000,
+      "until": { "path": "json.workflow.tasks", "matchSome": { "title": "汇总产出", "status": "done" } }
+    },
+    { "type": "capture", "from": "detail.json.workflow.tasks", "where": { "title": "收集与梳理资料" }, "pick": "reportMessageId", "saveAs": "repId1" },
+    { "type": "capture", "from": "detail.json.workflow.tasks", "where": { "title": "形成草稿" }, "pick": "reportMessageId", "saveAs": "repId2" },
+    { "type": "capture", "from": "detail.json.workflow.tasks", "where": { "title": "汇总产出" }, "pick": "reportMessageId", "saveAs": "repId3" },
+    { "type": "http", "method": "GET", "path": "/api/messages?sessionId={{caseSession}}", "expectStatus": 200, "saveAs": "msgs" }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "msgs.json.messages", "where": { "id": "{{@repId1}}" }, "expect": { "role": "agent" }, "atLeast": 1 },
+    { "type": "state_delta", "collection": "msgs.json.messages", "where": { "id": "{{@repId2}}" }, "expect": { "role": "agent" }, "atLeast": 1 },
+    { "type": "state_delta", "collection": "msgs.json.messages", "where": { "id": "{{@repId3}}" }, "expect": { "role": "agent" }, "atLeast": 1 },
+    { "type": "state_delta", "collection": "msgs.json.messages", "where": { "role": "agent" }, "atLeast": 3 },
+    { "type": "regex", "target": "msgs.body", "pattern": "【任务汇报】" },
+    { "type": "regex", "target": "msgs.body", "pattern": "\"taskId\"\\s*:\\s*\"task-" },
+    { "type": "regex", "target": "msgs.body", "pattern": "\"workflowId\"\\s*:\\s*\"wf-" }
+  ]
+}

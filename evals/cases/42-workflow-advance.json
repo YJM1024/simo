@@ -1,0 +1,48 @@
+{
+  "id": "workflow-advance",
+  "name": "自动推进（依赖串行：finalize 在 collect/draft done 后才完成；无依赖并行：collect 与 draft 完成时间相近）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-wfadv-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}} mock:workflow 请拆成多个任务并自动推进。" },
+      "saveAs": "createStream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 30000 },
+      "drainMs": 300
+    },
+    { "type": "http", "method": "GET", "path": "/api/workflows?sessionId={{caseSession}}", "expectStatus": 200, "saveAs": "wfList" },
+    { "type": "capture", "from": "wfList.json.workflows", "where": {}, "pick": "id", "saveAs": "workflowId" },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/workflows/{{@workflowId}}",
+      "saveAs": "detail",
+      "intervalMs": 500,
+      "timeoutMs": 90000,
+      "until": { "path": "json.workflow.tasks", "matchSome": { "title": "汇总产出", "status": "done" } }
+    },
+    { "type": "http", "method": "GET", "path": "/api/tasks?sessionId={{caseSession}}", "expectStatus": 200, "saveAs": "tasks" },
+    { "type": "capture", "from": "tasks.json.tasks", "where": { "title": "收集与梳理资料" }, "saveAs": "collectNode" },
+    { "type": "capture", "from": "tasks.json.tasks", "where": { "title": "形成草稿" }, "saveAs": "draftNode" },
+    { "type": "capture", "from": "tasks.json.tasks", "where": { "title": "汇总产出" }, "saveAs": "finalizeNode" },
+    { "type": "capture", "from": "tasks.json.tasks", "where": { "title": "收集与梳理资料" }, "pick": "updatedAt", "saveAs": "collectDoneAt" },
+    { "type": "capture", "from": "tasks.json.tasks", "where": { "title": "形成草稿" }, "pick": "updatedAt", "saveAs": "draftDoneAt" },
+    { "type": "capture", "from": "tasks.json.tasks", "where": { "title": "汇总产出" }, "pick": "updatedAt", "saveAs": "finalizeDoneAt" },
+    { "type": "capture", "from": "detail.json.workflow", "pick": "progress", "saveAs": "wfProgress" }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "tasks.json.tasks", "where": { "title": "收集与梳理资料" }, "expect": { "status": "done" }, "atLeast": 1 },
+    { "type": "state_delta", "collection": "tasks.json.tasks", "where": { "title": "形成草稿" }, "expect": { "status": "done" }, "atLeast": 1 },
+    { "type": "state_delta", "collection": "tasks.json.tasks", "where": { "title": "汇总产出" }, "expect": { "status": "done" }, "atLeast": 1 },
+    { "type": "numeric", "left": "finalizeDoneAt", "op": "gte", "right": "collectDoneAt" },
+    { "type": "numeric", "left": "finalizeDoneAt", "op": "gte", "right": "draftDoneAt" },
+    { "type": "numeric", "left": "collectDoneAt", "op": "near", "right": "draftDoneAt", "tolerance": 5000 },
+    { "type": "numeric", "left": "wfProgress", "op": "eq", "value": 100 }
+  ]
+}

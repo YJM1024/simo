@@ -1,0 +1,13 @@
+{
+  "id": "card-persist",
+  "name": "M41 卡片持久化：重启后消息与 cards[] 仍在（脚本覆盖）",
+  "tier": "critical",
+  "pending": "需要重启被测服务进程，单次 run.mjs 做不到 → 由 evals/card-persist.ps1 真实执行（起服→chat→send_card→停服→同 home 重启→GET messages/cards 断言卡片与 fallback 仍在）。",
+  "vars": {},
+  "steps": [
+    { "type": "http", "method": "GET", "path": "/api/health", "expectStatus": 200, "saveAs": "health" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "health.body", "pattern": "\"ok\"\\s*:\\s*true" }
+  ]
+}

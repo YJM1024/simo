@@ -1,0 +1,58 @@
+{
+  "id": "workflow-pause",
+  "name": "暂停/恢复/取消（pause 后不启动新任务；resume 继续；cancel 终止 future）",
+  "tier": "normal",
+  "vars": {
+    "probe": "evals-wfpause-{{runId}}",
+    "probe2": "evals-wfcancel-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}} mock:workflow 拆成多个任务并执行。" },
+      "saveAs": "createStream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 30000 },
+      "drainMs": 200
+    },
+    { "type": "http", "method": "GET", "path": "/api/workflows?sessionId={{caseSession}}", "expectStatus": 200, "saveAs": "wfList" },
+    { "type": "capture", "from": "wfList.json.workflows", "where": {}, "pick": "id", "saveAs": "workflowId" },
+    { "type": "http", "method": "POST", "path": "/api/workflows/{{@workflowId}}/pause", "body": {}, "expectStatus": [200, 202], "saveAs": "paused" },
+    { "type": "http", "method": "GET", "path": "/api/workflows/{{@workflowId}}", "expectStatus": 200, "saveAs": "pausedDetail" },
+    { "type": "wait", "ms": 6000 },
+    { "type": "http", "method": "GET", "path": "/api/tasks?sessionId={{caseSession}}", "expectStatus": 200, "saveAs": "tasksPaused" },
+    { "type": "http", "method": "POST", "path": "/api/workflows/{{@workflowId}}/resume", "body": {}, "expectStatus": [200, 202], "saveAs": "resumed" },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/workflows/{{@workflowId}}",
+      "saveAs": "resumedDetail",
+      "intervalMs": 500,
+      "timeoutMs": 90000,
+      "until": { "path": "json.workflow.tasks", "matchSome": { "title": "汇总产出", "status": "done" } }
+    },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe2}}",
+      "chat": { "text": "{{probe2}} mock:workflow 再拆一个工作流用于取消。" },
+      "saveAs": "createStream2",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 30000 },
+      "drainMs": 200
+    },
+    { "type": "http", "method": "GET", "path": "/api/workflows?sessionId={{caseSession}}", "expectStatus": 200, "saveAs": "wfList2" },
+    { "type": "capture", "from": "wfList2.json.workflows", "whereContains": { "title": "{{probe2}}" }, "pick": "id", "saveAs": "wf2" },
+    { "type": "http", "method": "POST", "path": "/api/workflows/{{@wf2}}/cancel", "body": {}, "expectStatus": [200, 202], "saveAs": "cancelled" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "paused.body", "pattern": "\"status\"\\s*:\\s*\"paused\"" },
+    { "type": "regex", "target": "pausedDetail.body", "pattern": "\"status\"\\s*:\\s*\"paused\"" },
+    { "type": "state_delta", "collection": "tasksPaused.json.tasks", "where": { "title": "汇总产出" }, "expect": { "status": "pending" }, "atLeast": 1 },
+    { "type": "regex", "target": "resumed.body", "pattern": "\"status\"\\s*:\\s*\"(running|paused)\"" },
+    { "type": "regex", "target": "resumedDetail.body", "pattern": "\"status\"\\s*:\\s*\"done\"" },
+    { "type": "regex", "target": "cancelled.body", "pattern": "\"status\"\\s*:\\s*\"cancelled\"" }
+  ]
+}

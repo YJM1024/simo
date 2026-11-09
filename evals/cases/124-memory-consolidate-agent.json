@@ -1,0 +1,24 @@
+{
+  "id": "memory-consolidate-agent",
+  "name": "M30 记忆巩固：稳定事实/规范/偏好写 agent_memory 且带来源（ownerAgent=agent:simo）",
+  "tier": "normal",
+  "vars": {
+    "p": "konsol-agent-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "我们约定每周五提交一次交付物（{{p}}），这是规范。" }, "expectStatus": [200, 202], "saveAs": "c1" },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "我喜欢喝美式咖啡（{{p}}），这是我的偏好。" }, "expectStatus": [200, 202], "saveAs": "c2" },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "记住：项目代号是 AgentMem-{{p}}，负责数据整理。" }, "expectStatus": [200, 202], "saveAs": "c3" },
+    { "type": "http", "method": "POST", "path": "/api/debug/memory/consolidate", "body": { "sessionId": "{{caseSession}}", "agentId": "agent:simo", "maxMessages": 20 }, "expectStatus": 200, "saveAs": "cons" },
+    { "type": "http", "method": "GET", "path": "/api/memory/agents/simo/memory", "expectStatus": 200, "saveAs": "agentMemory" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "cons.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "regex", "target": "agentMemory.body", "pattern": "\"ownerAgent\"\\s*:\\s*\"agent:simo\"" },
+    { "type": "regex", "target": "agentMemory.body", "pattern": "美式咖啡（{{p}}）" },
+    { "type": "regex", "target": "agentMemory.body", "pattern": "交付物（{{p}}）" },
+    { "type": "regex", "target": "agentMemory.body", "pattern": "\"source\"\\s*:\\s*\"conversation\"" },
+    { "type": "regex", "target": "agentMemory.body", "pattern": "\"authority\"\\s*:\\s*\"inferred\"" },
+    { "type": "count", "target": "agentMemory.json.items", "pattern": "{{p}}", "atLeast": 1 }
+  ]
+}

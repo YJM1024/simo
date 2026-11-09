@@ -1,0 +1,150 @@
+{
+  "id": "memory-entities",
+  "name": "记忆实体（entities 列表/kind 过滤/详情 memoryCounts/404/邻域图）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-mem-ent-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/sessions",
+      "body": {
+        "title": "{{caseSession}}"
+      },
+      "expectStatus": [
+        200,
+        201
+      ],
+      "saveAs": "created"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions",
+      "expectStatus": 200,
+      "saveAs": "sessions"
+    },
+    {
+      "type": "capture",
+      "from": "sessions.json.sessions",
+      "whereContains": {
+        "title": "{{caseSession}}"
+      },
+      "pick": "id",
+      "saveAs": "sid"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": {
+        "sessionId": "{{@sid}}",
+        "text": "记住：项目代号是 Orion（{{probe}}）。"
+      },
+      "expectStatus": [
+        200,
+        202
+      ],
+      "saveAs": "chat"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/memory/items?all=1",
+      "saveAs": "items",
+      "intervalMs": 300,
+      "timeoutMs": 20000,
+      "until": {
+        "path": "json.items",
+        "matchSome": {
+          "content": "项目代号是 Orion（{{probe}}）"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/memory/entities",
+      "expectStatus": 200,
+      "saveAs": "entities"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/memory/entities?kind=agent",
+      "expectStatus": 200,
+      "saveAs": "agentEntities"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/memory/entities/ent-global",
+      "expectStatus": 200,
+      "saveAs": "entityDetail"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/memory/entities/ent-no-such",
+      "expectStatus": [
+        404
+      ],
+      "saveAs": "entityMissing"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/memory/graph?entityId=ent-global&depth=1",
+      "expectStatus": 200,
+      "saveAs": "graph"
+    }
+  ],
+  "graders": [
+    {
+      "type": "count",
+      "target": "entities.json.entities",
+      "pattern": "\"id\"\\s*:\\s*\"ent-",
+      "atLeast": 2
+    },
+    {
+      "type": "numeric",
+      "left": "entities.json.total",
+      "op": "gte",
+      "value": 2
+    },
+    {
+      "type": "regex",
+      "target": "agentEntities.body",
+      "pattern": "\"kind\"\\s*:\\s*\"agent\""
+    },
+    {
+      "type": "regex",
+      "target": "entityDetail.body",
+      "pattern": "\"memoryCounts\"\\s*:\\s*\\{"
+    },
+    {
+      "type": "regex",
+      "target": "entityDetail.body",
+      "pattern": "\"relations\"\\s*:\\s*\\["
+    },
+    {
+      "type": "forbidden",
+      "target": "entityMissing.body",
+      "patterns": [
+        "\"ok\"\\s*:\\s*true"
+      ]
+    },
+    {
+      "type": "regex",
+      "target": "graph.body",
+      "pattern": "\"nodes\"\\s*:\\s*\\["
+    },
+    {
+      "type": "regex",
+      "target": "graph.body",
+      "pattern": "ent-global"
+    }
+  ]
+}

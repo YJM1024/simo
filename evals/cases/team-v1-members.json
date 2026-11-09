@@ -1,0 +1,94 @@
+{
+  "id": "team-v1-members",
+  "name": "团队 V1 成员（成员=下级会话：ownerAgentId/独立 sessionId；GET /api/team 与 /api/sessions/{id}/team）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-teamv1-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/sessions",
+      "body": {
+        "title": "{{caseSession}}"
+      },
+      "expectStatus": [
+        200,
+        201
+      ],
+      "saveAs": "created"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions",
+      "expectStatus": 200,
+      "saveAs": "sessions"
+    },
+    {
+      "type": "capture",
+      "from": "sessions.json.sessions",
+      "whereContains": {
+        "title": "{{caseSession}}"
+      },
+      "pick": "id",
+      "saveAs": "sid"
+    },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@sid}}",
+      "chat": {
+        "text": "我想创建一个新的需求：{{probe}}-member 整理资料。"
+      },
+      "saveAs": "s1",
+      "until": {
+        "type": [
+          "reply.done",
+          "message.done"
+        ],
+        "timeoutMs": 45000
+      },
+      "drainMs": 1200
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/team?sessionId={{@sid}}",
+      "expectStatus": 200,
+      "saveAs": "team"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions/{{@sid}}/team",
+      "expectStatus": [
+        200
+      ],
+      "saveAs": "sessionTeam"
+    }
+  ],
+  "graders": [
+    {
+      "type": "regex",
+      "target": "team.body",
+      "pattern": "\"members\"\\s*:\\s*\\["
+    },
+    {
+      "type": "regex",
+      "target": "team.body",
+      "pattern": "\"(ownerAgentId|agentId)\"\\s*:\\s*\""
+    },
+    {
+      "type": "regex",
+      "target": "team.body",
+      "pattern": "\"sessionId\"\\s*:\\s*\""
+    },
+    {
+      "type": "regex",
+      "target": "sessionTeam.body",
+      "pattern": "\"members\"\\s*:\\s*\\["
+    }
+  ]
+}

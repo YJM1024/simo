@@ -1,0 +1,57 @@
+{
+  "id": "markdown-passthrough",
+  "name": "Markdown 透传（列表/粗体/行内代码/引用/分隔线原样保存，不被转义或剥离）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-md-{{runId}}",
+    "md": "1. 第一项 {{runId}}\n2. 第二项\n\n- 项A\n- 项B\n\n**粗体** 与 *斜体* 与 `code`\n\n> 引用一行\n\n---"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": { "sessionId": "{{caseSession}}", "text": "{{md}}" },
+      "expectStatus": [200, 202],
+      "saveAs": "chat"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{caseSession}}",
+      "saveAs": "msgs",
+      "intervalMs": 200,
+      "timeoutMs": 10000,
+      "until": { "path": "json.messages", "matchSome": { "text": "{{md}}" } }
+    },
+    {
+      "type": "capture",
+      "from": "msgs.json.messages",
+      "where": { "text": "{{md}}" },
+      "pick": "text",
+      "saveAs": "storedText"
+    },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}} 再发一次：\n- x\n- y" },
+      "saveAs": "stream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 20000 },
+      "drainMs": 500
+    }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "msgs.json.messages", "where": { "text": "{{md}}" }, "atLeast": 1 },
+    { "type": "regex", "target": "storedText", "pattern": "1\\. 第一项 {{runId}}" },
+    { "type": "regex", "target": "storedText", "pattern": "2\\. 第二项" },
+    { "type": "regex", "target": "storedText", "pattern": "- 项A" },
+    { "type": "regex", "target": "storedText", "pattern": "\\*\\*粗体\\*\\*" },
+    { "type": "regex", "target": "storedText", "pattern": "`code`" },
+    { "type": "regex", "target": "storedText", "pattern": "> 引用一行" },
+    { "type": "regex", "target": "storedText", "pattern": "---" },
+    { "type": "forbidden", "target": "storedText", "patterns": ["&lt;", "&gt;", "&amp;", "<ol>", "<strong>", "<blockquote>"] },
+    { "type": "regex", "target": "stream.trace", "pattern": "(reply|message)\\.done" }
+  ]
+}

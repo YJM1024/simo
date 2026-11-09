@@ -1,0 +1,62 @@
+{
+  "id": "message-categories",
+  "name": "消息分类（模型标记 @@CATEGORY → requirement/clarification/progress/consultation；标记被剥离；user 为空）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-cat-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}" }, "pick": "id", "saveAs": "sid" },
+
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@sid}}",
+      "chat": { "text": "mock:category=requirement {{probe}} 帮我整理一份本周待办清单。" },
+      "saveAs": "s1",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 45000 },
+      "drainMs": 400
+    },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@sid}}",
+      "chat": { "text": "mock:category=clarification {{probe}} 这个需求还需要确认细节。" },
+      "saveAs": "s2",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 45000 },
+      "drainMs": 400
+    },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@sid}}",
+      "chat": { "text": "mock:category=progress {{probe}} 任务进行到一半了。" },
+      "saveAs": "s3",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 45000 },
+      "drainMs": 400
+    },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@sid}}",
+      "chat": { "text": "mock:category=consultation {{probe}} 今天几号？" },
+      "saveAs": "s4",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 45000 },
+      "drainMs": 400
+    },
+
+    { "type": "http", "method": "GET", "path": "/api/messages?sessionId={{@sid}}", "expectStatus": 200, "saveAs": "msgs" }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "msgs.json.messages", "where": { "role": "agent", "category": "requirement" }, "atLeast": 1 },
+    { "type": "state_delta", "collection": "msgs.json.messages", "where": { "role": "agent", "category": "clarification" }, "atLeast": 1 },
+    { "type": "state_delta", "collection": "msgs.json.messages", "where": { "role": "agent", "category": "progress" }, "atLeast": 1 },
+    { "type": "state_delta", "collection": "msgs.json.messages", "where": { "role": "agent", "category": "consultation" }, "atLeast": 1 },
+    { "type": "forbidden", "target": "msgs.body", "patterns": ["@@CATEGORY"] },
+    { "type": "state_delta", "collection": "msgs.json.messages", "where": { "role": "user" }, "expect": { "category": "" }, "atLeast": 1 },
+    { "type": "forbidden", "target": "msgs.body", "patterns": ["\"category\"\\s*:\\s*\"delivery\""] },
+    { "type": "regex", "target": "msgs.body", "pattern": "\"category\"\\s*:\\s*\"(requirement|clarification|progress|consultation)\"" }
+  ]
+}

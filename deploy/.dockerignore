@@ -1,0 +1,70 @@
+# 构建上下文排除清单（仓库根 = 构建上下文）
+#
+# 用法（两种，内容保持一致）：
+#   - `docker build -f deploy/Dockerfile .`：BuildKit 读取 **deploy/Dockerfile.dockerignore**（同名规则）
+#   - 若把本文件复制为仓库根 `.dockerignore`：旧式/常规构建也会生效
+#
+# 注意：Docker **不会**读取 `deploy/.dockerignore` 作为构建排除规则（排除规则只认
+# “构建上下文根目录的 .dockerignore”或“<Dockerfile 路径>.dockerignore”）。
+# 本文件即 deploy/.dockerignore 的规范内容，见 README「构建上下文与 .dockerignore」。
+
+# 依赖与构建产物（一律在镜像内重建）
+web/node_modules/
+agentd/internal/webui/dist/
+**/node_modules/
+
+# 本机自包含工具链（Windows 版 Go，数百 MB，且与 linux 构建无关）
+toolchain/
+
+# 本机二进制/临时状态
+*.exe
+*.exe.*
+simo.exe
+.state-*
+.state-*/**
+spill/
+*.log
+logs/
+tmp/
+.tmp/
+
+# 版本控制与编辑器
+.git/
+.gitignore
+.github/
+.vscode/
+.idea/
+*.swp
+
+# 设计/研究/参考素材（不参与构建，避免上下文膨胀）
+design/
+research/
+harness/
+skeleton/
+docs/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.pdf
+*.zip
+
+# 容器交付物自身（Dockerfile 由 -f 指定，不需要进上下文；compose 本地开发用）
+deploy/run-local.ps1
+deploy/README.md
+
+# 数据目录/运行时状态（绝不能进镜像）
+data/
+agentd.db
+agentd.db-*
+artifacts/
+workspace/
+logs/
+config.local.json
+.env
+.env.*
+
+# 本地 OS 噪音
+Thumbs.db
+.DS_Store

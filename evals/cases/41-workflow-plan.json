@@ -1,0 +1,35 @@
+{
+  "id": "workflow-plan",
+  "name": "工作流拆解（一个需求 → workflows 出现、≥2 任务、有 depends_on、tasks 状态合法）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-wfplan-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}} mock:workflow 帮我做一次季度复盘。" },
+      "saveAs": "createStream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 30000 },
+      "drainMs": 500
+    },
+    { "type": "http", "method": "GET", "path": "/api/workflows?sessionId={{caseSession}}", "expectStatus": 200, "saveAs": "wfList" },
+    { "type": "capture", "from": "wfList.json.workflows", "where": {}, "pick": "id", "saveAs": "workflowId" },
+    { "type": "http", "method": "GET", "path": "/api/workflows/{{@workflowId}}", "expectStatus": 200, "saveAs": "detail" },
+    { "type": "http", "method": "GET", "path": "/api/tasks?sessionId={{caseSession}}", "expectStatus": 200, "saveAs": "tasks" },
+    { "type": "capture", "from": "detail.json.workflow.tasks", "where": { "title": "汇总产出" }, "saveAs": "finalizeNode" },
+    { "type": "capture", "from": "detail.json.workflow.tasks", "where": { "title": "收集与梳理资料" }, "saveAs": "collectNode" }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "wfList.json.workflows", "atLeast": 1 },
+    { "type": "state_delta", "collection": "detail.json.workflow.tasks", "atLeast": 2 },
+    { "type": "state_delta", "collection": "tasks.json.tasks", "where": { "workflowId": "{{@workflowId}}" }, "atLeast": 2 },
+    { "type": "regex", "target": "finalizeNode", "pattern": "\"dependsOn\"\\s*:\\s*\\[\\s*\"" },
+    { "type": "regex", "target": "collectNode", "pattern": "\"status\"\\s*:\\s*\"(pending|running|done)\"" },
+    { "type": "regex", "target": "detail.body", "pattern": "\"title\"" },
+    { "type": "regex", "target": "detail.body", "pattern": "\"status\"\\s*:\\s*\"(draft|running|paused|done|failed|cancelled)\"" }
+  ]
+}

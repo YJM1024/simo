@@ -1,0 +1,176 @@
+{
+  "id": "cli-exit-codes",
+  "name": "CLI 退出码矩阵（0 成功 / 2 参数 / 3 审批 / 4 拒绝 + --json 信封）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-cli-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "cli",
+      "args": [
+        "actions",
+        "list",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "actionsList"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "system",
+        "health",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "health"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "session",
+        "get",
+        "--json"
+      ],
+      "expectExit": 2,
+      "saveAs": "missingArg"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "session",
+        "list",
+        "--pretty",
+        "--json"
+      ],
+      "expectExit": 2,
+      "saveAs": "mutuallyExclusive"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "workflow",
+        "start",
+        "--session",
+        "main",
+        "--plan",
+        "{\"title\":\"cli-exit-{{runId}}\",\"tasks\":[{\"title\":\"t1\"}]}",
+        "--json"
+      ],
+      "expectExit": 3,
+      "saveAs": "needApproval"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "session",
+        "delete",
+        "--id",
+        "sess-nope",
+        "--yes",
+        "--json"
+      ],
+      "expectExit": 4,
+      "saveAs": "deniedR4"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "nope",
+        "nope",
+        "--json"
+      ],
+      "expectExit": 2,
+      "saveAs": "unknownCmd"
+    }
+  ],
+  "graders": [
+    {
+      "type": "numeric",
+      "left": "actionsList.exitCode",
+      "op": "eq",
+      "value": 0
+    },
+    {
+      "type": "regex",
+      "target": "actionsList.stdout",
+      "pattern": "\"actions\"\\s*:\\s*\\["
+    },
+    {
+      "type": "regex",
+      "target": "health.stdout",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    },
+    {
+      "type": "numeric",
+      "left": "missingArg.exitCode",
+      "op": "eq",
+      "value": 2
+    },
+    {
+      "type": "regex",
+      "target": "missingArg.stdout",
+      "pattern": "\"code\"\\s*:\\s*\"ACTION_INVALID_ARGS\""
+    },
+    {
+      "type": "numeric",
+      "left": "mutuallyExclusive.exitCode",
+      "op": "eq",
+      "value": 2
+    },
+    {
+      "type": "regex",
+      "target": "mutuallyExclusive.stdout",
+      "pattern": "\"ok\"\\s*:\\s*false"
+    },
+    {
+      "type": "numeric",
+      "left": "needApproval.exitCode",
+      "op": "eq",
+      "value": 3
+    },
+    {
+      "type": "regex",
+      "target": "needApproval.stdout",
+      "pattern": "\"code\"\\s*:\\s*\"APPROVAL_REQUIRED\""
+    },
+    {
+      "type": "regex",
+      "target": "needApproval.stdout",
+      "pattern": "\"approvalId\"\\s*:\\s*\"appr-"
+    },
+    {
+      "type": "numeric",
+      "left": "deniedR4.exitCode",
+      "op": "eq",
+      "value": 4
+    },
+    {
+      "type": "regex",
+      "target": "deniedR4.stdout",
+      "pattern": "\"ok\"\\s*:\\s*false"
+    },
+    {
+      "type": "numeric",
+      "left": "unknownCmd.exitCode",
+      "op": "eq",
+      "value": 2
+    },
+    {
+      "type": "regex",
+      "target": "unknownCmd.stdout",
+      "pattern": "^\\s*\\{"
+    },
+    {
+      "type": "regex",
+      "target": "unknownCmd.stdout",
+      "pattern": "\"ok\"\\s*:\\s*false"
+    },
+    {
+      "type": "regex",
+      "target": "unknownCmd.stdout",
+      "pattern": "\"code\"\\s*:"
+    }
+  ]
+}

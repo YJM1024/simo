@@ -1,0 +1,35 @@
+{
+  "id": "upload-traversal",
+  "name": "上传路径穿越（..%2F 与 %2e%2e 都被拒；未知 id 404；不泄露系统文件）",
+  "tier": "critical",
+  "steps": [
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/uploads/..%2F..%2Fetc%2Fpasswd",
+      "expectStatus": [400, 404],
+      "saveAs": "trav1"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/uploads/%2e%2e%2f%2e%2e%2fetc%2fpasswd",
+      "expectStatus": [400, 404],
+      "saveAs": "trav2"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/uploads/..%5C..%5Cwindows%5Cwin.ini",
+      "expectStatus": [400, 404],
+      "saveAs": "trav3"
+    },
+    { "type": "http", "method": "GET", "path": "/api/uploads/evals-no-such-upload-id", "expectStatus": 404, "saveAs": "missing" }
+  ],
+  "graders": [
+    { "type": "forbidden", "target": "trav1.body", "patterns": ["root:", "/bin/bash", "\\[boot loader\\]"] },
+    { "type": "forbidden", "target": "trav2.body", "patterns": ["root:", "/bin/bash", "\\[boot loader\\]"] },
+    { "type": "forbidden", "target": "trav3.body", "patterns": ["\\[boot loader\\]", "\\[fonts\\]", "for 16-bit app support"] },
+    { "type": "forbidden", "target": "missing.body", "patterns": ["\"ok\"\\s*:\\s*true"] }
+  ]
+}

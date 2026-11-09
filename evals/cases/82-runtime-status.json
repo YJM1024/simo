@@ -1,0 +1,53 @@
+{
+  "id": "runtime-status",
+  "name": "运行时状态 API（/api/runtime/status、workflow/task runtime 形状：progress/耗时/nextAction/预算/stall/检查点）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-rt-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "GET", "path": "/api/runtime/status", "expectStatus": 200, "saveAs": "rtStatus" },
+
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}" }, "pick": "id", "saveAs": "sid" },
+
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@sid}}",
+      "chat": { "text": "{{probe}} mock:workflow 拆解任务并推进。" },
+      "saveAs": "wfStream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 45000 },
+      "drainMs": 400
+    },
+    { "type": "http", "method": "GET", "path": "/api/workflows?sessionId={{@sid}}", "expectStatus": 200, "saveAs": "wfList" },
+    { "type": "capture", "from": "wfList.json.workflows", "where": {}, "pick": "id", "saveAs": "workflowId" },
+    { "type": "http", "method": "GET", "path": "/api/workflows/{{@workflowId}}", "expectStatus": 200, "saveAs": "wfDetail" },
+    { "type": "capture", "from": "wfDetail.json.workflow.tasks", "where": {}, "pick": "id", "saveAs": "taskId" },
+
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/workflows/{{@workflowId}}/runtime",
+      "saveAs": "wfRuntime",
+      "intervalMs": 500,
+      "timeoutMs": 30000,
+      "until": { "path": "json.runtime", "matchSome": { "status": "running" } }
+    },
+    { "type": "http", "method": "GET", "path": "/api/tasks/{{@taskId}}/runtime", "expectStatus": 200, "saveAs": "taskRuntime" },
+    { "type": "http", "method": "GET", "path": "/api/runtime/status", "expectStatus": 200, "saveAs": "rtStatus2" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "rtStatus.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "regex", "target": "rtStatus.body", "pattern": "\"(version|uptimeMs|activeTasks|budget|dbBytes)\"\\s*:" },
+    { "type": "regex", "target": "wfRuntime.body", "pattern": "\"progress\"\\s*:" },
+    { "type": "regex", "target": "wfRuntime.body", "pattern": "\"(elapsedMs|startedAt)\"\\s*:" },
+    { "type": "regex", "target": "wfRuntime.body", "pattern": "\"(nextAction|etaHint|budget)\"\\s*:" },
+    { "type": "regex", "target": "wfRuntime.body", "pattern": "\"(stallState|stall)\"\\s*:" },
+    { "type": "regex", "target": "wfRuntime.body", "pattern": "\"(checkpoint|lastCheckpoint|checkpointAt)\"" },
+    { "type": "regex", "target": "taskRuntime.body", "pattern": "\"(attempt|progress|lastProgressAt)\"\\s*:" },
+    { "type": "regex", "target": "taskRuntime.body", "pattern": "\"(stallState|resumePoint|nextAction)\"\\s*:" },
+    { "type": "forbidden", "target": "rtStatus.body", "patterns": ["\"specId\"\\s*:", "\"specVersion\"\\s*:"] }
+  ]
+}

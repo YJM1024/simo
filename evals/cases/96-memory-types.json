@@ -1,0 +1,29 @@
+{
+  "id": "memory-types",
+  "name": "记忆五类型过滤（scene/semantic/norm/procedural/working：返回项的 type 与过滤一致）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-mem-types-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}" }, "pick": "id", "saveAs": "sid" },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{@sid}}", "text": "记住：项目代号是 Orion（{{probe}}）。" }, "expectStatus": [200, 202], "saveAs": "chat" },
+
+    { "type": "http", "method": "GET", "path": "/api/memory/items?type=scene&status=all", "expectStatus": 200, "saveAs": "scene" },
+    { "type": "http", "method": "GET", "path": "/api/memory/items?type=semantic&status=all", "expectStatus": 200, "timeoutMs": 60000, "saveAs": "semantic" },
+    { "type": "http", "method": "GET", "path": "/api/memory/items?type=norm&status=all", "expectStatus": 200, "saveAs": "norm" },
+    { "type": "http", "method": "GET", "path": "/api/memory/items?type=procedural&status=all", "expectStatus": 200, "saveAs": "procedural" },
+    { "type": "http", "method": "GET", "path": "/api/memory/items?type=working&status=all", "expectStatus": 200, "saveAs": "working" }
+  ],
+  "graders": [
+    { "type": "forbidden", "target": "scene.body", "patterns": ["\"type\"\\s*:\\s*\"(semantic|norm|procedural|working)\""] },
+    { "type": "forbidden", "target": "semantic.body", "patterns": ["\"type\"\\s*:\\s*\"(scene|norm|procedural|working)\""] },
+    { "type": "forbidden", "target": "norm.body", "patterns": ["\"type\"\\s*:\\s*\"(scene|semantic|procedural|working)\""] },
+    { "type": "forbidden", "target": "procedural.body", "patterns": ["\"type\"\\s*:\\s*\"(scene|semantic|norm|working)\""] },
+    { "type": "forbidden", "target": "working.body", "patterns": ["\"type\"\\s*:\\s*\"(scene|semantic|norm|procedural)\""] },
+    { "type": "regex", "target": "semantic.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "count", "target": "semantic.json.items", "pattern": "\"type\"\\s*:\\s*\"semantic\"", "atLeast": 1 }
+  ]
+}

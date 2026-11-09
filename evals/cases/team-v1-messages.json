@@ -1,0 +1,99 @@
+{
+  "id": "team-v1-messages",
+  "name": "团队 V1 内部消息（角色间路由存在、不进用户主窗口、Lead 汇总可见）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-teamv1m-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/sessions",
+      "body": {
+        "title": "{{caseSession}}"
+      },
+      "expectStatus": [
+        200,
+        201
+      ],
+      "saveAs": "created"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions",
+      "expectStatus": 200,
+      "saveAs": "sessions"
+    },
+    {
+      "type": "capture",
+      "from": "sessions.json.sessions",
+      "whereContains": {
+        "title": "{{caseSession}}"
+      },
+      "pick": "id",
+      "saveAs": "sid"
+    },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@sid}}",
+      "chat": {
+        "text": "我想创建一个新的需求：{{probe}}-child 分析数据。"
+      },
+      "saveAs": "s1",
+      "until": {
+        "type": [
+          "reply.done",
+          "message.done"
+        ],
+        "timeoutMs": 45000
+      },
+      "drainMs": 1200
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions",
+      "expectStatus": 200,
+      "saveAs": "allSessions"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{@sid}}",
+      "expectStatus": 200,
+      "saveAs": "mainMsgs"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/team?sessionId={{@sid}}",
+      "expectStatus": 200,
+      "saveAs": "team"
+    }
+  ],
+  "graders": [
+    {
+      "type": "forbidden",
+      "target": "mainMsgs.body",
+      "patterns": [
+        "\"internal\":\\s*true",
+        "\"channel\"\\s*:\\s*\"team\"",
+        "\"visibility\"\\s*:\\s*\"internal\""
+      ]
+    },
+    {
+      "type": "count",
+      "target": "mainMsgs.json.messages",
+      "pattern": "\"role\"\\s*:\\s*\"agent\"",
+      "atLeast": 1
+    },
+    {
+      "type": "regex",
+      "target": "team.body",
+      "pattern": "\"members\"\\s*:\\s*\\["
+    }
+  ]
+}

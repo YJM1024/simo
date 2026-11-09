@@ -1,0 +1,50 @@
+{
+  "id": "preference-repeat",
+  "name": "偏好重复写入（同 key 更新为 active，不产生 disputed）",
+  "tier": "normal",
+  "vars": {
+    "probe": "evals-pref-{{runId}}",
+    "p1": "记住：我喜欢喝美式咖啡。{{probe}}",
+    "p2": "记住：我喜欢喝拿铁咖啡。{{probe}}"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{p1}}" },
+      "saveAs": "s1",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 20000 },
+      "drainMs": 1000
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/memory?q={{probe}}",
+      "saveAs": "first",
+      "intervalMs": 200,
+      "timeoutMs": 8000,
+      "until": { "path": "json.items", "matchSome": {} }
+    },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{p2}}" },
+      "saveAs": "s2",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 20000 },
+      "drainMs": 1500
+    },
+    { "type": "http", "method": "GET", "path": "/api/memory?q={{probe}}", "expectStatus": 200, "saveAs": "after" }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "after.json.items", "atLeast": 1 },
+    { "type": "state_delta", "collection": "after.json.items", "where": { "kind": "preference" }, "atLeast": 1 },
+    { "type": "state_delta", "collection": "after.json.items", "where": { "status": "active" }, "atLeast": 1 },
+    { "type": "state_delta", "collection": "after.json.items", "where": { "status": "disputed" }, "atMost": 0 },
+    { "type": "regex", "target": "after.body", "pattern": "拿铁" },
+    { "type": "regex", "target": "after.body", "pattern": "\"version\"\\s*:\\s*[2-9]" }
+  ]
+}

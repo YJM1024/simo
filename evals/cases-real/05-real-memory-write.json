@@ -1,0 +1,34 @@
+{
+  "id": "real-memory-write",
+  "name": "真实模型：一次\"记住\"记忆写入（结构断言：记忆条目存在且来源 user_confirmed）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-real-mem-{{runId}}",
+    "keytext": "A-302-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "chat": { "text": "记住：我的工位是 {{keytext}}。" },
+      "saveAs": "stream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 90000 },
+      "drainMs": 1000
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/memory?q={{keytext}}",
+      "saveAs": "mem",
+      "intervalMs": 300,
+      "timeoutMs": 15000,
+      "until": { "path": "json.items", "matchSome": {} }
+    }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "mem.json.items", "atLeast": 1 },
+    { "type": "state_delta", "collection": "mem.json.items", "where": { "authority": "user_confirmed" }, "expect": { "source": "user" }, "atLeast": 1 },
+    { "type": "regex", "target": "mem.body", "pattern": "{{keytext}}" }
+  ]
+}

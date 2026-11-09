@@ -1,0 +1,94 @@
+{
+  "id": "upload-limits",
+  "name": "上传限额（单文件 >20MiB → 413/400；单条消息 >5 附件 → 413/400，均带错误信封）",
+  "tier": "normal",
+  "vars": {
+    "probe": "evals-limit-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/uploads?sessionId={{caseSession}}",
+      "multipart": {
+        "files": [{ "filename": "too-big-{{runId}}.bin", "mime": "application/octet-stream", "sizeBytes": 22020096, "fill": 97 }]
+      },
+      "expectStatus": [400, 413],
+      "timeoutMs": 60000,
+      "saveAs": "tooBig"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/uploads?sessionId={{caseSession}}",
+      "multipart": { "files": [{ "filename": "a1-{{runId}}.txt", "mime": "text/plain", "content": "a1" }] },
+      "expectStatus": [200, 201],
+      "saveAs": "u1"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/uploads?sessionId={{caseSession}}",
+      "multipart": { "files": [{ "filename": "a2-{{runId}}.txt", "mime": "text/plain", "content": "a2" }] },
+      "expectStatus": [200, 201],
+      "saveAs": "u2"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/uploads?sessionId={{caseSession}}",
+      "multipart": { "files": [{ "filename": "a3-{{runId}}.txt", "mime": "text/plain", "content": "a3" }] },
+      "expectStatus": [200, 201],
+      "saveAs": "u3"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/uploads?sessionId={{caseSession}}",
+      "multipart": { "files": [{ "filename": "a4-{{runId}}.txt", "mime": "text/plain", "content": "a4" }] },
+      "expectStatus": [200, 201],
+      "saveAs": "u4"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/uploads?sessionId={{caseSession}}",
+      "multipart": { "files": [{ "filename": "a5-{{runId}}.txt", "mime": "text/plain", "content": "a5" }] },
+      "expectStatus": [200, 201],
+      "saveAs": "u5"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/uploads?sessionId={{caseSession}}",
+      "multipart": { "files": [{ "filename": "a6-{{runId}}.txt", "mime": "text/plain", "content": "a6" }] },
+      "expectStatus": [200, 201],
+      "saveAs": "u6"
+    },
+    { "type": "capture", "from": "u1.json.attachments", "where": {}, "pick": "id", "saveAs": "id1" },
+    { "type": "capture", "from": "u2.json.attachments", "where": {}, "pick": "id", "saveAs": "id2" },
+    { "type": "capture", "from": "u3.json.attachments", "where": {}, "pick": "id", "saveAs": "id3" },
+    { "type": "capture", "from": "u4.json.attachments", "where": {}, "pick": "id", "saveAs": "id4" },
+    { "type": "capture", "from": "u5.json.attachments", "where": {}, "pick": "id", "saveAs": "id5" },
+    { "type": "capture", "from": "u6.json.attachments", "where": {}, "pick": "id", "saveAs": "id6" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": {
+        "sessionId": "{{caseSession}}",
+        "text": "{{probe}} 六个附件",
+        "attachments": ["{{@id1}}", "{{@id2}}", "{{@id3}}", "{{@id4}}", "{{@id5}}", "{{@id6}}"]
+      },
+      "expectStatus": [400, 413],
+      "saveAs": "tooMany"
+    }
+  ],
+  "graders": [
+    { "type": "forbidden", "target": "tooBig.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "regex", "target": "tooBig.body", "pattern": "(error|message|code)" },
+    { "type": "forbidden", "target": "tooMany.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "regex", "target": "tooMany.body", "pattern": "(error|message|code)" },
+    { "type": "state_delta", "collection": "u5.json.attachments", "atLeast": 1 }
+  ]
+}

@@ -1,0 +1,227 @@
+{
+  "id": "agents-api",
+  "name": "Agents API（/api/agents 形状；sessions.ownerAgentId；agent 消息 agentId 与 agents 一致）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-agents-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/agents",
+      "expectStatus": 200,
+      "saveAs": "agents"
+    },
+    {
+      "type": "capture",
+      "from": [
+        "agents.json.agents",
+        "agents.json.data",
+        "agents.json.items"
+      ],
+      "mode": "array",
+      "saveAs": "agentList"
+    },
+    {
+      "type": "capture",
+      "from": "agentList",
+      "where": {},
+      "pick": "id",
+      "saveAs": "agentId1"
+    },
+    {
+      "type": "capture",
+      "from": "agentList",
+      "where": {},
+      "pick": "name",
+      "saveAs": "agentName1"
+    },
+    {
+      "type": "capture",
+      "from": "agentList",
+      "where": {},
+      "pick": "role",
+      "saveAs": "agentRole1"
+    },
+    {
+      "type": "capture",
+      "from": "agentList",
+      "where": {},
+      "pick": "model",
+      "saveAs": "agentModel1"
+    },
+    {
+      "type": "capture",
+      "from": "agentList",
+      "where": {},
+      "pick": "tools",
+      "saveAs": "agentTools1"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/sessions",
+      "body": {
+        "title": "{{caseSession}}"
+      },
+      "expectStatus": [
+        200,
+        201
+      ],
+      "saveAs": "created"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions",
+      "expectStatus": 200,
+      "saveAs": "sessions"
+    },
+    {
+      "type": "capture",
+      "from": "sessions.json.sessions",
+      "whereContains": {
+        "title": "{{caseSession}}"
+      },
+      "pick": "id",
+      "saveAs": "sid"
+    },
+    {
+      "type": "capture",
+      "from": "sessions.json.sessions",
+      "whereContains": {
+        "title": "{{caseSession}}"
+      },
+      "pick": "ownerAgentId",
+      "saveAs": "sessionOwner"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": {
+        "sessionId": "{{@sid}}",
+        "text": "{{probe}} 你好。"
+      },
+      "expectStatus": [
+        200,
+        202
+      ],
+      "saveAs": "chat"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{@sid}}",
+      "saveAs": "warm",
+      "intervalMs": 300,
+      "timeoutMs": 45000,
+      "until": {
+        "path": "json.messages",
+        "matchSome": {
+          "role": "agent"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{@sid}}",
+      "expectStatus": 200,
+      "saveAs": "msgs"
+    },
+    {
+      "type": "capture",
+      "from": "msgs.json.messages",
+      "where": {
+        "role": "agent"
+      },
+      "pick": "agentId",
+      "saveAs": "msgAgentId"
+    }
+  ],
+  "graders": [
+    {
+      "type": "regex",
+      "target": "agents.body",
+      "pattern": "\"id\"\\s*:\\s*\"simo\""
+    },
+    {
+      "type": "state_delta",
+      "collection": "agentList",
+      "atLeast": 1
+    },
+    {
+      "type": "regex",
+      "target": "agents.body",
+      "pattern": "\"name\"\\s*:\\s*\"[^\"]+\""
+    },
+    {
+      "type": "regex",
+      "target": "agents.body",
+      "pattern": "\"role\"\\s*:\\s*\"[^\"]+\""
+    },
+    {
+      "type": "regex",
+      "target": "agents.body",
+      "pattern": "\"tools\"\\s*:\\s*\\["
+    },
+    {
+      "type": "regex",
+      "target": "agents.body",
+      "pattern": "\"model\"\\s*:\\s*\"[^\"]+\""
+    },
+    {
+      "type": "regex",
+      "target": "agentTools1",
+      "pattern": "^\\["
+    },
+    {
+      "type": "regex",
+      "target": "agentModel1",
+      "pattern": "^.{1,}$"
+    },
+    {
+      "type": "regex",
+      "target": "agentName1",
+      "pattern": "^.{1,}$"
+    },
+    {
+      "type": "regex",
+      "target": "agentRole1",
+      "pattern": "^.{1,}$"
+    },
+    {
+      "type": "regex",
+      "target": "sessionOwner",
+      "pattern": "^.{1,}$"
+    },
+    {
+      "type": "state_delta",
+      "collection": "agentList",
+      "where": {
+        "id": "{{@sessionOwner}}"
+      },
+      "atLeast": 1
+    },
+    {
+      "type": "regex",
+      "target": "msgAgentId",
+      "pattern": "^.{1,}$"
+    },
+    {
+      "type": "state_delta",
+      "collection": "agentList",
+      "where": {
+        "id": "{{@msgAgentId}}"
+      },
+      "atLeast": 1
+    },
+    {
+      "type": "regex",
+      "target": "agents.body",
+      "pattern": "\"icon\"\\s*:\\s*\"[^\"]+\""
+    }
+  ]
+}

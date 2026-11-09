@@ -1,0 +1,21 @@
+{
+  "id": "memory-consolidate-conflict",
+  "name": "M30 记忆巩固：同 factKey 不同值 → disputed 两条保留（不自动裁决）",
+  "tier": "critical",
+  "vars": {
+    "p": "konsol-conf-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "记住：项目代号是 ConfA-{{p}}，这是旧说法。" }, "expectStatus": [200, 202], "saveAs": "c1" },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "项目代号是 ConfB-{{p}}，这是新说法，两个都要保留。" }, "expectStatus": [200, 202], "saveAs": "c2" },
+    { "type": "http", "method": "POST", "path": "/api/debug/memory/consolidate", "body": { "sessionId": "{{caseSession}}", "agentId": "agent:simo", "maxMessages": 20 }, "expectStatus": 200, "saveAs": "cons" },
+    { "type": "http", "method": "GET", "path": "/api/memory/conflicts", "expectStatus": 200, "saveAs": "conflicts" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "cons.body", "pattern": "\"conflictCount\"\\s*:\\s*1" },
+    { "type": "regex", "target": "conflicts.body", "pattern": "ConfA-{{p}}" },
+    { "type": "regex", "target": "conflicts.body", "pattern": "ConfB-{{p}}" },
+    { "type": "regex", "target": "conflicts.body", "pattern": "\"status\"\\s*:\\s*\"disputed\"" },
+    { "type": "forbidden", "target": "cons.body", "patterns": ["no_candidates"] }
+  ]
+}

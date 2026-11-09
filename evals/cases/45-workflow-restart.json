@@ -1,0 +1,15 @@
+{
+  "id": "workflow-restart",
+  "name": "重启恢复（工作流/任务/汇报不丢，running → interrupted，工作流暂停）",
+  "tier": "critical",
+  "pending": "需要重启被测服务进程，单次 run.mjs 做不到 → 由 evals/workflow-restart.ps1 真实执行（起服→触发工作流→杀进程→重启→断言不丢/interrupted）。注意：该脚本会自建独立端口+临时 AGENTD_HOME，不碰 8787。",
+  "vars": {
+    "probe": "evals-wfrestart-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "GET", "path": "/api/workflows?sessionId=main", "expectStatus": 200, "saveAs": "wfList" }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "wfList.json.workflows", "atLeast": 1 }
+  ]
+}

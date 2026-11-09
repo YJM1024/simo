@@ -1,0 +1,86 @@
+{
+  "id": "recall-rebuild",
+  "name": "派生表重建（seed → recall 有实体/路径 → rebuild → 再 rebuild 幂等 → 重新 seed 恢复）",
+  "tier": "normal",
+  "vars": {
+    "probe": "evals-recall-rebuild-{{runId}}",
+    "a": "ent-rb-a-{{runId}}",
+    "b": "ent-rb-b-{{runId}}",
+    "m": "mem-rb-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/debug/recall/seed",
+      "expectStatus": [200],
+      "body": {
+        "entities": [
+          { "id": "{{a}}", "kind": "place", "name": "重建测试实体A", "canonical_name": "重建测试实体A", "aliases": ["重建别名A"] },
+          { "id": "{{b}}", "kind": "org", "name": "重建测试实体B", "canonical_name": "重建测试实体B", "aliases": [] }
+        ],
+        "relations": [
+          { "id": "rel-rb-{{runId}}", "from_entity": "{{a}}", "to_entity": "{{b}}", "rel_type": "related_to", "source_item": "{{m}}", "source_version": 1 }
+        ],
+        "memoryItems": [
+          { "id": "{{m}}", "content": "重建测试实体A 与 重建测试实体B 有关", "type": "semantic", "version": 1, "layer": 1, "status": "active" }
+        ]
+      },
+      "saveAs": "seeded"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/debug/recall",
+      "expectStatus": 200,
+      "body": { "query": "重建别名A", "budget": { "maxEntities": 5, "perEntityN": 3, "maxHop": 1, "tokenBudget": 8000 } },
+      "saveAs": "before"
+    },
+    { "type": "http", "method": "POST", "path": "/api/debug/recall/rebuild", "body": {}, "expectStatus": [200], "saveAs": "rebuild1" },
+    { "type": "http", "method": "POST", "path": "/api/debug/recall/rebuild", "body": {}, "expectStatus": [200], "saveAs": "rebuild2" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/debug/recall",
+      "expectStatus": 200,
+      "body": { "query": "重建测试实体A", "budget": { "maxEntities": 5, "perEntityN": 3, "maxHop": 1, "tokenBudget": 8000 } },
+      "saveAs": "afterRebuild"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/debug/recall/seed",
+      "expectStatus": [200],
+      "body": {
+        "entities": [
+          { "id": "{{a}}", "kind": "place", "name": "重建测试实体A", "canonical_name": "重建测试实体A", "aliases": ["重建别名A"] },
+          { "id": "{{b}}", "kind": "org", "name": "重建测试实体B", "canonical_name": "重建测试实体B", "aliases": [] }
+        ],
+        "relations": [
+          { "id": "rel-rb-{{runId}}", "from_entity": "{{a}}", "to_entity": "{{b}}", "rel_type": "related_to", "source_item": "{{m}}", "source_version": 1 }
+        ]
+      },
+      "saveAs": "reseeded"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/debug/recall",
+      "expectStatus": 200,
+      "body": { "query": "重建别名A", "budget": { "maxEntities": 5, "perEntityN": 3, "maxHop": 1, "tokenBudget": 8000 } },
+      "saveAs": "afterReseed"
+    }
+  ],
+  "graders": [
+    { "type": "regex", "target": "seeded.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "regex", "target": "before.body", "pattern": "{{a}}" },
+    { "type": "regex", "target": "before.body", "pattern": "\"paths\"\\s*:\\s*\\[\\s*\\{" },
+    { "type": "regex", "target": "rebuild1.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "regex", "target": "rebuild2.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "regex", "target": "afterRebuild.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "regex", "target": "afterRebuild.body", "pattern": "{{a}}" },
+    { "type": "regex", "target": "afterRebuild.body", "pattern": "\"paths\"\\s*:\\s*\\[\\s*\\{" },
+    { "type": "regex", "target": "reseeded.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "regex", "target": "afterReseed.body", "pattern": "\"paths\"\\s*:\\s*\\[\\s*\\{" }
+  ]
+}

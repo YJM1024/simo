@@ -1,0 +1,54 @@
+{
+  "id": "task-cancel",
+  "name": "任务取消（running 时 cancel → status=cancelled，且不再推进到 done）",
+  "tier": "critical",
+  "vars": {
+    "marker": "evals-cancel-{{runId}}",
+    "tmsg": "{{marker}} 帮我把这个月所有待办整理成长报告，多阶段慢慢做。"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{marker}}",
+      "chat": { "text": "{{tmsg}}" },
+      "saveAs": "stream",
+      "until": { "type": "task.created", "timeoutMs": 25000 },
+      "drainMs": 500
+    },
+    { "type": "capture", "from": "stream.frames", "where": { "type": "task.created" }, "pick": "data.id", "saveAs": "taskId" },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/tasks?sessionId={{caseSession}}",
+      "saveAs": "running",
+      "intervalMs": 200,
+      "timeoutMs": 15000,
+      "until": { "path": "json.tasks", "matchSome": { "id": "{{@taskId}}", "status": "running" } }
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/tasks/{{@taskId}}/cancel",
+      "body": {},
+      "expectStatus": [200, 202, 204],
+      "saveAs": "cancelResp"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/tasks?sessionId={{caseSession}}",
+      "saveAs": "afterCancel",
+      "intervalMs": 200,
+      "timeoutMs": 15000,
+      "until": { "path": "json.tasks", "matchSome": { "id": "{{@taskId}}", "status": "cancelled" } }
+    },
+    { "type": "capture", "from": "afterCancel.json.tasks", "where": { "id": "{{@taskId}}" }, "saveAs": "cancelledNode" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "cancelledNode", "pattern": "\"status\"\\s*:\\s*\"cancelled\"" },
+    { "type": "state_delta", "collection": "afterCancel.json.tasks", "where": { "id": "{{@taskId}}", "status": "done" }, "atMost": 0 },
+    { "type": "forbidden", "target": "cancelledNode", "patterns": ["\"status\"\\s*:\\s*\"done\""] }
+  ]
+}

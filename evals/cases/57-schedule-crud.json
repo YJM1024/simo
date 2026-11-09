@@ -1,0 +1,66 @@
+{
+  "id": "schedule-crud",
+  "name": "定时任务 CRUD（建/查/改启停/删 + 非法 cron 400 错误信封）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-crud-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}" }, "pick": "id", "saveAs": "sid" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/schedules",
+      "body": {
+        "sessionId": "{{@sid}}",
+        "title": "evals-crud-{{runId}}",
+        "prompt": "{{probe}} 每小时提醒",
+        "trigger": { "type": "once", "expr": "{{nowPlusIso:3600}}" }
+      },
+      "expectStatus": [200, 201],
+      "saveAs": "created"
+    },
+    { "type": "capture", "from": "created.json.schedule", "where": {}, "pick": "id", "saveAs": "schId" },
+    { "type": "http", "method": "GET", "path": "/api/schedules", "expectStatus": 200, "saveAs": "list" },
+    { "type": "http", "method": "GET", "path": "/api/schedules/{{@schId}}", "expectStatus": 200, "saveAs": "detail" },
+    { "type": "http", "method": "PATCH", "path": "/api/schedules/{{@schId}}", "body": { "enabled": false }, "expectStatus": [200], "saveAs": "patched" },
+    { "type": "http", "method": "DELETE", "path": "/api/schedules/{{@schId}}", "expectStatus": [200, 204], "saveAs": "deleted" },
+    { "type": "http", "method": "GET", "path": "/api/schedules/{{@schId}}", "expectStatus": 404, "saveAs": "gone" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/schedules",
+      "body": { "sessionId": "{{@sid}}", "title": "bad-cron", "prompt": "x", "trigger": { "type": "cron", "expr": "not a cron" } },
+      "expectStatus": [400],
+      "saveAs": "badCron"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/schedules",
+      "body": { "sessionId": "{{@sid}}", "title": "bad-once", "prompt": "x", "trigger": { "type": "once", "expr": "not-a-time" } },
+      "expectStatus": [400],
+      "saveAs": "badOnce"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/schedules",
+      "body": { "sessionId": "{{@sid}}", "title": "bad-type", "prompt": "x", "trigger": { "type": "monthly", "expr": "x" } },
+      "expectStatus": [400],
+      "saveAs": "badType"
+    }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "list.json.schedules", "where": { "id": "{{@schId}}" }, "atLeast": 1 },
+    { "type": "regex", "target": "detail.body", "pattern": "\"enabled\"\\s*:\\s*true" },
+    { "type": "numeric", "left": "detail.json.schedule.nextRunAt", "op": "gt", "value": 0 },
+    { "type": "regex", "target": "patched.body", "pattern": "\"enabled\"\\s*:\\s*false" },
+    { "type": "forbidden", "target": "badCron.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "regex", "target": "badCron.body", "pattern": "(error|message|code)" },
+    { "type": "forbidden", "target": "badOnce.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "badType.body", "patterns": ["\"ok\"\\s*:\\s*true"] }
+  ]
+}

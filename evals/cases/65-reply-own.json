@@ -1,0 +1,54 @@
+{
+  "id": "reply-own",
+  "name": "回复自己的消息（replyTo 指向 user 消息，可正常发送并获得回复）",
+  "tier": "normal",
+  "vars": {
+    "probe": "evals-replyown-{{runId}}",
+    "firstText": "{{probe}} 第一句。",
+    "secondText": "{{probe}} 补充一句。"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}" }, "pick": "id", "saveAs": "sid" },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{@sid}}", "text": "{{firstText}}" }, "expectStatus": [200, 202], "saveAs": "first" },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{@sid}}",
+      "saveAs": "warm",
+      "intervalMs": 300,
+      "timeoutMs": 45000,
+      "until": { "path": "json.messages", "matchSome": { "role": "user", "text": "{{firstText}}" } }
+    },
+    { "type": "http", "method": "GET", "path": "/api/messages?sessionId={{@sid}}", "expectStatus": 200, "saveAs": "msgs1" },
+    { "type": "capture", "from": "msgs1.json.messages", "where": { "role": "user", "text": "{{firstText}}" }, "pick": "id", "saveAs": "ownMsgId" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": { "sessionId": "{{@sid}}", "text": "{{secondText}}", "replyToMessageId": "{{@ownMsgId}}" },
+      "expectStatus": [200, 202],
+      "saveAs": "second"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{@sid}}",
+      "saveAs": "after",
+      "intervalMs": 300,
+      "timeoutMs": 45000,
+      "until": { "path": "json.messages", "matchSome": { "role": "user", "text": "{{secondText}}" } }
+    },
+    { "type": "http", "method": "GET", "path": "/api/messages?sessionId={{@sid}}", "expectStatus": 200, "saveAs": "msgs2" },
+    { "type": "capture", "from": "msgs2.json.messages", "where": { "role": "user", "text": "{{secondText}}" }, "pick": "replyTo", "saveAs": "replyTo" },
+    { "type": "capture", "from": "replyTo", "where": {}, "pick": "id", "saveAs": "replyToId" },
+    { "type": "capture", "from": "replyTo", "where": {}, "pick": "role", "saveAs": "replyToRole" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "replyToId", "pattern": "^{{@ownMsgId}}$" },
+    { "type": "regex", "target": "replyToRole", "pattern": "^user$" },
+    { "type": "count", "target": "msgs2.json.messages", "pattern": "\"role\"\\s*:\\s*\"agent\"", "atLeast": 2 },
+    { "type": "state_delta", "collection": "msgs2.json.messages", "where": { "role": "user", "text": "{{secondText}}" }, "atLeast": 1 }
+  ]
+}

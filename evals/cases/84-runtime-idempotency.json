@@ -1,0 +1,34 @@
+{
+  "id": "runtime-idempotency",
+  "name": "工具副作用幂等（同工具同参重复 → committed 直接返回不重跑；attempted→unknown 不自动重试、任务 blocked）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-idem-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}" }, "pick": "id", "saveAs": "sid" },
+
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@sid}}",
+      "chat": { "text": "{{probe}} mock:effect-dup" },
+      "saveAs": "stream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 60000 },
+      "drainMs": 500
+    },
+    { "type": "http", "method": "GET", "path": "/api/debug/runtime?sessionId={{@sid}}", "expectStatus": 200, "saveAs": "rt" },
+    { "type": "capture", "from": "rt.json.toolEffects", "mode": "array", "saveAs": "effects" },
+    { "type": "capture", "from": "rt.json.recoveries", "mode": "array", "saveAs": "recoveries" },
+    { "type": "http", "method": "GET", "path": "/api/tasks?sessionId={{@sid}}", "expectStatus": 200, "saveAs": "tasks" }
+  ],
+  "graders": [
+    { "type": "count", "target": "effects", "pattern": "\"status\"\\s*:\\s*\"committed\"", "atLeast": 1 },
+    { "type": "regex", "target": "rt.body", "pattern": "\"effectKey\"\\s*:" },
+    { "type": "regex", "target": "rt.body", "pattern": "(idempotent|hit|reused|committed)" },
+    { "type": "regex", "target": "rt.body", "pattern": "\"(checkpoints|recoveries|reportLog|toolEffects)\"\\s*:" },
+    { "type": "regex", "target": "tasks.body", "pattern": "\"status\"\\s*:" }
+  ]
+}

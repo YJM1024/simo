@@ -1,0 +1,32 @@
+{
+  "id": "memory-hidden",
+  "name": "记忆无公开写 API（POST/PUT/PATCH/DELETE /api/memory* 一律 404；旧接口仍只读）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-mem-hidden-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/memory", "body": { "content": "x" }, "expectStatus": [404, 405], "saveAs": "postRoot" },
+    { "type": "http", "method": "POST", "path": "/api/memory/items", "body": { "content": "x" }, "expectStatus": [404, 405], "saveAs": "postItems" },
+    { "type": "http", "method": "PATCH", "path": "/api/memory/items/mem-x", "body": { "content": "x" }, "expectStatus": [404, 405], "saveAs": "patchItem" },
+    { "type": "http", "method": "DELETE", "path": "/api/memory/items/mem-x", "expectStatus": [404, 405], "saveAs": "deleteItem" },
+    { "type": "http", "method": "POST", "path": "/api/memory/entities", "body": { "name": "x" }, "expectStatus": [404, 405], "saveAs": "postEntity" },
+    { "type": "http", "method": "PUT", "path": "/api/memory/entities/ent-global", "body": { "name": "x" }, "expectStatus": [404, 405], "saveAs": "putEntity" },
+    { "type": "http", "method": "POST", "path": "/api/memory/conflicts", "body": {}, "expectStatus": [404, 405], "saveAs": "postConflict" },
+    { "type": "http", "method": "POST", "path": "/api/memory/canonical/can-x", "body": {}, "expectStatus": [404, 405], "saveAs": "postCanonical" },
+    { "type": "http", "method": "GET", "path": "/api/memory/items", "expectStatus": 200, "saveAs": "listRead" },
+    { "type": "http", "method": "GET", "path": "/api/memory/conflicts", "expectStatus": 200, "saveAs": "conflictsRead" }
+  ],
+  "graders": [
+    { "type": "forbidden", "target": "postRoot.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "postItems.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "patchItem.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "deleteItem.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "postEntity.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "putEntity.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "postConflict.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "postCanonical.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "regex", "target": "listRead.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "regex", "target": "conflictsRead.body", "pattern": "\"ok\"\\s*:\\s*true" }
+  ]
+}

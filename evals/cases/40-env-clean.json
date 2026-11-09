@@ -1,0 +1,52 @@
+{
+  "id": "env-clean",
+  "name": "环境清理（pwsh 内无 API key：$env:DEEPSEEK_API_KEY 为空/不存在）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-env-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}} mock:pwsh-env" },
+      "saveAs": "envStream",
+      "until": { "type": ["reply.done", "message.done", "error"], "timeoutMs": 30000 },
+      "drainMs": 1500
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "pendingEnv",
+      "intervalMs": 200,
+      "timeoutMs": 10000,
+      "until": { "path": "json.approvals", "matchSome": { "tool": "pwsh", "status": "pending" } }
+    },
+    { "type": "capture", "from": "pendingEnv.json.approvals", "where": { "tool": "pwsh", "status": "pending" }, "pick": "id", "saveAs": "envId" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/approvals/{{@envId}}",
+      "body": { "decision": "allow" },
+      "expectStatus": 200,
+      "saveAs": "envAllow"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "approvedEnv",
+      "intervalMs": 200,
+      "timeoutMs": 15000,
+      "until": { "path": "json.approvals", "matchSome": { "id": "{{@envId}}", "status": "approved" } }
+    }
+  ],
+  "graders": [
+    { "type": "regex", "target": "approvedEnv.body", "pattern": "DEEPSEEK_API_KEY" },
+    { "type": "forbidden", "target": "approvedEnv.body", "patterns": ["sk-[A-Za-z0-9_-]{10,}", "Bearer\\s+[A-Za-z0-9._-]{20,}"] },
+    { "type": "regex", "target": "approvedEnv.body", "pattern": "(empty|未设置|not\\s*set|\\(null\\)|^\\s*$|<null>|\\[无\\])" }
+  ]
+}

@@ -1,0 +1,244 @@
+{
+  "id": "cli-actions-matrix",
+  "name": "CLI 动作矩阵（12 命名空间只读代表 + 写动作经 HTTP 可见；含 schedule.list / session.decisions）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-cli-matrix-{{runId}}",
+    "title": "evals-cli-matrix-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "cli",
+      "args": [
+        "session",
+        "list",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "sessionList"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "agent",
+        "list",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "agentList"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "task",
+        "list",
+        "--session",
+        "main",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "taskList"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "workflow",
+        "list",
+        "--session",
+        "main",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "workflowList"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "permission",
+        "approvals",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "permissionApprovals"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "memory",
+        "conflicts",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "memoryConflicts"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "file",
+        "list",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "fileList"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "permission",
+        "get",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "permissionGet"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "config",
+        "get",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "configGet"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "system",
+        "usage",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "systemUsage"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "session",
+        "tree",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "sessionTree"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "schedule",
+        "list",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "scheduleList"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "session",
+        "decisions",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "sessionDecisions"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "session",
+        "create",
+        "--title",
+        "{{title}}",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "created"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions",
+      "expectStatus": 200,
+      "saveAs": "sessions"
+    }
+  ],
+  "graders": [
+    {
+      "type": "regex",
+      "target": "sessionList.stdout",
+      "pattern": "\"id\"\\s*:\\s*\"main\""
+    },
+    {
+      "type": "regex",
+      "target": "agentList.stdout",
+      "pattern": "\"id\"\\s*:\\s*\"simo\""
+    },
+    {
+      "type": "regex",
+      "target": "taskList.stdout",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    },
+    {
+      "type": "regex",
+      "target": "workflowList.stdout",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    },
+    {
+      "type": "regex",
+      "target": "permissionApprovals.stdout",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    },
+    {
+      "type": "regex",
+      "target": "memoryConflicts.stdout",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    },
+    {
+      "type": "regex",
+      "target": "fileList.stdout",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    },
+    {
+      "type": "regex",
+      "target": "permissionGet.stdout",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    },
+    {
+      "type": "regex",
+      "target": "configGet.stdout",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    },
+    {
+      "type": "regex",
+      "target": "systemUsage.stdout",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    },
+    {
+      "type": "regex",
+      "target": "sessionTree.stdout",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    },
+    {
+      "type": "regex",
+      "target": "created.stdout",
+      "pattern": "\"action\"\\s*:\\s*\"session.create\""
+    },
+    {
+      "type": "state_delta",
+      "collection": "sessions.json.sessions",
+      "whereContains": {
+        "title": "{{title}}"
+      },
+      "atLeast": 1
+    },
+    {
+      "type": "regex",
+      "target": "scheduleList.stdout",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    },
+    {
+      "type": "regex",
+      "target": "sessionDecisions.stdout",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    }
+  ]
+}

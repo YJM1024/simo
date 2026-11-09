@@ -1,0 +1,246 @@
+{
+  "id": "card-validation",
+  "name": "M41 卡片校验：非法块/动作不存在/无 chatPrompt/缺 fallback/超限 → 4xx 且不落库",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-card-validate-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/chat.send_card",
+      "expectStatus": 400,
+      "saveAs": "badBlock",
+      "body": {
+        "sessionId": "{{caseSession}}",
+        "fallbackText": "坏块兜底",
+        "schema": {
+          "schemaVersion": 1,
+          "title": "坏块",
+          "blocks": [
+            {
+              "id": "x",
+              "type": "script",
+              "props": {}
+            }
+          ],
+          "actions": [
+            {
+              "id": "a",
+              "label": "确认",
+              "route": "agent",
+              "action": "chat.send",
+              "prompt": "确认"
+            }
+          ],
+          "equivalence": {
+            "chatPrompt": "确认"
+          },
+          "layout": {
+            "kind": "rows"
+          }
+        }
+      }
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/chat.send_card",
+      "expectStatus": 400,
+      "saveAs": "badAction",
+      "body": {
+        "sessionId": "{{caseSession}}",
+        "fallbackText": "坏动作兜底",
+        "schema": {
+          "schemaVersion": 1,
+          "title": "坏动作",
+          "blocks": [
+            {
+              "id": "t",
+              "type": "text",
+              "props": {
+                "text": "hi"
+              }
+            }
+          ],
+          "actions": [
+            {
+              "id": "a",
+              "label": "确认",
+              "route": "action",
+              "action": "no.such.action"
+            }
+          ],
+          "equivalence": {
+            "chatPrompt": "确认"
+          },
+          "layout": {
+            "kind": "rows"
+          }
+        }
+      }
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/chat.send_card",
+      "expectStatus": 400,
+      "saveAs": "badEquiv",
+      "body": {
+        "sessionId": "{{caseSession}}",
+        "fallbackText": "缺等价兜底",
+        "schema": {
+          "schemaVersion": 1,
+          "title": "缺等价",
+          "blocks": [
+            {
+              "id": "t",
+              "type": "text",
+              "props": {
+                "text": "hi"
+              }
+            }
+          ],
+          "actions": [
+            {
+              "id": "a",
+              "label": "确认",
+              "route": "agent",
+              "action": "chat.send",
+              "prompt": "确认"
+            }
+          ],
+          "layout": {
+            "kind": "rows"
+          }
+        }
+      }
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/chat.send_card",
+      "expectStatus": 400,
+      "saveAs": "badFallback",
+      "body": {
+        "sessionId": "{{caseSession}}",
+        "schema": {
+          "schemaVersion": 1,
+          "title": "缺兜底",
+          "blocks": [
+            {
+              "id": "t",
+              "type": "text",
+              "props": {
+                "text": "hi"
+              }
+            }
+          ],
+          "actions": [
+            {
+              "id": "a",
+              "label": "确认",
+              "route": "agent",
+              "action": "chat.send",
+              "prompt": "确认"
+            }
+          ],
+          "equivalence": {
+            "chatPrompt": "确认"
+          },
+          "layout": {
+            "kind": "rows"
+          }
+        }
+      }
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/chat.send_card",
+      "expectStatus": 400,
+      "saveAs": "badLimit",
+      "body": {
+        "sessionId": "{{caseSession}}",
+        "fallbackText": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "schema": {
+          "schemaVersion": 1,
+          "title": "超限",
+          "blocks": [
+            {
+              "id": "t",
+              "type": "text",
+              "props": {
+                "text": "hi"
+              }
+            }
+          ],
+          "actions": [
+            {
+              "id": "a",
+              "label": "确认",
+              "route": "agent",
+              "action": "chat.send",
+              "prompt": "确认"
+            }
+          ],
+          "equivalence": {
+            "chatPrompt": "确认"
+          },
+          "layout": {
+            "kind": "rows"
+          }
+        }
+      }
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{caseSession}}",
+      "expectStatus": 200,
+      "saveAs": "persisted"
+    }
+  ],
+  "graders": [
+    {
+      "type": "regex",
+      "target": "badBlock.body",
+      "pattern": "VIEW_UNKNOWN_BLOCK|CARD_UNKNOWN_BLOCK|CARD_SCHEMA_INVALID"
+    },
+    {
+      "type": "regex",
+      "target": "badAction.body",
+      "pattern": "CARD_ACTION_INVALID|CARD_ROUTE_INVALID|CARD_ACTION_UNKNOWN"
+    },
+    {
+      "type": "regex",
+      "target": "badEquiv.body",
+      "pattern": "VIEW_EQUIVALENCE_MISSING|CARD_SCHEMA_INVALID|CARD_ROUTE_INVALID"
+    },
+    {
+      "type": "regex",
+      "target": "badFallback.body",
+      "pattern": "CARD_FALLBACK_REQUIRED"
+    },
+    {
+      "type": "regex",
+      "target": "badLimit.body",
+      "pattern": "VIEW_LIMIT_EXCEEDED|CARD_LIMIT_EXCEEDED"
+    },
+    {
+      "type": "count",
+      "target": "persisted.json.messages",
+      "pattern": "\"cards\"",
+      "exactly": 0
+    },
+    {
+      "type": "forbidden",
+      "target": "persisted.body",
+      "patterns": [
+        "card-bad",
+        "no.such.action"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "id": "permission-ask",
+  "name": "权限审批（write → pending 不执行；deny 不执行；allow 才写入 workspace）",
+  "tier": "critical",
+  "vars": {
+    "wmsg": "请执行 mock:write 把 TODO 写进文件。",
+    "dmsg": "请执行 mock:delete 删除临时文件。",
+    "notePath": "{{agentdHome}}/workspace/mock-write.txt"
+  },
+  "steps": [
+    { "type": "fs", "op": "remove", "path": "{{notePath}}", "saveAs": "cleanup" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{wmsg}}",
+      "chat": { "text": "{{wmsg}}" },
+      "saveAs": "stream1",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 30000 },
+      "drainMs": 2000
+    },
+    { "type": "http", "method": "GET", "path": "/api/approvals", "expectStatus": 200, "saveAs": "approvals1" },
+    {
+      "type": "capture",
+      "from": "approvals1.json.approvals",
+      "where": { "tool": "write_file", "status": "pending" },
+      "pick": "id",
+      "saveAs": "approval1"
+    },
+    { "type": "fs", "path": "{{notePath}}", "saveAs": "notesPending" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/approvals/{{@approval1}}",
+      "body": { "decision": "deny" },
+      "expectStatus": 200,
+      "saveAs": "denyResp"
+    },
+    { "type": "fs", "path": "{{notePath}}", "saveAs": "notesDenied" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{wmsg}}",
+      "chat": { "text": "{{wmsg}}" },
+      "saveAs": "stream2",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 30000 },
+      "drainMs": 1500
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "approvals2",
+      "intervalMs": 200,
+      "timeoutMs": 10000,
+      "until": { "path": "json.approvals", "matchSome": { "tool": "write_file", "status": "pending" } }
+    },
+    {
+      "type": "capture",
+      "from": "approvals2.json.approvals",
+      "where": { "tool": "write_file", "status": "pending" },
+      "pick": "id",
+      "saveAs": "approval2"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/approvals/{{@approval2}}",
+      "body": { "decision": "allow" },
+      "expectStatus": 200,
+      "saveAs": "allowResp"
+    },
+    { "type": "fs", "path": "{{notePath}}", "saveAs": "notesAllowed" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{dmsg}}",
+      "chat": { "text": "{{dmsg}}" },
+      "saveAs": "deleteStream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 30000 },
+      "drainMs": 1000
+    },
+    { "type": "http", "method": "GET", "path": "/api/approvals", "expectStatus": 200, "saveAs": "approvals3" }
+  ],
+  "graders": [
+    {
+      "type": "state_delta",
+      "collection": "approvals1.json.approvals",
+      "where": { "tool": "write_file", "status": "pending" },
+      "atLeast": 1
+    },
+    { "type": "regex", "target": "notesPending.exists", "pattern": "^false$" },
+    { "type": "regex", "target": "denyResp.body", "pattern": "\"status\"\\s*:\\s*\"denied\"" },
+    { "type": "regex", "target": "notesDenied.exists", "pattern": "^false$" },
+    {
+      "type": "state_delta",
+      "collection": "approvals2.json.approvals",
+      "where": { "tool": "write_file", "status": "pending" },
+      "atLeast": 1
+    },
+    { "type": "regex", "target": "allowResp.body", "pattern": "\"status\"\\s*:\\s*\"approved\"" },
+    { "type": "regex", "target": "notesAllowed.exists", "pattern": "^true$" },
+    { "type": "file_exists", "path": "{{notePath}}", "exists": true },
+    { "type": "state_delta", "collection": "approvals3.json.approvals", "where": { "tool": "delete_file" }, "atMost": 0 },
+    { "type": "regex", "target": "deleteStream.trace", "pattern": "(reply|message)\\.done" }
+  ]
+}

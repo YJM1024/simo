@@ -1,0 +1,15 @@
+{
+  "id": "team-v0-executor",
+  "name": "任务执行者配置（默认 agent:task-npc；AGENTD_TASK_EXECUTOR=agent:simo 后生效）",
+  "tier": "normal",
+  "pending": "默认值可在 /api/team 断言；覆盖值需要以 AGENTD_TASK_EXECUTOR=agent:simo 重启服务 → 由 evals/team-executor.ps1 真实执行（phase1 默认 task-npc；phase2 重启带 env，断言 members.agentId=agent:simo）。",
+  "vars": {
+    "probe": "evals-team-exec-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "GET", "path": "/api/team", "expectStatus": 200, "saveAs": "team" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "team.body", "pattern": "\"agentId\"\\s*:" }
+  ]
+}

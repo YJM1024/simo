@@ -1,0 +1,51 @@
+{
+  "id": "upload-attach",
+  "name": "上传附件（上传 → 带 attachments 发送 → 消息带元数据 → 下载内容一致）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-attach-{{runId}}",
+    "fname": "note-{{runId}}.txt",
+    "fcontent": "hello m8 {{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/uploads?sessionId={{caseSession}}",
+      "multipart": {
+        "files": [{ "filename": "{{fname}}", "mime": "text/plain", "content": "{{fcontent}}" }]
+      },
+      "expectStatus": [200, 201],
+      "saveAs": "upload"
+    },
+    { "type": "capture", "from": "upload.json.attachments", "where": {}, "pick": "id", "saveAs": "attachmentId" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": { "sessionId": "{{caseSession}}", "text": "{{probe}} 带一个附件", "attachments": ["{{@attachmentId}}"] },
+      "expectStatus": [200, 202],
+      "saveAs": "chat"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{caseSession}}",
+      "saveAs": "msgs",
+      "intervalMs": 200,
+      "timeoutMs": 10000,
+      "until": { "path": "json.messages", "matchSome": { "text": "{{probe}} 带一个附件" } }
+    },
+    { "type": "http", "method": "GET", "path": "/api/uploads/{{@attachmentId}}", "expectStatus": 200, "saveAs": "download" }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "upload.json.attachments", "atLeast": 1 },
+    { "type": "regex", "target": "msgs.body", "pattern": "\"attachments\"\\s*:\\s*\\[\\s*\\{" },
+    { "type": "regex", "target": "msgs.body", "pattern": "\"name\"\\s*:\\s*\"{{fname}}\"" },
+    { "type": "regex", "target": "msgs.body", "pattern": "\"mime\"\\s*:\\s*\"text/plain\"" },
+    { "type": "regex", "target": "msgs.body", "pattern": "\"size\"\\s*:\\s*[1-9][0-9]*" },
+    { "type": "regex", "target": "msgs.body", "pattern": "\"id\"\\s*:\\s*\"{{@attachmentId}}\"" },
+    { "type": "regex", "target": "download.body", "pattern": "hello m8 {{runId}}" },
+    { "type": "regex", "target": "download.headers", "pattern": "\"content-disposition\"" }
+  ]
+}

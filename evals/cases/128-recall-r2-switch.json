@@ -1,0 +1,21 @@
+{
+  "id": "recall-r2-switch",
+  "name": "M27 召回开关：AGENTD_RECALL_R2=0 → 1 跳、无 agentic steps（hop_capped）",
+  "tier": "critical",
+  "pending": "需要以 AGENTD_RECALL_R2=0 启动被测服务，单次 run.mjs 不能改 env → 由 evals/m27-m30-env.ps1 真实执行（起服 R2=0→hopLimit=1、无 steps→停止）。",
+  "vars": {
+    "q": "不存在的东西-Switch-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http", "method": "POST", "path": "/api/debug/recall", "expectStatus": 200, "saveAs": "recall",
+      "body": { "query": "{{q}}", "sessionId": "main", "agentId": "agent:simo", "trace": "full", "budget": { "maxHop": 2 } }
+    }
+  ],
+  "graders": [
+    { "type": "regex", "target": "recall.body", "pattern": "\"hopLimit\"\\s*:\\s*1" },
+    { "type": "regex", "target": "recall.body", "pattern": "\"steps\"\\s*:\\s*0" },
+    { "type": "forbidden", "target": "recall.body", "patterns": ["\"steps\"\\s*:\\s*\\[\\s*\\{"] },
+    { "type": "regex", "target": "recall.body", "pattern": "hop_capped" }
+  ]
+}

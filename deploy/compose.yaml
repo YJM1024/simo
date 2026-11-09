@@ -1,0 +1,99 @@
+# agentd 本地/单机部署（Compose v2）
+#
+# 用法（在仓库根执行）：
+#   docker compose -f deploy/compose.yaml build
+#   docker compose -f deploy/compose.yaml up -d
+#   docker compose -f deploy/compose.yaml ps
+#   docker compose -f deploy/compose.yaml logs -f agentd
+#   docker compose -f deploy/compose.yaml down            # 保留命名卷
+#
+# 诚实声明：本机无 Docker/WSL/Podman，**本文件未实际运行验证**（见 README「验证状态」）。
+
+name: agentd
+
+services:
+  agentd:
+    image: agentd:local
+    build:
+      # 构建上下文 = 仓库根（需要同时 COPY web/ 与 agentd/）
+      context: ..
+      dockerfile: deploy/Dockerfile
+      args:
+        # 镜像 tag 可按需覆盖；golang:1.27 若在目标 registry 不存在，
+        # 改成实际可用的 1.27.x 补丁 tag（go.mod 要求 go 1.27）
+        NODE_IMAGE: node:24-bookworm-slim
+        GO_IMAGE: golang:1.27-alpine
+        RUNTIME_IMAGE: alpine:3.22
+        GOPROXY: https://goproxy.cn,direct
+        TZ: ${TZ:-Asia/Shanghai}
+
+    # 只绑本机回环；默认宿主 18787，避免与用户正在使用的 8787 实例冲突。
+    # 确需 8787 且未占用时：$env:AGENTD_PORT="8787"; docker compose ... up -d
+    ports:
+      - "127.0.0.1:${AGENTD_PORT:-18787}:8787"
+
+    environment:
+      AGENTD_HOME: /data
+      # 关键：默认 127.0.0.1 只在容器内回环，端口映射会不通
+      AGENTD_ADDR: 0.0.0.0:8787
+      # M1 只有 mock；M2 接真实模型时再改为 real（密钥走 env/挂载，见 README）
+      AGENTD_MODEL: mock
+      TZ: ${TZ:-Asia/Shanghai}
+      # 可选：模块开关（逗号分隔），例如 AGENTD_DISABLE_MODULES: "tasks"
+      # AGENTD_DISABLE_MODULES: ""
+      # 可选：记忆/召回开关（默认值见 deploy/README.md）
+      # AGENTD_MEMORY_CONSOLIDATE: "1"
+      # AGENTD_RECALL_R2: "1"
+      # AGENTD_RECALL_VECTOR: "0"
+
+    # 可选：用 .env 注入（.env 不进镜像、不入库；见 README「配置与密钥」）
+    # env_file:
+    #   - ../.env
+
+    volumes:
+      # 默认命名卷；设置 AGENTD_DATA_MOUNT 可改为宿主目录（Windows 示例：
+      #   $env:AGENTD_DATA_MOUNT="E:/simo-data"; docker compose ... up -d
+      # 注意短语法里的容器路径固定为 /data）。
+      - "${AGENTD_DATA_MOUNT:-agentd-data}:/data"
+
+    restart: unless-stopped
+
+    # 让 PID 1 由 tini 处理信号/回收僵尸进程（Go 自身已处理 SIGTERM，双保险）
+    init: true
+    # 优雅停机：agentd 内部 shutdown 超时 10s（cmd/agentd/main.go），留余量
+    stop_grace_period: 15s
+
+    healthcheck:
+      # 等价于镜像内 HEALTHCHECK；显式写出便于 compose ps 观察
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8787/api/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+    # 最小权限（不需要额外 capability；镜像已是非 root）
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+    # 可选：只读根文件系统（--read-only + /tmp tmpfs）。
+    # 未验证：开启前先确认 agentd 只写 /data；本机无容器无法实测，故默认注释。
+    # read_only: true
+    # tmpfs:
+    #   - /tmp
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # 可选：单机资源上限（按需取消注释）
+    # mem_limit: 1g
+    # cpus: "2.0"
+
+volumes:
+  agentd-data:
+    # 命名卷由 Docker 管理；备份/迁移见 README（tar 打包即可换机）
+    name: agentd-data

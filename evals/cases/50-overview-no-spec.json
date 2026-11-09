@@ -1,0 +1,30 @@
+{
+  "id": "overview-no-spec",
+  "name": "概览不暴露 Spec（响应无 specId/specVersion/specCore 字段，且不是 404 伪装）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-ovspec-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}" }, "pick": "id", "saveAs": "sid" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@sid}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}} 帮我整理一下这个会话。" },
+      "saveAs": "stream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 30000 },
+      "drainMs": 300
+    },
+    { "type": "http", "method": "POST", "path": "/api/sessions/{{@sid}}/overview/refresh", "body": {}, "expectStatus": [200, 201], "saveAs": "refreshed" },
+    { "type": "http", "method": "GET", "path": "/api/sessions/{{@sid}}/overview", "expectStatus": 200, "saveAs": "ov" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "ov.body", "pattern": "\"goal\"" },
+    { "type": "forbidden", "target": "ov.body", "patterns": ["\"specId\"\\s*:", "\"specVersion\"\\s*:", "\"specCore\"\\s*:", "\"spec\"\\s*:\\s*\\{"] },
+    { "type": "forbidden", "target": "refreshed.body", "patterns": ["\"specId\"\\s*:", "\"specVersion\"\\s*:", "\"specCore\"\\s*:"] }
+  ]
+}

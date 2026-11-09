@@ -1,0 +1,136 @@
+{
+  "id": "team-v1-enter",
+  "name": "团队 V1 进入成员会话（向成员 sessionId 发消息 → 归属该会话、可回复）",
+  "tier": "normal",
+  "vars": {
+    "probe": "evals-teamv1e-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/sessions",
+      "body": {
+        "title": "{{caseSession}}"
+      },
+      "expectStatus": [
+        200,
+        201
+      ],
+      "saveAs": "created"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions",
+      "expectStatus": 200,
+      "saveAs": "sessions"
+    },
+    {
+      "type": "capture",
+      "from": "sessions.json.sessions",
+      "whereContains": {
+        "title": "{{caseSession}}"
+      },
+      "pick": "id",
+      "saveAs": "sid"
+    },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@sid}}",
+      "chat": {
+        "text": "我想创建一个新的需求：{{probe}}-ent 写周报。"
+      },
+      "saveAs": "s1",
+      "until": {
+        "type": [
+          "reply.done",
+          "message.done"
+        ],
+        "timeoutMs": 45000
+      },
+      "drainMs": 1200
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions/tree",
+      "expectStatus": 200,
+      "saveAs": "tree"
+    },
+    {
+      "type": "capture",
+      "from": [
+        "tree.json.sessions",
+        "tree.json.tree"
+      ],
+      "mode": "array",
+      "saveAs": "roots"
+    },
+    {
+      "type": "capture",
+      "from": "roots",
+      "where": {
+        "id": "{{@sid}}"
+      },
+      "pick": "children",
+      "saveAs": "children"
+    },
+    {
+      "type": "capture",
+      "from": "children",
+      "whereContains": {
+        "title": "{{probe}}-ent"
+      },
+      "pick": "id",
+      "saveAs": "memberSid"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": {
+        "sessionId": "{{@memberSid}}",
+        "text": "{{probe}} 进入成员会话说一句。"
+      },
+      "expectStatus": [
+        200,
+        202
+      ],
+      "saveAs": "enterChat"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{@memberSid}}",
+      "saveAs": "memberMsgs",
+      "intervalMs": 300,
+      "timeoutMs": 30000,
+      "until": {
+        "path": "json.messages",
+        "matchSome": {
+          "role": "agent"
+        }
+      }
+    }
+  ],
+  "graders": [
+    {
+      "type": "regex",
+      "target": "enterChat.body",
+      "pattern": "(\"ok\"\\s*:\\s*true|\"messageId\")"
+    },
+    {
+      "type": "regex",
+      "target": "memberMsgs.body",
+      "pattern": "\"sessionId\"\\s*:\\s*\"{{@memberSid}}\""
+    },
+    {
+      "type": "count",
+      "target": "memberMsgs.json.messages",
+      "pattern": "\"role\"\\s*:\\s*\"agent\"",
+      "atLeast": 1
+    }
+  ]
+}

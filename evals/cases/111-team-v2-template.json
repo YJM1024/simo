@@ -1,0 +1,77 @@
+{
+  "id": "team-v2-template",
+  "name": "M25 团队模板 V2：upsert/get + 版本递增 + 继承覆盖 + 父模板不存在报错",
+  "tier": "critical",
+  "vars": {
+    "baseName": "基础模板-{{runId}}",
+    "childName": "子模板-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/team.template.upsert",
+      "body": {
+        "name": "{{baseName}}",
+        "roles": [
+          { "roleKey": "researcher", "title": "研究员", "roleType": "generic", "agentId": "researcher" },
+          { "roleKey": "reviewer", "title": "审校", "roleType": "template" }
+        ]
+      },
+      "expectStatus": 200,
+      "saveAs": "tplBase"
+    },
+    { "type": "capture", "from": "tplBase.json.data", "pick": "id", "saveAs": "baseId" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/team.template.upsert",
+      "body": {
+        "name": "{{childName}}",
+        "inheritsFrom": "{{@baseId}}",
+        "roles": [
+          { "roleKey": "researcher", "title": "高级研究员", "roleType": "generic", "agentId": "researcher" },
+          { "roleKey": "writer", "title": "写作", "roleType": "template" }
+        ]
+      },
+      "expectStatus": 200,
+      "saveAs": "tplChild"
+    },
+    { "type": "capture", "from": "tplChild.json.data", "pick": "id", "saveAs": "childId" },
+    { "type": "http", "method": "POST", "path": "/api/actions/team.template.get", "body": { "id": "{{@childId}}" }, "expectStatus": 200, "saveAs": "got" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/team.template.upsert",
+      "body": {
+        "templateId": "{{@childId}}",
+        "name": "{{childName}}",
+        "inheritsFrom": "{{@baseId}}",
+        "roles": [
+          { "roleKey": "researcher", "title": "高级研究员", "roleType": "generic", "agentId": "researcher" },
+          { "roleKey": "writer", "title": "写作", "roleType": "template" }
+        ]
+      },
+      "expectStatus": 200,
+      "saveAs": "dup"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/team.template.upsert",
+      "body": { "name": "孤儿模板-{{runId}}", "inheritsFrom": "team-tpl-missing", "roles": [] },
+      "expectStatus": [400, 500],
+      "saveAs": "bad"
+    }
+  ],
+  "graders": [
+    { "type": "regex", "target": "tplBase.body", "pattern": "\"version\"\\s*:\\s*1" },
+    { "type": "regex", "target": "tplBase.body", "pattern": "\"inheritsFrom\"\\s*:\\s*\"\"" },
+    { "type": "regex", "target": "tplChild.body", "pattern": "\"inheritsFrom\"\\s*:\\s*\"{{@baseId}}\"" },
+    { "type": "regex", "target": "got.body", "pattern": "\"title\"\\s*:\\s*\"高级研究员\"" },
+    { "type": "regex", "target": "got.body", "pattern": "\"inheritedFrom\"\\s*:\\s*\"{{@baseId}}\"" },
+    { "type": "count", "target": "got.json.data.roles", "pattern": "\"roleKey\"", "exactly": 3 },
+    { "type": "regex", "target": "dup.body", "pattern": "\"version\"\\s*:\\s*2" },
+    { "type": "regex", "target": "bad.body", "pattern": "父模板不存在" }
+  ]
+}

@@ -1,0 +1,150 @@
+{
+  "id": "cli-parity",
+  "name": "CLI ↔ HTTP 对拍（同参数同结果：session/agent/system/config）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-cli-parity-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "cli",
+      "args": [
+        "session",
+        "list",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "cliSessions"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions",
+      "expectStatus": 200,
+      "saveAs": "httpSessions"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "agent",
+        "list",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "cliAgents"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/agents",
+      "expectStatus": 200,
+      "saveAs": "httpAgents"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "system",
+        "health",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "cliHealth"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/health",
+      "expectStatus": 200,
+      "saveAs": "httpHealth"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "config",
+        "get",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "cliConfig"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/config.get",
+      "body": {},
+      "expectStatus": 200,
+      "saveAs": "httpConfig"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "task",
+        "list",
+        "--session",
+        "main",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "cliTasks"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/tasks?sessionId=main",
+      "expectStatus": 200,
+      "saveAs": "httpTasks"
+    }
+  ],
+  "graders": [
+    {
+      "type": "regex",
+      "target": "cliSessions.stdout",
+      "pattern": "\"id\"\\s*:\\s*\"main\""
+    },
+    {
+      "type": "regex",
+      "target": "httpSessions.body",
+      "pattern": "\"id\"\\s*:\\s*\"main\""
+    },
+    {
+      "type": "regex",
+      "target": "cliAgents.stdout",
+      "pattern": "\"id\"\\s*:\\s*\"simo\""
+    },
+    {
+      "type": "regex",
+      "target": "httpAgents.body",
+      "pattern": "\"id\"\\s*:\\s*\"simo\""
+    },
+    {
+      "type": "regex",
+      "target": "cliHealth.stdout",
+      "pattern": "\"ready\"\\s*:\\s*true"
+    },
+    {
+      "type": "regex",
+      "target": "httpHealth.body",
+      "pattern": "\"ready\"\\s*:\\s*true"
+    },
+    {
+      "type": "regex",
+      "target": "cliConfig.stdout",
+      "pattern": "\"approvalTtlMs\"\\s*:"
+    },
+    {
+      "type": "regex",
+      "target": "httpConfig.body",
+      "pattern": "\"approvalTtlMs\"\\s*:"
+    },
+    {
+      "type": "regex",
+      "target": "cliTasks.stdout",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    },
+    {
+      "type": "regex",
+      "target": "httpTasks.body",
+      "pattern": "\"tasks\"\\s*:"
+    }
+  ]
+}

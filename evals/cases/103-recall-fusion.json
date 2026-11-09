@@ -1,0 +1,171 @@
+{
+  "id": "recall-fusion",
+  "name": "Recall 融合排序（多路命中 → RRF 分数有序、topK 打包 ≤8、scoreBreakdown 可见）",
+  "tier": "normal",
+  "vars": {
+    "probe": "evals-recall-fusion-{{runId}}",
+    "e1": "ent-zhang-a-{{runId}}",
+    "e2": "ent-zhang-b-{{runId}}",
+    "e3": "ent-zhang-c-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/debug/recall/seed",
+      "expectStatus": [
+        200
+      ],
+      "body": {
+        "entities": [
+          {
+            "id": "{{e1}}",
+            "kind": "person",
+            "name": "小张（A）",
+            "canonical_name": "小张A",
+            "aliases": [
+              "小张"
+            ]
+          },
+          {
+            "id": "{{e2}}",
+            "kind": "person",
+            "name": "小张（B）",
+            "canonical_name": "小张B",
+            "aliases": [
+              "小张"
+            ]
+          },
+          {
+            "id": "{{e3}}",
+            "kind": "person",
+            "name": "小张（C）",
+            "canonical_name": "小张C",
+            "aliases": [
+              "小张"
+            ]
+          }
+        ],
+        "memoryItems": [
+          {
+            "id": "mem-zhang-a-{{runId}}",
+            "content": "小张在项目 A 负责前端",
+            "type": "semantic",
+            "version": 1,
+            "layer": 1,
+            "status": "active"
+          },
+          {
+            "id": "mem-zhang-b-{{runId}}",
+            "content": "小张在项目 B 负责后端",
+            "type": "semantic",
+            "version": 1,
+            "layer": 1,
+            "status": "active"
+          },
+          {
+            "id": "mem-zhang-c-{{runId}}",
+            "content": "小张在项目 C 负责测试",
+            "type": "semantic",
+            "version": 1,
+            "layer": 1,
+            "status": "active"
+          }
+        ]
+      },
+      "saveAs": "seeded"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/debug/recall",
+      "expectStatus": 200,
+      "body": {
+        "query": "小张",
+        "budget": {
+          "maxEntities": 5,
+          "perEntityN": 3,
+          "maxHop": 1,
+          "tokenBudget": 8000,
+          "topK": 8
+        }
+      },
+      "saveAs": "recall"
+    },
+    {
+      "type": "capture",
+      "from": "recall.json.items",
+      "mode": "array",
+      "saveAs": "items"
+    },
+    {
+      "type": "capture",
+      "from": "recall.json.entities",
+      "mode": "array",
+      "saveAs": "entities"
+    },
+    {
+      "type": "capture",
+      "from": "items",
+      "where": {},
+      "pick": "score",
+      "saveAs": "scoreFirst"
+    },
+    {
+      "type": "capture",
+      "from": "items",
+      "last": true,
+      "where": {},
+      "pick": "score",
+      "saveAs": "scoreLast"
+    }
+  ],
+  "graders": [
+    {
+      "type": "regex",
+      "target": "seeded.body",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    },
+    {
+      "type": "count",
+      "target": "entities",
+      "pattern": "\"entityId\"",
+      "atLeast": 2
+    },
+    {
+      "type": "count",
+      "target": "items",
+      "pattern": "\"itemId\"",
+      "atLeast": 1
+    },
+    {
+      "type": "count",
+      "target": "items",
+      "pattern": "\"itemId\"",
+      "atMost": 8
+    },
+    {
+      "type": "regex",
+      "target": "recall.body",
+      "pattern": "\"scoreBreakdown\"\\s*:\\s*\\{"
+    },
+    {
+      "type": "numeric",
+      "left": "scoreFirst",
+      "op": "gte",
+      "right": "scoreLast"
+    },
+    {
+      "type": "regex",
+      "target": "recall.body",
+      "pattern": "\"recallId\"\\s*:"
+    },
+    {
+      "type": "forbidden",
+      "target": "recall.body",
+      "patterns": [
+        "\"ok\"\\s*:\\s*false"
+      ]
+    }
+  ]
+}

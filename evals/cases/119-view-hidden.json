@@ -1,0 +1,29 @@
+{
+  "id": "view-hidden",
+  "name": "M26 视图写路径隐藏：/api/views* 无公开写 API（POST/PUT/DELETE → 404/405），变更只经动作层",
+  "tier": "critical",
+  "vars": {},
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/views", "body": {}, "expectStatus": [404, 405], "saveAs": "postViews" },
+    { "type": "http", "method": "POST", "path": "/api/views/view-probe", "body": {}, "expectStatus": [404, 405], "saveAs": "postView" },
+    { "type": "http", "method": "PUT", "path": "/api/views/view-probe", "body": {}, "expectStatus": [404, 405], "saveAs": "putView" },
+    { "type": "http", "method": "DELETE", "path": "/api/views/view-probe", "body": {}, "expectStatus": [404, 405], "saveAs": "delView" },
+    { "type": "http", "method": "POST", "path": "/api/views/view-probe/versions", "body": {}, "expectStatus": [404, 405], "saveAs": "postVersions" },
+    { "type": "http", "method": "POST", "path": "/api/views/view-probe/rollback", "body": {}, "expectStatus": [404, 405], "saveAs": "postRollback" },
+    { "type": "http", "method": "GET", "path": "/api/views/view-probe", "expectStatus": 404, "saveAs": "getView" },
+    { "type": "http", "method": "GET", "path": "/api/actions", "expectStatus": 200, "saveAs": "catalog" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "postViews.body", "pattern": "not_found|Method Not Allowed|405" },
+    { "type": "regex", "target": "postView.body", "pattern": "not_found|Method Not Allowed|405" },
+    { "type": "regex", "target": "putView.body", "pattern": "not_found|Method Not Allowed|405" },
+    { "type": "regex", "target": "delView.body", "pattern": "not_found|Method Not Allowed|405" },
+    { "type": "regex", "target": "postVersions.body", "pattern": "not_found|Method Not Allowed|405" },
+    { "type": "regex", "target": "postRollback.body", "pattern": "not_found|Method Not Allowed|405" },
+    { "type": "regex", "target": "getView.body", "pattern": "VIEW_NOT_FOUND|not_found" },
+    { "type": "regex", "target": "catalog.body", "pattern": "\"name\"\\s*:\\s*\"ui\\.set_view\"" },
+    { "type": "regex", "target": "catalog.body", "pattern": "\"name\"\\s*:\\s*\"ui\\.view\\.rollback\"" },
+    { "type": "regex", "target": "catalog.body", "pattern": "\"name\"\\s*:\\s*\"ui\\.delete_view\"" },
+    { "type": "count", "target": "catalog.body", "pattern": "\"name\"\\s*:\\s*\"views\\.", "exactly": 0 }
+  ]
+}

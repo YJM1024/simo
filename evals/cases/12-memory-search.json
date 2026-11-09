@@ -1,0 +1,61 @@
+{
+  "id": "memory-search",
+  "name": "记忆检索（长词 trigram / 2 字 LIKE 兜底；只断言命中与否，不断言分值）",
+  "tier": "normal",
+  "vars": {
+    "k1": "松鼠-{{runId}}",
+    "k2": "灯塔-{{runId}}",
+    "k3": "蓝鲸-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{k1}}",
+      "chat": { "text": "记住：{{k1}} 密码本放在书房第二个抽屉。" },
+      "saveAs": "s1",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 20000 },
+      "drainMs": 600
+    },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{k2}}",
+      "chat": { "text": "记住：{{k2}} 每周三下午去灯塔跑步。" },
+      "saveAs": "s2",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 20000 },
+      "drainMs": 600
+    },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{k3}}",
+      "chat": { "text": "记住：{{k3}} 蓝鲸项目由后端组负责。" },
+      "saveAs": "s3",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 20000 },
+      "drainMs": 1500
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/memory?q={{k2}}",
+      "saveAs": "longHit",
+      "intervalMs": 150,
+      "timeoutMs": 8000,
+      "until": { "path": "json.items", "matchSome": {} }
+    },
+    { "type": "http", "method": "GET", "path": "/api/memory?q=灯塔-{{runId}}", "expectStatus": 200, "saveAs": "longHit2" },
+    { "type": "http", "method": "GET", "path": "/api/memory?q=灯塔", "expectStatus": 200, "saveAs": "shortHit" }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "longHit.json.items", "atLeast": 1 },
+    { "type": "regex", "target": "longHit.json.items.0.content", "pattern": "{{k2}}" },
+    { "type": "forbidden", "target": "longHit.body", "patterns": ["{{k1}}", "{{k3}}"] },
+    { "type": "state_delta", "collection": "longHit2.json.items", "atLeast": 1 },
+    { "type": "state_delta", "collection": "shortHit.json.items", "atLeast": 1 },
+    { "type": "forbidden", "target": "shortHit.body", "patterns": ["{{k1}}"] }
+  ]
+}

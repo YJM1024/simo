@@ -1,0 +1,42 @@
+{
+  "id": "archive-ws-error",
+  "name": "归档会话 WS chat 返回 error 帧（不是静默丢弃）",
+  "tier": "normal",
+  "vars": {
+    "title": "evals-wserr-{{runId}}",
+    "probe": "evals-wserr-msg-{{runId}} 归档后经 WS 发送"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{title}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{title}}" }, "pick": "id", "saveAs": "sessionId" },
+    {
+      "type": "http",
+      "candidate": [{ "method": "POST", "path": "/api/sessions/{{@sessionId}}/archive", "body": {} }],
+      "expectStatus": [200, 202, 204],
+      "saveAs": "archived"
+    },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@sessionId}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}}" },
+      "saveAs": "wsErr",
+      "until": { "type": "error", "timeoutMs": 10000 },
+      "drainMs": 500
+    },
+    {
+      "type": "http",
+      "candidate": [{ "method": "POST", "path": "/api/sessions/{{@sessionId}}/unarchive", "body": {} }],
+      "expectStatus": [200, 202, 204],
+      "saveAs": "unarchived"
+    }
+  ],
+  "graders": [
+    { "type": "regex", "target": "wsErr.raw", "pattern": "\"type\"\\s*:\\s*\"error\"" },
+    { "type": "forbidden", "target": "wsErr.raw", "patterns": ["\"type\"\\s*:\\s*\"reply\\.done\"", "\"type\"\\s*:\\s*\"message\\.done\""] },
+    { "type": "regex", "target": "wsErr.raw", "pattern": "(归档|只读|archiv|readonly)" },
+    { "type": "forbidden", "target": "wsErr.raw", "patterns": ["\"type\"\\s*:\\s*\"reply\\.delta\""] }
+  ]
+}

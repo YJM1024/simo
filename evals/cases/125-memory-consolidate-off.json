@@ -1,0 +1,31 @@
+{
+  "id": "memory-consolidate-off",
+  "name": "M30 记忆巩固关闭：AGENTD_MEMORY_CONSOLIDATE=0 → 不自动跑；debug 手动仍可",
+  "tier": "critical",
+  "pending": "需要以 AGENTD_MEMORY_CONSOLIDATE=0 启动被测服务，单次 run.mjs 不能改 env → 由 evals/m27-m30-env.ps1 真实执行（起服→9 条超阈值消息不自动巩固→debug 手动仍可→停止）。",
+  "vars": {
+    "p": "evals-consol-off-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "约定1：项目代号是 Off1-{{p}}，负责数据整理。" }, "expectStatus": [200, 202], "saveAs": "c1" },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "约定2：项目代号是 Off2-{{p}}，负责数据整理。" }, "expectStatus": [200, 202], "saveAs": "c2" },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "约定3：项目代号是 Off3-{{p}}，负责数据整理。" }, "expectStatus": [200, 202], "saveAs": "c3" },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "约定4：项目代号是 Off4-{{p}}，负责数据整理。" }, "expectStatus": [200, 202], "saveAs": "c4" },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "约定5：项目代号是 Off5-{{p}}，负责数据整理。" }, "expectStatus": [200, 202], "saveAs": "c5" },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "约定6：项目代号是 Off6-{{p}}，负责数据整理。" }, "expectStatus": [200, 202], "saveAs": "c6" },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "约定7：项目代号是 Off7-{{p}}，负责数据整理。" }, "expectStatus": [200, 202], "saveAs": "c7" },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "约定8：项目代号是 Off8-{{p}}，负责数据整理。" }, "expectStatus": [200, 202], "saveAs": "c8" },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "约定9：项目代号是 Off9-{{p}}，负责数据整理。" }, "expectStatus": [200, 202], "saveAs": "c9" },
+    { "type": "http", "method": "GET", "path": "/api/debug/memory/consolidation?sessionId={{caseSession}}", "expectStatus": 200, "saveAs": "before" },
+    { "type": "http", "method": "POST", "path": "/api/debug/memory/consolidate", "body": { "sessionId": "{{caseSession}}", "agentId": "agent:simo", "maxMessages": 20 }, "expectStatus": 200, "saveAs": "manual" },
+    { "type": "http", "method": "GET", "path": "/api/debug/memory/consolidation?sessionId={{caseSession}}", "expectStatus": 200, "saveAs": "after" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "before.body", "pattern": "\"enabled\"\\s*:\\s*false" },
+    { "type": "regex", "target": "before.body", "pattern": "\"total\"\\s*:\\s*0" },
+    { "type": "regex", "target": "manual.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "regex", "target": "manual.body", "pattern": "mjob-" },
+    { "type": "regex", "target": "after.body", "pattern": "\"total\"\\s*:\\s*1" },
+    { "type": "forbidden", "target": "before.body", "patterns": ["mjob-"] }
+  ]
+}

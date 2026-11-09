@@ -1,0 +1,95 @@
+{
+  "id": "pwsh-basic",
+  "name": "pwsh 基本执行（echo → 输出+[exit code: 0]；危险命令 ask 后拒绝；workspace 外写被拒）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-pwsh-{{runId}}",
+    "outside": "{{agentdHome}}/outside-m9.txt"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}} mock:pwsh:echo hi" },
+      "saveAs": "echoStream",
+      "until": { "type": ["reply.done", "message.done", "error"], "timeoutMs": 30000 },
+      "drainMs": 1500
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "pendingEcho",
+      "intervalMs": 200,
+      "timeoutMs": 10000,
+      "until": { "path": "json.approvals", "matchSome": { "tool": "pwsh", "status": "pending" } }
+    },
+    { "type": "capture", "from": "pendingEcho.json.approvals", "where": { "tool": "pwsh", "status": "pending" }, "pick": "id", "saveAs": "echoId" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/approvals/{{@echoId}}",
+      "body": { "decision": "allow" },
+      "expectStatus": 200,
+      "saveAs": "echoAllow"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "approvedEcho",
+      "intervalMs": 200,
+      "timeoutMs": 10000,
+      "until": { "path": "json.approvals", "matchSome": { "id": "{{@echoId}}", "status": "approved" } }
+    },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}} mock:pwsh:Remove-Item -Recurse -Force ." },
+      "saveAs": "dangerStream",
+      "until": { "type": ["reply.done", "message.done", "error"], "timeoutMs": 30000 },
+      "drainMs": 1500
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "pendingDanger",
+      "intervalMs": 200,
+      "timeoutMs": 10000,
+      "until": { "path": "json.approvals", "matchSome": { "tool": "pwsh", "status": "pending" } }
+    },
+    { "type": "capture", "from": "pendingDanger.json.approvals", "where": { "tool": "pwsh", "status": "pending" }, "pick": "id", "saveAs": "dangerId" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/approvals/{{@dangerId}}",
+      "body": { "decision": "deny" },
+      "expectStatus": 200,
+      "saveAs": "dangerDeny"
+    },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}} mock:write-outside" },
+      "saveAs": "outsideStream",
+      "until": { "type": ["reply.done", "message.done", "error"], "timeoutMs": 30000 },
+      "drainMs": 1500
+    },
+    { "type": "http", "method": "GET", "path": "/api/approvals", "expectStatus": 200, "saveAs": "apprOutside" },
+    { "type": "fs", "path": "{{outside}}", "saveAs": "outsideFile" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "approvedEcho.body", "pattern": "hi" },
+    { "type": "regex", "target": "approvedEcho.body", "pattern": "\\[exit code:\\s*0\\]" },
+    { "type": "regex", "target": "dangerDeny.body", "pattern": "denied" },
+    { "type": "regex", "target": "outsideFile.exists", "pattern": "^false$" },
+    { "type": "state_delta", "collection": "apprOutside.json.approvals", "where": { "status": "pending" }, "atMost": 0 }
+  ]
+}

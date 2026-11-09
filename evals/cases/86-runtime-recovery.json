@@ -1,0 +1,15 @@
+{
+  "id": "runtime-recovery",
+  "name": "重启恢复（可恢复任务续跑、done 不重跑、无重复副作用、会话出现已恢复汇报）",
+  "tier": "critical",
+  "pending": "需要杀进程 + 重启同一 AGENTD_HOME，单次 run.mjs 做不到 → 由 evals/runtime-recovery.ps1 真实执行（起服→跑 mock:workflow→任务中途 kill→重启→断言 done 不重跑/工作流收敛/恢复汇报存在；有 /api/debug/runtime 时额外校验 recoveries 审计）。脚本自建端口+临时 home，只停自己 PID，不碰 8787。",
+  "vars": {
+    "probe": "evals-recovery-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "GET", "path": "/api/runtime/status", "expectStatus": 200, "saveAs": "rt" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "rt.body", "pattern": "\"ok\"\\s*:\\s*true" }
+  ]
+}

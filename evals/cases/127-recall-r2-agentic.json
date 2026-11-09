@@ -1,0 +1,24 @@
+{
+  "id": "recall-r2-agentic",
+  "name": "M27 召回 R2：agentic 多步（≤3 步）+ 空结果 ask/no_hit + hopLimit=2",
+  "tier": "normal",
+  "vars": {
+    "q": "完全不存在的东西XYZ-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http", "method": "POST", "path": "/api/debug/recall", "expectStatus": 200, "saveAs": "recall",
+      "body": { "query": "{{q}}", "sessionId": "main", "agentId": "agent:simo", "trace": "full" }
+    },
+    { "type": "capture", "from": "recall.json.trace.steps", "mode": "array", "saveAs": "steps" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "recall.body", "pattern": "\"hopLimit\"\\s*:\\s*2" },
+    { "type": "regex", "target": "recall.body", "pattern": "\"steps\"\\s*:\\s*\\[\\s*\\{" },
+    { "type": "count", "target": "steps", "pattern": "\"action\"", "atLeast": 1 },
+    { "type": "count", "target": "steps", "pattern": "\"action\"", "atMost": 3 },
+    { "type": "regex", "target": "recall.body", "pattern": "\"ask\"\\s*:\\s*\\{" },
+    { "type": "regex", "target": "recall.body", "pattern": "no_hit" },
+    { "type": "regex", "target": "recall.body", "pattern": "\"once\"\\s*:\\s*true" }
+  ]
+}

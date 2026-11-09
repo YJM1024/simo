@@ -1,0 +1,65 @@
+{
+  "id": "team-ws-events",
+  "name": "M31 团队事件进用户 WS（team.created/member.added/trigger.fired；幂等 fire 不重复广播；不进 chat 消息流）",
+  "tier": "critical",
+  "vars": {
+    "tag": "evals-m31-{{runId}}",
+    "triggerKey": "m31-trigger-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http", "method": "POST", "path": "/api/actions/team.template.upsert", "expectStatus": 200, "saveAs": "template",
+      "body": {
+        "name": "WS 团队 {{tag}}",
+        "roles": [
+          { "roleKey": "researcher", "title": "研究员", "roleType": "generic", "agentId": "researcher" },
+          { "roleKey": "reviewer", "title": "审校", "roleType": "template" }
+        ]
+      }
+    },
+    { "type": "capture", "from": "template.json.data", "pick": "id", "saveAs": "templateId" },
+    {
+      "type": "http", "method": "POST", "path": "/api/actions/team.create", "expectStatus": 200, "saveAs": "created",
+      "body": { "sessionId": "main", "templateId": "{{@templateId}}" }
+    },
+    { "type": "capture", "from": "created.json.data.team", "pick": "id", "saveAs": "teamId" },
+    { "type": "capture", "from": "created.json.data.members", "where": { "roleType": "generic" }, "pick": "id", "saveAs": "fromMember" },
+    { "type": "capture", "from": "created.json.data.members", "where": { "roleType": "template" }, "pick": "sessionId", "saveAs": "toSession" },
+    {
+      "type": "http", "method": "POST", "path": "/api/actions/team.trigger.create", "expectStatus": 200, "saveAs": "trigger",
+      "body": {
+        "teamId": "{{@teamId}}", "fromMemberId": "{{@fromMember}}", "toSessionId": "{{@toSession}}",
+        "content": "审校", "idempotencyKey": "{{triggerKey}}"
+      }
+    },
+    { "type": "capture", "from": "trigger.json.data", "pick": "id", "saveAs": "triggerId" },
+    {
+      "type": "http", "method": "POST", "path": "/api/actions/team.trigger.fire", "expectStatus": 200, "saveAs": "fire1",
+      "body": { "id": "{{@triggerId}}" }
+    },
+    {
+      "type": "http", "method": "POST", "path": "/api/actions/team.trigger.fire", "expectStatus": 200, "saveAs": "fire2",
+      "body": { "id": "{{@triggerId}}" }
+    },
+    {
+      "type": "ws", "path": "/api/ws?since=0", "sessionId": "main", "saveAs": "teamStream",
+      "until": { "type": ["team.trigger.fired"], "timeoutMs": 12000 },
+      "drainMs": 400
+    },
+    { "type": "http", "method": "GET", "path": "/api/messages?sessionId=main", "expectStatus": 200, "saveAs": "messages" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "created.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "regex", "target": "teamStream.raw", "pattern": "\"type\"\\s*:\\s*\"team.created\"" },
+    { "type": "regex", "target": "teamStream.raw", "pattern": "\"teamId\"\\s*:\\s*\"{{@teamId}}\"" },
+    { "type": "regex", "target": "teamStream.raw", "pattern": "\"type\"\\s*:\\s*\"team.member.added\"" },
+    { "type": "regex", "target": "teamStream.raw", "pattern": "\"type\"\\s*:\\s*\"team.trigger.fired\"" },
+    { "type": "regex", "target": "teamStream.raw", "pattern": "\"toSessionId\"\\s*:\\s*\"{{@toSession}}\"" },
+    { "type": "regex", "target": "teamStream.raw", "pattern": "\"started\"\\s*:\\s*true" },
+    { "type": "count", "target": "teamStream.allFrames", "pattern": "\"triggerId\"\\s*:\\s*\"{{@triggerId}}\"", "exactly": 1 },
+    { "type": "regex", "target": "fire2.body", "pattern": "\"idempotent\"\\s*:\\s*true" },
+    { "type": "regex", "target": "fire1.body", "pattern": "\"started\"\\s*:\\s*true" },
+    { "type": "forbidden", "target": "messages.body", "patterns": ["team\\.created", "team\\.member\\.added", "team\\.trigger\\.fired", "{{@teamId}}", "{{@triggerId}}"] },
+    { "type": "forbidden", "target": "teamStream.raw", "patterns": ["\"type\"\\s*:\\s*\"error\""] }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "id": "message-persist",
+  "name": "消息持久化（POST 后 GET 能查到，且回复落定）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-persist-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": { "sessionId": "{{caseSession}}", "text": "{{probe}}" },
+      "expectStatus": 202,
+      "saveAs": "post"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{caseSession}}",
+      "expectStatus": 200,
+      "saveAs": "immediate"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{caseSession}}",
+      "saveAs": "after",
+      "intervalMs": 150,
+      "timeoutMs": 15000,
+      "until": { "path": "json.messages", "matchSome": { "role": "agent", "status": "done" } }
+    }
+  ],
+  "graders": [
+    { "type": "regex", "target": "post.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    {
+      "type": "state_delta",
+      "collection": "immediate.json.messages",
+      "where": { "role": "user", "text": "{{probe}}" },
+      "expect": { "status": "done" },
+      "exactly": 1
+    },
+    {
+      "type": "state_delta",
+      "collection": "after.json.messages",
+      "where": { "role": "agent", "status": "done" },
+      "atLeast": 1
+    },
+    { "type": "forbidden", "target": "post.body", "patterns": ["\"ok\"\\s*:\\s*false"] }
+  ]
+}

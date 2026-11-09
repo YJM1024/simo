@@ -1,0 +1,63 @@
+{
+  "id": "team-v2-instance",
+  "name": "M25 团队模板实例化：templateId → 成员子会话 + generic/template 两种 agent 身份 + 未知模板报错",
+  "tier": "critical",
+  "vars": {
+    "tplName": "实例模板-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/team.template.upsert",
+      "body": {
+        "name": "{{tplName}}",
+        "roles": [
+          { "roleKey": "researcher", "title": "研究员", "roleType": "generic", "agentId": "researcher" },
+          { "roleKey": "reviewer", "title": "审校", "roleType": "template" }
+        ]
+      },
+      "expectStatus": 200,
+      "saveAs": "tpl"
+    },
+    { "type": "capture", "from": "tpl.json.data", "pick": "id", "saveAs": "tplId" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/team.create",
+      "body": { "sessionId": "main", "templateId": "{{@tplId}}" },
+      "expectStatus": 200,
+      "saveAs": "created"
+    },
+    { "type": "capture", "from": "created.json.data", "pick": "team.id", "saveAs": "teamId" },
+    {
+      "type": "capture",
+      "from": "created.json.data.members",
+      "where": { "roleType": "template" },
+      "pick": "sessionId",
+      "saveAs": "templateSession"
+    },
+    { "type": "capture", "from": "created.json.data.members", "where": { "roleType": "generic" }, "pick": "agentId", "saveAs": "genericAgent" },
+    { "type": "http", "method": "GET", "path": "/api/teams/{{@teamId}}", "expectStatus": 200, "saveAs": "teamPage" },
+    { "type": "http", "method": "GET", "path": "/api/sessions/{{@templateSession}}/team", "expectStatus": 200, "saveAs": "memberTeam" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/team.create",
+      "body": { "sessionId": "main", "templateId": "team-tpl-missing" },
+      "expectStatus": [400, 500],
+      "saveAs": "badCreate"
+    }
+  ],
+  "graders": [
+    { "type": "regex", "target": "created.body", "pattern": "\"agentId\"\\s*:\\s*\"agent:researcher\"" },
+    { "type": "regex", "target": "created.body", "pattern": "\"roleType\"\\s*:\\s*\"template\"" },
+    { "type": "regex", "target": "created.body", "pattern": "\"sessionId\"\\s*:\\s*\"sess-" },
+    { "type": "regex", "target": "teamPage.body", "pattern": "\"templateId\"\\s*:\\s*\"{{@tplId}}\"" },
+    { "type": "regex", "target": "teamPage.body", "pattern": "\"templateVersion\"\\s*:\\s*1" },
+    { "type": "count", "target": "teamPage.json.members", "pattern": "\"sessionId\"", "exactly": 2 },
+    { "type": "regex", "target": "memberTeam.body", "pattern": "\"members\"\\s*:\\s*\\[" },
+    { "type": "regex", "target": "memberTeam.body", "pattern": "\"team\"\\s*:\\s*\\{" },
+    { "type": "regex", "target": "badCreate.body", "pattern": "ACTION_INTERNAL|no rows|模板" }
+  ]
+}

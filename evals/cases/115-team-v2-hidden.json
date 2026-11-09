@@ -1,0 +1,29 @@
+{
+  "id": "team-v2-hidden",
+  "name": "M25 团队写路径隐藏：不存在公开写 API（POST/PUT/DELETE /api/teams* → 404/405），团队变更只经动作层",
+  "tier": "critical",
+  "vars": {},
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/teams", "body": {}, "expectStatus": [404, 405], "saveAs": "postTeams" },
+    { "type": "http", "method": "POST", "path": "/api/teams/team-probe/members", "body": {}, "expectStatus": [404, 405], "saveAs": "postMembers" },
+    { "type": "http", "method": "POST", "path": "/api/teams/team-probe/messages", "body": {}, "expectStatus": [404, 405], "saveAs": "postMessages" },
+    { "type": "http", "method": "POST", "path": "/api/teams/team-probe/triggers", "body": {}, "expectStatus": [404, 405], "saveAs": "postTriggers" },
+    { "type": "http", "method": "PUT", "path": "/api/teams/team-probe", "body": {}, "expectStatus": [404, 405], "saveAs": "putTeam" },
+    { "type": "http", "method": "DELETE", "path": "/api/teams/team-probe", "body": {}, "expectStatus": [404, 405], "saveAs": "delTeam" },
+    { "type": "http", "method": "GET", "path": "/api/teams/team-probe", "expectStatus": 404, "saveAs": "getTeam" },
+    { "type": "http", "method": "GET", "path": "/api/actions", "expectStatus": 200, "saveAs": "catalog" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "postTeams.body", "pattern": "\"code\"\\s*:\\s*\"not_found\"" },
+    { "type": "regex", "target": "postMembers.body", "pattern": "\"code\"\\s*:\\s*\"not_found\"" },
+    { "type": "regex", "target": "postMessages.body", "pattern": "\"code\"\\s*:\\s*\"not_found\"" },
+    { "type": "regex", "target": "postTriggers.body", "pattern": "\"code\"\\s*:\\s*\"not_found\"" },
+    { "type": "regex", "target": "putTeam.body", "pattern": "not_found|Method Not Allowed|405" },
+    { "type": "regex", "target": "delTeam.body", "pattern": "not_found|Method Not Allowed|405" },
+    { "type": "regex", "target": "getTeam.body", "pattern": "team_not_found" },
+    { "type": "regex", "target": "catalog.body", "pattern": "\"name\"\\s*:\\s*\"team\\.template\\.upsert\"" },
+    { "type": "regex", "target": "catalog.body", "pattern": "\"name\"\\s*:\\s*\"team\\.owner\\.set\"" },
+    { "type": "regex", "target": "catalog.body", "pattern": "\"name\"\\s*:\\s*\"team\\.trigger\\.create\"" },
+    { "type": "count", "target": "catalog.body", "pattern": "\"name\"\\s*:\\s*\"team\\.delete\"", "exactly": 0 }
+  ]
+}

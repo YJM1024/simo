@@ -1,0 +1,105 @@
+{
+  "id": "team-v2-trigger",
+  "name": "M25 跨会话触发：create 幂等（同 id）+ fire 幂等（交付物不重复）+ 目标会话启动 + maxRetries=2/retryCount 记账",
+  "tier": "critical",
+  "vars": {
+    "tplName": "触发模板-{{runId}}",
+    "content": "请审校交付物-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/team.template.upsert",
+      "body": {
+        "name": "{{tplName}}",
+        "roles": [
+          { "roleKey": "researcher", "title": "研究员", "roleType": "generic", "agentId": "researcher" },
+          { "roleKey": "reviewer", "title": "审校", "roleType": "template" }
+        ]
+      },
+      "expectStatus": 200,
+      "saveAs": "tpl"
+    },
+    { "type": "capture", "from": "tpl.json.data", "pick": "id", "saveAs": "tplId" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/team.create",
+      "body": { "sessionId": "main", "templateId": "{{@tplId}}" },
+      "expectStatus": 200,
+      "saveAs": "created"
+    },
+    { "type": "capture", "from": "created.json.data", "pick": "team.id", "saveAs": "teamId" },
+    { "type": "capture", "from": "created.json.data.members", "where": { "roleType": "generic" }, "pick": "id", "saveAs": "fromMemberId" },
+    {
+      "type": "capture",
+      "from": "created.json.data.members",
+      "where": { "roleType": "template" },
+      "pick": "sessionId",
+      "saveAs": "toSessionId"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/team.trigger.create",
+      "body": {
+        "teamId": "{{@teamId}}",
+        "fromMemberId": "{{@fromMemberId}}",
+        "toSessionId": "{{@toSessionId}}",
+        "content": "{{content}}",
+        "idempotencyKey": "trig-{{runId}}"
+      },
+      "expectStatus": 200,
+      "saveAs": "trig1"
+    },
+    { "type": "capture", "from": "trig1.json.data", "pick": "id", "saveAs": "triggerId" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/team.trigger.create",
+      "body": {
+        "teamId": "{{@teamId}}",
+        "fromMemberId": "{{@fromMemberId}}",
+        "toSessionId": "{{@toSessionId}}",
+        "content": "{{content}}",
+        "idempotencyKey": "trig-{{runId}}"
+      },
+      "expectStatus": 200,
+      "saveAs": "trig2"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/team.trigger.fire",
+      "body": { "id": "{{@triggerId}}", "artifactId": "artifact-{{runId}}", "summary": "交付物已就绪" },
+      "expectStatus": 200,
+      "saveAs": "fire1"
+    },
+    { "type": "http", "method": "GET", "path": "/api/teams/{{@teamId}}/deliverables", "expectStatus": 200, "saveAs": "deliv1" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/team.trigger.fire",
+      "body": { "id": "{{@triggerId}}" },
+      "expectStatus": 200,
+      "saveAs": "fire2"
+    },
+    { "type": "http", "method": "GET", "path": "/api/teams/{{@teamId}}/deliverables", "expectStatus": 200, "saveAs": "deliv2" },
+    { "type": "http", "method": "GET", "path": "/api/teams/{{@teamId}}/triggers", "expectStatus": 200, "saveAs": "triggers" },
+    { "type": "http", "method": "GET", "path": "/api/messages?sessionId={{@toSessionId}}", "expectStatus": 200, "saveAs": "msgs" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "trig2.body", "pattern": "\"id\"\\s*:\\s*\"{{@triggerId}}\"" },
+    { "type": "count", "target": "triggers.json.triggers", "pattern": "\"idempotencyKey\"", "exactly": 1 },
+    { "type": "regex", "target": "fire1.body", "pattern": "\"status\"\\s*:\\s*\"fired\"" },
+    { "type": "regex", "target": "fire1.body", "pattern": "\"idempotent\"\\s*:\\s*false" },
+    { "type": "regex", "target": "fire2.body", "pattern": "\"idempotent\"\\s*:\\s*true" },
+    { "type": "count", "target": "deliv1.json.deliverables", "pattern": "\"artifactId\"", "exactly": 1 },
+    { "type": "count", "target": "deliv2.json.deliverables", "pattern": "\"artifactId\"", "exactly": 1 },
+    { "type": "regex", "target": "deliv1.body", "pattern": "artifact-" },
+    { "type": "regex", "target": "triggers.body", "pattern": "\"maxRetries\"\\s*:\\s*2" },
+    { "type": "regex", "target": "triggers.body", "pattern": "\"retryCount\"\\s*:\\s*1" },
+    { "type": "regex", "target": "msgs.body", "pattern": "团队触发" }
+  ]
+}

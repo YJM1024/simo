@@ -1,0 +1,127 @@
+{
+  "id": "memory-agent",
+  "name": "智能体通用记忆（只读、带来源 source/authority；ownerAgent 归属正确）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-mem-agent-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/sessions",
+      "body": {
+        "title": "{{caseSession}}"
+      },
+      "expectStatus": [
+        200,
+        201
+      ],
+      "saveAs": "created"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions",
+      "expectStatus": 200,
+      "saveAs": "sessions"
+    },
+    {
+      "type": "capture",
+      "from": "sessions.json.sessions",
+      "whereContains": {
+        "title": "{{caseSession}}"
+      },
+      "pick": "id",
+      "saveAs": "sid"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/chat",
+      "body": {
+        "sessionId": "{{@sid}}",
+        "text": "记住：项目代号是 Orion（{{probe}}）。"
+      },
+      "expectStatus": [
+        200,
+        202
+      ],
+      "saveAs": "chat"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/memory/items?all=1",
+      "saveAs": "items",
+      "intervalMs": 300,
+      "timeoutMs": 20000,
+      "until": {
+        "path": "json.items",
+        "matchSome": {
+          "content": "项目代号是 Orion（{{probe}}）"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/memory/agents/simo/memory",
+      "expectStatus": 200,
+      "timeoutMs": 60000,
+      "saveAs": "agentMemory"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/memory/agents/no-such-agent/memory",
+      "expectStatus": [
+        200,
+        404
+      ],
+      "saveAs": "unknownAgent"
+    }
+  ],
+  "graders": [
+    {
+      "type": "regex",
+      "target": "agentMemory.body",
+      "pattern": "\"ownerAgent\"\\s*:\\s*\"agent:simo\""
+    },
+    {
+      "type": "count",
+      "target": "agentMemory.json.items",
+      "pattern": "\"ownerAgent\"\\s*:\\s*\"agent:simo\"",
+      "atLeast": 1
+    },
+    {
+      "type": "regex",
+      "target": "agentMemory.body",
+      "pattern": "\"source\"\\s*:\\s*\"(user|conversation|tool|inferred)\""
+    },
+    {
+      "type": "regex",
+      "target": "agentMemory.body",
+      "pattern": "\"authority\"\\s*:\\s*\"(user_confirmed|system_verified|inferred)\""
+    },
+    {
+      "type": "regex",
+      "target": "agentMemory.body",
+      "pattern": "\"assertion\"\\s*:"
+    },
+    {
+      "type": "forbidden",
+      "target": "agentMemory.body",
+      "patterns": [
+        "\"status\"\\s*:\\s*\"retracted\""
+      ]
+    },
+    {
+      "type": "forbidden",
+      "target": "unknownAgent.body",
+      "patterns": [
+        "\"ownerAgent\"\\s*:\\s*\"agent:simo\"[^\\]]*no-such"
+      ]
+    }
+  ]
+}

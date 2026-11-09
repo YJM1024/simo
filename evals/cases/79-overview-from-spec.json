@@ -1,0 +1,54 @@
+{
+  "id": "overview-from-spec",
+  "name": "概览由 Spec 生成（goal/current 自然汇报体、constraints/completed/pending 数组、timeline 有序、无 spec 字段）",
+  "tier": "normal",
+  "vars": {
+    "probe": "evals-ovspec-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}" }, "pick": "id", "saveAs": "sid" },
+
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@sid}}",
+      "chat": { "text": "{{probe}} mock:workflow 拆解任务并推进。" },
+      "saveAs": "wfStream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 45000 },
+      "drainMs": 400
+    },
+    { "type": "http", "method": "GET", "path": "/api/workflows?sessionId={{@sid}}", "expectStatus": 200, "saveAs": "wfList" },
+    { "type": "capture", "from": "wfList.json.workflows", "where": {}, "pick": "id", "saveAs": "workflowId" },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/workflows/{{@workflowId}}",
+      "saveAs": "wfDone",
+      "intervalMs": 500,
+      "timeoutMs": 90000,
+      "until": { "path": "json.workflow.tasks", "matchSome": { "title": "汇总产出", "status": "done" } }
+    },
+
+    { "type": "http", "method": "POST", "path": "/api/sessions/{{@sid}}/overview/refresh", "body": {}, "expectStatus": [200, 201], "saveAs": "refreshed" },
+    { "type": "http", "method": "GET", "path": "/api/sessions/{{@sid}}/overview", "expectStatus": 200, "saveAs": "ov" },
+    { "type": "capture", "from": "ov.json.overview", "where": {}, "pick": "timeline", "saveAs": "timeline" },
+    { "type": "capture", "from": "timeline", "where": {}, "pick": "at", "saveAs": "tFirstAt" },
+    { "type": "capture", "from": "timeline", "last": true, "where": {}, "pick": "at", "saveAs": "tLastAt" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "ov.body", "pattern": "\"goal\"\\s*:\\s*\"[^\"]{8,}\"" },
+    { "type": "regex", "target": "ov.body", "pattern": "\"current\"\\s*:\\s*\"[^\"]{6,}\"" },
+    { "type": "regex", "target": "ov.body", "pattern": "\"constraints\"\\s*:\\s*\\[" },
+    { "type": "regex", "target": "ov.body", "pattern": "\"completed\"\\s*:\\s*\\[" },
+    { "type": "regex", "target": "ov.body", "pattern": "\"pending\"\\s*:\\s*\\[" },
+    { "type": "regex", "target": "ov.body", "pattern": "\"timeline\"\\s*:\\s*\\[\\s*\\{" },
+    { "type": "regex", "target": "ov.body", "pattern": "\"text\"\\s*:\\s*\"[^\"]{4,}\"" },
+    { "type": "count", "target": "timeline", "pattern": "\"at\"", "atLeast": 1 },
+    { "type": "numeric", "left": "tLastAt", "op": "gte", "right": "tFirstAt" },
+    { "type": "regex", "target": "ov.body", "pattern": "。" },
+    { "type": "forbidden", "target": "ov.body", "patterns": ["(goal|constraints|current|notes)\"\\s*:\\s*\"[^\"]*[:：]"] },
+    { "type": "forbidden", "target": "ov.body", "patterns": ["\"specId\"\\s*:", "\"specVersion\"\\s*:", "\"specCore\"\\s*:", "\"executorAgentId\"\\s*:"] }
+  ]
+}

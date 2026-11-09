@@ -1,0 +1,24 @@
+{
+  "id": "team-hidden",
+  "name": "团队无公开写 API（POST/PATCH /api/team、/api/workflows/{id}/members 一律 404/405；读可用）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-team-hidden-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "GET", "path": "/api/team", "expectStatus": 200, "saveAs": "teamGet" },
+    { "type": "http", "method": "POST", "path": "/api/team", "body": { "add": "x" }, "expectStatus": [404, 405], "saveAs": "teamPost" },
+    { "type": "http", "method": "PATCH", "path": "/api/team", "body": { "member": "x" }, "expectStatus": [404, 405], "saveAs": "teamPatch" },
+    { "type": "http", "method": "POST", "path": "/api/workflows/wf-x/members", "body": { "add": "x" }, "expectStatus": [404, 405], "saveAs": "membersPost" },
+    { "type": "http", "method": "PATCH", "path": "/api/workflows/wf-x/members", "body": { "member": "x" }, "expectStatus": [404, 405], "saveAs": "membersPatch" },
+    { "type": "http", "method": "GET", "path": "/api/workflows/wf-nope/members", "expectStatus": [404], "saveAs": "membersMissing" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "teamGet.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "forbidden", "target": "teamPost.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "teamPatch.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "membersPost.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "membersPatch.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "membersMissing.body", "patterns": ["\"ok\"\\s*:\\s*true"] }
+  ]
+}

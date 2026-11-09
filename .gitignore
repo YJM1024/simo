@@ -1,0 +1,45 @@
+# ---- secrets & runtime data: never commit ----
+agentd/config.local.json
+data/
+.tmp/
+.trash/
+*.log
+logs/
+uploads/
+artifacts/
+
+# ---- build outputs (rebuild with deploy/package.ps1) ----
+*.exe
+*.zip
+*.sha256
+deploy/dist/
+agentd/internal/webui/dist/
+
+# ---- transient test / incident artifacts ----
+.leadcheck/
+.m17-*/
+.m18-*/
+.m19-*/
+.m20-*/
+.m21-*/
+.m30-*/
+.m40-*/
+evals/reports/
+evals/incident/
+agents/
+toolchain/
+__pycache__/
+*.pyc
+*.vhdx
+
+# ---- editor / OS noise ----
+.git/
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+.DS_Store
+node_modules/
+.pnpm-store/
+**/.pnpm-store/
+*.ignored_*

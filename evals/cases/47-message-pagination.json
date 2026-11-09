@@ -1,0 +1,52 @@
+{
+  "id": "message-pagination",
+  "name": "消息分页（≥30 条；limit/before 游标分页不重不漏、非法游标返回空）",
+  "tier": "normal",
+  "vars": {
+    "p": "evals-page-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}" }, "pick": "id", "saveAs": "sid" },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{@sid}}", "text": "{{p}}-01" }, "expectStatus": [200, 202] },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{@sid}}", "text": "{{p}}-02" }, "expectStatus": [200, 202] },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{@sid}}", "text": "{{p}}-03" }, "expectStatus": [200, 202] },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{@sid}}", "text": "{{p}}-04" }, "expectStatus": [200, 202] },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{@sid}}", "text": "{{p}}-05" }, "expectStatus": [200, 202] },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{@sid}}", "text": "{{p}}-06" }, "expectStatus": [200, 202] },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{@sid}}", "text": "{{p}}-07" }, "expectStatus": [200, 202] },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{@sid}}", "text": "{{p}}-08" }, "expectStatus": [200, 202] },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{@sid}}", "text": "{{p}}-09" }, "expectStatus": [200, 202] },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{@sid}}", "text": "{{p}}-10" }, "expectStatus": [200, 202] },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{@sid}}", "text": "{{p}}-11" }, "expectStatus": [200, 202] },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{@sid}}", "text": "{{p}}-12" }, "expectStatus": [200, 202] },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{@sid}}", "text": "{{p}}-13" }, "expectStatus": [200, 202] },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{@sid}}", "text": "{{p}}-14" }, "expectStatus": [200, 202] },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{@sid}}", "text": "{{p}}-15" }, "expectStatus": [200, 202] },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{@sid}}",
+      "saveAs": "warm",
+      "intervalMs": 300,
+      "timeoutMs": 20000,
+      "until": { "path": "json.messages", "matchSome": { "text": "{{p}}-15" } }
+    },
+    { "type": "http", "method": "GET", "path": "/api/messages?sessionId={{@sid}}&limit=8", "expectStatus": 200, "saveAs": "page1" },
+    { "type": "capture", "from": "page1.json.messages", "where": {}, "pick": "id", "saveAs": "page1FirstId" },
+    { "type": "capture", "from": "page1.json.messages", "last": true, "where": {}, "pick": "id", "saveAs": "page1LastId" },
+    { "type": "capture", "from": "page1.json", "where": {}, "pick": "nextBefore", "saveAs": "cursor" },
+    { "type": "http", "method": "GET", "path": "/api/messages?sessionId={{@sid}}&limit=8&before={{@cursor}}", "expectStatus": 200, "saveAs": "page2" },
+    { "type": "http", "method": "GET", "path": "/api/messages?sessionId={{@sid}}&limit=8&before=msg-nope", "expectStatus": 200, "saveAs": "bogusCursor" }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "page1.json.messages", "atLeast": 8 },
+    { "type": "state_delta", "collection": "page2.json.messages", "atLeast": 8 },
+    { "type": "regex", "target": "page1.body", "pattern": "\"hasMore\"\\s*:\\s*true" },
+    { "type": "regex", "target": "page1.body", "pattern": "\"nextBefore\"\\s*:\\s*\"msg-" },
+    { "type": "forbidden", "target": "page2.body", "patterns": ["\"id\"\\s*:\\s*\"{{@page1FirstId}}\"", "\"id\"\\s*:\\s*\"{{@page1LastId}}\""] },
+    { "type": "state_delta", "collection": "bogusCursor.json.messages", "atMost": 0 },
+    { "type": "regex", "target": "warm.body", "pattern": "{{p}}-15" }
+  ]
+}

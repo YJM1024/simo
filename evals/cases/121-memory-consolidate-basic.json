@@ -1,0 +1,30 @@
+{
+  "id": "memory-consolidate-basic",
+  "name": "M30 记忆巩固：debug consolidate → 候选(项目/代号/偏好/规范) → 写回记忆 + 冲突保留 + 可查",
+  "tier": "critical",
+  "vars": {
+    "p": "konsol-basic-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "记住：项目代号是 Orion（{{p}}），主要负责数据整理。" }, "expectStatus": [200, 202], "saveAs": "c1" },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "项目代号是 Vega（{{p}}），这个说法也要保留。" }, "expectStatus": [200, 202], "saveAs": "c2" },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "我们约定每周五提交一次交付物（{{p}}）。" }, "expectStatus": [200, 202], "saveAs": "c3" },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "今天天气不错，随便聊聊（{{p}}）。" }, "expectStatus": [200, 202], "saveAs": "c4" },
+    { "type": "http", "method": "POST", "path": "/api/debug/memory/consolidate", "body": { "sessionId": "{{caseSession}}", "agentId": "agent:simo", "maxMessages": 20 }, "expectStatus": 200, "saveAs": "cons" },
+    { "type": "http", "method": "GET", "path": "/api/debug/memory/consolidation?sessionId={{caseSession}}", "expectStatus": 200, "saveAs": "status" },
+    { "type": "http", "method": "GET", "path": "/api/memory/conflicts", "expectStatus": 200, "saveAs": "conflicts" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "cons.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "regex", "target": "cons.body", "pattern": "\"candidateCount\"\\s*:\\s*3" },
+    { "type": "regex", "target": "cons.body", "pattern": "\"createdCount\"\\s*:\\s*2" },
+    { "type": "regex", "target": "cons.body", "pattern": "\"conflictCount\"\\s*:\\s*1" },
+    { "type": "regex", "target": "cons.body", "pattern": "\"id\"\\s*:\\s*\"mjob-" },
+    { "type": "regex", "target": "status.body", "pattern": "\"total\"\\s*:\\s*1" },
+    { "type": "regex", "target": "status.body", "pattern": "mjob-" },
+    { "type": "regex", "target": "conflicts.body", "pattern": "Orion（{{p}}）" },
+    { "type": "regex", "target": "conflicts.body", "pattern": "Vega（{{p}}）" },
+    { "type": "regex", "target": "conflicts.body", "pattern": "\"status\"\\s*:\\s*\"disputed\"" },
+    { "type": "forbidden", "target": "cons.body", "patterns": ["no_candidates"] }
+  ]
+}

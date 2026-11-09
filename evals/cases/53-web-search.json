@@ -1,0 +1,50 @@
+{
+  "id": "web-search",
+  "name": "联网搜索（web_search 审批后返回结构化结果：源码可解析出 URL/标题）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-search-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}" }, "pick": "id", "saveAs": "sid" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@sid}}",
+      "chat": { "text": "mock:web-search agentd 是什么" },
+      "saveAs": "stream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 60000 },
+      "drainMs": 800
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "pending",
+      "intervalMs": 300,
+      "timeoutMs": 20000,
+      "until": { "path": "json.approvals", "matchSome": { "tool": "web_search", "status": "pending" } }
+    },
+    { "type": "capture", "from": "pending.json.approvals", "where": { "tool": "web_search", "status": "pending" }, "pick": "id", "saveAs": "approvalId" },
+    { "type": "http", "method": "POST", "path": "/api/approvals/{{@approvalId}}", "body": { "decision": "allow" }, "expectStatus": 200, "timeoutMs": 90000, "saveAs": "allowResp" },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "resolved",
+      "intervalMs": 400,
+      "timeoutMs": 30000,
+      "until": { "path": "json.approvals", "matchSome": { "id": "{{@approvalId}}", "status": "approved" } }
+    }
+  ],
+  "graders": [
+    { "type": "regex", "target": "allowResp.body", "pattern": "\"status\"\\s*:\\s*\"approved\"" },
+    { "type": "regex", "target": "resolved.body", "pattern": "\"tool\"\\s*:\\s*\"web_search\"" },
+    { "type": "regex", "target": "resolved.body", "pattern": "https?://" },
+    { "type": "count", "target": "resolved.body", "pattern": "https?://", "atLeast": 3 },
+    { "type": "regex", "target": "resolved.body", "pattern": "\"source\"|source" },
+    { "type": "forbidden", "target": "resolved.body", "patterns": ["\"result\"\\s*:\\s*\"\"", "code=network_denied"] }
+  ]
+}

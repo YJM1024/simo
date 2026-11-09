@@ -1,0 +1,60 @@
+{
+  "id": "memory-readonly",
+  "name": "记忆只读（写动词 404 且无 ok:true；读接口 200）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-readonly-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/memory/items",
+      "body": { "content": "{{probe}} 不该被接受", "source": "user" },
+      "expectStatus": 404,
+      "saveAs": "postItems"
+    },
+    {
+      "type": "http",
+      "method": "PUT",
+      "path": "/api/memory/items/mem-evals-none",
+      "body": { "content": "改我" },
+      "expectStatus": 404,
+      "saveAs": "putItem"
+    },
+    {
+      "type": "http",
+      "method": "PATCH",
+      "path": "/api/memory/items/mem-evals-none",
+      "body": { "content": "改我" },
+      "expectStatus": 404,
+      "saveAs": "patchItem"
+    },
+    {
+      "type": "http",
+      "method": "DELETE",
+      "path": "/api/memory/items/mem-evals-none",
+      "expectStatus": 404,
+      "saveAs": "deleteItem"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/memory",
+      "body": { "content": "{{probe}} 也不该被接受" },
+      "expectStatus": 404,
+      "saveAs": "postMemory"
+    },
+    { "type": "http", "method": "GET", "path": "/api/memory/items", "expectStatus": 200, "saveAs": "items" },
+    { "type": "http", "method": "GET", "path": "/api/memory/scopes", "expectStatus": 200, "saveAs": "scopes" }
+  ],
+  "graders": [
+    { "type": "forbidden", "target": "postItems.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "putItem.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "patchItem.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "deleteItem.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "postMemory.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "regex", "target": "items.body", "pattern": "\"items\"\\s*:\\s*\\[" },
+    { "type": "regex", "target": "scopes.body", "pattern": "\"scopes\"\\s*:\\s*\\[" }
+  ]
+}

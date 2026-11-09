@@ -1,0 +1,28 @@
+{
+  "id": "recall-hidden",
+  "name": "Recall 对外不可见（公开无 /api/recall；memory 写 API 全 404；debug 端点仅内部）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-recall-hidden-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/recall", "body": { "query": "x" }, "expectStatus": [404, 405], "saveAs": "publicRecall" },
+    { "type": "http", "method": "GET", "path": "/api/recall?q=x", "expectStatus": [404, 405], "saveAs": "publicRecallGet" },
+    { "type": "http", "method": "POST", "path": "/api/memory/recall", "body": { "query": "x" }, "expectStatus": [404, 405], "saveAs": "memoryRecall" },
+    { "type": "http", "method": "POST", "path": "/api/memory", "body": { "content": "x" }, "expectStatus": [404, 405], "saveAs": "memoryWrite" },
+    { "type": "http", "method": "POST", "path": "/api/memory/items", "body": { "content": "x" }, "expectStatus": [404, 405], "saveAs": "memoryItemWrite" },
+    { "type": "http", "method": "DELETE", "path": "/api/memory/items/mem-x", "expectStatus": [404, 405], "saveAs": "memoryDelete" },
+    { "type": "http", "method": "POST", "path": "/api/debug/recall/seed", "body": { "entities": [] }, "expectStatus": [200], "saveAs": "seedEmpty" },
+    { "type": "http", "method": "POST", "path": "/api/debug/recall", "body": { "query": "zzz-no-such-{{runId}}" }, "expectStatus": 200, "saveAs": "debugRecall" }
+  ],
+  "graders": [
+    { "type": "forbidden", "target": "publicRecall.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "publicRecallGet.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "memoryRecall.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "memoryWrite.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "memoryItemWrite.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "forbidden", "target": "memoryDelete.body", "patterns": ["\"ok\"\\s*:\\s*true"] },
+    { "type": "regex", "target": "seedEmpty.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "regex", "target": "debugRecall.body", "pattern": "\"ok\"\\s*:\\s*true" }
+  ]
+}

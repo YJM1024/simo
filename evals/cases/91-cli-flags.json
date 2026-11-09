@@ -1,0 +1,153 @@
+{
+  "id": "cli-flags",
+  "name": "CLI 全局参数（--json/--pretty、互斥=2、--dry-run JSON 信封、dash 值、错误 base-url）",
+  "tier": "normal",
+  "vars": {
+    "probe": "evals-cli-flags-{{runId}}",
+    "title": "evals-cli-flags-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "cli",
+      "args": [
+        "session",
+        "list",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "asJson"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "session",
+        "list",
+        "--pretty"
+      ],
+      "expectExit": 0,
+      "saveAs": "asPretty"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "session",
+        "list",
+        "--pretty",
+        "--json"
+      ],
+      "expectExit": 2,
+      "saveAs": "exclusive"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "session",
+        "create",
+        "--title",
+        "{{title}}",
+        "--dry-run",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "dryRun"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "session",
+        "list",
+        "--base-url",
+        "{{probe}}"
+      ],
+      "expectExit": [
+        1,
+        2
+      ],
+      "saveAs": "badBaseUrl"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions",
+      "expectStatus": 200,
+      "saveAs": "sessions"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "session",
+        "create",
+        "--title",
+        "--dash-name",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "dashCreate"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions",
+      "expectStatus": 200,
+      "saveAs": "dashSessions"
+    }
+  ],
+  "graders": [
+    {
+      "type": "regex",
+      "target": "asJson.stdout",
+      "pattern": "\"id\"\\s*:\\s*\"main\""
+    },
+    {
+      "type": "regex",
+      "target": "asPretty.stdout",
+      "pattern": "\"id\"\\s*:\\s*\"main\""
+    },
+    {
+      "type": "numeric",
+      "left": "exclusive.exitCode",
+      "op": "eq",
+      "value": 2
+    },
+    {
+      "type": "numeric",
+      "left": "dryRun.exitCode",
+      "op": "eq",
+      "value": 0
+    },
+    {
+      "type": "forbidden",
+      "target": "sessions.body",
+      "patterns": [
+        "\"title\"\\s*:\\s*\"{{title}}\""
+      ]
+    },
+    {
+      "type": "numeric",
+      "left": "badBaseUrl.exitCode",
+      "op": "eq",
+      "value": 1
+    },
+    {
+      "type": "regex",
+      "target": "dryRun.stdout",
+      "pattern": "^\\s*\\{"
+    },
+    {
+      "type": "regex",
+      "target": "dryRun.stdout",
+      "pattern": "\"(ok|data|wouldDo|plan|dryRun)\"\\s*:"
+    },
+    {
+      "type": "regex",
+      "target": "dashSessions.body",
+      "pattern": "\"title\"\\s*:\\s*\"--dash-name\""
+    },
+    {
+      "type": "numeric",
+      "left": "dashCreate.exitCode",
+      "op": "eq",
+      "value": 0
+    }
+  ]
+}

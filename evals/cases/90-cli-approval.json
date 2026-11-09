@@ -1,0 +1,239 @@
+{
+  "id": "cli-approval",
+  "name": "CLI 审批语义（R3 首次 exit 3；approve 即执行且 HTTP 可见；deny 记 denied；never fail-closed=4）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-cli-appr-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "cli",
+      "args": [
+        "workflow",
+        "start",
+        "--session",
+        "main",
+        "--plan",
+        "{\"title\":\"cli-appr-{{runId}}\",\"tasks\":[{\"title\":\"t1\"}]}",
+        "--json"
+      ],
+      "expectExit": 3,
+      "saveAs": "ask1"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "pending",
+      "intervalMs": 200,
+      "timeoutMs": 15000,
+      "until": {
+        "path": "json.approvals",
+        "matchSome": {
+          "status": "pending"
+        }
+      }
+    },
+    {
+      "type": "capture",
+      "from": "pending.json.approvals",
+      "where": {
+        "status": "pending"
+      },
+      "pick": "id",
+      "saveAs": "approvalId"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/workflows?sessionId=main",
+      "expectStatus": 200,
+      "saveAs": "wfBefore"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "permission",
+        "approve",
+        "--id",
+        "{{@approvalId}}",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "approved"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/workflows?sessionId=main",
+      "expectStatus": 200,
+      "saveAs": "wfAfter"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/approvals/{{@approvalId}}",
+      "expectStatus": [
+        200
+      ],
+      "saveAs": "approvalAfter"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "workflow",
+        "start",
+        "--session",
+        "main",
+        "--plan",
+        "{\"title\":\"cli-appr-deny-{{runId}}\",\"tasks\":[{\"title\":\"t2\"}]}",
+        "--json"
+      ],
+      "expectExit": 3,
+      "saveAs": "ask2"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/approvals",
+      "expectStatus": 200,
+      "saveAs": "pending2"
+    },
+    {
+      "type": "capture",
+      "from": "pending2.json.approvals",
+      "where": {
+        "status": "pending"
+      },
+      "pick": "id",
+      "saveAs": "denyId"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "permission",
+        "deny",
+        "--id",
+        "{{@denyId}}",
+        "--json"
+      ],
+      "expectExit": 0,
+      "saveAs": "denied"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/approvals/{{@denyId}}",
+      "expectStatus": [
+        200
+      ],
+      "saveAs": "deniedAfter"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/permissions",
+      "body": {
+        "policy": "never"
+      },
+      "expectStatus": [
+        200
+      ],
+      "saveAs": "setNever"
+    },
+    {
+      "type": "cli",
+      "args": [
+        "workflow",
+        "start",
+        "--session",
+        "main",
+        "--plan",
+        "{\"title\":\"cli-appr-never-{{runId}}\",\"tasks\":[{\"title\":\"t3\"}]}",
+        "--json"
+      ],
+      "expectExit": 4,
+      "saveAs": "neverDenied"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/permissions",
+      "body": {
+        "policy": "auto"
+      },
+      "expectStatus": [
+        200
+      ],
+      "saveAs": "resetAuto"
+    }
+  ],
+  "graders": [
+    {
+      "type": "numeric",
+      "left": "ask1.exitCode",
+      "op": "eq",
+      "value": 3
+    },
+    {
+      "type": "regex",
+      "target": "ask1.stdout",
+      "pattern": "\"approvalId\"\\s*:\\s*\"appr-"
+    },
+    {
+      "type": "numeric",
+      "left": "approved.exitCode",
+      "op": "eq",
+      "value": 0
+    },
+    {
+      "type": "regex",
+      "target": "approved.stdout",
+      "pattern": "\"decision\"\\s*:\\s*\"allow\""
+    },
+    {
+      "type": "regex",
+      "target": "approvalAfter.body",
+      "pattern": "\"status\"\\s*:\\s*\"approved\""
+    },
+    {
+      "type": "count",
+      "target": "wfAfter.json.workflows",
+      "pattern": "\"id\"\\s*:\\s*\"wf-",
+      "atLeast": 1
+    },
+    {
+      "type": "numeric",
+      "left": "ask2.exitCode",
+      "op": "eq",
+      "value": 3
+    },
+    {
+      "type": "numeric",
+      "left": "denied.exitCode",
+      "op": "eq",
+      "value": 0
+    },
+    {
+      "type": "regex",
+      "target": "denied.stdout",
+      "pattern": "\"decision\"\\s*:\\s*\"deny\""
+    },
+    {
+      "type": "regex",
+      "target": "deniedAfter.body",
+      "pattern": "\"status\"\\s*:\\s*\"denied\""
+    },
+    {
+      "type": "numeric",
+      "left": "neverDenied.exitCode",
+      "op": "eq",
+      "value": 4
+    },
+    {
+      "type": "regex",
+      "target": "neverDenied.stdout",
+      "pattern": "\"ok\"\\s*:\\s*false"
+    }
+  ]
+}

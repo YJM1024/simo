@@ -1,0 +1,60 @@
+{
+  "id": "session-files",
+  "name": "会话文件聚合（任务产物 + 上传附件；去重；preview/downloadUrl 可用；kind 过滤）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-files-{{runId}}",
+    "fname": "attach-{{runId}}.txt"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}" }, "pick": "id", "saveAs": "sid" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@sid}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}} mock:workflow 生成一份报告。" },
+      "saveAs": "wfStream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 30000 },
+      "drainMs": 300
+    },
+    { "type": "http", "method": "GET", "path": "/api/workflows?sessionId={{@sid}}", "expectStatus": 200, "saveAs": "wfList" },
+    { "type": "capture", "from": "wfList.json.workflows", "where": {}, "pick": "id", "saveAs": "workflowId" },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/workflows/{{@workflowId}}",
+      "saveAs": "detail",
+      "intervalMs": 400,
+      "timeoutMs": 90000,
+      "until": { "path": "json.workflow.tasks", "matchSome": { "title": "汇总产出", "status": "done" } }
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/uploads?sessionId={{@sid}}",
+      "multipart": { "files": [{ "filename": "{{fname}}", "mime": "text/plain", "content": "attachment body" }] },
+      "expectStatus": [200, 201],
+      "saveAs": "upload"
+    },
+    { "type": "http", "method": "GET", "path": "/api/sessions/{{@sid}}/files", "expectStatus": 200, "saveAs": "filesAll" },
+    { "type": "capture", "from": "filesAll.json.files", "where": { "kind": "artifact" }, "pick": "previewUrl", "saveAs": "artifactPreview" },
+    { "type": "http", "method": "GET", "path": "/api/sessions/{{@sid}}/files?kind=artifact", "expectStatus": 200, "saveAs": "onlyArtifacts" },
+    { "type": "http", "method": "GET", "path": "/api/sessions/{{@sid}}/files?kind=upload", "expectStatus": 200, "saveAs": "onlyUploads" },
+    { "type": "http", "method": "GET", "path": "/api/sessions/{{@sid}}/files?kind=bogus", "expectStatus": [400], "saveAs": "badKind" }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "filesAll.json.files", "where": { "kind": "artifact" }, "atLeast": 1 },
+    { "type": "state_delta", "collection": "filesAll.json.files", "where": { "kind": "upload" }, "atLeast": 1 },
+    { "type": "regex", "target": "filesAll.body", "pattern": "\"previewUrl\"\\s*:\\s*\"/(api|)" },
+    { "type": "regex", "target": "filesAll.body", "pattern": "\"downloadUrl\"\\s*:\\s*\"/(api|)" },
+    { "type": "forbidden", "target": "filesAll.body", "patterns": ["\"id\"\\s*:\\s*\"file-artifact-([^\"]+)\"[\\s\\S]*\"id\"\\s*:\\s*\"file-artifact-\\1\""] },
+    { "type": "regex", "target": "onlyArtifacts.body", "pattern": "\"kind\"\\s*:\\s*\"artifact\"" },
+    { "type": "forbidden", "target": "onlyArtifacts.body", "patterns": ["\"kind\"\\s*:\\s*\"upload\""] },
+    { "type": "regex", "target": "onlyUploads.body", "pattern": "\"kind\"\\s*:\\s*\"upload\"" },
+    { "type": "forbidden", "target": "onlyUploads.body", "patterns": ["\"kind\"\\s*:\\s*\"artifact\""] },
+    { "type": "forbidden", "target": "badKind.body", "patterns": ["\"ok\"\\s*:\\s*true"] }
+  ]
+}

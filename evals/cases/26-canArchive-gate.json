@@ -1,0 +1,68 @@
+{
+  "id": "canArchive-gate",
+  "name": "canArchive 门禁（有运行中任务 → 归档被拒并返回 blockers；任务完成后归档成功）",
+  "tier": "critical",
+  "vars": {
+    "title": "evals-gate-{{runId}}",
+    "tmsg": "{{title}} 多阶段长任务：整理季度报告，慢慢做。"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{title}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{title}}" }, "pick": "id", "saveAs": "sessionId" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{@sessionId}}",
+      "collectAfterText": "{{title}}",
+      "chat": { "text": "{{tmsg}}" },
+      "saveAs": "stream",
+      "until": { "type": "task.created", "timeoutMs": 25000 },
+      "drainMs": 500
+    },
+    { "type": "capture", "from": "stream.frames", "where": { "type": "task.created" }, "pick": "data.id", "saveAs": "taskId" },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/tasks?sessionId={{@sessionId}}",
+      "saveAs": "running",
+      "intervalMs": 200,
+      "timeoutMs": 15000,
+      "until": { "path": "json.tasks", "matchSome": { "id": "{{@taskId}}", "status": "running" } }
+    },
+    {
+      "type": "http",
+      "candidate": [
+        { "method": "POST", "path": "/api/sessions/{{@sessionId}}/archive", "body": {} },
+        { "method": "PATCH", "path": "/api/sessions/{{@sessionId}}", "body": { "archived": 1 } }
+      ],
+      "expectStatus": [409, 423],
+      "saveAs": "blocked"
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/tasks?sessionId={{@sessionId}}",
+      "saveAs": "finished",
+      "intervalMs": 300,
+      "timeoutMs": 40000,
+      "until": { "path": "json.tasks", "matchSome": { "id": "{{@taskId}}", "status": "done" } }
+    },
+    {
+      "type": "http",
+      "candidate": [
+        { "method": "POST", "path": "/api/sessions/{{@sessionId}}/archive", "body": {} },
+        { "method": "PATCH", "path": "/api/sessions/{{@sessionId}}", "body": { "archived": 1 } }
+      ],
+      "expectStatus": [200, 202, 204],
+      "saveAs": "archived"
+    },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "afterArchive" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "blocked.body", "pattern": "\"blockers\"\\s*:\\s*\\[\\s*\"[^\"]+\"" },
+    { "type": "forbidden", "target": "blocked.body", "patterns": ["\"archived\"\\s*:\\s*1[^,}]?\\s*[,}]"] },
+    { "type": "state_delta", "collection": "afterArchive.json.sessions", "where": { "id": "{{@sessionId}}" }, "expect": { "archived": 1 }, "atLeast": 1 },
+    { "type": "state_delta", "collection": "finished.json.tasks", "where": { "id": "{{@taskId}}", "status": "done" }, "atLeast": 1 }
+  ]
+}

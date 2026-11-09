@@ -1,0 +1,40 @@
+{
+  "id": "memory-pyramid",
+  "name": "记忆金字塔（L0–L4 + 5 视角结构；节点含 level/view/text/coverage/status）",
+  "tier": "normal",
+  "vars": {
+    "probe": "evals-mem-pyr-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}" }, "pick": "id", "saveAs": "sid" },
+    { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{@sid}}", "text": "记住：项目代号是 Orion（{{probe}}）。" }, "expectStatus": [200, 202], "saveAs": "chat" },
+    { "type": "http", "method": "GET", "path": "/api/memory/pyramid?level=0&view=what_happened", "expectStatus": 200, "saveAs": "l0" },
+    { "type": "http", "method": "GET", "path": "/api/memory/pyramid?level=1", "expectStatus": 200, "saveAs": "l1" },
+    { "type": "http", "method": "GET", "path": "/api/memory/pyramid?level=2", "expectStatus": 200, "saveAs": "l2" },
+    { "type": "http", "method": "GET", "path": "/api/memory/pyramid?level=3", "expectStatus": 200, "saveAs": "l3" },
+    { "type": "http", "method": "GET", "path": "/api/memory/pyramid?level=4", "expectStatus": 200, "saveAs": "l4" },
+    { "type": "http", "method": "GET", "path": "/api/memory/pyramid?view=what_happened", "expectStatus": 200, "saveAs": "v1" },
+    { "type": "http", "method": "GET", "path": "/api/memory/pyramid?view=what_is", "expectStatus": 200, "saveAs": "v2" },
+    { "type": "http", "method": "GET", "path": "/api/memory/pyramid?view=what_should", "expectStatus": 200, "saveAs": "v3" },
+    { "type": "http", "method": "GET", "path": "/api/memory/pyramid?view=how_to", "expectStatus": 200, "saveAs": "v4" },
+    { "type": "http", "method": "GET", "path": "/api/memory/pyramid?view=current_state", "expectStatus": 200, "saveAs": "v5" }
+  ],
+  "graders": [
+    { "type": "numeric", "left": "l0.json.level", "op": "eq", "value": 0 },
+    { "type": "count", "target": "l0.json.nodes", "pattern": "\"coverage\"\\s*:", "atLeast": 1 },
+    { "type": "regex", "target": "l0.body", "pattern": "\"view\"\\s*:\\s*\"what_happened\"" },
+    { "type": "regex", "target": "l0.body", "pattern": "\"status\"\\s*:\\s*\"active\"" },
+    { "type": "regex", "target": "l0.body", "pattern": "\"text\"\\s*:\\s*\"[^\"]+\"" },
+    { "type": "numeric", "left": "l1.json.level", "op": "eq", "value": 1 },
+    { "type": "numeric", "left": "l2.json.level", "op": "eq", "value": 2 },
+    { "type": "numeric", "left": "l3.json.level", "op": "eq", "value": 3 },
+    { "type": "numeric", "left": "l4.json.level", "op": "eq", "value": 4 },
+    { "type": "regex", "target": "v1.body", "pattern": "\"view\"\\s*:\\s*\"what_happened\"" },
+    { "type": "regex", "target": "v2.body", "pattern": "\"view\"\\s*:\\s*\"what_is\"" },
+    { "type": "regex", "target": "v3.body", "pattern": "\"view\"\\s*:\\s*\"what_should\"" },
+    { "type": "regex", "target": "v4.body", "pattern": "\"view\"\\s*:\\s*\"how_to\"" },
+    { "type": "regex", "target": "v5.body", "pattern": "\"view\"\\s*:\\s*\"current_state\"" }
+  ]
+}

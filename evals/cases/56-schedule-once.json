@@ -1,0 +1,55 @@
+{
+  "id": "schedule-once",
+  "name": "一次性定时（now+6s 到点触发：目标会话收到 prompt 并真实回复，lastStatus=done / runCount=1）",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-once-{{runId}}",
+    "prompt": "{{probe}} 提醒我喝水"
+  },
+  "steps": [
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}" }, "pick": "id", "saveAs": "sid" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/schedules",
+      "body": {
+        "sessionId": "{{@sid}}",
+        "title": "evals-once",
+        "prompt": "{{prompt}}",
+        "trigger": { "type": "once", "expr": "{{nowPlusIso:6}}" }
+      },
+      "expectStatus": [200, 201],
+      "saveAs": "createdSch"
+    },
+    { "type": "capture", "from": "createdSch.json.schedule", "where": {}, "pick": "id", "saveAs": "schId" },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/schedules",
+      "saveAs": "list",
+      "intervalMs": 500,
+      "timeoutMs": 60000,
+      "until": { "path": "json.schedules", "matchSome": { "id": "{{@schId}}", "lastStatus": "done" } }
+    },
+    { "type": "http", "method": "GET", "path": "/api/schedules/{{@schId}}", "expectStatus": 200, "saveAs": "detail" },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{@sid}}",
+      "saveAs": "msgs",
+      "intervalMs": 300,
+      "timeoutMs": 20000,
+      "until": { "path": "json.messages", "matchSome": { "text": "{{prompt}}" } }
+    }
+  ],
+  "graders": [
+    { "type": "regex", "target": "detail.body", "pattern": "\"lastStatus\"\\s*:\\s*\"done\"" },
+    { "type": "regex", "target": "detail.body", "pattern": "\"runCount\"\\s*:\\s*1" },
+    { "type": "regex", "target": "detail.body", "pattern": "\"enabled\"\\s*:\\s*false" },
+    { "type": "regex", "target": "detail.body", "pattern": "\"nextRunAt\"\\s*:\\s*0" },
+    { "type": "state_delta", "collection": "msgs.json.messages", "where": { "text": "{{prompt}}" }, "atLeast": 1 },
+    { "type": "state_delta", "collection": "msgs.json.messages", "where": { "role": "agent" }, "atLeast": 1 }
+  ]
+}

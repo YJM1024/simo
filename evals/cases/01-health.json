@@ -1,0 +1,14 @@
+{
+  "id": "health",
+  "name": "健康检查（服务可启动 + 契约字段 + 前端产物）",
+  "tier": "critical",
+  "vars": {},
+  "steps": [
+    { "type": "http", "method": "GET", "path": "/api/health", "expectStatus": 200, "saveAs": "health" }
+  ],
+  "graders": [
+    { "type": "regex", "target": "health.body", "pattern": "\"ok\"\\s*:\\s*true" },
+    { "type": "regex", "target": "health.body", "pattern": "\"time\"\\s*:\\s*\\d{10,}" },
+    { "type": "file_exists", "path": "agentd/internal/webui/dist/index.html" }
+  ]
+}

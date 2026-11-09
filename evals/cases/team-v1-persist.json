@@ -1,0 +1,28 @@
+{
+  "id": "team-v1-persist",
+  "name": "团队 V1 持久化（重启后成员/内部消息仍在）",
+  "tier": "critical",
+  "pending": "需要重启被测服务：由 evals/team-v1-persist.ps1 覆盖（建团队+内部消息→杀进程→重启→断言团队/成员/内部消息仍在；已实现，12/12 PASS）。",
+  "vars": {
+    "probe": "evals-teamv1p-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/team",
+      "expectStatus": [
+        200,
+        404
+      ],
+      "saveAs": "team"
+    }
+  ],
+  "graders": [
+    {
+      "type": "regex",
+      "target": "team.body",
+      "pattern": "(members|ok)"
+    }
+  ]
+}

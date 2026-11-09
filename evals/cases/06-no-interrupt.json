@@ -1,0 +1,51 @@
+{
+  "id": "no-interrupt",
+  "name": "不打断（任务运行中发普通消息：有回复，任务仍在跑）",
+  "tier": "normal",
+  "vars": {
+    "probe": "evals-nointerrupt-{{runId}}"
+  },
+  "steps": [
+    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}}：帮我把这个月的所有待办整理成一份报告，需要一点时间，慢慢做。" },
+      "saveAs": "taskStream",
+      "until": { "type": "task.created", "timeoutMs": 25000 },
+      "drainMs": 2500
+    },
+    {
+      "type": "capture",
+      "from": "taskStream.frames",
+      "where": { "type": "task.created" },
+      "pick": "data.id",
+      "saveAs": "taskId"
+    },
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{probe}}",
+      "chat": { "text": "{{probe}}：顺便问一句，今天几号？" },
+      "saveAs": "chatStream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 20000 },
+      "drainMs": 3000
+    },
+    {
+      "type": "capture",
+      "from": "chatStream.frames",
+      "where": { "type": "task.updated", "data.id": "{{@taskId}}" },
+      "pick": "data.status",
+      "last": true,
+      "saveAs": "taskStatusAfter"
+    }
+  ],
+  "graders": [
+    { "type": "regex", "target": "chatStream.trace", "pattern": "(reply|message)\\.done" },
+    { "type": "regex", "target": "taskStatusAfter", "pattern": "^(running|queued)$" },
+    { "type": "forbidden", "target": "chatStream.raw", "patterns": ["\"type\":\"error\""] }
+  ]
+}

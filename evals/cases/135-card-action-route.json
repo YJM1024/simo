@@ -1,0 +1,120 @@
+{
+  "id": "card-action-route",
+  "name": "M41 卡片 route=action：调用目录动作（task.list）并返回结果",
+  "tier": "critical",
+  "vars": {
+    "probe": "evals-card-action-route-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/actions/chat.send_card",
+      "expectStatus": [
+        200,
+        201
+      ],
+      "saveAs": "sent",
+      "body": {
+        "sessionId": "{{caseSession}}",
+        "fallbackText": "任务查询卡片（兜底）。",
+        "schema": {
+          "schemaVersion": 1,
+          "title": "任务查询",
+          "blocks": [
+            {
+              "id": "t1",
+              "type": "text",
+              "props": {
+                "text": "点击查询任务列表"
+              }
+            }
+          ],
+          "actions": [
+            {
+              "id": "list",
+              "label": "查询任务",
+              "route": "action",
+              "action": "task.list",
+              "args": {},
+              "variant": "primary"
+            }
+          ],
+          "equivalence": {
+            "chatPrompt": "查询任务列表"
+          },
+          "layout": {
+            "kind": "rows"
+          }
+        }
+      }
+    },
+    {
+      "type": "capture",
+      "from": "sent.json.data",
+      "pick": "cardId",
+      "saveAs": "cardId"
+    },
+    {
+      "type": "capture",
+      "from": "sent.json.data",
+      "pick": "messageId",
+      "saveAs": "messageId"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/cards/{{@cardId}}/actions/list",
+      "expectStatus": 200,
+      "saveAs": "action",
+      "body": {
+        "messageId": "{{@messageId}}",
+        "baseVersion": 1,
+        "payload": {},
+        "idempotencyKey": "action-route-{{runId}}"
+      }
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/cards/{{@cardId}}",
+      "expectStatus": 200,
+      "saveAs": "cardAfter"
+    }
+  ],
+  "graders": [
+    {
+      "type": "regex",
+      "target": "sent.body",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    },
+    {
+      "type": "regex",
+      "target": "action.body",
+      "pattern": "\"route\"\\s*:\\s*\"action\""
+    },
+    {
+      "type": "regex",
+      "target": "action.body",
+      "pattern": "\"result\""
+    },
+    {
+      "type": "regex",
+      "target": "action.body",
+      "pattern": "\"ok\"\\s*:\\s*true|\"tasks\""
+    },
+    {
+      "type": "regex",
+      "target": "cardAfter.body",
+      "pattern": "\"status\"\\s*:\\s*\"submitted\""
+    },
+    {
+      "type": "forbidden",
+      "target": "action.body",
+      "patterns": [
+        "CARD_FORBIDDEN",
+        "APPROVAL_REQUIRED"
+      ]
+    }
+  ]
+}

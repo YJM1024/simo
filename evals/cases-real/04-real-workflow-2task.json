@@ -1,0 +1,36 @@
+{
+  "id": "real-workflow-2task",
+  "name": "真实模型：一个小工作流（拆解 → 任务全部 done，结构断言）",
+  "tier": "normal",
+  "vars": {
+    "probe": "evals-real-wf-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "chat": { "text": "拆成几个任务：先收集资料，再写摘要。" },
+      "saveAs": "stream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 120000 },
+      "drainMs": 500
+    },
+    { "type": "http", "method": "GET", "path": "/api/workflows?sessionId={{caseSession}}", "expectStatus": 200, "saveAs": "wfList" },
+    { "type": "capture", "from": "wfList.json.workflows", "where": {}, "pick": "id", "saveAs": "workflowId" },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/workflows/{{@workflowId}}",
+      "saveAs": "detail",
+      "intervalMs": 500,
+      "timeoutMs": 120000,
+      "until": { "path": "json.workflow.tasks", "matchSome": { "title": "汇总产出", "status": "done" } }
+    }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "wfList.json.workflows", "atLeast": 1 },
+    { "type": "state_delta", "collection": "detail.json.workflow.tasks", "atLeast": 2 },
+    { "type": "regex", "target": "detail.body", "pattern": "\"status\"\\s*:\\s*\"done\"" },
+    { "type": "state_delta", "collection": "detail.json.workflow.tasks", "where": { "status": "done" }, "atLeast": 2 }
+  ]
+}

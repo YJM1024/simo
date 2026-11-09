@@ -1,0 +1,43 @@
+# Minimal mountable custom agent preset for this Harness profile.
+# Install with plugin_manager { action: install_bundle, target: <this directory> }.
+# Verified row names/configs are copied from the shipped web-app presets
+# (node_modules/@deepseek-ai/dsh-web-app/presets/*.patch.yml).
+- insert:
+    - id: preset-demo
+      name: '@deepseek-ai/dsh-agent-preset'
+      config:
+        id: demo
+        name: Demo
+        description: Read-only reconnaissance agent - persona, read/search, shell.
+        order: 20
+        plugins:
+          - id: persona
+            name: '@deepseek-ai/dsh-persona'
+            config:
+              prefix: >-
+                You are a meticulous reconnaissance agent. You inspect a
+                repository and report exact paths, commands and file contents
+                with line numbers. You never modify files unless told to.
+          - id: agent-instructions
+            name: '@deepseek-ai/dsh-agent-instructions'
+            config:
+              maxBytes: 65536
+          - id: time-context
+            name: '@deepseek-ai/dsh-time-context'
+          # Read-only filesystem: read + read-image only (write/edit off).
+          - id: tool-fs
+            name: '@deepseek-ai/dsh-tool-fs'
+            config:
+              write: false
+              edit: false
+          - id: tool-fs-search
+            name: '@deepseek-ai/dsh-tool-fs-search'
+            config:
+              sampleOverCapGlobResults: false
+          # Exactly one shell tool per platform, mirroring the shipped presets.
+          - id: tool-pwsh
+            name: '@deepseek-ai/dsh-tool-pwsh'
+            disabled: !!js process.platform !== 'win32'
+          - id: tool-bash
+            name: '@deepseek-ai/dsh-tool-bash'
+            disabled: !!js process.platform === 'win32'

@@ -1,0 +1,14 @@
+{
+  "name": "superagent-kernel-skeleton",
+  "version": "0.1.0",
+  "private": true,
+  "description": "事件驱动 + 双层(Router/Worker) + 存算分离 + 授权与上下文分离 + 验收门 的 Agent 内核最小参考实现（零依赖）",
+  "type": "module",
+  "scripts": {
+    "demo": "node demo.mjs",
+    "test": "node --test --test-isolation=none test/smoke.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

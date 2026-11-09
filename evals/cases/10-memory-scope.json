@@ -1,0 +1,45 @@
+{
+  "id": "memory-scope",
+  "name": "记忆作用域（global 可查、scopes 统计、task:<不存在> 不带出）",
+  "tier": "normal",
+  "vars": {
+    "memo": "evals-scope-{{runId}}"
+  },
+  "steps": [
+    {
+      "type": "ws",
+      "path": "/api/ws",
+      "sessionId": "{{caseSession}}",
+      "collectAfterText": "{{memo}}",
+      "chat": { "text": "记住：{{memo}} 厨房灯泡型号是 KF-27。" },
+      "saveAs": "stream",
+      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 20000 },
+      "drainMs": 1500
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/memory?q={{memo}}&scope=global",
+      "saveAs": "globalHit",
+      "intervalMs": 150,
+      "timeoutMs": 8000,
+      "until": { "path": "json.items", "matchSome": {} }
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/memory?q={{memo}}&scope=task:evals-no-such-task",
+      "expectStatus": 200,
+      "saveAs": "taskMiss"
+    },
+    { "type": "http", "method": "GET", "path": "/api/memory/scopes", "expectStatus": 200, "saveAs": "scopes" }
+  ],
+  "graders": [
+    { "type": "state_delta", "collection": "globalHit.json.items", "where": { "scope": "global" }, "atLeast": 1 },
+    { "type": "regex", "target": "globalHit.json.items.0.content", "pattern": "{{memo}}" },
+    { "type": "state_delta", "collection": "taskMiss.json.items", "atMost": 0 },
+    { "type": "forbidden", "target": "taskMiss.body", "patterns": ["{{memo}}"] },
+    { "type": "regex", "target": "scopes.body", "pattern": "\"scope\"\\s*:\\s*\"global\"" },
+    { "type": "regex", "target": "scopes.body", "pattern": "\"count\"\\s*:\\s*[1-9]" }
+  ]
+}
