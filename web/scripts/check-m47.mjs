@@ -47,7 +47,7 @@ check('助手 30px 深色「墨」/ 用户 30px 浅灰「你」+ 1px 边', () =>
 })
 
 check('消息头：min-height 30 / items-center / meta 13px/20px / 与正文 6px', () => {
-  assert.match(messageList, /mb-1\.5 flex min-h-\[30px\] flex-wrap items-center/)
+  assert.match(messageList, /mb-1\.5 flex h-\[30px\] flex-nowrap items-center/)
   assert.match(messageList, /text-\[13px\] font-medium leading-5/)
   assert.match(read('features/chat/MessageBadges.tsx'), /text-\[13px\] leading-5 text-ink-muted/)
   assert.match(messageList, /text-\[15px\] leading-\[1\.65\]/)

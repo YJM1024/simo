@@ -73,6 +73,7 @@ func (m *Module) startRuntime(ctx context.Context) {
 				return
 			case <-ticker.C:
 				m.expireApprovals()
+				m.checkTurnWatchdog()
 			}
 		}
 	}()

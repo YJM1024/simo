@@ -299,10 +299,12 @@ export function useChatRuntime(): ChatRuntime {
           const payload = parseDone(frame.data)
           if (!payload) return
           clearFeedback()
+          // 后端失败/超时/中断统一落为错误态：不再保留「正在输入…」与撤回按钮
+          const doneStatus = /fail|error|timeout|interrupt|abort|cancel/i.test(payload.status) ? 'error' : payload.status
           setMessages((prev) =>
             prev.map((item) =>
               item.id === payload.id && item.status !== 'retracted'
-                ? { ...item, status: payload.status }
+                ? { ...item, status: doneStatus }
                 : item,
             ),
           )
@@ -348,6 +350,8 @@ export function useChatRuntime(): ChatRuntime {
             })
           }
           clearFeedback()
+          // 流式回复没有收到 done/retracted 就出错：立即转错误态，避免一直显示「正在输入…」
+          setMessages((prev) => prev.map((item) => (item.status === 'streaming' ? { ...item, status: 'error' } : item)))
           return
         }
         case 'task.created': {

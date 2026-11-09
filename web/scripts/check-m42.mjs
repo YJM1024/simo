@@ -31,7 +31,7 @@ const workbench = read('features/workbench/WorkbenchPage.tsx')
 const composer = read('features/chat/Composer.tsx')
 const packageJson = JSON.parse(readRoot('package.json'))
 
-check('品牌/头像：司墨无字距；方角头像；消息头像 self-start 对齐', () => {
+check('品牌/头像：司墨无字距；圆形头像；消息头与头像同轴', () => {
   const brand = read('app/BrandMark.tsx')
   const avatar = read('platform/AgentAvatar.tsx')
   assert.equal(/linearGradient|feDropShadow|filter=/.test(brand), false)
@@ -39,7 +39,7 @@ check('品牌/头像：司墨无字距；方角头像；消息头像 self-start 
   assert.match(topBar, /tracking-normal text-ink">司墨/)
   assert.match(avatar, /round: 'rounded-full'/)
   assert.match(avatar, /bg-avatar-agent-bg text-avatar-agent-ink/)
-  assert.match(avatar, /self-start/)
+  assert.equal(/self-start/.test(avatar), false)
 })
 
 check('圆角令牌收敛：控件 2–3、卡片/面板 4、气泡 6、徽标/胶囊 2', () => {

@@ -6,12 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 	"unicode/utf8"
 
 	"agentd/internal/core/eventlog"
 	corememory "agentd/internal/core/memory"
-	coresession "agentd/internal/core/session"
 	coretask "agentd/internal/core/task"
 	"agentd/internal/platform/llm"
 	"agentd/internal/platform/tokenmeter"
@@ -19,7 +20,7 @@ import (
 
 const (
 	maxMessageRunes   = 4000
-	turnTimeout       = 5 * time.Minute
+	turnTimeout       = 12 * time.Minute
 	maxModelSteps     = 3
 	maxContextHistory = 20
 )
@@ -65,20 +66,47 @@ const (
 )
 
 type activeTurn struct {
-	ID           string
-	SessionID    string
-	ReplyID      string
-	UserMsgID    string
-	StartedAt    int64
-	cancel       context.CancelFunc
-	ctx          context.Context
-	done         chan struct{}
-	decision     DecisionEnvelope
-	MemoryNote   string
-	RouteNote    string
-	WorkflowNote string
-	TeamNote     string
-	QuoteContext string
+	ID              string
+	SessionID       string
+	ReplyID         string
+	UserMsgID       string
+	StartedAt       int64
+	cancel          context.CancelFunc
+	ctx             context.Context
+	done            chan struct{}
+	decision        DecisionEnvelope
+	MemoryNote      string
+	RouteNote       string
+	WorkflowNote    string
+	TeamNote        string
+	QuoteContext    string
+	AutoCreatedNote string
+	lastActivity    atomic.Int64
+	timeoutMu       sync.Mutex
+	timeoutReason   string
+	timeoutOnce     sync.Once
+}
+
+func (a *activeTurn) touch() {
+	if a != nil {
+		a.lastActivity.Store(time.Now().UnixMilli())
+	}
+}
+
+func (a *activeTurn) setTimeoutReason(reason string) bool {
+	a.timeoutMu.Lock()
+	defer a.timeoutMu.Unlock()
+	if a.timeoutReason != "" {
+		return false
+	}
+	a.timeoutReason = reason
+	return true
+}
+
+func (a *activeTurn) timeout() string {
+	a.timeoutMu.Lock()
+	defer a.timeoutMu.Unlock()
+	return a.timeoutReason
 }
 
 // startTurn 创建 Turn/Intent/Decision + 占位回复，立即返回（不等待模型/任务）。
@@ -120,14 +148,48 @@ func (m *Module) startTurnExplicit(ctx context.Context, sessionID, text string, 
 	}
 	routeReason := ""
 	routeTo := ""
-	if routeTarget, reason := m.chooseAutoRoute(ctx, sessionID, text, replySessionID, explicitSession); routeTarget != "" {
-		routeTo = routeTarget
-		routeReason = reason
-		sessionID = routeTarget
+	autoCreated := false
+	routeIntent, _, intentAttempted := m.classifyRouteIntent(ctx, sessionID, text, replySessionID, explicitSession)
+	if routeIntent.Confidence >= routeConfidenceThreshold() {
+		switch {
+		case strings.HasPrefix(routeIntent.Route, "existing:"):
+			candidateID := strings.TrimSpace(strings.TrimPrefix(routeIntent.Route, "existing:"))
+			if candidateID != "" && m.sessionIsActiveChild(ctx, sessionID, candidateID) {
+				routeTo = candidateID
+				routeReason = "existing"
+			}
+		case strings.HasPrefix(routeIntent.Route, "new:"):
+			title := sanitizeRouteTitle(strings.TrimPrefix(routeIntent.Route, "new:"))
+			if title != "" {
+				existingID := ""
+				for _, child := range m.autoRouteChildren(ctx, sessionID) {
+					if normalizeRouteText(child.Title) == normalizeRouteText(title) {
+						existingID = child.ID
+						break
+					}
+				}
+				if existingID != "" {
+					routeTo = existingID
+					routeReason = "existing"
+				} else if m.sessions == nil {
+					m.log.Warn("意图路由无 sessions 模块，降级主会话")
+				} else if child, err := m.sessions.Create(ctx, sessionID, title); err == nil {
+					routeTo = child.ID
+					routeReason = "created"
+					autoCreated = true
+				} else {
+					m.log.Warn("意图路由创建子会话失败，降级主会话", "err", err, "title", title)
+				}
+			}
+		}
+	}
+	if routeTo != "" {
+		sessionID = routeTo
 	}
 	routeNote := ""
-	// M4：主会话收到“我想创建一个新的需求…” → 建子会话，消息归属过去；失败回退 main。
-	if m.sessions != nil && isNewSessionIntent(text) && routeTo == "" {
+	// M4 兼容：仅在意图路由不可用（mock/旧客户端）时保留旧的“新需求”建子会话行为。
+	if m.sessions != nil && !intentAttempted && autoRouteEnabled() && !explicitSession &&
+		!explicitMainSessionIntent(text) && isNewSessionIntent(text) && routeTo == "" {
 		if _, _, isMemory := parseMemoryCommand(text, sessionID); !isMemory {
 			child, err := m.sessions.Create(ctx, sessionID, sessionTitleFromText(text))
 			if err != nil {
@@ -135,7 +197,6 @@ func (m *Module) startTurnExplicit(ctx context.Context, sessionID, text string, 
 				routeNote = "创建子会话失败，已留在主会话继续处理。"
 			} else {
 				m.log.Info("已创建子会话并路由消息", "parent", sessionID, "child", child.ID, "title", child.Title)
-				m.createParentRouteSummary(ctx, sessionID, child)
 				sessionID = child.ID
 			}
 		}
@@ -183,7 +244,7 @@ func (m *Module) startTurnExplicit(ctx context.Context, sessionID, text string, 
 		return Message{}, fmt.Errorf("写入用户消息失败: %w", err)
 	}
 	if routeTo != "" {
-		m.createRouteHint(ctx, originalSessionID, sessionID, user.ID, routeReason)
+		m.emitRouteAudit(ctx, originalSessionID, sessionID, user.ID, routeReason)
 		m.recordMessageRoute(ctx, user.ID, originalSessionID, sessionID, routeReason)
 	}
 	if _, err := m.events.Append(ctx, eventlog.TypeMessageCreated, user); err != nil {
@@ -283,6 +344,10 @@ func (m *Module) startTurnExplicit(ctx context.Context, sessionID, text string, 
 		TeamNote:     teamNote,
 		QuoteContext: replyQuoteContext(replySnapshot),
 	}
+	if autoCreated {
+		active.AutoCreatedNote = "该子会话已由系统自动创建，无需再次调用 session.create；直接在本会话处理用户请求。"
+	}
+	active.touch()
 	m.mu.Lock()
 	m.active[reply.ID] = active
 	m.mu.Unlock()
@@ -329,6 +394,10 @@ func (m *Module) emitInternal(ctx context.Context, typ string, payload any) {
 func (m *Module) runTurn(active *activeTurn, user Message, decision DecisionEnvelope, userText string) {
 	defer m.finishActive(active)
 	ctx := active.ctx
+	if reason := active.timeout(); reason != "" {
+		m.failTimedOut(active, reason)
+		return
+	}
 
 	if active.MemoryNote != "" {
 		m.setReplyCategory(ctx, active.ReplyID, CategoryConsultation)
@@ -362,11 +431,19 @@ func (m *Module) runTurn(active *activeTurn, user Message, decision DecisionEnve
 
 	err := m.streamModel(ctx, active, userText)
 	if err != nil {
+		if reason := active.timeout(); reason != "" {
+			m.failTimedOut(active, reason)
+			return
+		}
 		if errors.Is(err, errTurnCanceled) || errors.Is(err, context.Canceled) {
 			m.retract(ctx, active, "user_correct")
 			return
 		}
 		m.fail(ctx, active, err)
+		return
+	}
+	if reason := active.timeout(); reason != "" {
+		m.failTimedOut(active, reason)
 		return
 	}
 	if ctx.Err() != nil {
@@ -379,6 +456,10 @@ func (m *Module) runTurn(active *activeTurn, user Message, decision DecisionEnve
 func (m *Module) streamText(ctx context.Context, active *activeTurn, text string) {
 	for _, chunk := range splitRunes(text, 8) {
 		if ctx.Err() != nil {
+			if reason := active.timeout(); reason != "" {
+				m.failTimedOut(active, reason)
+				return
+			}
 			m.retract(ctx, active, "user_correct")
 			return
 		}
@@ -447,6 +528,7 @@ func (m *Module) streamModel(ctx context.Context, active *activeTurn, userText s
 		var stepText, stepReasoning strings.Builder
 		var calls []llm.ToolCall
 		for event := range ch {
+			active.touch()
 			if ctx.Err() != nil {
 				return errTurnCanceled
 			}
@@ -589,6 +671,9 @@ func (m *Module) buildModelMessages(ctx context.Context, active *activeTurn, use
 	}
 	if memoryText := m.memoryContext(ctx, active, userText); memoryText != "" {
 		messages = append(messages, llm.Message{Role: "system", Content: memoryText})
+	}
+	if active.AutoCreatedNote != "" {
+		messages = append(messages, llm.Message{Role: "system", Content: active.AutoCreatedNote})
 	}
 
 	if history, err := m.listMessages(ctx, active.SessionID); err == nil {
@@ -776,23 +861,6 @@ func parseMemoryCommand(text, sessionID string) (corememory.Candidate, string, b
 	return corememory.Candidate{}, "", false
 }
 
-func (m *Module) createParentRouteSummary(ctx context.Context, parentSessionID string, child coresession.Session) {
-	if parentSessionID == defaultSessionID || strings.TrimSpace(parentSessionID) == "" {
-		return
-	}
-	text := "已创建子会话「" + child.Title + "」，正在处理新需求；完成后会在本会话汇总。"
-	message := Message{
-		ID: newID("msg"), SessionID: parentSessionID, SessionTitle: m.sessionTitle(ctx, parentSessionID),
-		Role: RoleAgent, Text: text, At: time.Now().UnixMilli(), Status: StatusDone,
-		Category: CategoryProgress, SessionPath: m.sessionPath(ctx, parentSessionID),
-		AgentID: m.sessionOwnerAgentID(ctx, parentSessionID), Attachments: []Attachment{},
-	}
-	if err := m.createMessage(ctx, message); err != nil {
-		return
-	}
-	_, _ = m.events.Append(ctx, eventlog.TypeMessageCreated, message)
-}
-
 func isNewSessionIntent(text string) bool {
 	lower := strings.ToLower(strings.TrimSpace(text))
 	keywords := []string{
@@ -861,6 +929,7 @@ func (m *Module) recordUsage(ctx context.Context, active *activeTurn, usage llm.
 }
 
 func (m *Module) emitDelta(ctx context.Context, active *activeTurn, delta string) error {
+	active.touch()
 	if err := m.appendMessageText(ctx, active.ReplyID, delta); err != nil {
 		return fmt.Errorf("追加回复失败: %w", err)
 	}
@@ -875,6 +944,10 @@ func (m *Module) emitDelta(ctx context.Context, active *activeTurn, delta string
 }
 
 func (m *Module) finish(ctx context.Context, active *activeTurn) {
+	if reason := active.timeout(); reason != "" {
+		m.failTimedOut(active, reason)
+		return
+	}
 	if ctx.Err() != nil {
 		m.retract(ctx, active, "user_correct")
 		return
@@ -893,6 +966,10 @@ func (m *Module) finish(ctx context.Context, active *activeTurn) {
 
 func (m *Module) fail(ctx context.Context, active *activeTurn, cause error) {
 	m.log.Error("回复失败", "err", cause, "replyId", active.ReplyID)
+	if reason := active.timeout(); reason != "" {
+		m.failTimedOut(active, reason)
+		return
+	}
 	if ctx.Err() != nil {
 		m.retract(ctx, active, "user_correct")
 		return

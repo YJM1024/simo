@@ -40,7 +40,7 @@ export default function AgentAvatar({ agent, agentId, size = 'sm', className = '
       role="img"
       aria-label={`${info.name}（${info.role}）`}
       title={`${info.name} · ${info.role}`}
-      className={`inline-grid flex-none self-start place-items-center overflow-hidden rounded-full border font-semibold ${SIZE_CLASS[size]} ${TONE_CLASS[info.tone]} ${SHAPE_CLASS[info.shape]} ${className}`}
+      className={`inline-grid flex-none place-items-center overflow-hidden rounded-full border font-semibold ${SIZE_CLASS[size]} ${TONE_CLASS[info.tone]} ${SHAPE_CLASS[info.shape]} ${className}`}
     >
       {info.icon}
     </span>

@@ -114,6 +114,7 @@ func (m *Module) handleMessages(w http.ResponseWriter, r *http.Request) {
 	m.attachAgentIDs(r.Context(), list)
 	m.attachCards(r.Context(), list)
 	m.attachRouteFields(r.Context(), list)
+	m.attachFinishedAt(r.Context(), list)
 	for i := range list {
 		list[i].SessionTitle = titles[list[i].SessionID]
 	}

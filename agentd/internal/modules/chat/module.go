@@ -224,6 +224,7 @@ func (m *Module) Start(ctx context.Context) error {
 		go m.consumeTaskReports(ch)
 	}
 	m.startScheduler(ctx)
+	m.recoverStaleStreaming(ctx)
 	m.startRuntime(ctx)
 	m.log.Debug("module started", "module", m.ID())
 	return nil

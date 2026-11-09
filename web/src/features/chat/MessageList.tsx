@@ -16,7 +16,6 @@ import { CategoryBadge, SessionPathBadge } from './MessageBadges.tsx'
 import TaskReportCard, { isTaskReportMessage } from './TaskReportCard.tsx'
 import { formatDuration, toolStatusLabel, toolStatusTone, type ToolCallInfo } from './toolcalls.ts'
 import AgentAvatar from '../../platform/AgentAvatar.tsx'
-import { Icon } from '../../platform/ui/icons.tsx'
 import { bus, EVENTS } from '../../platform/events.ts'
 import { findAgent, useAgentCatalog, type AgentInfo } from '../../platform/agents.ts'
 
@@ -59,10 +58,10 @@ function ToolCallsPanel({ calls }: { calls: ToolCallInfo[] }) {
   )
 }
 
-const ROLE_LABEL: Record<string, string> = { user: '你', agent: '司墨', system: '系统' }
+const ROLE_LABEL: Record<string, string> = { user: '你', agent: '司墨' }
 
-function roleOf(message: ChatMessage): 'user' | 'agent' | 'system' {
-  return message.role === 'user' || message.role === 'agent' ? message.role : 'system'
+function roleOf(message: ChatMessage): 'user' | 'agent' {
+  return message.role === 'user' ? 'user' : 'agent'
 }
 
 interface MessageBubbleProps {
@@ -96,7 +95,7 @@ function MessageBubble({
 }: MessageBubbleProps) {
   const role = roleOf(message)
   const streaming = message.status === 'streaming'
-  const failed = message.status === 'error'
+  const failed = message.status === 'error' || message.status === 'failed'
   const retracted = message.status === 'retracted'
   const sessionInfo = message.sessionId ? meta.get(message.sessionId) : undefined
   const depth = sessionInfo?.depth ?? 0
@@ -120,29 +119,29 @@ function MessageBubble({
       ) : (
         <div
           aria-hidden="true"
-          className={`grid h-[30px] w-[30px] flex-none self-start place-items-center rounded-full border text-xs ${
+          className={`grid h-[30px] w-[30px] flex-none place-items-center rounded-full border text-xs ${
             role === 'user'
               ? 'border-avatar-border bg-avatar-bg text-avatar-ink'
               : 'border-avatar-border bg-avatar-bg text-ink-muted'
           }`}
         >
-          {role === 'user' ? '你' : <Icon name="info" size={16} />}
+          {'你'}
         </div>
       )}
       <div className="min-w-0 max-w-[min(72ch,84%)]">
-        <div className="mb-1.5 flex min-h-[30px] flex-wrap items-center gap-x-2 gap-y-0.5 leading-5">
+        <div className="mb-1.5 flex h-[30px] flex-nowrap items-center gap-x-2 overflow-hidden leading-5">
           {role !== 'user' && (
-            <span className={`text-[13px] font-medium leading-5 ${role === 'system' ? 'text-muted' : 'text-ink'}`}>
-              {role === 'agent' && handler ? handler.name : ROLE_LABEL[role] ?? '系统'}
+            <span className="flex-none text-[13px] font-medium leading-5 text-ink">
+              {role === 'agent' && handler ? handler.name : ROLE_LABEL[role] ?? '司墨'}
             </span>
           )}
           <CategoryBadge message={message} />
           <SessionPathBadge message={message} meta={meta} onJumpSession={onJumpSession} />
-          <time dateTime={new Date(message.at).toISOString()} className="text-[13px] leading-5 tabular-nums text-ink-muted">
+          <time dateTime={new Date(message.at).toISOString()} className="flex-none text-[13px] leading-5 tabular-nums text-ink-muted">
             {formatClockTime(message.at)}
           </time>
-          {role === 'user' && !failed && <span className="text-[13px] leading-5 text-ink-muted">已发送</span>}
-          {streaming && <span className="text-[13px] leading-5 text-accent">正在输入…</span>}
+          {role === 'user' && !failed && <span className="flex-none text-[13px] leading-5 text-ink-muted">已发送</span>}
+          {streaming && <span className="flex-none text-[13px] leading-5 text-accent">正在输入…</span>}
           {streaming && (
             <button
               type="button"
@@ -153,7 +152,7 @@ function MessageBubble({
               撤回
             </button>
           )}
-          {failed && <span className="text-[13px] leading-5 text-danger-ink">发送失败</span>}
+          {failed && <span className="flex-none text-[13px] leading-5 text-danger-ink">{role === 'agent' ? '回复中断' : '发送失败'}</span>}
           {neutralized && <span className="text-[13px] leading-5 text-warn-ink" aria-label="子代理输出已被中和">已中和</span>}
           {retracted && <span className="text-[13px] leading-5 text-ink-muted">已撤回</span>}
           {!retracted && (
@@ -220,9 +219,7 @@ function MessageBubble({
             className={`break-words text-[15px] leading-[1.65] text-ink ${
               role === 'user'
                 ? 'rounded-bubble border border-message-user-border bg-message-user px-3 py-2.5'
-                : role === 'system'
-                  ? 'rounded-bubble border border-avatar-border bg-surface-sunken px-3 py-2.5 text-ink-secondary'
-                  : 'px-0 py-0'
+                : 'px-0 py-0'
             } ${streaming ? "after:ml-px after:animate-cursor-blink after:text-accent after:content-['▍']" : ''} ${
               failed ? 'border-danger-border' : ''
             }`}
@@ -354,8 +351,9 @@ export default function MessageList({
   onCopy,
 }: MessageListProps) {
   const agentCatalog = useAgentCatalog()
-  const hasMessages = messages.length > 0
-  const last = messages[messages.length - 1]
+  const displayedMessages = messages.filter((message) => message.role === 'user' || message.role === 'agent')
+  const hasMessages = displayedMessages.length > 0
+  const last = displayedMessages[displayedMessages.length - 1]
   const showThinking = agentStatus === 'thinking' && (!last || last.role !== 'agent')
 
   return (
@@ -367,7 +365,7 @@ export default function MessageList({
       aria-live="polite"
       aria-relevant="additions text"
       aria-busy={agentStatus === 'thinking' || loading}
-      className="flex w-full min-w-0 flex-1 flex-col gap-4 overflow-y-auto scroll-smooth py-6 pl-[52px] pr-3 sm:py-8 sm:pr-5"
+      className="flex w-full min-w-0 flex-1 flex-col gap-4 overflow-y-auto py-6 pl-[52px] pr-3 sm:py-8 sm:pr-5"
     >
       {/* 流式/等待的读屏播报（视觉上是隐藏的，避免重复打扰） */}
       <span className="sr-only" role="status" aria-live="polite">
@@ -401,7 +399,7 @@ export default function MessageList({
       )}
 
       {hasMessages &&
-        messages.map((message) => (
+        displayedMessages.map((message) => (
           <MessageBubble
             key={message.id}
             message={message}

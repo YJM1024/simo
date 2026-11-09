@@ -14,6 +14,7 @@ type Message struct {
 	Role         string            `json:"role"`
 	Text         string            `json:"text"`
 	At           int64             `json:"at"`
+	FinishedAt   int64             `json:"finishedAt,omitempty"`
 	Status       string            `json:"status"`
 	Attachments  []Attachment      `json:"attachments"`
 	TaskID       string            `json:"taskId,omitempty"`
@@ -64,6 +65,7 @@ const (
 	StatusDone      = "done"
 	StatusError     = "error"
 	StatusRetracted = "retracted"
+	StatusFailed    = "failed"
 
 	// defaultSessionID 与 sessions 模块的默认会话一致（字符串重复是刻意的：
 	// 模块间禁止 import，不能从 sessions 包取常量）。
@@ -82,6 +84,7 @@ type deltaPayload struct {
 type donePayload struct {
 	ID     string `json:"id"`
 	Status string `json:"status"`
+	Reason string `json:"reason,omitempty"`
 }
 
 func newID(prefix string) string {

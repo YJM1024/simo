@@ -457,5 +457,13 @@ func migrations() []sqlite.Migration {
 				return nil
 			},
 		},
+		{
+			Version: 18,
+			Name:    "M55 streaming recovery finished_at",
+			Up: func(ctx context.Context, tx *sql.Tx) error {
+				_, err := tx.ExecContext(ctx, `ALTER TABLE messages ADD COLUMN finished_at INTEGER NOT NULL DEFAULT 0`)
+				return err
+			},
+		},
 	}
 }

@@ -1015,6 +1015,30 @@ generic/template 与继承、入口/成员列表/详情任务产物、WS+轮询/
 - 右栏「计划」与任务行间距统一 8px；已完成任务标题保留删除线、颜色 `--text-muted`。
 - 门禁：`node scripts/check-m54.mjs`（5 条：执行者/主题中性、滚动与分区、右栏间距/删线、门禁链）。
 
+## 27.20 M55 增量：消息头像严格对齐 + 流式中断态
+
+- 消息头固定 `h-[30px] flex items-center`、meta `leading-5`（20px）、无额外上下 gap；头像自身移除
+  `self-start`/margin/translate；用户/助手/system 统一 30px 圆形同列，与文字中心严格同高；正文间距 6px。
+- system 同用 30px 浅灰圆底 + 16px 灰色 info 图标。
+- `reply.done` 的 failed/error/timeout/interrupt/abort/cancel 归一为 `error`；`error` 帧把仍在 streaming
+  的回复切为错误态；助手显示「回复中断」，不再出现「正在输入…」/「撤回」。
+- 门禁：`node scripts/check-m55.mjs`（5 条：头像/消息头/system/中断态/门禁链）。
+
+## 27.21 M57 增量：会话切换瞬时贴底
+
+- 消息滚动容器移除 `scroll-smooth`，恢复 `scroll-behavior:auto`；切换会话/首次加载在 `useLayoutEffect`
+  中直接 `el.scrollTop = el.scrollHeight`，不再被浏览器动画化。
+- 只有「回到底部」按钮使用 `scrollTo({behavior:'smooth'})`；加载更多/分页不触发平滑滚动。
+- 门禁：`node scripts/check-m57.mjs`（4 条：无 smooth 类、瞬时贴底、仅按钮平滑、门禁链）。
+
+## 27.22 M58 增量：隐藏系统消息/路由提示
+
+- 消息列表只渲染 `role=user|agent`；system/其他角色在 ChatCenter 与 MessageList 双层过滤，不占位；
+  时间轴同样过滤，只保留 user/agent 刻度。
+- 删除 system 头像/「系统」标签与样式分支；页面只出现「你」和「司墨」两种消息。
+- 路由为默认行为，不再显示任何「已路由」文案。
+- 门禁：`node scripts/check-m58.mjs`（5 条：消息过滤/时间轴过滤/删除 system/双角色/门禁链）。
+
 ## 28. 已知限制
 
 - M34 复杂交互仍受 schema/动作层约束：向导/表格编辑/批量/看板移动失败保留原状态；`chart` 为最小 SVG 图表，不是通用 BI。

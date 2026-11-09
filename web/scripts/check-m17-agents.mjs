@@ -171,7 +171,7 @@ check('头像组件：圆形 30/24、深色助手底、主题 token、可访问�
   assert.match(avatar, /rounded-full/)
   assert.match(avatar, /h-\[30px\] w-\[30px\]/)
   assert.match(avatar, /bg-avatar-agent-bg text-avatar-agent-ink/)
-  assert.match(avatar, /self-start/)
+  assert.equal(/self-start/.test(avatar), false)
   assert.match(avatar, /aria-label/)
   assert.equal(/#[0-9a-fA-F]{3,8}/.test(avatar), false)
 })
