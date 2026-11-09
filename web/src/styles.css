@@ -55,7 +55,7 @@
   --accent-ink: #ffffff;
   --accent-soft: rgba(37, 99, 235, 0.08);
   --accent-border: rgba(37, 99, 235, 0.18);
-  --accent-gradient: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
+  --accent-gradient: var(--accent);
   --accent-glow: 0 0 10px rgba(37, 99, 235, 0.18);
 
   /* ---- 画布氛围（渐变 + 细网格）---- */
@@ -66,8 +66,19 @@
   /* ---- 消息气泡（语义上区分归属）---- */
   --message: #ffffff;
   --message-border: rgba(18, 26, 38, 0.06);
-  --message-user: rgba(37, 99, 235, 0.06);
-  --message-user-border: rgba(37, 99, 235, 0.18);
+  --message-user: #f4f4f5;
+  --message-user-border: #e4e4e7;
+  --avatar-bg: #f3f4f6;
+  --avatar-ink: #374151;
+  --avatar-border: #e5e7eb;
+  --avatar-agent-bg: #111827;
+  --avatar-agent-ink: #ffffff;
+  --timeline-bar: #d1d5db;
+  --timeline-user: #3b82f6;
+  --timeline-user-active: #2563eb;
+  --timeline-agent: #64748b;
+  --timeline-system: #cbd5e1;
+  --timeline-track: #e5e7eb;
   --message-system: rgba(239, 68, 68, 0.06);
   --message-system-border: rgba(239, 68, 68, 0.24);
 
@@ -176,6 +187,17 @@
   --color-message-border: var(--message-border);
   --color-message-user: var(--message-user);
   --color-message-user-border: var(--message-user-border);
+  --color-avatar-bg: var(--avatar-bg);
+  --color-avatar-ink: var(--avatar-ink);
+  --color-avatar-border: var(--avatar-border);
+  --color-avatar-agent-bg: var(--avatar-agent-bg);
+  --color-avatar-agent-ink: var(--avatar-agent-ink);
+  --color-timeline-bar: var(--timeline-bar);
+  --color-timeline-user: var(--timeline-user);
+  --color-timeline-user-active: var(--timeline-user-active);
+  --color-timeline-agent: var(--timeline-agent);
+  --color-timeline-system: var(--timeline-system);
+  --color-timeline-track: var(--timeline-track);
   --color-message-system: var(--message-system);
   --color-message-system-border: var(--message-system-border);
   --color-ok: var(--ok);
@@ -417,5 +439,20 @@
 .tracking-wider,
 .tracking-wide {
   letter-spacing: 0;
+}
+
+
+/* M48: 浮层统一不透明白底 / 1px 边框 / 8px 圆角 / 高阴影 / z-index */
+.popover-surface {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.16) !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+  z-index: 60;
 }
 

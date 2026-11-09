@@ -113,6 +113,7 @@ func (m *Module) handleMessages(w http.ResponseWriter, r *http.Request) {
 	m.attachReplySnapshots(r.Context(), list)
 	m.attachAgentIDs(r.Context(), list)
 	m.attachCards(r.Context(), list)
+	m.attachRouteFields(r.Context(), list)
 	for i := range list {
 		list[i].SessionTitle = titles[list[i].SessionID]
 	}
@@ -137,6 +138,11 @@ func (m *Module) handleMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpserver.WriteJSON(w, http.StatusOK, map[string]any{"messages": list})
+}
+
+func (m *Module) handleEditDisabled(w http.ResponseWriter, r *http.Request) {
+	httpserver.WriteJSON(w, http.StatusBadRequest, map[string]any{"ok": false,
+		"error": map[string]any{"code": "edit_disabled", "message": "消息编辑/修改已禁用，历史消息不会被修改"}})
 }
 
 func (m *Module) handleMessageSearch(w http.ResponseWriter, r *http.Request) {
@@ -213,7 +219,8 @@ func (m *Module) handleChat(w http.ResponseWriter, r *http.Request) {
 		httpserver.WriteError(w, http.StatusBadRequest, "请求体不是合法 JSON")
 		return
 	}
-	user, err := m.startTurn(r.Context(), req.SessionID, req.Text, ClassRefine, req.Attachments, req.ReplyToMessageID)
+	user, err := m.startTurnExplicit(r.Context(), req.SessionID, req.Text, ClassRefine, req.Attachments, req.ReplyToMessageID,
+		strings.TrimSpace(req.SessionID) != "")
 	if err != nil {
 		m.writeRequestError(w, err)
 		return
@@ -329,12 +336,13 @@ func (m *Module) handleWS(w http.ResponseWriter, r *http.Request) {
 				m.wsError(ctx, out, codeBadRequest, "chat.data 非法")
 				continue
 			}
+			explicitSession := strings.TrimSpace(payload.SessionID) != ""
 			if strings.TrimSpace(payload.SessionID) == "" {
 				payload.SessionID = sessionID
 			}
 			// 兼容：客户端先 chat 后 subscribe 时，先起流，避免丢自己的事件。
 			startSubscription(0, false)
-			if _, err := m.startTurn(ctx, payload.SessionID, payload.Text, ClassRefine, payload.Attachments, payload.ReplyToMessageID); err != nil {
+			if _, err := m.startTurnExplicit(ctx, payload.SessionID, payload.Text, ClassRefine, payload.Attachments, payload.ReplyToMessageID, explicitSession); err != nil {
 				code, message := codeInternal, "发送失败"
 				var reqErr *requestError
 				if errors.As(err, &reqErr) {
@@ -346,6 +354,11 @@ func (m *Module) handleWS(w http.ResponseWriter, r *http.Request) {
 			var payload correctPayload
 			if err := json.Unmarshal(frame.Data, &payload); err != nil {
 				m.wsError(ctx, out, codeBadRequest, "correct.data 非法")
+				continue
+			}
+			// M50：对指定消息的编辑/修改一律拒绝；保留无 target 的“停止当前流式回复”语义。
+			if strings.TrimSpace(payload.TargetMessageID) != "" {
+				m.wsErrorWithText(ctx, out, "edit_disabled", "消息编辑/修改已禁用", payload.Text)
 				continue
 			}
 			if strings.TrimSpace(payload.SessionID) == "" {

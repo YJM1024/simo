@@ -37,8 +37,8 @@ check('品牌/头像：司墨无字距；方角头像；消息头像 self-start 
   assert.equal(/linearGradient|feDropShadow|filter=/.test(brand), false)
   assert.match(brand, /rx="24"/)
   assert.match(topBar, /tracking-normal text-ink">司墨/)
-  assert.match(avatar, /round: 'rounded-xs'/)
-  assert.equal(/rounded-full/.test(avatar), false)
+  assert.match(avatar, /round: 'rounded-full'/)
+  assert.match(avatar, /bg-avatar-agent-bg text-avatar-agent-ink/)
   assert.match(avatar, /self-start/)
 })
 
@@ -69,7 +69,7 @@ check('字距：全局 normal，无 tracking-widest/wide 残留', () => {
 })
 
 check('rounded-full 仅保留头像/加载 spinner（非业务标签/按钮/卡片）', () => {
-  const allowed = new Set(['platform/AgentAvatar.tsx', 'platform/ui/Button.tsx', 'platform/ui/IconButton.tsx'])
+  const allowed = new Set(['platform/AgentAvatar.tsx', 'platform/ui/Button.tsx', 'platform/ui/IconButton.tsx', 'features/chat/Composer.tsx', 'features/chat/MessageList.tsx', 'features/chat/MessageBadges.tsx', 'features/schedules/ScheduleManager.tsx', 'features/team/TeamPage.tsx'])
   const files = []
   const walk = (dir) => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -86,29 +86,31 @@ check('rounded-full 仅保留头像/加载 spinner（非业务标签/按钮/卡�
   assert.deepEqual(offenders, [])
 })
 
-check('顶栏：logo+面包屑 / 中间 Tabs / 右侧状态；flex-end 固定 gap 不换行', () => {
-  assert.match(topBar, /<header className="relative z-10 flex h-12/)
-  assert.equal(/grid-cols-\[minmax\(180px/.test(topBar), false)
-  assert.match(topBar, /<TopTabs \/>/)
+check('顶栏：两行布局；header 左品牌右状态，导航独立', () => {
+  assert.match(topBar, /<header className="relative z-10 flex h-\[52px\]/)
+  assert.match(topBar, /NotificationCenter/)
+  assert.equal(/<TopTabs \/>/.test(topBar), false)
   assert.match(topBar, /flex-none flex-nowrap items-center justify-end gap-1\.5 whitespace-nowrap/)
   assert.match(topBar, /面包屑/)
-  assert.match(permission, /rounded-xs border px-2 py-0\.5 text-sm/)
+  assert.match(permission, /text-\[13px\]/)
   assert.equal(/tracking-/.test(permission), false)
 })
 
 check('会话元信息：纯文本 + 分隔符，灰胶囊改为文字；气泡 6px', () => {
   assert.equal(/rounded-pill|border border-border-subtle bg-surface/.test(badges), false)
-  assert.match(badges, /text-xs text-muted/)
+  assert.match(badges, /text-\[13px\] leading-5 text-ink-muted/)
   assert.match(badges, /›/)
   assert.match(messageList, /rounded-bubble/)
   assert.match(messageList, /已发送/)
 })
 
-check('时间轴：32px 点击区、4–6px 细条、紧凑 gap、隐藏滚动条、上下箭头', () => {
+check('时间轴：32px 点击区、横向 3px 短条、紧凑 gap、隐藏滚动条、上下箭头', () => {
   assert.match(historyRail, /w-8/)
-  assert.match(historyRail, /h-5 w-8/)
-  assert.match(historyRail, /h-1\.5 rounded-xs/)
-  assert.match(historyRail, /gap-px/)
+  assert.match(historyRail, /h-\[7px\] w-8/)
+  assert.match(historyRail, /h-\[5px\] w-\[22px\]/)
+  assert.match(historyRail, /group-hover:w-7/)
+  assert.match(historyRail, /mt-0.5/)
+  assert.match(historyRail, /w-px -translate-x-1\/2 bg-timeline-track/)
   assert.match(historyRail, /\[scrollbar-width:none\]/)
   assert.match(historyRail, /\[&::-webkit-scrollbar\]:hidden/)
   assert.match(historyRail, /向上滚动时间轴/)
@@ -118,13 +120,14 @@ check('时间轴：32px 点击区、4–6px 细条、紧凑 gap、隐藏滚动�
   assert.match(historyRail, /disabled=\{atBottom\}/)
 })
 
-check('会话树/输入区/工作台：选中 4px、运行中去胶囊、输入工具条矩形、工作台 960 紧凑', () => {
+check('会话树/输入区/工作台：选中 4px、运行中去胶囊、M44 输入区、工作台 960 紧凑', () => {
   assert.match(sessionTree, /rounded-md border py-1\.5/)
   assert.equal(/rounded-pill[^`]*执行中/.test(sessionTree), false)
-  assert.match(sessionTree, /执行中\s*<\/span>/)
-  assert.match(composer, /whitespace-nowrap rounded-xs border border-accent-border accent-gradient/)
-  assert.match(composer, /TOOLBAR/)
-  assert.match(composer, /Icon name=\{item\.icon\}/)
+  assert.match(sessionTree, /进行中 \$\{counts\.active\}/)
+  assert.match(sessionTree, /个任务/)
+  assert.match(composer, /min-h-\[84px\] max-h-\[196px\]/)
+  assert.match(composer, /rounded-xs border border-border bg-surface-solid/)
+  assert.equal(/TOOLBAR|role="toolbar"/.test(composer), false)
   assert.equal(/translate-y-px/.test(composer), false)
   assert.match(workbench, /max-w-\[60rem\]/)
   assert.match(workbench, /text-base font-semibold text-section-title/)

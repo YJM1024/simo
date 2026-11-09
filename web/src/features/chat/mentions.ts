@@ -2,8 +2,6 @@
 //
 // 检测光标前的 @query → 候选会话/文件 → 插入 `@标签 ` 到草稿；不改变发送协议（文本引用）。
 
-import type { ChatMessage } from '../../platform/types.ts'
-
 export interface MentionItem {
   kind: 'session' | 'file'
   id: string
@@ -78,18 +76,6 @@ export function normalizeMentionFiles(payload: unknown): MentionItem[] {
     items.push({ kind: 'file', id, label: name, subtitle: kind === 'artifact' ? '任务产物' : kind === 'upload' ? '消息附件' : '文件' })
   }
   return items
-}
-
-/** 重试时用来重发的文本：agent 消息→上一条用户消息；用户消息→自身。 */
-export function retryPrompt(messages: readonly ChatMessage[], index: number): string | null {
-  const message = messages[index]
-  if (!message) return null
-  if (message.role === 'user') return message.text.trim() || null
-  for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
-    const previous = messages[cursor]
-    if (previous?.role === 'user' && previous.text.trim()) return previous.text
-  }
-  return null
 }
 
 export async function copyMessageText(text: string): Promise<boolean> {

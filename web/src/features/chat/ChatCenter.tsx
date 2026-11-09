@@ -3,20 +3,20 @@
 // M4：主窗口 = 根节点聚合视图；M7：三速反馈 + 通知；M10：工作流「停」按钮；
 // M11：顶部标签「对话 / 文件 / 概览」、消息侧边迷你时间轴（点击预览+跳转高亮、视口高亮、可折叠）。
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { archiveSession, renameSession } from '../../platform/http.ts'
 import { bus, EVENTS } from '../../platform/events.ts'
 import { Tabs } from '../../platform/ui/Tabs.tsx'
+import { Icon } from '../../platform/ui/icons.tsx'
 import { saveModelPreference } from '../../platform/preferences.ts'
 import { sendChat } from '../../platform/ws-hub.ts'
 import type { ChatMessage, WireFrame } from '../../platform/types.ts'
 import HistoryRail from './HistoryRail.tsx'
-import NotificationCenter from './NotificationCenter.tsx'
 import SessionFilesView from './SessionFilesView.tsx'
 import TrajectoryView from './TrajectoryView.tsx'
 import { feedbackLabel, shouldShowFeedback } from './feedback.ts'
 import { pickActiveTick } from './history.ts'
-import { copyMessageText, retryPrompt } from './mentions.ts'
+import { copyMessageText } from './mentions.ts'
 import { parseSlash, validateSlash } from './slash.ts'
 import { compactionSummary } from './trajectory.ts'
 import Composer from './Composer.tsx'
@@ -128,40 +128,24 @@ export default function ChatCenter() {
     [showActionNotice],
   )
 
-  const retryMessage = useCallback(
-    (message: ChatMessage) => {
-      const index = runtime.messages.findIndex((item) => item.id === message.id)
-      const prompt = retryPrompt(runtime.messages, index)
-      if (!prompt) {
-        showActionNotice('没有可重试的用户消息')
-        return
-      }
-      void runtime.send(prompt).then((ok) => showActionNotice(ok ? '已重新发送请求' : '重试失败，请稍后再试'))
-    },
-    [runtime, showActionNotice],
-  )
-
-  const editResend = useCallback(
-    (message: ChatMessage, text: string) => {
-      void runtime.send(text).then((ok) => showActionNotice(ok ? '已按编辑后的内容重新发送' : '重发失败，请稍后再试'))
-      void message
-    },
-    [runtime, showActionNotice],
-  )
-
   const scrollToBottom = useCallback((smooth: boolean) => {
     const el = listRef.current
     if (!el) return
-    el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'auto' })
+    if (smooth) {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+    } else {
+      // 切换会话/首次加载：直接瞬间定位到底部，不做平滑动画
+      el.scrollTop = el.scrollHeight
+    }
   }, [])
 
-  // 贴底跟随：只有用户主动上滑后才停止
-  useEffect(() => {
-    if (tab === 'chat' && stickRef.current) scrollToBottom(false)
-  }, [runtime.messages, runtime.agentStatus, tab, scrollToBottom])
+  // 贴底跟随：只有用户主动上滑后才停止；消息渲染完成前不滚动
+  useLayoutEffect(() => {
+    if (tab === 'chat' && stickRef.current && !runtime.messagesLoading) scrollToBottom(false)
+  }, [runtime.messages, runtime.messagesLoading, runtime.agentStatus, tab, scrollToBottom])
 
   // 换会话/换聚合视图时恢复贴底；换会话回到「对话」标签
-  useEffect(() => {
+  useLayoutEffect(() => {
     stickRef.current = true
     setAtBottom(true)
     setTab('chat')
@@ -228,6 +212,8 @@ export default function ChatCenter() {
   }, [tab, runtime.messages])
 
   const { notice, dismissNotice } = runtime
+  // 消息加载完成前只显示加载态，避免旧消息/第一条先渲染再跳到底部
+  const visibleMessages = runtime.messagesLoading ? [] : runtime.messages
 
   // 状态行：并行任务优先（执行回路），其次对话思考中
   const statusLabel =
@@ -241,7 +227,7 @@ export default function ChatCenter() {
 
   return (
     <main
-      className="relative flex h-full min-h-0 flex-col bg-transparent"
+      className="relative flex h-full min-h-0 flex-col bg-transparent pt-3"
       aria-label={`会话工作台：${runtime.sessionTitle}`}
     >
       <Tabs
@@ -253,7 +239,8 @@ export default function ChatCenter() {
         className="flex-none border-b border-border-subtle bg-surface px-2 sm:px-4"
       />
 
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-border-subtle px-3 pt-2.5 pb-2 sm:px-5">
+      <div className="flex items-center gap-3 border-b border-border-subtle px-3 pt-2.5 pb-2 sm:px-5">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
         <h2 className="m-0 text-lg font-semibold tracking-tight">{runtime.sessionTitle}</h2>
         <span className="font-mono text-2xs tracking-normal text-muted">
           {isRoot ? '主窗口 · 聚合视图' : `子会话 · 深度 ${runtime.sessionDepth}`}
@@ -261,7 +248,7 @@ export default function ChatCenter() {
 
         {/* M4：仅本会话 / 含子会话 */}
         <div
-          className="flex items-center rounded-md border border-border-subtle bg-surface-solid p-0.5 text-2xs"
+          className="flex items-center gap-4 text-[13px]"
           role="group"
           aria-label="消息范围"
           title="根会话默认含子会话；聚合视图按时间合并递归子会话消息"
@@ -270,21 +257,23 @@ export default function ChatCenter() {
             type="button"
             onClick={() => runtime.setIncludeChildren(false)}
             aria-pressed={!runtime.includeChildren}
-            className={`cursor-pointer rounded-xs px-2 py-0.5 font-mono tracking-normal transition-colors duration-fast ${
-              !runtime.includeChildren ? 'bg-accent-soft text-accent-hover' : 'text-muted hover:text-ink-secondary'
+            className={`relative cursor-pointer pb-1 transition-colors duration-fast ${
+              !runtime.includeChildren ? 'font-medium text-ink' : 'text-muted hover:text-ink-secondary'
             }`}
           >
             仅本会话
+            {!runtime.includeChildren && <span className="absolute inset-x-0 bottom-0 h-0.5 bg-ink" aria-hidden="true" />}
           </button>
           <button
             type="button"
             onClick={() => runtime.setIncludeChildren(true)}
             aria-pressed={runtime.includeChildren}
-            className={`cursor-pointer rounded-xs px-2 py-0.5 font-mono tracking-normal transition-colors duration-fast ${
-              runtime.includeChildren ? 'bg-accent-soft text-accent-hover' : 'text-muted hover:text-ink-secondary'
+            className={`relative cursor-pointer pb-1 transition-colors duration-fast ${
+              runtime.includeChildren ? 'font-medium text-ink' : 'text-muted hover:text-ink-secondary'
             }`}
           >
             含子会话
+            {runtime.includeChildren && <span className="absolute inset-x-0 bottom-0 h-0.5 bg-ink" aria-hidden="true" />}
           </button>
         </div>
 
@@ -305,19 +294,12 @@ export default function ChatCenter() {
           </span>
         )}
 
-        <span
-          className={`ml-auto rounded-pill border px-2 py-0.5 font-mono text-2xs tracking-normal ${
-            runtime.runningTasks > 0
-              ? 'border-warn-border bg-warn-soft text-warn-ink'
-              : runtime.agentStatus === 'thinking'
-                ? 'border-accent-border bg-accent-soft text-accent-hover'
-                : 'border-border-subtle bg-surface-solid text-muted'
-          }`}
-          title="对话回路与执行回路相互独立：输入框始终保持可用"
-        >
+        </div>
+        <div className="flex flex-none items-center gap-2 whitespace-nowrap">
+        <span className="text-[13px] text-ink-muted" title="对话回路与执行回路相互独立：输入框始终保持可用">
           {statusLabel}
         </span>
-        <NotificationCenter />
+        </div>
       </div>
 
       <p className="hidden border-b border-border-subtle bg-surface-sunken px-2 py-1 font-mono text-2xs text-muted max-[820px]:block">
@@ -390,40 +372,53 @@ export default function ChatCenter() {
           id="session-panel-chat"
           role="tabpanel"
           aria-label="对话"
-          className="flex min-h-0 flex-1"
+          className="flex min-h-0 flex-1 justify-center"
         >
-          {runtime.messages.length > 0 && (
-            <HistoryRail
-              messages={runtime.messages}
-              activeMessageId={activeMessageId}
+          <div className="relative flex min-h-0 w-full max-w-[832px]">
+            {visibleMessages.length > 0 && (
+              <div className="absolute inset-y-0 left-0 z-10">
+                <HistoryRail
+                  messages={visibleMessages}
+                  activeMessageId={activeMessageId}
+                  highlightId={highlightId}
+                  onJump={jumpToMessage}
+                />
+              </div>
+            )}
+            <MessageList
+              messages={visibleMessages}
+              meta={runtime.sessionMeta}
+              sessionId={runtime.sessionId ?? ''}
+              reasoning={runtime.reasoning}
+              toolCalls={runtime.toolCalls}
               highlightId={highlightId}
-              onJump={jumpToMessage}
+              hasOlder={runtime.hasOlder}
+              loadingOlder={runtime.loadingOlder}
+              onLoadOlder={() => void runtime.loadOlder()}
+              loading={runtime.messagesLoading}
+              error={runtime.messagesError}
+              agentStatus={runtime.agentStatus}
+              listRef={listRef}
+              onScroll={handleScroll}
+              onRetry={runtime.retryMessages}
+              onRetract={runtime.retract}
+              onJumpSession={runtime.jumpToSession}
+              onReply={(message) => runtime.setReplyTo(message)}
+              onJumpToMessage={jumpToMessage}
+              onCopy={copyMessage}
             />
-          )}
-          <MessageList
-            messages={runtime.messages}
-            meta={runtime.sessionMeta}
-            sessionId={runtime.sessionId ?? ''}
-            reasoning={runtime.reasoning}
-            toolCalls={runtime.toolCalls}
-            highlightId={highlightId}
-            hasOlder={runtime.hasOlder}
-            loadingOlder={runtime.loadingOlder}
-            onLoadOlder={() => void runtime.loadOlder()}
-            loading={runtime.messagesLoading}
-            error={runtime.messagesError}
-            agentStatus={runtime.agentStatus}
-            listRef={listRef}
-            onScroll={handleScroll}
-            onRetry={runtime.retryMessages}
-            onRetract={runtime.retract}
-            onJumpSession={runtime.jumpToSession}
-            onReply={(message) => runtime.setReplyTo(message)}
-            onJumpToMessage={jumpToMessage}
-            onCopy={copyMessage}
-            onRetryMessage={retryMessage}
-            onEditResend={editResend}
-          />
+            {!atBottom && (
+              <button
+                type="button"
+                onClick={jumpToBottom}
+                aria-label="回到最底部"
+                title="回到最底部"
+                className="absolute bottom-2 right-3 z-20 flex h-7 w-7 cursor-pointer items-center justify-center rounded-xs border border-border bg-surface-solid text-ink-secondary hover:border-accent-border hover:text-ink"
+              >
+                <Icon name="chevron-down" size={16} />
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -446,16 +441,6 @@ export default function ChatCenter() {
         <div id="session-panel-files" role="tabpanel" aria-label="文件" className="flex min-h-0 flex-1">
           <SessionFilesView sessionId={runtime.sessionId} />
         </div>
-      )}
-
-      {tab === 'chat' && !atBottom && (
-        <button
-          type="button"
-          onClick={jumpToBottom}
-          className="absolute right-5 bottom-28 z-20 cursor-pointer rounded-pill border border-border bg-glass px-3 py-1.5 text-sm text-ink-secondary shadow-md backdrop-blur-glass transition-transform duration-fast hover:-translate-y-px hover:border-accent-border hover:text-accent-hover"
-        >
-          回到底部 ↓
-        </button>
       )}
 
       {tab === 'chat' && (

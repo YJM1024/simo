@@ -209,7 +209,7 @@ export default function ViewPreview({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-scrim-strong p-2 backdrop-blur-sm sm:p-4" role="dialog" aria-modal="true" aria-label="自定义视图预览" onMouseDown={(event) => { if (event.target === event.currentTarget) requestClose() }}>
-      <div ref={panelRef} className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-lg">
+      <div ref={panelRef} className="popover-surface flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden">
         <header className="flex flex-none flex-wrap items-start justify-between gap-2 border-b border-border-subtle px-3 py-2.5 sm:px-4">
           <div className="min-w-0">
             <h2 className="m-0 flex flex-wrap items-center gap-1.5 text-lg font-semibold tracking-tight">

@@ -1,6 +1,6 @@
 // features/workbench/SettingsPage.tsx —— 设置中心（UI-1）
 //
-// 模型 / 权限 / 主题 / 数据目录 / 快捷键；模型偏好仅本地（后端切换接口未就绪时提示）；
+// 模型只读展示；权限 / 主题 / 数据目录 / 快捷键；权限走 /api/permissions（缺失时优雅降级）。
 // 权限走 /api/permissions（缺失时优雅降级）；主题复用 platform theme；数据目录只读说明。
 // 只读展示为主，无危险自动操作；切换 full 沙盒需确认。
 
@@ -17,11 +17,8 @@ import {
 import { readSessionId } from '../../platform/router.ts'
 import { useFocusTrap } from '../../platform/useFocusTrap.ts'
 import {
-  MODEL_OPTIONS,
   SHORTCUTS,
   dataDirectoryHint,
-  loadModelPreference,
-  saveModelPreference,
   type SettingsSectionId,
 } from './settings.ts'
 
@@ -32,7 +29,7 @@ const SANDBOX_OPTIONS = [
 ] as const
 const APPROVAL_OPTIONS = [
   { id: 'ask', label: '每次询问', hint: '危险操作需人工确认' },
-  { id: 'auto', label: '自动判断', hint: '按风险自动批准/拒绝' },
+  { id: 'auto', label: '按风险自动批准/拒绝', hint: '低风险自动通过，高风险拒绝' },
   { id: 'never', label: '从不放行', hint: 'fail-closed，最严格' },
 ] as const
 
@@ -60,7 +57,6 @@ export default function SettingsPage({
   const panelRef = useRef<HTMLDivElement | null>(null)
   useFocusTrap(panelRef, true, onClose)
 
-  const [model, setModel] = useState(() => loadModelPreference())
   const [theme, setThemeState] = useState<ThemeName>(() => getInitialTheme())
   const [permissions, setPermissions] = useState<PermState>({ sandbox: 'workspace-write', approval: 'auto' })
   const [permLoading, setPermLoading] = useState(true)
@@ -171,7 +167,7 @@ export default function SettingsPage({
         if (event.target === event.currentTarget) onClose()
       }}
     >
-      <div ref={panelRef} className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-lg">
+      <div ref={panelRef} className="popover-surface flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden">
         <header className="flex flex-none items-start justify-between gap-2 border-b border-border-subtle px-4 py-3">
           <div>
             <h2 className="m-0 text-lg font-semibold tracking-tight">设置</h2>
@@ -186,38 +182,20 @@ export default function SettingsPage({
           </button>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 pb-6">
           {notice && (
             <p role="status" className="m-0 mb-2 rounded-md border border-ok-border bg-ok-soft px-2 py-1 text-2xs text-ok-ink">
               {notice}
             </p>
           )}
 
-          <section id="settings-model" className="mb-4">
-            <h3 className="m-0 mb-1 text-md font-semibold">模型</h3>
-            <div className="flex flex-wrap items-center gap-2">
-              <select
-                aria-label="模型偏好"
-                value={model}
-                onChange={(event) => {
-                  const next = saveModelPreference(event.target.value)
-                  setModel(next)
-                  setNotice('模型偏好已记录到本地；实际模型由后端决定')
-                }}
-                className="rounded-md border border-border-subtle bg-surface-solid px-2 py-1.5 text-sm text-ink"
-              >
-                {MODEL_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-              <span className="text-2xs text-muted">后端模型切换接口未就绪时只保存本地偏好。</span>
-            </div>
+          <section id="settings-model" className="mb-6 border-b border-avatar-border pb-4 last:mb-0 last:border-0 last:pb-0">
+            <h3 className="m-0 mb-2 text-[14px] font-semibold text-section-title">模型</h3>
+            <p className="m-0 text-sm text-ink-secondary">模型：V4.1 Flash（固定，在智能体页配置）</p>
           </section>
 
-          <section id="settings-permissions" className="mb-4">
-            <h3 className="m-0 mb-1 text-md font-semibold">权限</h3>
+          <section id="settings-permissions" className="mb-6 border-b border-avatar-border pb-4 last:mb-0 last:border-0 last:pb-0">
+            <h3 className="m-0 mb-2 text-[14px] font-semibold text-section-title">权限</h3>
             {permError && <p className="m-0 mb-1 text-2xs text-warn-ink">{permError}</p>}
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <div>
@@ -232,7 +210,7 @@ export default function SettingsPage({
                       onClick={() => void applyPermissions({ ...permissions, sandbox: option.id })}
                       className={`cursor-pointer rounded-md border px-2 py-1 text-left text-sm disabled:opacity-50 ${
                         permissions.sandbox === option.id
-                          ? 'border-accent-border bg-accent-soft text-accent-hover'
+                          ? 'border-border bg-avatar-bg text-ink'
                           : 'border-border-subtle bg-surface-solid text-ink-secondary'
                       }`}
                     >
@@ -254,7 +232,7 @@ export default function SettingsPage({
                       onClick={() => void applyPermissions({ ...permissions, approval: option.id })}
                       className={`cursor-pointer rounded-md border px-2 py-1 text-left text-sm disabled:opacity-50 ${
                         permissions.approval === option.id
-                          ? 'border-accent-border bg-accent-soft text-accent-hover'
+                          ? 'border-border bg-avatar-bg text-ink'
                           : 'border-border-subtle bg-surface-solid text-ink-secondary'
                       }`}
                     >
@@ -267,10 +245,10 @@ export default function SettingsPage({
             </div>
           </section>
 
-          <section id="settings-executor" className="mb-4">
-            <h3 className="m-0 mb-1 text-md font-semibold">子任务执行者</h3>
-            <p className="m-0 mb-1 text-2xs text-muted">
-              决定新子任务由任务智能体（NPC）执行，还是由司墨本人直接执行；接口未就绪时保存本地偏好。
+          <section id="settings-executor" className="mb-6 border-b border-avatar-border pb-4 last:mb-0 last:border-0 last:pb-0">
+            <h3 className="m-0 mb-2 text-[14px] font-semibold text-section-title">子任务执行者</h3>
+            <p className="m-0 mb-2 text-xs text-muted">
+              决定新子任务由任务智能体（NPC）执行，还是由司墨本人直接执行。
             </p>
             <div className="flex flex-col gap-1 sm:flex-row">
               {(
@@ -287,7 +265,7 @@ export default function SettingsPage({
                   onClick={() => void chooseExecutor(option.id)}
                   className={`flex-1 cursor-pointer rounded-md border px-2 py-1 text-left text-sm disabled:opacity-50 ${
                     executor === option.id
-                      ? 'border-accent-border bg-accent-soft text-accent-hover'
+                      ? 'border-border bg-avatar-bg text-ink'
                       : 'border-border-subtle bg-surface-solid text-ink-secondary'
                   }`}
                 >
@@ -298,8 +276,8 @@ export default function SettingsPage({
             </div>
           </section>
 
-          <section id="settings-theme" className="mb-4">
-            <h3 className="m-0 mb-1 text-md font-semibold">主题</h3>
+          <section id="settings-theme" className="mb-6 border-b border-avatar-border pb-4 last:mb-0 last:border-0 last:pb-0">
+            <h3 className="m-0 mb-2 text-[14px] font-semibold text-section-title">主题</h3>
             <div className="flex flex-wrap gap-1.5">
               {listThemes().map((name) => (
                 <button
@@ -308,7 +286,7 @@ export default function SettingsPage({
                   aria-pressed={theme === name}
                   onClick={() => applyTheme(name)}
                   className={`cursor-pointer rounded-md border px-2 py-1 text-sm ${
-                    theme === name ? 'border-accent-border bg-accent-soft text-accent-hover' : 'border-border-subtle bg-surface-solid text-ink-secondary'
+                    theme === name ? 'border-border bg-avatar-bg text-ink' : 'border-border-subtle bg-surface-solid text-ink-secondary'
                   }`}
                 >
                   {themeLabel(name)}
@@ -317,10 +295,10 @@ export default function SettingsPage({
             </div>
           </section>
 
-          <section id="settings-view" className="mb-4">
-            <h3 className="m-0 mb-1 text-md font-semibold">自定义视图</h3>
-            <p className="m-0 mb-1 text-2xs text-muted">
-              打开当前会话的自定义视图（只读 schema 渲染，13 类块）；生成/修改/回滚通过对话，视图不存在时显示空态。
+          <section id="settings-view" className="mb-6 border-b border-avatar-border pb-4 last:mb-0 last:border-0 last:pb-0">
+            <h3 className="m-0 mb-2 text-[14px] font-semibold text-section-title">自定义视图</h3>
+            <p className="m-0 mb-2 text-xs text-muted">
+              打开当前会话的自定义视图（只读 schema 渲染，13 类块）；生成/修改/回滚通过对话。
             </p>
             <button
               type="button"
@@ -328,29 +306,32 @@ export default function SettingsPage({
                 bus.emit(EVENTS.VIEW_OPEN, {})
                 onClose()
               }}
-              className="cursor-pointer rounded-md border border-accent-border bg-accent-soft px-2.5 py-1 text-sm text-accent-hover"
+              className="cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-2.5 py-1 text-sm text-ink-secondary hover:border-accent-border hover:text-ink"
             >
-              打开自定义视图预览 →
+              打开自定义视图预览
             </button>
           </section>
 
-          <section id="settings-data" className="mb-4">
-            <h3 className="m-0 mb-1 text-md font-semibold">数据目录</h3>
-            <p className="m-0 rounded-md border border-border-subtle bg-surface-sunken px-2 py-1.5 font-mono text-2xs text-ink-secondary">
+          <section id="settings-data" className="mb-6 border-b border-avatar-border pb-4 last:mb-0 last:border-0 last:pb-0">
+            <h3 className="m-0 mb-2 text-[14px] font-semibold text-section-title">数据目录</h3>
+            <p className="m-0 rounded-xs border border-border-subtle bg-surface-sunken px-2 py-1.5 font-mono text-xs text-ink-secondary">
               {dataDirectoryHint()}
             </p>
           </section>
 
-          <section id="settings-shortcuts" className="mb-2">
-            <h3 className="m-0 mb-1 text-md font-semibold">快捷键</h3>
-            <dl className="m-0 grid grid-cols-1 gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
+          <section id="settings-shortcuts" className="mb-0">
+            <h3 className="m-0 mb-2 text-[14px] font-semibold text-section-title">快捷键</h3>
+            <div className="grid grid-cols-[6rem_minmax(0,1fr)_5rem] items-center gap-x-3">
               {SHORTCUTS.map((shortcut) => (
-                <div key={shortcut.keys} className="flex items-center justify-between gap-2 border-b border-border-subtle/50 py-0.5">
-                  <dt className="font-mono text-2xs text-muted">{shortcut.keys}</dt>
-                  <dd className="m-0 text-ink-secondary">{shortcut.label}</dd>
+                <div key={shortcut.keys} className="contents">
+                  <div className="flex h-8 items-center">
+                    <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded-xs border border-avatar-border bg-surface-sunken px-1 font-mono text-[11px] text-ink-secondary">{shortcut.keys}</kbd>
+                  </div>
+                  <div className="h-8 truncate text-[13px] leading-8 text-ink">{shortcut.label}</div>
+                  <div className="h-8 text-xs leading-8 text-muted">{shortcut.scope}</div>
                 </div>
               ))}
-            </dl>
+            </div>
           </section>
         </div>
 

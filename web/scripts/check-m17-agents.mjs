@@ -157,7 +157,7 @@ check('智能体页面字段：名称/角色/人格/工具/模型/图标 + 降�
   assert.match(page, /agent\.role/)
   assert.match(page, /agent\.persona/)
   assert.match(page, /agent\.tools/)
-  assert.match(page, /agent\.model/)
+  assert.match(page, /V4\.1 Flash/)
   assert.match(page, /AgentAvatar/)
   assert.match(page, /内置示例/)
   assert.match(page, /来自后端/)
@@ -165,10 +165,13 @@ check('智能体页面字段：名称/角色/人格/工具/模型/图标 + 降�
   assert.match(page, /只读/)
 })
 
-check('头像组件：主题 token（无硬编码颜色）+ 颜色/形状区分 + 可访问性', () => {
+check('头像组件：圆形 30/24、深色助手底、主题 token、可访问性', () => {
   assert.match(avatar, /TONE_CLASS/)
   assert.match(avatar, /SHAPE_CLASS/)
   assert.match(avatar, /rounded-full/)
+  assert.match(avatar, /h-\[30px\] w-\[30px\]/)
+  assert.match(avatar, /bg-avatar-agent-bg text-avatar-agent-ink/)
+  assert.match(avatar, /self-start/)
   assert.match(avatar, /aria-label/)
   assert.equal(/#[0-9a-fA-F]{3,8}/.test(avatar), false)
 })

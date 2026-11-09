@@ -48,6 +48,15 @@ export default function RightRail() {
 
   useEffect(() => bus.on(EVENTS.TASKS_STATE, ({ running: next }: { running: number }) => setRunning(next)), [])
 
+  // M45：窄屏顶部按钮打开/关闭右栏浮层
+  useEffect(
+    () =>
+      bus.on(EVENTS.RIGHT_RAIL_OPEN, () => {
+        setActive((current) => (current === null ? 'tasks' : null))
+      }),
+    [],
+  )
+
   useEffect(
     () =>
       bus.on(EVENTS.WS_FRAME, ({ frame }: { frame: WireFrame }) => {
@@ -90,7 +99,7 @@ export default function RightRail() {
     <aside
       className={`flex h-full min-h-0 min-w-0 bg-surface max-[1180px]:fixed max-[1180px]:right-0 max-[1180px]:top-24 max-[1180px]:bottom-0 max-[1180px]:z-30 ${
         collapsed
-          ? 'w-12 flex-none border-l border-border-subtle'
+          ? 'w-12 flex-none border-l border-border-subtle max-[1180px]:hidden'
           : 'w-full flex-row border-l border-border-subtle max-[1180px]:w-[min(90vw,360px)] max-[1180px]:shadow-lg'
       }`}
       aria-label="右侧面板"
@@ -108,7 +117,6 @@ export default function RightRail() {
           }`}
         >
           <Icon name="task" size={16} />
-          <span className="text-xs [writing-mode:vertical-rl]">任务</span>
           {running > 0 && <Badge tone="warn" count={running} size="sm" className="px-1" />}
         </button>
         <button
@@ -123,7 +131,6 @@ export default function RightRail() {
           }`}
         >
           <Icon name="overview" size={16} />
-          <span className="text-xs [writing-mode:vertical-rl]">概览</span>
           {overviewDot && <span className="absolute right-0.5 top-0.5 h-1.5 w-1.5 rounded-pill bg-accent" aria-label="概览有更新" />}
         </button>
         <Tooltip label={pinned ? '已固定：切会话不自动收起' : '固定：切会话不自动收起'} side="top">

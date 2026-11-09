@@ -63,8 +63,8 @@ check('窄屏：三栏折叠 + 命令面板/轨迹/用量表响应式', () => {
   assert.match(usage, /overflow-auto/)
   assert.match(usage, /min-w-\[40rem\]/)
   assert.match(trajectory, /overflow-x-auto/)
-  assert.match(messageList, /px-3 py-6 sm:px-5 sm:py-8/)
-  assert.match(composer, /px-3 pt-2\.5.*sm:px-5/)
+  assert.match(messageList, /py-6 pl-\[52px\] pr-3 sm:py-8 sm:pr-5/)
+  assert.match(composer, /pt-2\.5 pb-3\.5/)
 })
 
 check('键盘可达：focus-visible + 通知中心/命令面板 Esc + aria', () => {
@@ -74,8 +74,9 @@ check('键盘可达：focus-visible + 通知中心/命令面板 Esc + aria', () 
   assert.match(palette, /event\.key === 'Escape'/)
   assert.match(trajectory, /role="group" aria-label="轨迹筛选"/)
   assert.match(planPanel, /aria-pressed=\{checked\}/)
-  assert.match(composer, /aria-label="模型"/)
-  assert.match(composer, /aria-label="推理强度"/)
+  assert.equal(/aria-label="模型"/.test(composer), false)
+  assert.equal(/aria-label="推理强度"/.test(composer), false)
+  assert.match(composer, /aria-describedby="composer-hint"/)
   assert.match(notification, /aria-label=\{`通知中心/)
 })
 

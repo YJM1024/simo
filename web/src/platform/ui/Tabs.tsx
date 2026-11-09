@@ -16,7 +16,7 @@ export interface TabsProps {
   size?: 'sm' | 'md'
 }
 
-export function Tabs({ items, active, onChange, ariaLabel, className = '', size = 'md' }: TabsProps) {
+export function Tabs({ items, active, onChange, ariaLabel, className = '', gapClass = 'gap-0.5', size = 'md' }: TabsProps & { gapClass?: string }) {
   const refs = useRef<Array<HTMLButtonElement | null>>([])
   const move = (index: number): void => {
     const item = items[index]
@@ -25,7 +25,7 @@ export function Tabs({ items, active, onChange, ariaLabel, className = '', size 
     refs.current[index]?.focus()
   }
   return (
-    <div role="tablist" aria-label={ariaLabel} className={`flex min-w-0 items-center gap-0.5 overflow-x-auto whitespace-nowrap ${className}`}>
+    <div role="tablist" aria-label={ariaLabel} className={`flex min-w-0 items-center ${gapClass} overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${className}`}>
       {items.map((item, index) => {
         const selected = item.id === active
         return (

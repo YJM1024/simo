@@ -67,6 +67,20 @@ function isLegacyFallback(error: unknown): boolean {
   return error instanceof HttpError && (error.status === 404 || error.status === 405)
 }
 
+function countTree(nodes: readonly SessionNode[]): { active: number; archived: number } {
+  let active = 0
+  let archived = 0
+  const walk = (list: readonly SessionNode[]): void => {
+    for (const node of list) {
+      if (node.archived) archived += 1
+      else active += 1
+      walk(node.children)
+    }
+  }
+  walk(nodes)
+  return { active, archived }
+}
+
 function TreeSkeleton() {
   return (
     <div className="flex flex-col gap-2" aria-hidden="true">
@@ -85,6 +99,7 @@ function TreeSkeleton() {
 export default function SessionTreePanel() {
   const agentCatalog = useAgentCatalog()
   const [roots, setRoots] = useState<SessionNode[]>([])
+  const counts = countTree(roots)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
@@ -340,7 +355,6 @@ export default function SessionTreePanel() {
       const indent = 6 + Math.min(depth, 8) * 12
       const owner = findAgent(agentCatalog.agents, node.agentId ?? fallbackOwnerForSession(node.id))
       const unread = Math.max(0, (node.messageCount ?? 0) - (readCounts[node.id] ?? 0))
-      const running = node.status === 'running' || node.status === 'executing' || (isActive && runningTasks > 0)
       const isPinned = pinned.includes(node.id)
 
       return (
@@ -348,8 +362,8 @@ export default function SessionTreePanel() {
           <div
             className={`group flex items-start gap-1 rounded-md border py-1.5 pr-1.5 transition-colors duration-fast ${
               isActive
-                ? 'border-accent-border bg-accent-soft'
-                : 'border-transparent hover:bg-accent-soft/50'
+                ? 'border-border-subtle bg-avatar-bg'
+                : 'border-transparent hover:bg-surface-sunken'
             }`}
             style={{ paddingLeft: `${indent}px` }}
           >
@@ -375,12 +389,6 @@ export default function SessionTreePanel() {
                 {unread > 0 && (
                   <span className="flex-none text-xs tabular-nums text-accent" title={`${unread} 条未读消息`}>
                     {unread}
-                  </span>
-                )}
-                {running && (
-                  <span className="flex flex-none items-center gap-1 text-xs text-warn-ink" title="执行中">
-                    <span className="h-1 w-1 animate-thinking-bounce rounded-xs bg-warn" aria-hidden="true" />
-                    执行中
                   </span>
                 )}
                 {node.archived && (
@@ -560,14 +568,11 @@ export default function SessionTreePanel() {
         )}
       </div>
 
-      <div className="flex flex-none items-center justify-between gap-2 border-t border-border-subtle px-3.5 py-2 text-2xs text-muted">
-        <span className="inline-flex items-center gap-1">
-          <span className="h-1.5 w-1.5 rounded-xs bg-ok" aria-hidden="true" /> 进行中
+      <div className="flex flex-none items-center justify-between gap-2 overflow-hidden whitespace-nowrap border-t border-border-subtle px-3.5 py-2 text-xs text-ink-muted">
+        <span className="flex-none whitespace-nowrap">
+          {runningTasks > 0 ? `进行中 ${counts.active} · ${runningTasks} 个任务` : `进行中 ${counts.active} · 已归档 ${counts.archived}`}
         </span>
-        <span className="inline-flex items-center gap-1">
-          <span className="h-1.5 w-1.5 rounded-xs bg-muted" aria-hidden="true" /> 已归档
-        </span>
-        <span title="归档后只读，可随时恢复">⊘ 归档 · ↺ 恢复</span>
+        <span className="flex-none whitespace-nowrap text-ink-muted max-[1180px]:hidden" title="归档后只读，可随时恢复">归档 / 恢复</span>
       </div>
     </aside>
   )

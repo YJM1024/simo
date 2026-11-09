@@ -28,7 +28,7 @@ export function Dialog({ open, onClose, title, children, footer, size = 'md', de
       aria-label={title}
       onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}
     >
-      <div ref={panelRef} className={`flex max-h-[92vh] w-full ${SIZE[size]} flex-col overflow-hidden rounded-md border border-border bg-surface-solid shadow-lg`}>
+      <div ref={panelRef} className={`popover-surface flex max-h-[92vh] w-full ${SIZE[size]} flex-col overflow-hidden`}>
         <header className="flex flex-none items-start justify-between gap-3 border-b border-border-subtle px-4 py-3">
           <div className="min-w-0">
             <h2 className="m-0 truncate text-lg font-semibold text-ink">{title}</h2>

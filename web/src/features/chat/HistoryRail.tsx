@@ -16,13 +16,6 @@ const ROLE_LABEL: Record<'user' | 'agent' | 'system', string> = { user: '你', a
 const OPEN_DELAY = 150
 const CLOSE_GRACE = 200
 
-function tickColor(tick: TimelineTick): string {
-  if (tick.role === 'user') return 'bg-accent'
-  if (tick.role === 'system') return 'bg-warn'
-  const meta = categoryMeta(tick.category)
-  return meta ? meta.tickClass : 'bg-ok'
-}
-
 function tickToneLabel(tick: TimelineTick): string {
   const meta = categoryMeta(tick.category)
   return meta ? meta.label : ROLE_LABEL[tick.role]
@@ -36,7 +29,6 @@ interface HistoryRailProps {
 }
 
 export default function HistoryRail({ messages, activeMessageId, highlightId, onJump }: HistoryRailProps) {
-  const [collapsed, setCollapsed] = useState(false)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [pinnedId, setPinnedId] = useState<string | null>(null)
   const openTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -46,6 +38,7 @@ export default function HistoryRail({ messages, activeMessageId, highlightId, on
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const [atTop, setAtTop] = useState(true)
   const [atBottom, setAtBottom] = useState(false)
+  const [popupPos, setPopupPos] = useState({ x: 0, y: 0 })
   const ticks = buildTimeline(messages)
   const targetId = pinnedId ?? hoveredId
   const previewTick = targetId ? ticks.find((tick) => tick.id === targetId) ?? null : null
@@ -73,10 +66,21 @@ export default function HistoryRail({ messages, activeMessageId, highlightId, on
     const observer = new ResizeObserver(() => updateScrollState())
     observer.observe(element)
     return () => observer.disconnect()
-  }, [ticks.length, collapsed])
+  }, [ticks.length])
 
   const scrollByPage = (direction: -1 | 1): void => {
     scrollRef.current?.scrollBy({ top: direction * 120, behavior: 'smooth' })
+  }
+
+  const trackPointer = (event: React.MouseEvent): void => {
+    const width = 240
+    const height = 240
+    const gap = 12
+    let x = event.clientX + gap
+    let y = event.clientY + gap
+    if (x + width > window.innerWidth - 8) x = event.clientX - width - gap
+    if (y + height > window.innerHeight - 8) y = event.clientY - height - gap
+    setPopupPos({ x: Math.max(8, x), y: Math.max(8, y) })
   }
 
   useEffect(() => {
@@ -119,16 +123,20 @@ export default function HistoryRail({ messages, activeMessageId, highlightId, on
 
   const tickClassName = (id: string): string => {
     const selected = pinnedId === id
-    const active = activeMessageId === id
     const highlighted = highlightId === id
-    return `group flex h-5 w-8 flex-none cursor-pointer items-center justify-center rounded-xs transition-colors duration-fast focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+    return `group flex h-[7px] w-8 flex-none cursor-pointer items-center justify-center rounded-xs transition-colors duration-fast focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
       selected ? 'bg-accent-soft' : 'hover:bg-surface-sunken'
-    } ${highlighted ? 'bg-accent-soft' : ''} ${active && !selected ? 'opacity-100' : 'opacity-80 hover:opacity-100'}`
+    } ${highlighted ? 'bg-accent-soft' : ''}`
   }
 
-  const tickBarClassName = (id: string): string => {
-    const emphasized = pinnedId === id || highlightId === id || activeMessageId === id
-    return `block h-1.5 rounded-xs ${emphasized ? 'w-1.5' : 'w-1'}`
+  const tickBarClassName = (tick: TimelineTick): string => {
+    const emphasized = pinnedId === tick.id || highlightId === tick.id || activeMessageId === tick.id
+    const color = tick.role === 'user'
+      ? emphasized ? 'bg-timeline-user-active' : 'bg-timeline-user'
+      : tick.role === 'agent'
+        ? 'bg-timeline-agent'
+        : 'bg-timeline-system'
+    return `block rounded-[2px] transition-[width,height,opacity] duration-fast ${emphasized ? 'h-1.5 w-7 opacity-100' : 'h-[5px] w-[22px] opacity-65 group-hover:w-7 group-hover:opacity-100'} ${color}`
   }
 
   return (
@@ -140,39 +148,34 @@ export default function HistoryRail({ messages, activeMessageId, highlightId, on
     >
       <button
         type="button"
-        onClick={() => setCollapsed((value) => !value)}
-        aria-label={collapsed ? '展开消息时间轴' : '折叠消息时间轴'}
-        aria-expanded={!collapsed}
-        className="mb-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-xs border border-border-subtle bg-surface-solid text-muted hover:text-ink"
+        onClick={() => scrollByPage(-1)}
+        disabled={atTop}
+        aria-label="向上滚动时间轴"
+        className="mb-1 flex h-6 w-8 flex-none cursor-pointer items-center justify-center rounded-xs text-muted hover:bg-surface-sunken hover:text-ink disabled:cursor-default disabled:opacity-30"
       >
-        {collapsed ? <Icon name="chevron-right" size={16} /> : <Icon name="chevron-left" size={16} />}
+        <Icon name="chevron-up" size={16} />
       </button>
-
-      {collapsed ? (
-        <span className="text-xs tabular-nums text-muted">{ticks.length}</span>
-      ) : (
-        <>
-          <button
-            type="button"
-            onClick={() => scrollByPage(-1)}
-            disabled={atTop}
-            aria-label="向上滚动时间轴"
-            className="mb-1 flex h-6 w-8 flex-none cursor-pointer items-center justify-center rounded-xs text-muted hover:bg-surface-sunken hover:text-ink disabled:cursor-default disabled:opacity-30"
-          >
-            <Icon name="chevron-up" size={16} />
-          </button>
-          <div
-            ref={scrollRef}
-            onScroll={updateScrollState}
-            className="flex min-h-0 flex-1 flex-col items-center gap-px overflow-y-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
+      <div className="relative flex min-h-0 w-8 flex-1 flex-col items-center">
+        <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-timeline-track" />
+        <div
+          ref={scrollRef}
+          onScroll={updateScrollState}
+          className="relative z-10 flex min-h-0 w-full flex-1 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          <div className="my-auto flex w-full flex-none flex-col items-center py-1">
             {ticks.map((tick, index) => (
               <button
                 key={tick.id}
                 type="button"
                 onMouseEnter={() => openSoon(tick.id)}
+                onMouseMove={trackPointer}
                 onMouseLeave={closeSoon}
-                onFocus={() => { clearTimers(); setHoveredId(tick.id) }}
+                onFocus={(event) => {
+                  clearTimers()
+                  setHoveredId(tick.id)
+                  const rect = event.currentTarget.getBoundingClientRect()
+                  setPopupPos({ x: Math.min(window.innerWidth - 248, rect.right + 12), y: Math.min(window.innerHeight - 248, rect.top) })
+                }}
                 onBlur={closeSoon}
                 onClick={() => jumpAndPin(tick.id)}
                 onKeyDown={(event) => {
@@ -181,34 +184,35 @@ export default function HistoryRail({ messages, activeMessageId, highlightId, on
                     jumpAndPin(tick.id)
                   }
                 }}
-                className={tickClassName(tick.id)}
+                className={`${tickClassName(tick.id)} ${index > 0 && ticks[index - 1]?.role !== tick.role ? 'mt-0.5' : ''}`}
                 aria-label={`第 ${index + 1} 条${ROLE_LABEL[tick.role]}消息${tickToneLabel(tick) ? `（${tickToneLabel(tick)}）` : ''}：${tick.preview}`}
                 aria-expanded={targetId === tick.id}
               >
-                <span className={`${tickBarClassName(tick.id)} ${tickColor(tick)}`} aria-hidden="true" />
+                <span className={tickBarClassName(tick)} aria-hidden="true" />
               </button>
             ))}
           </div>
-          <button
-            type="button"
-            onClick={() => scrollByPage(1)}
-            disabled={atBottom}
-            aria-label="向下滚动时间轴"
-            className="mt-1 flex h-6 w-8 flex-none cursor-pointer items-center justify-center rounded-xs text-muted hover:bg-surface-sunken hover:text-ink disabled:cursor-default disabled:opacity-30"
-          >
-            <Icon name="chevron-down" size={16} />
-          </button>
-        </>
-      )}
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={() => scrollByPage(1)}
+        disabled={atBottom}
+        aria-label="向下滚动时间轴"
+        className="mt-1 flex h-6 w-8 flex-none cursor-pointer items-center justify-center rounded-xs text-muted hover:bg-surface-sunken hover:text-ink disabled:cursor-default disabled:opacity-30"
+      >
+        <Icon name="chevron-down" size={16} />
+      </button>
 
-      {previewTick && !collapsed && (
+      {previewTick && (
         <div
           ref={popupRef}
           onMouseEnter={clearTimers}
           onMouseLeave={closeSoon}
           onFocus={clearTimers}
           onBlur={closeSoon}
-          className="absolute left-full top-8 z-20 ml-1 w-60 rounded-sm border border-border bg-surface-solid p-2.5 text-left shadow-lg"
+          className="popover-surface fixed w-60 p-2.5 text-left"
+          style={{ left: popupPos.x, top: popupPos.y }}
           role="dialog"
           aria-label="消息预览"
         >

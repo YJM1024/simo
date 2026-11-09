@@ -62,6 +62,9 @@ const (
 	TypeCardUpdated = "card.updated"
 	TypeCardAction  = "card.action"
 
+	// M43 消息自动路由（审计）。
+	TypeMessageRouted = "message.routed"
+
 	// M30 记忆巩固（审计，不广播用户 WS）。
 	TypeMemoryConsolidated = "memory.consolidated"
 
@@ -113,6 +116,7 @@ var persistedTypes = map[string]struct{}{
 	TypeMemoryConsolidated: {},
 	TypeCardUpdated:        {},
 	TypeCardAction:         {},
+	TypeMessageRouted:      {},
 
 	TypeTeamCreated:          {},
 	TypeTeamArchived:         {},

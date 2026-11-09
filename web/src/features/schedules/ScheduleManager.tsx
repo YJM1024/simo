@@ -61,8 +61,16 @@ const STATUS_TONE_CLASS: Record<'ok' | 'danger' | 'warn' | 'muted' | 'accent', s
 
 const TRIGGER_TONE = 'border-border-subtle bg-surface-sunken text-ink-secondary'
 
-function errorText(error: unknown): string {
-  if (error instanceof HttpError) {
+function nextRunText(schedule: ScheduleRecord): string {
+  if (schedule.nextRunAt === null || schedule.nextRunAt <= 0) {
+    return schedule.triggerType === 'once' ? '已结束' : '无下次运行'
+  }
+  const expired = schedule.nextRunAt < Date.now()
+  if (expired) return schedule.triggerType === 'once' ? '已结束' : `已过期（${formatRelativeTime(schedule.nextRunAt)}）`
+  return `${formatScheduleTime(schedule.nextRunAt)}（${formatRelativeTime(schedule.nextRunAt)}）`
+}
+
+function errorText(error: unknown): string {  if (error instanceof HttpError) {
     if (error.offline) return '无法连接后端，请稍后重试'
     if (error.status === 404 || error.status === 405) return '定时任务接口尚未就绪（后端 M13 实现中）'
     return error.message || '请求失败'
@@ -260,7 +268,7 @@ export default function ScheduleManager({ defaultSessionId, onClose, onChanged, 
     >
       <div
         ref={panelRef}
-        className={embedded ? 'flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-surface' : 'flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-border bg-surface-solid shadow-lg'}
+        className={embedded ? 'flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-surface' : 'popover-surface flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden'}
       >
         <header className="flex flex-none flex-wrap items-start justify-between gap-2 border-b border-border-subtle px-4 py-3">
           <div className="min-w-0">
@@ -651,14 +659,11 @@ export default function ScheduleManager({ defaultSessionId, onClose, onChanged, 
                               <span className="min-w-0 max-w-[18rem] truncate text-md font-medium text-ink" title={schedule.title}>
                                 {schedule.title}
                               </span>
-                              <span className={`rounded-pill border px-1.5 font-mono text-2xs ${TRIGGER_TONE}`}>
+                              <span className={`rounded-xs border px-1.5 text-xs ${TRIGGER_TONE}`}>
                                 {triggerTypeLabel(schedule.triggerType)}
                               </span>
-                              <span className="rounded-pill border border-border-subtle bg-surface-sunken px-1.5 font-mono text-2xs text-muted">
-                                {schedule.timezone}
-                              </span>
                             </div>
-                            <p className="m-0 mt-1 font-mono text-2xs text-muted">
+                            <p className="m-0 mt-1 text-xs text-muted">
                               目标会话 {schedule.sessionTitle ?? schedule.sessionId} · {describeTrigger(schedule)}
                             </p>
                           </div>
@@ -669,39 +674,32 @@ export default function ScheduleManager({ defaultSessionId, onClose, onChanged, 
                             aria-label={`${schedule.enabled ? '停用' : '启用'}定时任务 ${schedule.title}`}
                             onClick={() => void toggle(schedule)}
                             disabled={busy}
-                            className={`flex flex-none cursor-pointer items-center gap-1.5 rounded-pill border px-2 py-0.5 text-2xs transition-colors duration-fast disabled:opacity-50 ${
-                              schedule.enabled
-                                ? 'border-accent-border bg-accent-soft text-accent-hover'
-                                : 'border-border-subtle bg-surface-sunken text-muted'
-                            }`}
+                            className="flex flex-none cursor-pointer items-center gap-2 text-xs text-muted disabled:opacity-50"
                           >
                             <span
                               aria-hidden="true"
-                              className={`relative inline-flex h-3.5 w-6 items-center rounded-pill ${
-                                schedule.enabled ? 'bg-accent' : 'bg-surface-sunken border border-border'
+                              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-fast ${
+                                schedule.enabled ? 'bg-accent' : 'border border-border bg-surface-sunken'
                               }`}
                             >
                               <span
-                                className={`absolute h-2.5 w-2.5 rounded-xs bg-surface-solid shadow-sm ${
-                                  schedule.enabled ? 'translate-x-3' : 'translate-x-0.5'
+                                className={`absolute h-4 w-4 rounded-full bg-surface-solid shadow-sm transition-transform duration-fast ${
+                                  schedule.enabled ? 'translate-x-4' : 'translate-x-0.5'
                                 }`}
                               />
                             </span>
-                            {schedule.enabled ? '启用' : '停用'}
+                            {schedule.enabled ? '已启用' : '已停用'}
                           </button>
                         </div>
 
-                        <div className="mt-1.5 grid grid-cols-1 gap-x-4 gap-y-0.5 font-mono text-2xs text-muted sm:grid-cols-2">
-                          <span>
-                            下次运行 {formatScheduleTime(schedule.nextRunAt, schedule.timezone)}
-                            {schedule.nextRunAt !== null ? `（${formatRelativeTime(schedule.nextRunAt)}）` : ''}
-                          </span>
+                        <div className="mt-1.5 grid grid-cols-1 gap-x-4 gap-y-0.5 text-xs text-muted sm:grid-cols-2">
+                          <span>下次运行 {nextRunText(schedule)}</span>
                           <span className="flex flex-wrap items-center gap-1.5">
                             上次结果
-                            <span className={`rounded-pill border px-1.5 ${STATUS_TONE_CLASS[tone]}`}>
+                            <span className={`rounded-xs border px-1.5 ${STATUS_TONE_CLASS[tone]}`}>
                               {statusLabel(schedule.lastStatus)}
                             </span>
-                            {schedule.lastRunAt !== null && <span>{formatScheduleTime(schedule.lastRunAt, schedule.timezone)}</span>}
+                            {schedule.lastRunAt !== null && <span>{formatScheduleTime(schedule.lastRunAt)}</span>}
                             {schedule.runCount > 0 && <span>已运行 {schedule.runCount} 次</span>}
                           </span>
                         </div>
@@ -750,7 +748,7 @@ export default function ScheduleManager({ defaultSessionId, onClose, onChanged, 
                               type="button"
                               onClick={() => setConfirmDeleteId(schedule.id)}
                               disabled={busy}
-                              className="cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-2 py-0.5 text-2xs text-danger-ink disabled:opacity-50"
+                              className="cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-2 py-0.5 text-[12px] text-danger-ink disabled:opacity-50"
                             >
                               删除
                             </button>

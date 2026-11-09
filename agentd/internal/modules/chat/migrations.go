@@ -438,5 +438,24 @@ func migrations() []sqlite.Migration {
 				return nil
 			},
 		},
+		{
+			Version: 17,
+			Name:    "M43 message auto route audit",
+			Up: func(ctx context.Context, tx *sql.Tx) error {
+				for _, stmt := range []string{
+					`CREATE TABLE IF NOT EXISTS message_routes (
+						message_id TEXT PRIMARY KEY, from_session_id TEXT NOT NULL DEFAULT '',
+						to_session_id TEXT NOT NULL DEFAULT '', reason TEXT NOT NULL DEFAULT '',
+						created_at INTEGER NOT NULL
+					)`,
+					`CREATE INDEX IF NOT EXISTS idx_message_routes_to ON message_routes(to_session_id, created_at)`,
+				} {
+					if _, err := tx.ExecContext(ctx, stmt); err != nil {
+						return err
+					}
+				}
+				return nil
+			},
+		},
 	}
 }

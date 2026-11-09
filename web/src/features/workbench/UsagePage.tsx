@@ -125,7 +125,7 @@ export default function UsagePage({ onClose }: { onClose: () => void }) {
         if (event.target === event.currentTarget) onClose()
       }}
     >
-      <div ref={panelRef} className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-lg">
+      <div ref={panelRef} className="popover-surface flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden">
         <header className="flex flex-none flex-wrap items-start justify-between gap-2 border-b border-border-subtle px-4 py-3">
           <div className="min-w-0">
             <h2 className="m-0 text-lg font-semibold tracking-tight">用量统计</h2>

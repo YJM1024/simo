@@ -96,6 +96,10 @@ export interface TasksStatePayload {
   total: number
 }
 
+export interface ComposerInsertPayload {
+  text: string
+}
+
 export type BusPayloads = {
   'session:active': SessionActivePayload
   'session:select': SessionSelectPayload
@@ -109,7 +113,9 @@ export type BusPayloads = {
   'nav:reset': Record<string, never>
   'chat:tab:open': ChatTabPayload
   'chat:tab:state': ChatTabPayload
+  'composer:insert': ComposerInsertPayload
   'layout:right': LayoutRightPayload
+  'right:rail:open': Record<string, never>
   'workbench:open': WorkbenchOpenPayload
   'ws:state': WsStatePayload
   'ws:frame': WsFramePayload
@@ -142,8 +148,12 @@ export const EVENTS = {
   CHAT_TAB_OPEN: 'chat:tab:open',
   /** M37：中栏会话标签变化（同步顶部 tab 激活态） */
   CHAT_TAB_STATE: 'chat:tab:state',
+  /** M44：空态建议按钮 → 填入输入框 */
+  COMPOSER_INSERT: 'composer:insert',
   /** M38：右栏收起/展开状态（App 调整最右侧列宽） */
   LAYOUT_RIGHT: 'layout:right',
+  /** M45：窄屏顶部按钮打开右栏浮层 */
+  RIGHT_RAIL_OPEN: 'right:rail:open',
   /** M40：工作台内嵌页的二级入口（用量/设置/命令面板/视图） */
   WORKBENCH_OPEN: 'workbench:open',
   /** WebSocket 连接状态（壳层顶栏） */

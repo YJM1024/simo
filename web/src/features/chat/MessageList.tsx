@@ -6,7 +6,7 @@
 //   - streaming 回复可「撤回」（发 correct 帧）；
 //   - 用户消息显示「已发送」。
 
-import { useState, type RefObject } from 'react'
+import { type RefObject } from 'react'
 import type { AgentState, ChatMessage, SessionMetaEntry } from '../../platform/types.ts'
 import { formatClockTime, hasNeutralized, stripNeutralized } from '../../platform/types.ts'
 import MarkdownMessage from './MarkdownMessage.tsx'
@@ -16,6 +16,8 @@ import { CategoryBadge, SessionPathBadge } from './MessageBadges.tsx'
 import TaskReportCard, { isTaskReportMessage } from './TaskReportCard.tsx'
 import { formatDuration, toolStatusLabel, toolStatusTone, type ToolCallInfo } from './toolcalls.ts'
 import AgentAvatar from '../../platform/AgentAvatar.tsx'
+import { Icon } from '../../platform/ui/icons.tsx'
+import { bus, EVENTS } from '../../platform/events.ts'
 import { findAgent, useAgentCatalog, type AgentInfo } from '../../platform/agents.ts'
 
 const TOOL_TONE: Record<'ok' | 'warn' | 'danger' | 'muted', string> = {
@@ -77,8 +79,6 @@ interface MessageBubbleProps {
   handler?: AgentInfo | null
   /** UI-1：消息操作 */
   onCopy: (message: ChatMessage) => void
-  onRetryMessage: (message: ChatMessage) => void
-  onEditResend: (message: ChatMessage, text: string) => void
 }
 
 function MessageBubble({
@@ -93,11 +93,7 @@ function MessageBubble({
   onJumpToMessage,
   handler,
   onCopy,
-  onRetryMessage,
-  onEditResend,
 }: MessageBubbleProps) {
-  const [editing, setEditing] = useState(false)
-  const [editText, setEditText] = useState(message.text)
   const role = roleOf(message)
   const streaming = message.status === 'streaming'
   const failed = message.status === 'error'
@@ -120,31 +116,33 @@ function MessageBubble({
       style={depth > 0 ? ({ marginLeft: `${Math.min(depth, 4) * 14}px` } as React.CSSProperties) : undefined}
     >
       {role === 'agent' ? (
-        <AgentAvatar agent={handler ?? findAgent([], message.agentId)} size="sm" className="shadow-sm" />
+        <AgentAvatar agent={handler ?? findAgent([], message.agentId)} size="sm" />
       ) : (
         <div
           aria-hidden="true"
-          className={`grid h-[30px] w-[30px] flex-none place-items-center rounded-sm border text-sm shadow-sm ${
+          className={`grid h-[30px] w-[30px] flex-none self-start place-items-center rounded-full border text-xs ${
             role === 'user'
-              ? 'border-accent-border accent-gradient text-accent-ink'
-              : 'border-danger-border bg-danger-soft text-danger-ink'
+              ? 'border-avatar-border bg-avatar-bg text-avatar-ink'
+              : 'border-avatar-border bg-avatar-bg text-ink-muted'
           }`}
         >
-          {role === 'user' ? '你' : '!'}
+          {role === 'user' ? '你' : <Icon name="info" size={16} />}
         </div>
       )}
-      <div className="min-w-0 max-w-[min(var(--bubble-max),84%)]">
-        <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-          <span className="text-xs text-muted">
-            {role === 'agent' && handler ? handler.name : ROLE_LABEL[role] ?? '系统'}
-          </span>
+      <div className="min-w-0 max-w-[min(72ch,84%)]">
+        <div className="mb-1.5 flex min-h-[30px] flex-wrap items-center gap-x-2 gap-y-0.5 leading-5">
+          {role !== 'user' && (
+            <span className={`text-[13px] font-medium leading-5 ${role === 'system' ? 'text-muted' : 'text-ink'}`}>
+              {role === 'agent' && handler ? handler.name : ROLE_LABEL[role] ?? '系统'}
+            </span>
+          )}
           <CategoryBadge message={message} />
           <SessionPathBadge message={message} meta={meta} onJumpSession={onJumpSession} />
-          <time dateTime={new Date(message.at).toISOString()} className="font-mono text-xs tabular-nums text-muted">
+          <time dateTime={new Date(message.at).toISOString()} className="text-[13px] leading-5 tabular-nums text-ink-muted">
             {formatClockTime(message.at)}
           </time>
-          {role === 'user' && !failed && <span className="text-xs text-muted">已发送</span>}
-          {streaming && <span className="text-xs text-accent">正在输入…</span>}
+          {role === 'user' && !failed && <span className="text-[13px] leading-5 text-ink-muted">已发送</span>}
+          {streaming && <span className="text-[13px] leading-5 text-accent">正在输入…</span>}
           {streaming && (
             <button
               type="button"
@@ -155,9 +153,9 @@ function MessageBubble({
               撤回
             </button>
           )}
-          {failed && <span className="text-xs text-danger-ink">发送失败</span>}
-          {neutralized && <span className="text-xs text-warn-ink" aria-label="子代理输出已被中和">已中和</span>}
-          {retracted && <span className="text-xs text-muted">已撤回</span>}
+          {failed && <span className="text-[13px] leading-5 text-danger-ink">发送失败</span>}
+          {neutralized && <span className="text-[13px] leading-5 text-warn-ink" aria-label="子代理输出已被中和">已中和</span>}
+          {retracted && <span className="text-[13px] leading-5 text-ink-muted">已撤回</span>}
           {!retracted && (
             <span className="flex items-center gap-1 opacity-0 transition-opacity duration-fast focus-within:opacity-100 group-hover:opacity-100">
               <button
@@ -178,29 +176,6 @@ function MessageBubble({
               >
                 引用
               </button>
-              <button
-                type="button"
-                onClick={() => onRetryMessage(message)}
-                aria-label="重试这条消息"
-                title="重试（重新发送对应请求）"
-                className="cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-1.5 text-2xs text-muted hover:border-accent-border hover:text-accent-hover"
-              >
-                重试
-              </button>
-              {role === 'user' && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditText(message.text)
-                    setEditing(true)
-                  }}
-                  aria-label="编辑并重发这条消息"
-                  title="编辑重发（作为新消息发送）"
-                  className="cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-1.5 text-2xs text-muted hover:border-accent-border hover:text-accent-hover"
-                >
-                  编辑重发
-                </button>
-              )}
               {message.replyTo && (
                 <button
                   type="button"
@@ -236,53 +211,18 @@ function MessageBubble({
           </button>
         )}
 
-        {editing ? (
-          <div className="rounded-lg border border-accent-border bg-surface-solid p-2 shadow-sm">
-            <label htmlFor={`edit-${message.id}`} className="sr-only">
-              编辑后重发
-            </label>
-            <textarea
-              id={`edit-${message.id}`}
-              value={editText}
-              onChange={(event) => setEditText(event.target.value)}
-              rows={3}
-              className="w-full resize-none rounded-md border border-border bg-surface px-2 py-1.5 text-md text-ink outline-none focus:border-accent"
-            />
-            <div className="mt-1.5 flex justify-end gap-1.5">
-              <button
-                type="button"
-                onClick={() => setEditing(false)}
-                className="cursor-pointer rounded-md border border-border-subtle bg-surface-solid px-2 py-0.5 text-2xs text-muted"
-              >
-                取消
-              </button>
-              <button
-                type="button"
-                disabled={!editText.trim()}
-                onClick={() => {
-                  const next = editText.trim()
-                  if (!next) return
-                  setEditing(false)
-                  onEditResend(message, next)
-                }}
-                className="cursor-pointer rounded-md border border-accent-border bg-accent-soft px-2 py-0.5 text-2xs text-accent-hover disabled:opacity-50"
-              >
-                保存并重发
-              </button>
-            </div>
-          </div>
-        ) : retracted ? (
+        {retracted ? (
           <div className="rounded-lg border border-dashed border-border bg-surface-sunken px-3 py-2.5 text-sm italic text-muted">
             已撤回（不展示内容）
           </div>
         ) : displayText || streaming || !isReport ? (
           <div
-            className={`break-words rounded-bubble border px-3 py-2.5 text-ink shadow-sm ${
+            className={`break-words text-[15px] leading-[1.65] text-ink ${
               role === 'user'
-                ? 'border-message-user-border bg-message-user'
+                ? 'rounded-bubble border border-message-user-border bg-message-user px-3 py-2.5'
                 : role === 'system'
-                  ? 'border-message-system-border bg-message-system text-danger-ink'
-                  : 'border-message-border bg-message'
+                  ? 'rounded-bubble border border-avatar-border bg-surface-sunken px-3 py-2.5 text-ink-secondary'
+                  : 'px-0 py-0'
             } ${streaming ? "after:ml-px after:animate-cursor-blink after:text-accent after:content-['▍']" : ''} ${
               failed ? 'border-danger-border' : ''
             }`}
@@ -334,29 +274,30 @@ function ListSkeleton() {
   )
 }
 
+const EMPTY_SUGGESTIONS = [
+  '帮我整理一份本周待办',
+  '记住：我的项目叫「司墨」',
+  '解释一下当前工作区',
+] as const
+
 function EmptyState() {
   return (
-    <div className="m-auto max-w-[560px] px-1 py-6 text-ink-secondary">
-      <div className="mb-0.5 text-2xl text-accent text-glow" aria-hidden="true">
-        ◍
+    <div className="mx-auto flex w-full max-w-[640px] flex-col items-start px-1 py-10">
+      <AgentAvatar size="sm" className="mb-3" />
+      <h2 className="m-0 text-lg font-semibold text-ink">开始和司墨对话</h2>
+      <p className="m-0 mt-1 text-sm text-ink-secondary">说需求、记信息、派任务；过程和结果都会回流到这里。</p>
+      <div className="mt-5 grid w-full gap-2">
+        {EMPTY_SUGGESTIONS.map((text) => (
+          <button
+            key={text}
+            type="button"
+            onClick={() => bus.emit(EVENTS.COMPOSER_INSERT, { text })}
+            className="w-full cursor-pointer rounded-md border border-border bg-surface-solid px-3 py-2 text-left text-sm text-ink-secondary transition-colors duration-fast hover:border-accent-border hover:text-ink"
+          >
+            {text}
+          </button>
+        ))}
       </div>
-      <h2 className="m-0 mb-2 text-xl font-semibold tracking-tight text-ink">一句话开始</h2>
-      <p className="m-0">你与它只有一段连续对话：说需求、让它记住，需要干活时它会派后台任务，结果回流到这里。</p>
-      <ul className="m-0 mt-3.5 grid list-none gap-1.5 p-0">
-        <li className="flex items-start gap-2 text-md">
-          <span className="mt-0.5 flex-none rounded-xs border border-accent-border bg-accent-soft px-1.5 font-mono text-2xs text-accent-hover">做</span>
-          直接说要做的事，例如「帮我整理一份…」；右栏可看任务阶段与产物
-        </li>
-        <li className="flex items-start gap-2 text-md">
-          <span className="mt-0.5 flex-none rounded-xs border border-accent-border bg-accent-soft px-1.5 font-mono text-2xs text-accent-hover">记</span>
-          让它记住重要信息，例如「记住：我的项目叫…」；右栏「记忆」可查看
-        </li>
-        <li className="flex items-start gap-2 text-md">
-          <span className="mt-0.5 flex-none rounded-xs border border-warn-border bg-warn-soft px-1.5 font-mono text-2xs text-warn-ink">聊</span>
-          随时插话：流式回复或后台任务运行时，输入框也不锁
-        </li>
-      </ul>
-      <p className="m-0 mt-4 text-sm text-muted">键盘：Enter 发送 · Shift+Enter 换行 · Esc 关闭弹窗</p>
     </div>
   )
 }
@@ -386,10 +327,8 @@ interface MessageListProps {
   onReply: (message: ChatMessage) => void
   /** M15：点击引用卡片跳转到原消息 */
   onJumpToMessage: (messageId: string) => void
-  /** UI-1：复制 / 重试 / 编辑重发 */
+  /** UI-1：复制 / 引用回复 */
   onCopy: (message: ChatMessage) => void
-  onRetryMessage: (message: ChatMessage) => void
-  onEditResend: (message: ChatMessage, text: string) => void
 }
 
 export default function MessageList({
@@ -413,8 +352,6 @@ export default function MessageList({
   onReply,
   onJumpToMessage,
   onCopy,
-  onRetryMessage,
-  onEditResend,
 }: MessageListProps) {
   const agentCatalog = useAgentCatalog()
   const hasMessages = messages.length > 0
@@ -430,7 +367,7 @@ export default function MessageList({
       aria-live="polite"
       aria-relevant="additions text"
       aria-busy={agentStatus === 'thinking' || loading}
-      className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto scroll-smooth px-3 py-6 sm:px-5 sm:py-8"
+      className="flex w-full min-w-0 flex-1 flex-col gap-4 overflow-y-auto scroll-smooth py-6 pl-[52px] pr-3 sm:py-8 sm:pr-5"
     >
       {/* 流式/等待的读屏播报（视觉上是隐藏的，避免重复打扰） */}
       <span className="sr-only" role="status" aria-live="polite">
@@ -477,8 +414,6 @@ export default function MessageList({
             onReply={onReply}
             onJumpToMessage={onJumpToMessage}
             onCopy={onCopy}
-            onRetryMessage={onRetryMessage}
-            onEditResend={onEditResend}
             handler={message.role === 'agent' ? findAgent(agentCatalog.agents, message.agentId) : null}
           />
         ))}

@@ -84,6 +84,10 @@ type activeTurn struct {
 // startTurn 创建 Turn/Intent/Decision + 占位回复，立即返回（不等待模型/任务）。
 // 这是 POST /api/chat 与 WS chat 的共同入口。
 func (m *Module) startTurn(ctx context.Context, sessionID, text string, class messageClass, attachmentIDs []string, replyToMessageID string) (Message, error) {
+	return m.startTurnExplicit(ctx, sessionID, text, class, attachmentIDs, replyToMessageID, false)
+}
+
+func (m *Module) startTurnExplicit(ctx context.Context, sessionID, text string, class messageClass, attachmentIDs []string, replyToMessageID string, explicitSession bool) (Message, error) {
 	text = strings.TrimSpace(text)
 	attachmentIDs = uniqueStrings(attachmentIDs)
 	if text == "" && len(attachmentIDs) == 0 {
@@ -99,15 +103,31 @@ func (m *Module) startTurn(ctx context.Context, sessionID, text string, class me
 	if sessionID == "" {
 		sessionID = defaultSessionID
 	}
+	originalSessionID := sessionID
 	if m.sessions != nil {
 		session, err := m.sessions.Get(ctx, sessionID)
 		if err == nil && session.Archived != 0 {
 			return Message{}, newRequestError(codeSessionArchived, "会话已归档（只读），请先 unarchive")
 		}
 	}
+	replySnapshot, err := m.resolveReplySnapshot(ctx, replyToMessageID)
+	if err != nil {
+		return Message{}, err
+	}
+	replySessionID := ""
+	if replySnapshot != nil {
+		replySessionID = replySnapshot.SessionID
+	}
+	routeReason := ""
+	routeTo := ""
+	if routeTarget, reason := m.chooseAutoRoute(ctx, sessionID, text, replySessionID, explicitSession); routeTarget != "" {
+		routeTo = routeTarget
+		routeReason = reason
+		sessionID = routeTarget
+	}
 	routeNote := ""
 	// M4：主会话收到“我想创建一个新的需求…” → 建子会话，消息归属过去；失败回退 main。
-	if m.sessions != nil && isNewSessionIntent(text) {
+	if m.sessions != nil && isNewSessionIntent(text) && routeTo == "" {
 		if _, _, isMemory := parseMemoryCommand(text, sessionID); !isMemory {
 			child, err := m.sessions.Create(ctx, sessionID, sessionTitleFromText(text))
 			if err != nil {
@@ -126,10 +146,6 @@ func (m *Module) startTurn(ctx context.Context, sessionID, text string, class me
 	sessionTitle := m.sessionTitle(ctx, sessionID)
 	sessionPath := m.sessionPath(ctx, sessionID)
 	ownerAgentID := m.sessionOwnerAgentID(ctx, sessionID)
-	replySnapshot, err := m.resolveReplySnapshot(ctx, replyToMessageID)
-	if err != nil {
-		return Message{}, err
-	}
 	uploads, err := m.listUploadsByIDs(ctx, attachmentIDs, sessionID)
 	if err != nil {
 		return Message{}, err
@@ -159,8 +175,16 @@ func (m *Module) startTurn(ctx context.Context, sessionID, text string, class me
 		ReplyToID:    strings.TrimSpace(replyToMessageID),
 		ReplyTo:      replySnapshot,
 	}
+	if routeTo != "" {
+		user.RoutedFrom = originalSessionID
+		user.RoutedTo = sessionID
+	}
 	if err := m.createMessageWithAttachments(ctx, user); err != nil {
 		return Message{}, fmt.Errorf("写入用户消息失败: %w", err)
+	}
+	if routeTo != "" {
+		m.createRouteHint(ctx, originalSessionID, sessionID, user.ID, routeReason)
+		m.recordMessageRoute(ctx, user.ID, originalSessionID, sessionID, routeReason)
 	}
 	if _, err := m.events.Append(ctx, eventlog.TypeMessageCreated, user); err != nil {
 		return Message{}, fmt.Errorf("写 message.created 失败: %w", err)
@@ -217,8 +241,15 @@ func (m *Module) startTurn(ctx context.Context, sessionID, text string, class me
 		SessionPath:  sessionPath,
 		AgentID:      ownerAgentID,
 	}
+	if routeTo != "" {
+		reply.RoutedFrom = originalSessionID
+		reply.RoutedTo = sessionID
+	}
 	if err := m.createMessage(ctx, reply); err != nil {
 		return Message{}, fmt.Errorf("写入 agent 占位消息失败: %w", err)
+	}
+	if routeTo != "" {
+		m.recordMessageRoute(ctx, reply.ID, originalSessionID, sessionID, routeReason)
 	}
 
 	// 契约 §5：普通 chat 立即回 reply.created；旧事件同时保留兼容 M1 客户端。
@@ -907,6 +938,9 @@ func (m *Module) finishActive(active *activeTurn) {
 
 // correct 处理客户端显式修正/停止：只影响流式回复，不取消后台任务。
 func (m *Module) correct(ctx context.Context, sessionID, targetReplyID, text string) error {
+	if strings.TrimSpace(targetReplyID) != "" {
+		return newRequestError("edit_disabled", "消息编辑/修改已禁用")
+	}
 	sessionID = strings.TrimSpace(sessionID)
 	if sessionID == "" {
 		sessionID = defaultSessionID

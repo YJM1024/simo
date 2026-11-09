@@ -262,15 +262,15 @@ check('M38 计划与待办：移到右栏 + 动作层端点 + 未就绪提示', 
   assert.equal(/PlanPanel/.test(chatCenter), false)
   assert.match(planSummary, /\/todos\//)
   assert.match(planSummary, /getPlan/)
-  assert.match(planSummary, /动作层支持/)
-  assert.match(planSummary, /任务列表只读投影|任务投影/)
+  assert.match(planSummary, /todos/)
+  assert.match(planSummary, /PlanTodo|planFromTasks/)
 })
 
-check('模型选择器 + 后端切换提示', () => {
-  assert.match(composer, /aria-label="模型"/)
-  assert.match(composer, /aria-label="推理强度"/)
-  assert.match(composer, /\/model/)
-  assert.match(composer, /后端模型切换接口未就绪/)
+check('M44 输入区无模型/推理选择器；模型由智能体页统一配置', () => {
+  assert.equal(/aria-label="模型"/.test(composer), false)
+  assert.equal(/aria-label="推理强度"/.test(composer), false)
+  assert.match(composer, /支持 Markdown 格式/)
+  assert.match(composer, /Enter 发送 · Shift\+Enter 换行/)
 })
 
 check('压缩提示 + 通知中心（角标/历史/筛选/已读）', () => {

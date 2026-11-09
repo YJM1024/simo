@@ -273,6 +273,10 @@ func (m *Module) authorizeTool(sessionID, tool string, args map[string]any) tool
 			return toolAuthorization{allowed: false, sandbox: settings.Sandbox, risk: "R0",
 				reason: "未知动作: " + actionName, code: "unknown_action"}
 		}
+		if definition.Disabled {
+			return toolAuthorization{allowed: false, sandbox: settings.Sandbox, risk: "R0",
+				reason: "消息编辑/修改已禁用", code: "edit_disabled"}
+		}
 		switch definition.Risk {
 		case "R3":
 			return toolAuthorization{allowed: true, sandbox: settings.Sandbox, risk: "R3", needsApproval: true}
@@ -523,6 +527,9 @@ func (m *Module) runTool(ctx context.Context, sessionID, tool string, args map[s
 		definition, ok := coreaction.ResolveName(name)
 		if !ok {
 			return "Error: 未知动作 (code=unknown_action)"
+		}
+		if definition.Disabled {
+			return "Error: 消息编辑/修改已禁用 (code=edit_disabled)"
 		}
 		name = definition.Name
 		invokeArgs := map[string]any{}

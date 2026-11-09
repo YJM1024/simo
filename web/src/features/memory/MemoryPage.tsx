@@ -246,7 +246,7 @@ export default function MemoryPage({ onClose }: MemoryPageProps) {
     >
       <div
         ref={panelRef}
-        className="flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-lg backdrop-blur-glass"
+        className="popover-surface flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="flex flex-none items-center justify-between gap-3 border-b border-border-subtle px-4 py-3">

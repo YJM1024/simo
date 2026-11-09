@@ -1,26 +1,12 @@
-// features/chat/Composer.tsx —— 输入区（M8：Markdown 源 + 工具栏 + 附件上传）
+// features/chat/Composer.tsx —— 输入区（M44：多行自适应、无格式工具条、无模型选择器）
 //
-// 契约：docs/m8-contract.md §2/§3.2：
-//   - 保持 textarea（Markdown 源），工具栏：粗体/斜体/无序/有序/行内代码/代码块/链接；
-//   - Ctrl+B / Ctrl+I；Enter 发送、Shift+Enter 换行；列表行回车自动续 `- ` / `n. `；
-//   - 工具栏包裹选区（无选区插入占位并选中）；
-//   - 附件：按钮/拖拽/粘贴 → POST /api/uploads?sessionId=，chips（名称/大小/删除），
-//     发送时把附件元数据交给 onSend（ws/rest 帧里只带 id 列表）；
-//   - M2 输入永不锁；M6 归档只读禁用；M7 错误走通知。
+// ChatGPT/Claude 风格：textarea 默认 3 行、随内容增长（最多约 8 行后内部滚动）；
+// 左下角仅「支持 Markdown 格式」，右下角发送（空内容禁用/提交中 loading）；
+// 下方只保留极简键盘提示；附件保留按钮/拖拽/粘贴，模型在智能体页配置。
 
 import { useEffect, useRef, useState } from 'react'
-import { apiGet, apiPost, getSessions } from '../../platform/http.ts'
+import { apiGet, getSessions } from '../../platform/http.ts'
 import { bus, EVENTS } from '../../platform/events.ts'
-import { readSessionId } from '../../platform/router.ts'
-import { Icon, type IconName } from '../../platform/ui/icons.tsx'
-import {
-  MODEL_OPTIONS,
-  REASONING_OPTIONS,
-  loadModelPreference,
-  loadReasoningPreference,
-  saveModelPreference,
-  saveReasoningPreference,
-} from '../../platform/preferences.ts'
 import type { ChatAttachment, ChatMessage } from '../../platform/types.ts'
 import {
   detectMentionTrigger,
@@ -39,30 +25,8 @@ import {
   uploadFiles,
   validateFiles,
 } from './attachments.ts'
-import {
-  applyOrderedList,
-  applyUnorderedList,
-  continueListOnEnter,
-  insertCodeBlock,
-  insertLink,
-  shortcutIntent,
-  wrapSelection,
-  type EditState,
-} from './markdown-edit.ts'
 
-const MAX_HEIGHT = 180
-
-type ToolbarAction = 'bold' | 'italic' | 'ul' | 'ol' | 'code' | 'codeblock' | 'link'
-
-const TOOLBAR: ReadonlyArray<{ action: ToolbarAction; icon: IconName; label: string; title: string }> = [
-  { action: 'bold', icon: 'bold', label: '粗体', title: '粗体（Ctrl+B）' },
-  { action: 'italic', icon: 'italic', label: '斜体', title: '斜体（Ctrl+I）' },
-  { action: 'ul', icon: 'list', label: '无序列表', title: '无序列表' },
-  { action: 'ol', icon: 'ordered-list', label: '有序列表', title: '有序列表' },
-  { action: 'code', icon: 'code', label: '行内代码', title: '行内代码' },
-  { action: 'codeblock', icon: 'code', label: '代码块', title: '代码块' },
-  { action: 'link', icon: 'link', label: '链接', title: '链接（http/https）' },
-]
+const MAX_HEIGHT = 196
 
 interface ComposerProps {
   disabled: boolean
@@ -78,36 +42,23 @@ interface ComposerProps {
   onSend: (text: string, attachments?: ChatAttachment[]) => Promise<boolean>
 }
 
-function editByAction(state: EditState, action: ToolbarAction): EditState {
-  if (action === 'bold') return wrapSelection(state.text, state.start, state.end, '**', '粗体文本')
-  if (action === 'italic') return wrapSelection(state.text, state.start, state.end, '*', '斜体文本')
-  if (action === 'code') return wrapSelection(state.text, state.start, state.end, '`', '代码')
-  if (action === 'codeblock') return insertCodeBlock(state.text, state.start, state.end)
-  if (action === 'ul') return applyUnorderedList(state.text, state.start, state.end)
-  if (action === 'ol') return applyOrderedList(state.text, state.start, state.end)
-  return insertLink(state.text, state.start, state.end)
-}
-
 export default function Composer({ disabled, disabledReason, sessionId, replyTo, onCancelReply, onSlashCommand, onSend }: ComposerProps) {
   const [draft, setDraft] = useState('')
   const [attachments, setAttachments] = useState<ChatAttachment[]>([])
   const [uploading, setUploading] = useState(false)
+  const [sending, setSending] = useState(false)
   const [dragging, setDragging] = useState(false)
   const [mentionTrigger, setMentionTrigger] = useState<MentionTrigger | null>(null)
   const [mentionPool, setMentionPool] = useState<MentionItem[]>([])
   const [mentionIndex, setMentionIndex] = useState(0)
   const [mentionLoading, setMentionLoading] = useState(false)
-  const [model, setModel] = useState(() => loadModelPreference())
-  const [reasoning, setReasoning] = useState(() => loadReasoningPreference())
-  const [modelHint, setModelHint] = useState<string | null>(null)
   const mentionSourcesRef = useRef<string>('')
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const canSend = !disabled && !uploading && (draft.trim().length > 0 || attachments.length > 0)
+  const canSend = !disabled && !uploading && !sending && (draft.trim().length > 0 || attachments.length > 0)
   const mentionItems = mentionTrigger ? filterMentions(mentionPool, mentionTrigger.query) : []
   const slashHints = slashSuggestions(draft)
 
-  // 自适应高度：最多 180px，之后内部滚动
+  // 自适应高度：默认约 3 行，最多约 8 行后内部滚动
   useEffect(() => {
     const el = textareaRef.current
     if (!el) return
@@ -115,23 +66,23 @@ export default function Composer({ disabled, disabledReason, sessionId, replyTo,
     el.style.height = `${Math.min(el.scrollHeight, MAX_HEIGHT)}px`
   }, [draft])
 
+  // M44：空态建议按钮填入输入框（不自动发送）
+  useEffect(
+    () =>
+      bus.on(EVENTS.COMPOSER_INSERT, ({ text }: { text: string }) => {
+        setDraft((prev) => (prev.trim() ? `${prev.trimEnd()}\n${text}` : text))
+        requestAnimationFrame(() => {
+          const target = textareaRef.current
+          if (!target) return
+          target.focus()
+          target.setSelectionRange(target.value.length, target.value.length)
+        })
+      }),
+    [],
+  )
+
   const notifyError = (detail: string): void => {
     bus.emit(EVENTS.NOTIFY, { kind: 'error', title: '附件上传失败', detail })
-  }
-
-  const applyEdit = (action: ToolbarAction): void => {
-    const el = textareaRef.current
-    if (!el || disabled) return
-    const from = el.selectionStart ?? draft.length
-    const to = el.selectionEnd ?? draft.length
-    const next = editByAction({ text: draft, start: from, end: to }, action)
-    setDraft(next.text)
-    requestAnimationFrame(() => {
-      const target = textareaRef.current
-      if (!target) return
-      target.focus()
-      target.setSelectionRange(next.start, next.end)
-    })
   }
 
   const addFiles = async (files: File[]): Promise<void> => {
@@ -200,25 +151,6 @@ export default function Composer({ disabled, disabledReason, sessionId, replyTo,
     })
   }
 
-  // ---- UI-2：模型/推理选择（本地偏好 + 后端会话配置；未就绪明确提示）----
-  async function applyModel(nextModel: string, nextReasoning: string): Promise<void> {
-    const savedModel = saveModelPreference(nextModel)
-    const savedReasoning = saveReasoningPreference(nextReasoning)
-    setModel(savedModel)
-    setReasoning(savedReasoning)
-    const targetSession = sessionId ?? readSessionId()
-    if (!targetSession) {
-      setModelHint('已记录本地偏好（当前无会话）')
-      return
-    }
-    try {
-      await apiPost(`/api/sessions/${encodeURIComponent(targetSession)}/model`, { model: savedModel, reasoning: savedReasoning })
-      setModelHint('模型偏好已提交（本会话生效，以后端支持为准）')
-    } catch {
-      setModelHint('后端模型切换接口未就绪，已记录本地偏好；不会假装切换成功。')
-    }
-  }
-
   async function submit(): Promise<void> {
     if (!canSend) return
     const text = draft
@@ -236,7 +168,9 @@ export default function Composer({ disabled, disabledReason, sessionId, replyTo,
     setDraft('')
     setAttachments([])
     setMentionTrigger(null)
+    setSending(true)
     const sent = await onSend(text, pendingAttachments)
+    setSending(false)
     if (!sent) {
       // 发送失败时把内容还回去，避免丢话
       setDraft((current) => (current.length > 0 ? current : text))
@@ -273,28 +207,7 @@ export default function Composer({ disabled, disabledReason, sessionId, replyTo,
       onCancelReply()
       return
     }
-    const shortcut = shortcutIntent(event.key, event.ctrlKey || event.metaKey, event.shiftKey)
-    if (shortcut) {
-      event.preventDefault()
-      applyEdit(shortcut)
-      return
-    }
     if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return
-
-    // 列表行回车自动续行（不发送）；普通行回车发送
-    const el = event.currentTarget
-    const caret = el.selectionStart ?? draft.length
-    const continuation = continueListOnEnter(draft, caret)
-    if (continuation.handled) {
-      event.preventDefault()
-      setDraft(continuation.state.text)
-      requestAnimationFrame(() => {
-        const target = textareaRef.current
-        if (!target) return
-        target.setSelectionRange(continuation.state.start, continuation.state.end)
-      })
-      return
-    }
     event.preventDefault()
     void submit()
   }
@@ -315,7 +228,7 @@ export default function Composer({ disabled, disabledReason, sessionId, replyTo,
 
   return (
     <footer
-      className={`border-t bg-surface px-3 pt-2.5 pb-3.5 backdrop-blur-glass sm:px-5 ${
+      className={`border-t bg-surface pt-2.5 pb-3.5 backdrop-blur-glass ${
         dragging ? 'border-accent bg-accent-soft/40' : 'border-border-subtle'
       }`}
       onDragOver={(event) => {
@@ -326,6 +239,7 @@ export default function Composer({ disabled, disabledReason, sessionId, replyTo,
       onDrop={handleDrop}
       aria-label="消息输入区"
     >
+      <div className="mx-auto w-full max-w-[832px] pl-[52px] pr-3 sm:pr-5">
       {replyTo && (
         <div
           role="group"
@@ -356,7 +270,7 @@ export default function Composer({ disabled, disabledReason, sessionId, replyTo,
       )}
 
       {mentionTrigger && (
-        <div className="mb-1.5 rounded-md border border-accent-border bg-surface-solid p-1 shadow-sm" role="listbox" aria-label="@ 引用候选">
+        <div className="popover-surface mb-1.5 p-1" role="listbox" aria-label="@ 引用候选">
           {mentionLoading && <p className="m-0 px-2 py-1 text-2xs text-muted">加载候选…</p>}
           {!mentionLoading && mentionItems.length === 0 && (
             <p className="m-0 px-2 py-1 text-2xs text-muted">没有匹配的会话或文件（可直接输入 @名称）。</p>
@@ -386,105 +300,13 @@ export default function Composer({ disabled, disabledReason, sessionId, replyTo,
         </p>
       )}
 
-      <div className="mb-1.5 flex flex-wrap items-center gap-1" role="toolbar" aria-label="Markdown 格式工具栏">
-        {TOOLBAR.map((item) => (
-          <button
-            key={item.action}
-            type="button"
-            onClick={() => applyEdit(item.action)}
-            disabled={disabled}
-            aria-label={item.title}
-            title={item.title}
-            className="min-w-7 cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-1.5 py-0.5 font-mono text-2xs text-ink-secondary transition-colors duration-fast hover:border-accent-border hover:text-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {<Icon name={item.icon} size={16} />}
-            <span className="sr-only">{item.label}</span>
-          </button>
-        ))}
-        <span className="mx-1 h-4 w-px bg-border-subtle" aria-hidden="true" />
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={disabled || uploading}
-          aria-label="添加附件"
-          title="添加附件（≤20 MiB，单条消息最多 5 个；也支持拖拽/粘贴）"
-          className="cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-1.5 py-0.5 text-2xs text-ink-secondary transition-colors duration-fast hover:border-accent-border hover:text-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <Icon name="file" size={16} /> 附件
-        </button>
-        {uploading && (
-          <span role="status" aria-live="polite" className="text-2xs text-accent-hover">
-            上传中…
-          </span>
-        )}
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          className="sr-only"
-          aria-label="选择附件文件"
-          onChange={(event) => {
-            const files = [...(event.target.files ?? [])]
-            event.target.value = ''
-            void addFiles(files)
-          }}
-        />
-        <span className="ml-auto flex items-center gap-1" aria-label="模型与推理强度">
-          <select
-            aria-label="模型"
-            title="模型（本地偏好；后端接口未就绪时仅记录本地）"
-            value={model}
-            disabled={disabled}
-            onChange={(event) => void applyModel(event.target.value, reasoning)}
-            className="cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-1 py-0.5 font-mono text-2xs text-ink-secondary disabled:opacity-50"
-          >
-            {MODEL_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="推理强度"
-            title="推理强度（本会话偏好）"
-            value={reasoning}
-            disabled={disabled}
-            onChange={(event) => void applyModel(model, event.target.value)}
-            className="cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-1 py-0.5 font-mono text-2xs text-muted disabled:opacity-50"
-          >
-            {REASONING_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </span>
-      </div>
-
-      {modelHint && (
-        <p role="status" className="m-0 mb-1.5 rounded-md border border-warn-border bg-warn-soft px-2 py-0.5 text-2xs text-warn-ink">
-          {modelHint}
-        </p>
-      )}
-
       {attachments.length > 0 && (
         <ul className="mb-1.5 flex list-none flex-wrap gap-1.5 p-0" aria-label="待发送附件">
           {attachments.map((attachment) => (
-            <li
-              key={attachment.id}
-              className="flex items-center gap-1 rounded-md border border-border-subtle bg-surface-solid px-1.5 py-0.5"
-            >
-              <span className="max-w-[12rem] truncate text-2xs text-ink-secondary" title={attachment.name}>
-                {attachment.name}
-              </span>
-              {attachment.size !== null && <span className="font-mono text-2xs text-muted">{formatBytes(attachment.size)}</span>}
-              <button
-                type="button"
-                onClick={() => removeAttachment(attachment.id)}
-                aria-label={`移除附件 ${attachment.name}`}
-                title="移除附件"
-                className="cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-1 text-2xs text-muted transition-colors duration-fast hover:border-danger-border hover:text-danger-ink"
-              >
+            <li key={attachment.id} className="flex items-center gap-1 rounded-xs border border-border-subtle bg-surface-solid px-1.5 py-0.5">
+              <span className="max-w-[12rem] truncate text-xs text-ink-secondary" title={attachment.name}>{attachment.name}</span>
+              {attachment.size !== null && <span className="text-xs tabular-nums text-muted">{formatBytes(attachment.size)}</span>}
+              <button type="button" onClick={() => removeAttachment(attachment.id)} aria-label={`移除附件 ${attachment.name}`} title="移除附件" className="cursor-pointer rounded-xs border-0 bg-transparent px-1 text-xs text-muted hover:text-danger-ink">
                 ×
               </button>
             </li>
@@ -492,49 +314,42 @@ export default function Composer({ disabled, disabledReason, sessionId, replyTo,
         </ul>
       )}
 
-      <div className="flex items-end gap-2.5">
+      <div className="relative">
         <textarea
           ref={textareaRef}
           id="composer"
-          rows={1}
+          rows={3}
           value={draft}
           disabled={disabled}
-          placeholder={disabledReason ?? (disabled ? '正在连接…' : '说点什么…（Markdown；Enter 发送；@ 引用会话/文件；/ 查看命令）')}
+          placeholder={disabledReason ?? (disabled ? '正在连接…' : '给司墨发消息…')}
           title={disabledReason}
           aria-label="消息输入框（支持 Markdown）"
           aria-describedby="composer-hint"
           onChange={(event) => handleDraftChange(event.target.value, event.target.selectionStart ?? event.target.value.length)}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          className="min-h-11 max-h-[var(--composer-max-h)] flex-1 resize-none rounded-lg border border-border bg-surface-solid px-3 py-2.5 font-[inherit] leading-normal text-ink shadow-sm outline-none transition-shadow duration-fast placeholder:text-muted focus:border-accent focus:shadow-focus disabled:opacity-55"
+          className="min-h-[84px] max-h-[196px] w-full resize-none overflow-y-auto rounded-xs border border-border bg-surface-solid px-3 pb-11 pt-3 text-sm leading-relaxed text-ink outline-none transition-colors duration-fast placeholder:text-muted focus:border-accent disabled:opacity-55"
         />
-        <button
-          type="button"
-          onClick={() => void submit()}
-          disabled={!canSend}
-          title={draft.trim() || attachments.length > 0 ? '发送（Enter）' : '空消息不会发送'}
-          className="whitespace-nowrap rounded-xs border border-accent-border accent-gradient px-4 py-2.5 text-accent-ink transition-colors duration-fast enabled:hover:bg-accent-hover enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-45"
-        >
-          发送
-        </button>
+        <div className="absolute inset-x-0 bottom-0 flex min-w-0 items-center justify-between gap-2 px-2 pb-1.5">
+          <span className="pointer-events-none shrink-0 text-xs text-muted">支持 Markdown 格式</span>
+          <div className="flex min-w-0 items-center justify-end gap-2">
+            {uploading && <span role="status" aria-live="polite" className="text-xs text-muted">上传中…</span>}
+            <span id="composer-hint" className="hidden whitespace-nowrap text-xs text-muted sm:inline">
+              {disabledReason ? `只读：${disabledReason}` : 'Enter 发送 · Shift+Enter 换行'}
+            </span>
+            <button
+              type="button"
+              onClick={() => void submit()}
+              disabled={!canSend}
+              title={canSend ? '发送（Enter）' : '输入内容后可发送'}
+              className="inline-flex h-8 min-w-9 flex-none items-center justify-center gap-1.5 rounded-xs border border-accent bg-accent px-2.5 text-xs font-medium text-accent-ink transition-colors duration-fast hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {sending && <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />}
+              {sending ? '发送中…' : '发送'}
+            </button>
+          </div>
+        </div>
       </div>
-      <div id="composer-hint" className="mt-1.5 flex flex-wrap justify-between gap-x-3 font-mono text-2xs tracking-normal text-muted">
-        <span>
-          {disabledReason
-            ? `只读：${disabledReason}`
-            : 'Enter 发送 · Shift+Enter 换行 · Ctrl+B/I 粗斜体 · 列表行回车续行'}
-        </span>
-        <span>
-          {uploading
-            ? '附件上传中…'
-            : attachments.length > 0
-              ? `${attachments.length} 个附件 · 单条最多 ${MAX_ATTACHMENTS_PER_MESSAGE} 个`
-              : draft.trim().length > 0
-                ? `${draft.trim().length} 字 · 可连续发送`
-                : disabledReason
-                  ? '恢复会话后可继续对话'
-                  : 'Markdown 源 · 附件 ≤20 MiB'}
-        </span>
       </div>
     </footer>
   )

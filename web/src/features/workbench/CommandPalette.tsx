@@ -170,7 +170,7 @@ export default function CommandPalette({ open, onClose, onOpenPage, onNotice }: 
         }
       }}
     >
-      <div className="w-full max-w-xl overflow-hidden rounded-xl border border-border bg-surface shadow-lg">
+      <div className="popover-surface w-full max-w-xl overflow-hidden">
         <div className="flex items-center gap-2 border-b border-border-subtle px-3 py-2">
           <span className="font-mono text-2xs text-muted">⌘K</span>
           <input

@@ -58,8 +58,8 @@ export default function TopTabs() {
   }, [])
 
   return (
-    <nav aria-label="主导航" className="relative z-10 flex h-12 min-w-0 items-center bg-transparent px-0">
-      <Tabs ariaLabel="视图" active={active} onChange={(id) => activate(id as NavId)} items={TABS} size="sm" className="h-12" />
+    <nav aria-label="主导航" className="relative z-10 flex h-full min-w-0 items-center bg-transparent">
+      <Tabs ariaLabel="视图" active={active} onChange={(id) => activate(id as NavId)} items={TABS} size="sm" className="h-10" gapClass="gap-5" />
     </nav>
   )
 }

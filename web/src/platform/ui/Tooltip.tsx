@@ -18,7 +18,7 @@ export function Tooltip({ label, children, side = 'bottom' }: { label: string; c
       {open && (
         <span
           role="tooltip"
-          className={`pointer-events-none absolute left-1/2 z-50 max-w-60 -translate-x-1/2 whitespace-normal rounded-xs border border-border bg-ink px-2 py-1 text-xs leading-snug text-ink-inverse shadow-lg ${side === 'top' ? 'bottom-full mb-1.5' : 'top-full mt-1.5'}`}
+          className={`popover-surface pointer-events-none absolute left-1/2 max-w-60 -translate-x-1/2 whitespace-normal px-2 py-1 text-xs leading-snug text-ink ${side === 'top' ? 'bottom-full mb-1.5' : 'top-full mt-1.5'}`}
         >
           {label}
         </span>

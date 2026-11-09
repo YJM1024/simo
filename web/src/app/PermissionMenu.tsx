@@ -4,6 +4,7 @@
 // 切 danger-full-access 必须二次确认；变更即时反馈（未保存/失败走错误通知）。
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   APPROVAL_POLICIES,
   SANDBOX_MODES,
@@ -32,12 +33,33 @@ export default function PermissionMenu({ permission, loading, saving, error, nee
   const [confirming, setConfirming] = useState<PermissionState | null>(null)
   const [flash, setFlash] = useState<string | null>(null)
   const rootRef = useRef<HTMLDivElement | null>(null)
+  const panelRef = useRef<HTMLDivElement | null>(null)
   const buttonRef = useRef<HTMLButtonElement | null>(null)
+  const [panelPos, setPanelPos] = useState({ left: 16, top: 64, width: 360 })
 
   const close = useCallback(() => {
     setOpen(false)
     setConfirming(null)
   }, [])
+
+  useEffect(() => {
+    if (!open) return
+    const place = (): void => {
+      const rect = buttonRef.current?.getBoundingClientRect()
+      if (!rect) return
+      const width = Math.min(360, window.innerWidth - 32)
+      const left = Math.max(16, Math.min(rect.right - width, window.innerWidth - width - 16))
+      const top = Math.max(16, Math.min(rect.bottom + 8, window.innerHeight - 80))
+      setPanelPos({ left, top, width })
+    }
+    place()
+    window.addEventListener('resize', place)
+    window.addEventListener('scroll', place, true)
+    return () => {
+      window.removeEventListener('resize', place)
+      window.removeEventListener('scroll', place, true)
+    }
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -48,7 +70,9 @@ export default function PermissionMenu({ permission, loading, saving, error, nee
       }
     }
     const onPointerDown = (event: MouseEvent): void => {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) close()
+      const target = event.target as Node
+      if (rootRef.current?.contains(target) || panelRef.current?.contains(target)) return
+      close()
     }
     document.addEventListener('keydown', onKeyDown)
     document.addEventListener('mousedown', onPointerDown)
@@ -66,12 +90,12 @@ export default function PermissionMenu({ permission, loading, saving, error, nee
 
   const fromFull = permission?.sandbox === 'danger-full-access'
   const tone = !permission
-    ? 'border-border-subtle bg-surface-solid text-muted'
+    ? 'text-muted'
     : fromFull
-      ? 'border-danger-border bg-danger-soft text-danger-ink'
+      ? 'text-danger-ink'
       : permission.sandbox === 'read-only'
-        ? 'border-border-subtle bg-surface-sunken text-muted'
-        : 'border-accent-border bg-accent-soft text-accent-hover'
+        ? 'text-muted'
+        : 'text-ink-secondary'
 
   const apply = async (next: PermissionState, confirmedFullAccess = false): Promise<void> => {
     const ok = await save(next, { confirmedFullAccess })
@@ -110,19 +134,22 @@ export default function PermissionMenu({ permission, loading, saving, error, nee
         aria-expanded={open}
         aria-label={`权限模式：${permission ? permissionSummary(permission) : '加载中'}（点击切换）`}
         title="权限：沙盒模式 + 审批策略（M9）"
-        className={`inline-flex max-w-[18rem] cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-xs border px-2 py-0.5 text-sm transition-colors duration-fast ${tone}`}
+        className={`inline-flex max-w-[18rem] cursor-pointer items-center gap-1.5 whitespace-nowrap text-[13px] transition-colors duration-fast ${tone}`}
       >
         <span className="h-1.5 w-1.5 flex-none rounded-xs bg-current opacity-70" aria-hidden="true" />
         <span className="max-[1180px]:hidden">权限 · </span>
         <span className="truncate">{permission ? permissionSummary(permission) : loading ? '加载中…' : '未知'}</span>
       </button>
 
-      {open && (
-        <div
-          role="dialog"
-          aria-label="权限模式切换"
-          className="absolute right-0 top-full z-40 mt-2 w-[22rem] max-w-[calc(100vw-2rem)] rounded-lg border border-border bg-surface-solid p-3 text-left shadow-lg"
-        >
+      {open &&
+        createPortal(
+          <div
+            ref={panelRef}
+            role="dialog"
+            aria-label="权限模式切换"
+            className="popover-surface fixed p-3 text-left"
+            style={{ left: panelPos.left, top: panelPos.top, width: panelPos.width, maxHeight: 'calc(100vh - 80px)', overflowY: 'auto', zIndex: 70 }}
+          >
           <div className="mb-2 flex items-center justify-between gap-2">
             <h3 className="m-0 text-sm font-semibold text-ink">权限模式</h3>
             <span className="font-mono text-2xs text-muted">切换立即生效</span>
@@ -140,22 +167,20 @@ export default function PermissionMenu({ permission, loading, saving, error, nee
                     onClick={() => chooseSandbox(mode)}
                     disabled={saving}
                     aria-pressed={active}
-                    className={`cursor-pointer rounded-md border p-1.5 text-left transition-colors duration-fast disabled:cursor-not-allowed disabled:opacity-60 ${
+                    className={`flex w-full min-w-0 cursor-pointer flex-col rounded-md border p-1.5 text-left transition-colors duration-fast disabled:cursor-not-allowed disabled:opacity-60 ${
                       active
-                        ? mode === 'danger-full-access'
-                          ? 'border-danger-border bg-danger-soft'
-                          : 'border-accent-border bg-accent-soft'
-                        : 'border-border-subtle bg-surface hover:border-accent-border'
+                        ? 'border-border-subtle bg-avatar-bg'
+                        : 'border-border-subtle bg-surface-solid hover:border-accent-border'
                     }`}
                   >
-                    <span className="flex items-center gap-1.5 text-sm font-medium text-ink">
-                      {sandboxLabel(mode)}
+                    <span className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-ink">
+                      <span className="min-w-0 break-words">{sandboxLabel(mode)}</span>
                       {mode === 'danger-full-access' && (
-                        <span className="rounded-pill border border-danger-border bg-danger-soft px-1 font-mono text-2xs text-danger-ink">危险</span>
+                        <span className="flex-none rounded-pill border border-danger-border bg-surface-solid px-1 font-mono text-2xs text-danger-ink">危险</span>
                       )}
-                      {active && <span className="ml-auto font-mono text-2xs text-accent-hover">当前</span>}
+                      {active && <span className="ml-auto flex-none text-xs text-muted">当前</span>}
                     </span>
-                    <span className="mt-0.5 block text-2xs leading-relaxed text-muted">{sandboxDescription(mode)}</span>
+                    <span className="mt-0.5 block whitespace-normal text-2xs leading-relaxed text-muted [overflow-wrap:anywhere]">{sandboxDescription(mode)}</span>
                   </button>
                 )
               })}
@@ -174,15 +199,15 @@ export default function PermissionMenu({ permission, loading, saving, error, nee
                     onClick={() => choosePolicy(policy)}
                     disabled={saving}
                     aria-pressed={active}
-                    className={`cursor-pointer rounded-md border p-1.5 text-left transition-colors duration-fast disabled:cursor-not-allowed disabled:opacity-60 ${
-                      active ? 'border-accent-border bg-accent-soft' : 'border-border-subtle bg-surface hover:border-accent-border'
+                    className={`flex w-full min-w-0 cursor-pointer flex-col rounded-md border p-1.5 text-left transition-colors duration-fast disabled:cursor-not-allowed disabled:opacity-60 ${
+                      active ? 'border-border-subtle bg-avatar-bg' : 'border-border-subtle bg-surface-solid hover:border-accent-border'
                     }`}
                   >
-                    <span className="flex items-center gap-1.5 text-sm font-medium text-ink">
-                      {approvalLabel(policy)}
-                      {active && <span className="ml-auto font-mono text-2xs text-accent-hover">当前</span>}
+                    <span className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-ink">
+                      <span className="min-w-0 break-words">{approvalLabel(policy)}</span>
+                      {active && <span className="ml-auto flex-none text-xs text-muted">当前</span>}
                     </span>
-                    <span className="mt-0.5 block text-2xs leading-relaxed text-muted">{approvalDescription(policy)}</span>
+                    <span className="mt-0.5 block whitespace-normal text-2xs leading-relaxed text-muted [overflow-wrap:anywhere]">{approvalDescription(policy)}</span>
                   </button>
                 )
               })}
@@ -190,7 +215,7 @@ export default function PermissionMenu({ permission, loading, saving, error, nee
           </section>
 
           {confirming && (
-            <div role="alertdialog" aria-label="确认切换到完全访问" className="mt-2 rounded-md border border-danger-border bg-danger-soft p-2.5">
+            <div role="alertdialog" aria-label="确认切换到完全访问" className="mt-2 rounded-md border border-danger-border bg-surface-solid p-2.5">
               <p className="m-0 text-sm font-medium text-danger-ink">确认切换到「完全访问」？</p>
               <p className="m-0 mt-1 text-2xs leading-relaxed text-ink-secondary">
                 任意路径读写、任意命令、允许网络；仅在信任当前任务时使用。切回「工作区可写」可随时恢复。
@@ -216,15 +241,16 @@ export default function PermissionMenu({ permission, loading, saving, error, nee
             </div>
           )}
 
-          <div className="mt-2 flex items-center justify-end gap-2 border-t border-border-subtle pt-1.5 text-sm text-muted">
-            <span className="mr-auto">{saving ? '切换中…' : flash ?? '只读自动通过 · 写/执行/网络按策略'}</span>
-            <button type="button" onClick={close} className="cursor-pointer whitespace-nowrap rounded-xs border border-border-subtle bg-surface-solid px-2 py-0.5 text-sm text-muted">
+          <div className="mt-2 flex min-w-0 items-start justify-end gap-2 border-t border-border-subtle pt-1.5 text-sm text-muted">
+            <span className="min-w-0 flex-1 whitespace-normal break-words">{saving ? '切换中…' : flash ?? '只读自动通过 · 写/执行/网络按策略'}</span>
+            <button type="button" onClick={close} className="flex-none cursor-pointer whitespace-nowrap rounded-xs border border-border-subtle bg-surface-solid px-2 py-0.5 text-sm text-muted">
               关闭
             </button>
           </div>
           {error && oneLine(error)}
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </div>
   )
 }

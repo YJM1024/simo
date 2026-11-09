@@ -265,9 +265,10 @@ check('概览只读：缓存加载 + 更新概览按钮 + 无表格/编辑控件
   assert.match(overviewView, /overviewSections/)
 })
 
-check('历史导航：时间轴折叠 + 点击跳转高亮 + data-message-id', () => {
+check('历史导航：时间轴居中 + 点击跳转高亮 + data-message-id', () => {
   assert.match(historyRail, /aria-label="消息时间轴"/)
-  assert.match(historyRail, /折叠消息时间轴|展开消息时间轴/)
+  assert.equal(/折叠消息时间轴|展开消息时间轴/.test(historyRail), false)
+  assert.match(historyRail, /my-auto/)
   assert.match(historyRail, /onJump/)
   assert.match(messageList, /data-message-id/)
   assert.match(messageList, /highlightId/)

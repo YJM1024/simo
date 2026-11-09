@@ -51,10 +51,12 @@ const chatCenter = read('features/chat/ChatCenter.tsx')
 const tabsUi = read('platform/ui/Tabs.tsx')
 const packageJson = JSON.parse(readRoot('package.json'))
 
-check('M42 顶部工具区集成 TopTabs，对话默认', () => {
-  assert.match(topBar, /import TopTabs from '\.\/TopTabs\.tsx'/)
-  assert.match(topBar, /<TopTabs \/>/)
-  assert.equal(/<TopTabs \/>/.test(app), false)
+check('M45 顶部两行：header 内不含 Tabs，导航条独立成行', () => {
+  assert.equal(/import TopTabs from '\.\/TopTabs\.tsx'/.test(topBar), false)
+  assert.equal(/<TopTabs \/>/.test(topBar), false)
+  assert.match(app, /import TopTabs from '\.\/TopTabs\.tsx'/)
+  assert.match(app, /<TopTabs \/>/)
+  assert.match(app, /h-10 flex-none items-center border-b border-border-subtle bg-surface px-4/)
   assert.match(topTabs, /useState<NavId>\('chat'\)/)
   assert.match(topTabs, /对话/)
   assert.match(topTabs, /工作台/)

@@ -30,16 +30,17 @@ export {
 export interface ShortcutRow {
   keys: string
   label: string
+  scope: string
 }
 
 export const SHORTCUTS: readonly ShortcutRow[] = [
-  { keys: 'Ctrl / ⌘ + K', label: '打开命令面板' },
-  { keys: 'Enter', label: '发送消息' },
-  { keys: 'Shift + Enter', label: '在输入框换行' },
-  { keys: 'Esc', label: '关闭面板 / 取消引用 / 关闭 @ 候选' },
-  { keys: '/archive · /rename · /pause · /model', label: '斜杠命令（输入框）' },
-  { keys: '@', label: '在输入框引用会话或文件' },
-  { keys: 'Tab', label: '在控件间移动焦点' },
+  { keys: 'Ctrl K', label: '打开命令面板', scope: '全局' },
+  { keys: 'Enter', label: '发送消息', scope: '对话' },
+  { keys: 'Shift Enter', label: '换行', scope: '输入框' },
+  { keys: 'Esc', label: '关闭浮层 / 取消引用', scope: '全局' },
+  { keys: '/', label: '斜杠命令', scope: '输入框' },
+  { keys: '@', label: '引用会话或文件', scope: '输入框' },
+  { keys: 'Tab', label: '移动焦点', scope: '全局' },
 ]
 
 export const SETTINGS_SECTIONS = [

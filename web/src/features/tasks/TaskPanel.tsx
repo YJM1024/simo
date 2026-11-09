@@ -27,19 +27,15 @@ import {
 import {
   approvalDecisionLabel,
   applyUpdated,
-  currentProgressLabel,
   countRunning,
   descendantSessionIds,
-  formatTime,
   groupArtifactsBySession,
-  isForeignArtifact,
   normalizeApproval,
   normalizeApprovalList,
   normalizeArtifactList,
   normalizeTaskDetail,
   normalizeTaskList,
   pendingApprovals,
-  progressPercent,
   tagArtifacts,
   taskStatusMeta,
   upsertCreated,
@@ -50,16 +46,12 @@ import {
 } from './model.ts'
 import {
   TASK_STATUS_GROUPS,
-  formatDurationMs,
   groupTasksByStatus,
   groupTasksByWorkflow,
   normalizeWorkflowList,
   taskStatusGroupLabel,
   workflowActions,
   workflowCounts,
-  workflowProgressPercent,
-  workflowStatusLabel,
-  workflowStatusTone,
   type TaskStatusGroup,
   type WorkflowRecord,
 } from './workflows.ts'
@@ -86,66 +78,21 @@ function errorText(error: unknown, fallback: string): string {
 
 function TaskListItem({ task, pendingCount, onOpen }: { task: TaskRecord; pendingCount: number; onOpen: (task: TaskRecord) => void }) {
   const meta = taskStatusMeta(task.status)
-  const percent = progressPercent(task)
-  const running = task.status === 'running' || task.status === 'queued'
-  const current = currentProgressLabel(task)
-  const donePhases = task.phases.filter((phase) => phase.status === 'done').length
-
+  const checked = task.status === 'done'
   return (
     <li>
       <button
         type="button"
         onClick={() => onOpen(task)}
-        className="w-full cursor-pointer rounded-md border border-border-subtle bg-surface-solid p-2.5 text-left shadow-sm transition-colors duration-fast hover:border-accent-border"
+        className="flex min-h-10 w-full min-w-0 cursor-pointer items-center gap-2 border-b border-border-subtle px-2 text-left transition-colors duration-fast hover:bg-surface-sunken"
         title="打开任务详情（阶段 / 产物 / 审批）"
       >
-        <div className="flex items-start justify-between gap-2">
-          <span className="min-w-0 flex-1 break-words text-md leading-snug text-ink">{task.title}</span>
-          <span className={`inline-flex flex-none items-center gap-1 rounded-pill border px-1.5 font-mono text-2xs tracking-normal ${meta.classes}`}>
-            {running && <span className="h-1 w-1 animate-thinking-bounce rounded-xs bg-current opacity-70" aria-hidden="true" />}
-            {meta.label}
-          </span>
-        </div>
-
-        {(pendingCount > 0 || task.neutralized) && (
-          <div className="mt-1 flex flex-wrap items-center gap-1">
-            {pendingCount > 0 && (
-              <span className="rounded-pill border border-warn-border bg-warn-soft px-1.5 text-2xs text-warn-ink">
-                待批准 {pendingCount}
-              </span>
-            )}
-            {task.neutralized && (
-              <span className="rounded-pill border border-warn-border bg-warn-soft px-1.5 text-2xs text-warn-ink">已中和</span>
-            )}
-          </div>
-        )}
-
-        {percent !== null && (
-          <div className="mt-1.5 flex items-center gap-1.5">
-            <span className="h-1 flex-1 overflow-hidden rounded-pill bg-surface-sunken" aria-hidden="true">
-              <span className="block h-full rounded-pill bg-accent" style={{ width: `${percent}%` }} />
-            </span>
-            <span className="font-mono text-2xs text-muted">{percent}%</span>
-          </div>
-        )}
-
-        {current && <p className="m-0 mt-1 truncate text-2xs text-ink-secondary">{current}</p>}
-
-        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-2xs text-muted">
-          {task.workflowId && <span>工作流 {task.workflowTitle ?? task.workflowId.slice(0, 12)}</span>}
-          {task.phases.length > 0 && <span>阶段 {donePhases}/{task.phases.length}</span>}
-          {task.artifacts.length > 0 && <span>产物 {task.artifacts.length}</span>}
-          {task.durationMs !== null && <span>耗时 {formatDurationMs(task.durationMs)}</span>}
-          {task.reportMessageId && <span className="text-accent-hover">已汇报</span>}
-          {formatTime(task.updatedAt ?? task.createdAt) && <span>{formatTime(task.updatedAt ?? task.createdAt)}</span>}
-        </div>
-
-        {(task.status === 'done' || task.status === 'failed') && task.summary && (
-          <p className="m-0 mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink-secondary">
-            <span className="text-muted">摘要：</span>
-            {task.summary}
-          </p>
-        )}
+        <span className={`grid h-4 w-4 flex-none place-items-center rounded-xs border ${checked ? 'border-ok-border bg-ok-soft text-ok-ink' : task.status === 'failed' ? 'border-danger-border bg-danger-soft text-danger-ink' : 'border-border-subtle bg-surface-solid text-muted'}`} aria-hidden="true">
+          {checked ? <Icon name="check" size={16} /> : task.status === 'running' || task.status === 'queued' ? <span className="h-1.5 w-1.5 rounded-xs bg-current" /> : null}
+        </span>
+        <span className={`min-w-0 flex-1 truncate text-sm ${checked ? 'text-muted line-through' : 'text-ink'}`} title={task.title}>{task.title}</span>
+        {pendingCount > 0 && <span className="h-1.5 w-1.5 flex-none rounded-xs bg-warn" title={`${pendingCount} 项待批准`} aria-label={`${pendingCount} 项待批准`} />}
+        <span className={`flex-none rounded-xs border px-1.5 py-0.5 text-[11px] ${meta.classes}`}>{meta.label}</span>
       </button>
     </li>
   )
@@ -164,14 +111,6 @@ function TaskListSkeleton() {
   )
 }
 
-const WORKFLOW_TONE: Record<'accent' | 'warn' | 'ok' | 'danger' | 'muted', string> = {
-  accent: 'border-accent-border bg-accent-soft text-accent-hover',
-  warn: 'border-warn-border bg-warn-soft text-warn-ink',
-  ok: 'border-ok-border bg-ok-soft text-ok-ink',
-  danger: 'border-danger-border bg-danger-soft text-danger-ink',
-  muted: 'border-border-subtle bg-surface-sunken text-muted',
-}
-
 function WorkflowGroupHeader({
   workflow,
   busy,
@@ -182,25 +121,16 @@ function WorkflowGroupHeader({
   onAction: (workflow: WorkflowRecord, action: WorkflowAction) => void
 }) {
   if (!workflow) {
-    return <p className="m-0 mb-1.5 font-mono text-2xs tracking-normal text-muted">未分组任务</p>
+    return <p className="m-0 px-1 py-2 text-xs text-muted">未分组任务</p>
   }
   const counts = workflowCounts(workflow)
   const actions = workflowActions(workflow)
   return (
-    <div className="mb-1.5 rounded-md border border-border-subtle bg-surface px-2 py-1.5">
-      <div className="flex flex-wrap items-center gap-1.5">
-        <span className="min-w-0 max-w-[12rem] truncate text-sm font-medium text-ink" title={workflow.title}>
-          {workflow.title}
-        </span>
-        <span className={`rounded-pill border px-1.5 font-mono text-2xs ${WORKFLOW_TONE[workflowStatusTone(workflow.status)]}`}>
-          {workflowStatusLabel(workflow.status)}
-        </span>
-        <span className="font-mono text-2xs text-muted">
-          {counts.done}/{workflow.tasks.length}
-        </span>
-        <span className="font-mono text-2xs text-muted">{workflowProgressPercent(workflow)}%</span>
-        <span className="ml-auto flex items-center gap-1">
-          {actions.map((action) => (
+    <div className="mb-1 flex min-w-0 items-center gap-2 px-1 py-2">
+      <span className="min-w-0 flex-1 truncate text-xs text-muted" title={workflow.title}>{workflow.title}</span>
+      <span className="flex-none text-[11px] tabular-nums text-muted">{counts.done}/{workflow.tasks.length}</span>
+      <span className="flex flex-none items-center gap-1">
+        {actions.map((action) => (
             <button
               key={action}
               type="button"
@@ -215,10 +145,6 @@ function WorkflowGroupHeader({
           ))}
         </span>
       </div>
-      <span className="mt-1 block h-1 overflow-hidden rounded-pill bg-surface-sunken" aria-hidden="true">
-        <span className="block h-full rounded-pill bg-accent" style={{ width: `${workflowProgressPercent(workflow)}%` }} />
-      </span>
-    </div>
   )
 }
 
@@ -715,6 +641,9 @@ export default function TaskPanel() {
     () => (sessionId ? artifactGroups.filter((group) => !group.sessionId || group.sessionId === sessionId) : artifactGroups),
     [artifactGroups, sessionId],
   )
+  const [showAllArtifacts, setShowAllArtifacts] = useState(false)
+  const flatArtifacts = useMemo(() => currentArtifactGroups.flatMap((group) => group.artifacts), [currentArtifactGroups])
+  const visibleArtifacts = showAllArtifacts ? flatArtifacts : flatArtifacts.slice(0, 3)
   const activeDetail = detailId ? detail ?? tasks.find((task) => task.id === detailId) ?? null : null
   const activeDetailWorkflow = activeDetail?.workflowId
     ? workflows.find((workflow) => workflow.id === activeDetail.workflowId) ?? null
@@ -774,7 +703,7 @@ export default function TaskPanel() {
         })}
       </div>
 
-      <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-2 pt-2 pb-3.5">
+      <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 pt-3 pb-3.5">
         <PlanSummary sessionId={sessionId} tasks={tasks as unknown as TaskInfo[]} />
         {listLoading && tasks.length === 0 && <TaskListSkeleton />}
 
@@ -810,21 +739,15 @@ export default function TaskPanel() {
             </div>
             <p className="m-0 mt-2 mb-0.5 text-md font-medium text-ink">暂无任务</p>
             <p className="m-0 text-sm leading-relaxed text-ink-secondary">
-              司墨拆解需求后会在这里按工作流与状态展示；每个任务完成都会在会话里发一条汇报。
+              司墨拆解需求后会在这里按工作流与状态展示；任务完成后会在会话里发一条汇报。
             </p>
-            <div className="mt-3.5 flex items-center justify-center gap-2 text-2xs text-muted">
-              <span className="rounded-xs border border-warn-border bg-warn-soft px-1.5 font-mono text-2xs text-warn-ink">M10</span>
-              <span>工作流 · 状态分组 · 逐任务汇报</span>
-            </div>
           </div>
         )}
 
         {!listLoading && tasks.length > 0 && selectedTasks.length === 0 && (
-          <div className="mx-1 mt-4 rounded-lg border border-dashed border-border bg-scrim p-3 text-center">
-            <p className="m-0 text-sm text-ink-secondary">
-              {taskStatusGroupLabel(statusGroup)}分组暂无任务
-            </p>
-          </div>
+          <p className="m-0 px-1 py-2 text-xs text-muted">
+            {taskStatusGroupLabel(statusGroup)}分组暂无任务
+          </p>
         )}
 
         {workflowGroups.map((group) => (
@@ -838,7 +761,7 @@ export default function TaskPanel() {
               busy={workflowBusyId === group.workflow?.id}
               onAction={(workflow, action) => void handleWorkflowAction(workflow, action)}
             />
-            <ul className="m-0 flex list-none flex-col gap-2 p-0" aria-label="任务列表">
+            <ul className="m-0 flex list-none flex-col p-0" aria-label="任务列表">
               {group.tasks.map((task) => (
                 <TaskListItem
                   key={task.id}
@@ -852,44 +775,36 @@ export default function TaskPanel() {
         ))}
 
         {artifactsAvailable && (
-          <section aria-label="当前会话交付物" className="mt-3 min-w-0 rounded-md border border-border-subtle bg-surface-solid p-2">
-            <div className="mb-1.5 flex min-w-0 items-center justify-between gap-2">
-              <h3 className="m-0 min-w-0 truncate text-2xs font-medium tracking-normal text-muted">交付物（当前会话）</h3>
+          <section aria-label="当前会话交付物" className="mt-3 min-w-0">
+            <div className="mb-1 flex min-w-0 items-center justify-between gap-2">
+              <h3 className="m-0 min-w-0 truncate text-xs font-medium text-muted">交付物（当前会话）</h3>
               <div className="flex flex-none items-center gap-1.5">
-                <span className="font-mono text-2xs text-muted">{sessionArtifacts.length}</span>
+                <span className="text-[11px] tabular-nums text-muted">{flatArtifacts.length}</span>
                 <IconButton icon="refresh" label="刷新交付物列表" size="sm" tone="ghost" disabled={artifactsLoading} onClick={() => void reloadArtifacts()} />
               </div>
             </div>
-            {artifactsLoading && sessionArtifacts.length === 0 ? (
-              <p className="m-0 text-sm text-muted">加载产物…</p>
-            ) : currentArtifactGroups.length === 0 ? (
-              <p className="m-0 break-words text-2xs text-muted">暂无交付物；任务完成后产物会出现在这里（只读，不复制文件）。</p>
+            {artifactsLoading && flatArtifacts.length === 0 ? (
+              <p className="m-0 text-xs text-muted">加载产物…</p>
+            ) : flatArtifacts.length === 0 ? (
+              <p className="m-0 text-xs text-muted">暂无交付物；任务完成后产物会出现在这里。</p>
             ) : (
-              currentArtifactGroups.map((group) => {
-                const foreign = group.artifacts.some((artifact) => isForeignArtifact(artifact, sessionId))
-                return (
-                  <div key={group.sessionId ?? 'current'} className="mt-1.5 min-w-0 first:mt-1">
-                    <p className="m-0 mb-1 flex min-w-0 items-center gap-1.5 font-mono text-2xs text-muted">
-                      <span className="min-w-0 truncate">{group.sessionTitle}</span>
-                      {foreign && (
-                        <span className="flex-none rounded-pill border border-warn-border bg-warn-soft px-1 text-warn-ink">子会话</span>
-                      )}
-                    </p>
-                    <ul className="m-0 flex min-w-0 list-none flex-col gap-1.5 p-0">
-                      {group.artifacts.map((artifact) => (
-                        <ArtifactPreview key={artifact.id} artifact={artifact} />
-                      ))}
-                    </ul>
-                  </div>
-                )
-              })
+              <>
+                <ul className="m-0 min-w-0 list-none p-0">
+                  {visibleArtifacts.map((artifact) => <ArtifactPreview key={artifact.id} artifact={artifact} compact />)}
+                </ul>
+                {flatArtifacts.length > 3 && (
+                  <button type="button" onClick={() => setShowAllArtifacts((value) => !value)} className="mt-1 cursor-pointer border-0 bg-transparent p-0 text-xs text-muted hover:text-ink">
+                    {showAllArtifacts ? '收起' : `查看全部 (${flatArtifacts.length})`}
+                  </button>
+                )}
+              </>
             )}
           </section>
         )}
       </div>
 
-      <div className="min-w-0 border-t border-border-subtle px-3.5 py-2 text-2xs text-muted">
-        任务按状态/工作流分组 · 汇报卡片可点开
+      <div className="min-w-0 border-t border-border-subtle px-3.5 py-2 text-[11px] text-muted">
+        任务与计划只读；点击任务查看详情。
       </div>
 
       {detailId && (

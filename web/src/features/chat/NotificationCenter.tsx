@@ -101,20 +101,18 @@ export default function NotificationCenter() {
         aria-label={`通知中心（${unread} 条未读）`}
         aria-expanded={open}
         title="通知中心：任务完成 / 审批 / 错误"
-        className="relative flex-none cursor-pointer rounded-pill border border-border-subtle bg-surface-solid px-2 py-0.5 font-mono text-2xs text-muted transition-colors duration-fast hover:border-accent-border hover:text-accent-hover"
+        className="relative flex-none cursor-pointer whitespace-nowrap rounded-xs border border-border-subtle bg-surface-solid px-2 py-1 text-xs text-muted transition-colors duration-fast hover:border-accent-border hover:text-ink"
       >
         通知
-        {unread > 0 && (
-          <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-xs bg-danger px-0.5 text-xs leading-none text-danger-ink" aria-hidden="true">
-            {unread > 99 ? '99+' : unread}
-          </span>
+        {unread > 0 && items.length > 0 && (
+          <span className="absolute -right-1 -top-1 h-2 w-2 rounded-xs bg-danger" aria-hidden="true" />
         )}
       </button>
 
       {open &&
         createPortal(
           <div className="fixed inset-0 z-50 flex items-start justify-end bg-scrim-strong/60 p-2 pt-14 backdrop-blur-sm sm:p-4 sm:pt-16" role="dialog" aria-modal="true" aria-label="通知中心" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false) }} onKeyDown={(event) => { if (event.key === 'Escape') { event.preventDefault(); setOpen(false) } }}>
-            <div ref={panelRef} className="flex max-h-[80vh] w-full max-w-md flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-lg">
+            <div ref={panelRef} className="popover-surface flex max-h-[80vh] w-full max-w-md flex-col overflow-hidden">
               <header className="flex flex-none items-center justify-between gap-2 border-b border-border-subtle px-3 py-2">
                 <div>
                   <h2 className="m-0 text-md font-semibold">通知中心</h2>

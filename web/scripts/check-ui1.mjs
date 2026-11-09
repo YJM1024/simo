@@ -159,20 +159,11 @@ check('@ 触发、过滤、插入与光标位置', () => {
   assert.equal(inserted.caret, inserted.text.length)
 })
 
-check('候选归一化 + 重试取上一条用户消息', () => {
+check('@ 候选归一化', () => {
   const sessionsItems = mod.normalizeMentionSessions({ sessions: [{ id: 'main', title: '主会话' }] })
   assert.equal(sessionsItems[0].kind, 'session')
   const fileItems = mod.normalizeMentionFiles({ files: [{ id: 'f1', name: 'a.md', kind: 'artifact' }] })
   assert.equal(fileItems[0].subtitle, '任务产物')
-  const messages = [
-    { id: 'u1', role: 'user', text: '原始需求' },
-    { id: 'a1', role: 'agent', text: '回复' },
-    { id: 'u2', role: 'user', text: '补充' },
-    { id: 'a2', role: 'agent', text: '再回复' },
-  ]
-  assert.equal(mod.retryPrompt(messages, 3), '补充')
-  assert.equal(mod.retryPrompt(messages, 0), '原始需求')
-  assert.equal(mod.retryPrompt([{ id: 'a', role: 'agent', text: 'x' }], 0), null)
 })
 
 check('交付物归一化：字段/去重/预览类型/大小', () => {
@@ -241,16 +232,15 @@ check('用量页：树状行 + 每行 sparkline + 指标/粒度/范围/折叠', 
   assert.match(usagePage, /<svg/)
 })
 
-check('输入框 @ 引用 + 斜杠命令提示；消息操作齐全', () => {
+check('输入框 @ 引用 + 斜杠命令提示；消息操作（M50 无编辑/重发）', () => {
   assert.match(composer, /detectMentionTrigger/)
   assert.match(composer, /insertMention/)
   assert.match(composer, /slashSuggestions/)
   assert.match(composer, /onSlashCommand/)
   assert.match(messageList, /复制消息/)
   assert.match(messageList, /引用/)
-  assert.match(messageList, /重试/)
-  assert.match(messageList, /编辑重发/)
   assert.match(messageList, /跳到原文/)
+  assert.equal(/编辑重发|onEditResend|onRetryMessage|retryPrompt/.test(messageList), false)
   assert.equal(/DeliverablesBar/.test(chatCenter), false)
   assert.match(taskPanel, /交付物（当前会话）/)
   assert.match(chatCenter, /parseSlash/)
@@ -260,7 +250,8 @@ check('会话树：搜索/置顶/未读/执行中；注册与门禁链', () => {
   assert.match(sessionPanel, /搜索会话/)
   assert.match(sessionPanel, /togglePinnedSession/)
   assert.match(sessionPanel, /未读/)
-  assert.match(sessionPanel, /执行中/)
+  assert.match(sessionPanel, /进行中/)
+  assert.match(sessionPanel, /runningTasks/)
   assert.match(registry, /workbenchFeature/)
   assert.match(packageJson.scripts['check'] ?? '', /check-ui1\.mjs/)
   assert.ok(existsSync(resolve(root, 'public/icon.svg')))

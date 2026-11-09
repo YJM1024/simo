@@ -25,6 +25,8 @@ type Message struct {
 	ReplyToID    string            `json:"replyToId,omitempty"`
 	ReplyTo      *ReplySnapshot    `json:"replyTo,omitempty"`
 	AgentID      string            `json:"agentId,omitempty"`
+	RoutedFrom   string            `json:"routedFrom,omitempty"`
+	RoutedTo     string            `json:"routedTo,omitempty"`
 	Cards        []Card            `json:"cards,omitempty"`
 }
 

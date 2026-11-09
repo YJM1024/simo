@@ -70,17 +70,17 @@ function MemoryItemCard({ item, onEntity }: { item: BrowserMemoryItem; onEntity:
   return (
     <li className="rounded-md border border-border-subtle bg-surface-solid p-2">
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="rounded-pill border border-accent-border bg-accent-soft px-1.5 font-mono text-2xs text-accent-hover">
+        <span className="rounded-xs border border-border-subtle bg-surface-sunken px-1.5 text-xs text-muted">
           {memoryTypeLabel(item.type)}
         </span>
-        {item.subType && <span className="font-mono text-2xs text-muted">{item.subType}</span>}
-        <span className="rounded-pill border border-border-subtle bg-surface-sunken px-1.5 font-mono text-2xs text-muted">
+        {item.subType && <span className="font-mono text-xs text-muted">{item.subType}</span>}
+        <span className="rounded-xs border border-border-subtle bg-surface-sunken px-1.5 text-xs text-muted">
           {statusLabel(item.status)}
         </span>
-        <span className="font-mono text-2xs text-muted">
+        <span className="font-mono text-xs text-muted">
           层 {item.layer} · {sourceLabel(item.source)} · {authorityLabel(item.authority)} · 置信 {formatConfidence(item.confidence)}
         </span>
-        {item.validUntil !== null && <span className="font-mono text-2xs text-warn-ink">已失效</span>}
+        {item.validUntil !== null && <span className="font-mono text-xs text-muted">已失效</span>}
       </div>
       <p className="m-0 mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink">{item.text}</p>
       {item.refs.length > 0 && (
@@ -100,7 +100,7 @@ function MemoryItemCard({ item, onEntity }: { item: BrowserMemoryItem; onEntity:
               key={ref.id}
               type="button"
               onClick={() => onEntity(ref.id, ref.name)}
-              className="cursor-pointer rounded-xs border border-border-subtle bg-surface-sunken px-1.5 py-0.5 font-mono text-2xs text-accent-hover"
+              className="cursor-pointer rounded-xs border border-border-subtle bg-surface-sunken px-1.5 py-0.5 font-mono text-xs text-muted hover:text-ink"
               title={`打开实体：${ref.name}`}
             >
               {ref.name}
@@ -636,7 +636,7 @@ export default function MemoryBrowserPage({ onClose, embedded = false }: { onClo
         if (!embedded && event.target === event.currentTarget) onClose()
       }}
     >
-      <div ref={panelRef} className={embedded ? 'flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-surface' : 'flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-md border border-border bg-surface-solid shadow-lg'}>
+      <div ref={panelRef} className={embedded ? 'flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-surface' : 'popover-surface flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden'}>
         <header className="flex flex-none flex-wrap items-start justify-between gap-2 border-b border-border-subtle px-3 py-2.5 sm:px-4">
           <div className="min-w-0">
             <h2 className="m-0 text-lg font-semibold tracking-tight">记忆</h2>

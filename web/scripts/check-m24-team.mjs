@@ -162,7 +162,8 @@ check('成员详情：进入会话 + 任务 + 产物', () => {
 })
 
 check('模板空态/角色清单 + 实时更新（WS+轮询）+ 只读', () => {
-  assert.match(teamPage, /团队模板（V2）尚未就绪/)
+  assert.match(teamPage, /还没有团队成员/)
+  assert.match(teamPage, /通过对话创建团队/)
   assert.match(teamPage, /roleTypeLabel/)
   assert.match(teamPage, /WS_FRAME/)
   assert.match(teamPage, /setInterval\(\(\) => void load\(\), 8000\)/)

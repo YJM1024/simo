@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react'
 import { formatSize, parseMarkdown, type MarkdownBlock, type TaskArtifact } from './model.ts'
 import { artifactContentUrl, fetchArtifactBlob, fetchArtifactText } from './rest.ts'
+import { Icon } from '../../platform/ui/icons.tsx'
 
 const KIND_LABEL: Record<string, string> = {
   markdown: 'Markdown',
@@ -102,7 +103,7 @@ function previewKindForError(error: unknown): string {
   return '预览加载失败'
 }
 
-export default function ArtifactPreview({ artifact }: { artifact: TaskArtifact }) {
+export default function ArtifactPreview({ artifact, compact = false }: { artifact: TaskArtifact; compact?: boolean }) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -153,7 +154,34 @@ export default function ArtifactPreview({ artifact }: { artifact: TaskArtifact }
     setError(null)
   }
 
-  return (
+  return compact ? (
+    <li className="group border-b border-border-subtle last:border-0">
+      <div className="flex h-8 min-w-0 items-center gap-2">
+        <span className="min-w-0 flex-1 truncate text-xs text-ink" title={artifact.name}>{artifact.name}</span>
+        {artifact.size !== null && <span className="flex-none text-[11px] tabular-nums text-muted">{formatSize(artifact.size)}</span>}
+        <div className="flex flex-none items-center gap-1 opacity-0 transition-opacity duration-fast group-hover:opacity-100 focus-within:opacity-100">
+          {previewable && (
+            <button type="button" onClick={() => (open ? closePreview() : setOpen(true))} aria-label={`${open ? '收起' : '预览'} ${artifact.name}`} title={open ? '收起预览' : '预览'} className="grid h-6 w-6 cursor-pointer place-items-center rounded-xs border border-border-subtle bg-surface-solid text-ink-secondary hover:text-ink">
+              <Icon name="file" size={16} />
+            </button>
+          )}
+          <a href={artifactContentUrl(artifact.id)} download={artifact.name} aria-label={`下载 ${artifact.name}`} title="下载" className="grid h-6 w-6 place-items-center rounded-xs border border-border-subtle bg-surface-solid text-ink-secondary no-underline hover:text-ink">
+            <Icon name="external" size={16} />
+          </a>
+        </div>
+      </div>
+      {open && (
+        <div className="mb-2 rounded-xs border border-border-subtle bg-surface-sunken p-2">
+          {loading && <p className="m-0 text-xs text-muted">加载预览…</p>}
+          {error && <p className="m-0 text-xs text-danger-ink">预览失败：{error}</p>}
+          {!loading && !error && artifact.kind === 'image' && imageUrl && <img src={imageUrl} alt={artifact.name} className="max-h-60 max-w-full rounded-xs border border-border-subtle" />}
+          {!loading && !error && artifact.kind === 'text' && <pre className="m-0 max-h-60 overflow-auto whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-ink-secondary">{text || '（空文件）'}</pre>}
+          {!loading && !error && artifact.kind === 'markdown' && <div className="max-h-60 overflow-auto">{renderMarkdown(parseMarkdown(text))}</div>}
+          {!loading && !error && artifact.kind === 'other' && <p className="m-0 text-xs text-muted">该类型不支持内联预览，请下载。</p>}
+        </div>
+      )}
+    </li>
+  ) : (
     <li className="rounded-md border border-border-subtle bg-surface-solid p-2.5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">

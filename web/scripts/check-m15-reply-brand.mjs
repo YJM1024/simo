@@ -134,7 +134,8 @@ check('品牌：顶栏内联 SVG 徽标 + 文案仅「司墨」', () => {
   assert.match(topBar, /司墨/)
   assert.equal(/本地/.test(topBar), false)
   assert.match(brandMark, /<svg/)
-  assert.match(brandMark, /linearGradient/)
+  assert.match(brandMark, /rx="24"/)
+  assert.equal(/linearGradient|feDropShadow/.test(brandMark), false)
   assert.match(brandMark, /aria-label="司墨"/)
 })
 

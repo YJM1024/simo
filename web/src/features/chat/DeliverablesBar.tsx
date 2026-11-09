@@ -41,7 +41,7 @@ function DeliverablePreview({ item, onClose }: { item: Deliverable; onClose: () 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-scrim-strong/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={`预览 ${item.name}`} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
-      <div className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-lg">
+      <div className="popover-surface flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden">
         <header className="flex flex-none items-center justify-between gap-2 border-b border-border-subtle px-3 py-2">
           <span className="min-w-0 truncate text-sm font-medium text-ink">{item.name}</span>
           <div className="flex items-center gap-2">

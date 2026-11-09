@@ -172,6 +172,9 @@ func (m *Module) Migrations() []module.Migration { return migrations() }
 func (m *Module) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/messages", m.handleMessages)
 	mux.HandleFunc("GET /api/messages/search", m.handleMessageSearch)
+	mux.HandleFunc("POST /api/messages/{id}/edit", m.handleEditDisabled)
+	mux.HandleFunc("POST /api/messages/{id}/correct", m.handleEditDisabled)
+	mux.HandleFunc("PATCH /api/messages/{id}", m.handleEditDisabled)
 	mux.HandleFunc("GET /api/sessions/{id}/files", m.handleSessionFiles)
 	mux.HandleFunc("GET /api/agents", m.handleAgents)
 	mux.HandleFunc("GET /api/stats", m.handleStats)

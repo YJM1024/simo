@@ -143,7 +143,8 @@ check('顶部 tab 页内切换：mainView 槽位，无浮窗/遮罩', () => {
 check('右栏细竖条固定最右：面板 order-1、标签条 order-2', () => {
   assert.match(rightRail, /order-1/)
   assert.match(rightRail, /order-2/)
-  assert.match(rightRail, /\[writing-mode:vertical-rl\]/)
+  assert.match(rightRail, /Icon name="task"/)
+  assert.match(rightRail, /Icon name="overview"/)
   assert.match(rightRail, /max-\[1180px\]:fixed/)
 })
 

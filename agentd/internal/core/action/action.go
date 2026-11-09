@@ -16,6 +16,7 @@ type Definition struct {
 	ReadOnly     bool            `json:"readOnly"`
 	Idempotent   bool            `json:"idempotent"`
 	HTTPRoute    string          `json:"httpRoute"`
+	Disabled     bool            `json:"disabled,omitempty"`
 }
 
 var definitions = build()
@@ -143,12 +144,23 @@ func build() []Definition {
 		def("team.triggers", "GET /api/teams/{id}/triggers", "R0", "读取团队触发器", true, "id"),
 		def("session.decisions", "GET /api/decisions", "R0", "读取决策记录", true, ""),
 	}
+	for i := range out {
+		if out[i].Name == "chat.correct" {
+			out[i].Disabled = true
+			out[i].Description = "已禁用：消息编辑/修改不再提供"
+		}
+	}
 	return out
 }
 
 func List() []Definition {
-	out := make([]Definition, len(definitions))
-	copy(out, definitions)
+	out := make([]Definition, 0, len(definitions))
+	for _, definition := range definitions {
+		if definition.Disabled {
+			continue
+		}
+		out = append(out, definition)
+	}
 	return out
 }
 

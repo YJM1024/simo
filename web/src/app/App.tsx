@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, ComponentType, PointerEvent as ReactPointerEvent } from 'react'
 import NotificationHost from './NotificationHost.tsx'
 import TopBar from './TopBar.tsx'
+import TopTabs from './TopTabs.tsx'
 import { useConnection } from './useConnection.ts'
 import { usePermissions } from './usePermissions.ts'
 import { useWorkspaceStatus } from './useWorkspaceStatus.ts'
@@ -21,8 +22,8 @@ import { getInitialTheme, setTheme, themeLabel } from '../platform/theme/theme.t
 const LEFT_DEFAULT = 264
 const LEFT_MIN = 220
 const LEFT_MAX = 320
-const RIGHT_DEFAULT = 320
-const RIGHT_MIN = 280
+const RIGHT_DEFAULT = 340
+const RIGHT_MIN = 340
 const RIGHT_MAX = 420
 const RIGHT_RAIL = 48
 const LEFT_KEY = 'simo.layout.leftWidth'
@@ -177,6 +178,10 @@ export default function App() {
         themeLabel={themeLabel(theme)}
         permissions={permissions}
       />
+
+      <div className="flex h-10 flex-none items-center border-b border-border-subtle bg-surface px-4">
+        <TopTabs />
+      </div>
 
       <div
         className="relative grid min-h-0 flex-1 grid-cols-[var(--layout-left)_minmax(0,1fr)_var(--layout-right)] max-[1180px]:grid-cols-[var(--layout-left-compact)_minmax(0,1fr)_0px] max-[820px]:grid-cols-1"

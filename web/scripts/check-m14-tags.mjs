@@ -274,15 +274,17 @@ check('会话路径：多级 + 折叠 + 点击跳转 + user 也显示', () => {
   assert.match(messageList, /<SessionPathBadge message=\{message\} meta=\{meta\} onJumpSession=\{onJumpSession\}/)
 })
 
-check('时间轴：hover/聚焦预览、分类颜色、Tab/Enter、关闭、折叠/视口高亮保留', () => {
+check('时间轴：hover/聚焦预览、横向短条、Tab/Enter、关闭、居中/视口高亮保留', () => {
   assert.match(historyRail, /onMouseEnter/)
+  assert.match(historyRail, /onMouseMove/)
   assert.match(historyRail, /onFocus/)
   assert.match(historyRail, /role="dialog"/)
   assert.match(historyRail, /关闭消息预览/)
-  assert.match(historyRail, /tickColor/)
-  assert.match(historyRail, /categoryMeta/)
+  assert.match(historyRail, /tickBarClassName/)
+  assert.match(historyRail, /bg-timeline-agent/)
   assert.match(historyRail, /aria-label="消息时间轴"/)
-  assert.match(historyRail, /折叠消息时间轴|展开消息时间轴/)
+  assert.match(historyRail, /my-auto/)
+  assert.equal(/折叠消息时间轴|展开消息时间轴/.test(historyRail), false)
   assert.match(historyRail, /activeMessageId/)
   // tick 是 button，原生 Tab 聚焦 + Enter 触发
   assert.match(historyRail, /<button/)

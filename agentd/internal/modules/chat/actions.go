@@ -160,6 +160,11 @@ func (m *Module) handleActionExecute(w http.ResponseWriter, r *http.Request) {
 		httpserver.WriteJSON(w, http.StatusNotFound, map[string]any{"ok": false, "error": map[string]any{"code": "UNKNOWN_ACTION", "message": "未知动作"}})
 		return
 	}
+	if def.Disabled {
+		httpserver.WriteJSON(w, http.StatusBadRequest, map[string]any{"ok": false,
+			"error": map[string]any{"code": "edit_disabled", "message": "消息编辑/修改已禁用"}})
+		return
+	}
 	args := map[string]any{}
 	if r.Body != nil {
 		_ = json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&args)
@@ -376,7 +381,9 @@ func (m *Module) executeAction(ctx context.Context, sessionID, name string, args
 		default:
 			return svc.CancelWorkflow(ctx, stringArg(args, "id"))
 		}
-	case "chat.send", "chat.reply", "chat.correct":
+	case "chat.correct":
+		return nil, &actionError{Code: "edit_disabled", Message: "消息编辑/修改已禁用", Status: http.StatusBadRequest}
+	case "chat.send", "chat.reply":
 		text := stringArg(args, "text")
 		replyTo := stringArg(args, "replyToMessageId")
 		message, err := m.startTurn(ctx, sessionID, text, ClassRefine, nil, replyTo)

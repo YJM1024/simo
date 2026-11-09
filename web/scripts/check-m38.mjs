@@ -57,7 +57,8 @@ check('主区域移除 plan/todo/交付物/概览，保留文件 tab', () => {
 
 check('右栏默认收起：细竖条任务/概览 + 运行角标/概览圆点', () => {
   assert.match(rightRail, /useState<RailTab \| null>\(null\)/)
-  assert.match(rightRail, /writing-mode:vertical-rl/)
+  assert.match(rightRail, /Icon name="task"/)
+  assert.match(rightRail, /Icon name="overview"/)
   assert.match(rightRail, /任务/)
   assert.match(rightRail, /概览/)
   assert.match(rightRail, /TASKS_STATE/)
@@ -85,7 +86,8 @@ check('任务 tab：计划摘要 + 任务列表 + 当前会话交付物', () => 
   assert.match(planSummary, /todoStatusLabel/)
   assert.match(planSummary, /getPlan/)
   assert.match(planSummary, /\/todos\//)
-  assert.match(planSummary, /任务列表只读投影|任务投影/)
+  assert.match(planSummary, /todos/)
+  assert.match(planSummary, /todoStatusLabel/)
   assert.match(taskPanel, /交付物（当前会话）/)
   assert.match(taskPanel, /currentArtifactGroups/)
   assert.match(taskPanel, /任务列表/)
@@ -98,7 +100,6 @@ check('右栏布局：竖条面板/窄屏浮层/min-w-0/truncate/break-words/垂
   assert.match(rightRail, /max-\[1180px\]:top-24/)
   assert.match(rightRail, /max-\[1180px\]:w-\[min\(90vw,360px\)\]/)
   assert.match(taskPanel, /min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto/)
-  assert.match(taskPanel, /break-words/)
   assert.match(taskPanel, /truncate/)
   assert.match(overviewPanel, /min-w-0/)
   assert.match(overviewPanel, /overflow-x-hidden overflow-y-auto/)

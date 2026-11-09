@@ -10,6 +10,7 @@ import { bus, EVENTS } from '../../platform/events.ts'
 import { readSessionId } from '../../platform/router.ts'
 import type { TaskInfo, WireFrame } from '../../platform/types.ts'
 import AgentAvatar from '../../platform/AgentAvatar.tsx'
+import { Icon } from '../../platform/ui/icons.tsx'
 import { findAgent, useAgentCatalog } from '../../platform/agents.ts'
 import { EmptyPane, ErrorPane, LoadingPane } from '../../platform/FeedbackPane.tsx'
 import { useFocusTrap } from '../../platform/useFocusTrap.ts'
@@ -146,15 +147,7 @@ function MemberDetail({ member, onClose }: { member: TeamMember; onClose: () => 
 
 function TemplateSection({ template }: { template: TeamInfo['template'] }) {
   const [collapsed, setCollapsed] = useState(false)
-  if (!template) {
-    return (
-      <EmptyPane
-        compact
-        title="团队模板（V2）尚未就绪"
-        description="后端未返回团队模板；模板/角色继承与通用/模板角色标记会在 V2 就绪后显示。当前不展示示例数据。"
-      />
-    )
-  }
+  if (!template) return null
   return (
     <section className="rounded-md border border-border-subtle bg-surface-solid p-2" aria-label="团队模板">
       <button
@@ -263,7 +256,7 @@ export default function TeamPage({ onClose, embedded = false }: { onClose: () =>
         if (!embedded && event.target === event.currentTarget) onClose()
       }}
     >
-      <div ref={panelRef} className={embedded ? 'flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-surface' : 'flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-md border border-border bg-surface-solid shadow-lg'}>
+      <div ref={panelRef} className={embedded ? 'flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-surface' : 'popover-surface flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden'}>
         <header className="flex flex-none flex-wrap items-start justify-between gap-2 border-b border-border-subtle px-3 py-2.5 sm:px-4">
           <div className="min-w-0">
             <h2 className="m-0 text-lg font-semibold tracking-tight">团队</h2>
@@ -338,7 +331,23 @@ export default function TeamPage({ onClose, embedded = false }: { onClose: () =>
               </div>
 
               {team.members.length === 0 ? (
-                <EmptyPane title="暂无团队成员" description="团队模板实例化后会生成下级会话成员；当前不展示示例数据。" />
+                <div className="mx-auto flex max-w-md flex-col items-center px-4 py-16 text-center">
+                  <span className="grid h-10 w-10 place-items-center rounded-full border border-border-subtle bg-surface-sunken text-ink-muted" aria-hidden="true">
+                    <Icon name="user" size={20} />
+                  </span>
+                  <p className="m-0 mt-3 text-base font-medium text-ink">还没有团队成员</p>
+                  <p className="m-0 mt-1 text-sm leading-relaxed text-ink-secondary">通过对话让司墨按角色创建成员；成员会作为下级会话出现在会话树中。</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      bus.emit(EVENTS.COMPOSER_INSERT, { text: '帮我创建一个团队' })
+                      onClose()
+                    }}
+                    className="mt-4 cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-3 py-1.5 text-sm text-ink-secondary hover:border-accent-border hover:text-ink"
+                  >
+                    通过对话创建团队
+                  </button>
+                </div>
               ) : filteredMembers.length === 0 ? (
                 <EmptyPane compact title="没有匹配的成员" description="调整状态筛选或搜索词；不会伪造成员数据。" />
               ) : (
@@ -422,7 +431,7 @@ export default function TeamPage({ onClose, embedded = false }: { onClose: () =>
               )}
 
               <div className="mt-2">
-                <TemplateSection template={team.template} />
+                {team.members.length > 0 && <TemplateSection template={team.template} />}
               </div>
               {selected && <div className="mt-2"><MemberDetail member={selected} onClose={() => setSelected(null)} /></div>}
             </>
