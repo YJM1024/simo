@@ -4,7 +4,7 @@
   "tier": "critical",
   "vars": {
     "probe": "evals-esc-{{runId}}",
-    "target": "{{agentdHome}}/workspace/escalated-{{runId}}.txt"
+    "target": "{{simoHome}}/workspace/escalated-{{runId}}.txt"
   },
   "steps": [
     { "type": "fs", "op": "remove", "path": "{{target}}", "saveAs": "cleanup" },

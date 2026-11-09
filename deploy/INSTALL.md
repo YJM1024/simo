@@ -1,7 +1,7 @@
 # Simo 部署与安装（Windows 便携包 / 安装 / 升级 / 备份恢复）
 
 > 适用：Windows 10/11 x64，单机单实例（SQLite 单写者）。容器方式见 [`README.md`](README.md)（本机无 Docker，容器部分仍为静态核对）。
-> 本文件与脚本只做部署编排，不改业务代码；文件名前缀 `simo` 为产品名（内部模块仍叫 agentd）。
+> 本文件与脚本只做部署编排，不改业务代码；文件名前缀 `simo` 为产品名（内部模块仍叫 simo）。
 
 ## 1. 文件清单
 
@@ -26,7 +26,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File deploy\package.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File deploy\package.ps1 -SkipWebBuild
 
 # 直接复用已有二进制（最快，用于发布/离线环境）
-powershell -NoProfile -ExecutionPolicy Bypass -File deploy\package.ps1 -SkipBuild -Exe agentd\simo.exe
+powershell -NoProfile -ExecutionPolicy Bypass -File deploy\package.ps1 -SkipBuild -Exe backend\simo.exe
 ```
 
 输出：`deploy\dist\simo-<version>-win-x64.zip` + `.sha256`（格式 `<hash>  <file>`），zip 内含 `VERSION.txt` 与 `manifest.json`（含 exe sha256）。
@@ -80,7 +80,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File deploy\restore.ps1 `
 ```
 
 - 备份 zip 含 `manifest.json`（逐文件 sha256）；恢复会校验 zip sha、逐文件 sha 与 SQLite `integrity_check`。
-- **恢复会同时恢复 `agentd.db`、`agentd.db-wal`、`agentd.db-shm`**；没有可用 Python 时跳过 `integrity_check` 并打印提示（不中断恢复）。
+- **恢复会同时恢复 `simo.db`、`simo.db-wal`、`simo.db-shm`**；没有可用 Python 时跳过 `integrity_check` 并打印提示（不中断恢复）。
 - 恢复默认**不覆盖** `config.local.json`（含密钥），需要时加 `-RestoreConfig`；产物恢复加 `-RestoreArtifacts`。
 - **回滚**：`upgrade.ps1 -Rollback` 先恢复备份数据（含 db-wal/db-shm）再切版本；无备份则拒绝并保持当前版本。也可手动停服后从 `<DataDir>\pre-restore-<时间戳>\` 移回 db 文件。
 
@@ -100,9 +100,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File deploy\restore.ps1 `
 ## 4. 数据与配置
 
 ```text
-<DataDir>/                 # AGENTD_HOME
-├── agentd.db (+ -wal/-shm)  # SQLite（WAL）
-├── agentd.db.lock           # 单写者锁（服务自身）
+<DataDir>/                 # SIMO_HOME
+├── simo.db (+ -wal/-shm)  # SQLite（WAL）
+├── simo.db.lock           # 单写者锁（服务自身）
 ├── artifacts/ workspace/ logs/
 ├── config.local.json        # 可选：provider/baseURL/model/apiKey/reasoning
 └── .simo-instance.json      # start.ps1 写入的 pid/端口（-Stop 用）
@@ -136,10 +136,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File deploy\restore.ps1 `
 ## 7. 本轮实测记录（2026-11-08，工作区 `.tmp\<GUID>` 内）
 
 - ✅ 便携包：`deploy\package.ps1 -SkipWebBuild` 从源码构建 `simo.exe` → zip + `.sha256`（产物已放 `deploy\dist\simo-M29-88d16d8d-win-x64.zip`，SHA256 `3c422cce…a9df3fa` 已复核一致）。
-- ✅ 解压到 `.tmp\m29-verify-<GUID>` → 直接启动包内 `simo.exe serve`（mock/18917）→ `/api/health` **200**（`{ok:true,ready:true}`），数据布局生成 `agentd.db(-wal/-shm)/artifacts/workspace/logs`；停止后端口释放。
+- ✅ 解压到 `.tmp\m29-verify-<GUID>` → 直接启动包内 `simo.exe serve`（mock/18917）→ `/api/health` **200**（`{ok:true,ready:true}`），数据布局生成 `simo.db(-wal/-shm)/artifacts/workspace/logs`；停止后端口释放。
 - ✅ 包内 `start.ps1`：启动→健康检查→`ready` 路径正常；端口被占用场景能正确启动/探测；`-Stop` 对状态文件（进程已退出）优雅提示、不误杀；**未实测**：同数据目录第二个实例的主动拒绝（逻辑已实现，待补跑）。
 - ✅ `backup.ps1`：Python `sqlite3.backup` 热备 → zip + sha256 + manifest；`restore.ps1 -VerifyOnly` 校验 zip/manifest/`integrity_check` 全通过。
-- ✅ `restore.ps1 -Force`：恢复到新建空目录成功（exit 0）；会同时恢复 `agentd.db`/`-wal`/`-shm`；无 Python 时跳过 `integrity_check` 并提示。过程中修复了 2 处 PowerShell 解析 bug——`if (Test-Path ... -and $switch)` 会被当作 `Test-Path -and` 参数，已改为 `if ((Test-Path ...) -and $switch)`。
+- ✅ `restore.ps1 -Force`：恢复到新建空目录成功（exit 0）；会同时恢复 `simo.db`/`-wal`/`-shm`；无 Python 时跳过 `integrity_check` 并提示。过程中修复了 2 处 PowerShell 解析 bug——`if (Test-Path ... -and $switch)` 会被当作 `Test-Path -and` 参数，已改为 `if ((Test-Path ...) -and $switch)`。
 - ✅ `install.ps1 -Start`：首次安装在 apiKey 为空时自动 `-Model mock` 启动并提示；`config.example.json` 无 BOM，安装器播种 config 时剥 BOM。
 - ✅ `upgrade.ps1`：升级前备份输出 `BACKUP_ZIP=<zip>`；备份失败会中止、不切换版本。
 - ✅ `upgrade.ps1 -Rollback`：要求有备份，先恢复数据（含 db-wal/db-shm）再切版本；无备份拒绝并保持当前版本。

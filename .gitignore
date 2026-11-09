@@ -1,5 +1,5 @@
 # ---- secrets & runtime data: never commit ----
-agentd/config.local.json
+backend/config.local.json
 data/
 .tmp/
 .trash/
@@ -13,7 +13,8 @@ artifacts/
 *.zip
 *.sha256
 deploy/dist/
-agentd/internal/webui/dist/
+backend/internal/webui/dist/
+frontend/dist/
 
 # ---- transient test / incident artifacts ----
 .leadcheck/

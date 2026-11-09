@@ -4,7 +4,7 @@
 > 依赖：M9（工具/审批/审计）、M10（工作流/逐任务汇报）、M13（调度/错过补偿）、M18（Spec/证据）。
 > 定位：**M19 不新造任务模型，而是给已有 `tasks/workflows/schedules/approvals` 补"耐久、心跳、幂等、分层预算、长时审批、可观测、跨天汇报"**，让任务能可靠跑数小时到数天。
 > 数字默认值一律是**工程默认、可配置、非验收承诺**，须按 M19 基线校准（17 §6.2 纪律）。
-> 证据/参考：`docs/design-core.md` §9（长程能力清单）、`docs/dsh-alignment.md` §7（DSH 借鉴：三屏障/作业/恢复/预算/看门狗/查询缓存）、`design/19` §7+§11、`design/23` §6/§8/§9/§10/§11（本契约的主要语义来源）、现有 `agentd/internal/modules/{tasks,chat,sessions}` 迁移与 `agentd/README.md` §M9–M13。
+> 证据/参考：`docs/design-core.md` §9（长程能力清单）、`docs/dsh-alignment.md` §7（DSH 借鉴：三屏障/作业/恢复/预算/看门狗/查询缓存）、`design/19` §7+§11、`design/23` §6/§8/§9/§10/§11（本契约的主要语义来源）、现有 `backend/internal/modules/{tasks,chat,sessions}` 迁移与 `backend/README.md` §M9–M13。
 
 ---
 
@@ -33,7 +33,7 @@
 
 ### 2.1 Task 状态机（在现有 status 上补齐）
 
-现有：`queued/running/done/failed/cancelled/paused/blocked/interrupted`（`agentd/internal/core/task/task.go` 及 tasks 服务）。M19 明确**迁移表**与**恢复动作**：
+现有：`queued/running/done/failed/cancelled/paused/blocked/interrupted`（`backend/internal/core/task/task.go` 及 tasks 服务）。M19 明确**迁移表**与**恢复动作**：
 
 | 状态 | 进入条件 | 可停留 | 重启后处理 | 可恢复？ |
 |---|---|---|---|---|
@@ -376,7 +376,7 @@ approvals 增列：
 
 ## 12. 验收标准（小时级 → 天级）
 
-> 前置：M1–M18 回归全绿；每个 case 用独立端口 + 独立 `AGENTD_HOME`（不动 8787）。
+> 前置：M1–M18 回归全绿；每个 case 用独立端口 + 独立 `SIMO_HOME`（不动 8787）。
 
 ### 12.1 小时级（A1–A5）
 
@@ -414,7 +414,7 @@ approvals 增列：
 | **杀进程** | 子进程执行中 `kill -9`（Windows 用 `taskkill /F`）；分别在：工具执行中 / 模型请求中 / 审批等待中 / 检查点写入瞬间 | A1/A2/A3；torn-tail；无重复副作用 |
 | **重启** | 重启后检查：状态对账、ready 重算、汇报幂等、预算账本继续 | A1/A3；`recovery_actions` 完整 |
 | **断网/外部失败** | mock provider 断连、`web_fetch` 超时、磁盘只读/写满（可选） | A8；降级与汇报 |
-| **长时间模拟** | 注入**假时钟**（`AGENTD_FAKE_NOW`/测试注入）压缩时间：跨天、24h 长跑、审批超时、预算日限 | A6/A7；日界逻辑、TTL、调度错过补偿 |
+| **长时间模拟** | 注入**假时钟**（`SIMO_FAKE_NOW`/测试注入）压缩时间：跨天、24h 长跑、审批超时、预算日限 | A6/A7；日界逻辑、TTL、调度错过补偿 |
 | **并发/竞争** | 双实例启动（第二实例必须失败）、恢复器 vs 调度 tick、并发审批、重复触发（同 dueAt 投递两次） | §11 单写者/幂等 |
 | **DB 故障** | 模拟 checkpoint 损坏/缺行、事件 seq 洞、approvals 半写 | 只读降级/显式汇报，不崩溃 |
 | **回归** | 现有 M1–M18 全量 + 新 case；独立端口/home | 不回归 |
@@ -493,5 +493,5 @@ approvals 增列：
 - `design/19-AgentLoop设计-v0.md` §7（检查点与恢复）、§11（失败/预算/指标）
 - `design/23-Planner与长程任务-v0.md` §6.4/§6.5（并发/WIP/死锁）、§8.1–§8.5（计划检查点/断点续跑/预算熔断/卡死检测）、§9（进度与 Hill Chart 投影）、§10（失败/恢复/Ledger 对账）、§11（评测断言与 L2 case）
 - `design/17-评测设计-v0.md`（L1/L2、故障注入、`t_ckpt`、Δ 消融）
-- 现有实现：`agentd/internal/modules/tasks/migrations.go`（tasks/workflows/workflow_events）、`agentd/internal/modules/chat/migrations.go`（approvals/approval_grants/schedules/schedule_fires）、`agentd/internal/core/task/task.go`（interrupted）、`agentd/README.md` §M9–M13
+- 现有实现：`backend/internal/modules/tasks/migrations.go`（tasks/workflows/workflow_events）、`backend/internal/modules/chat/migrations.go`（approvals/approval_grants/schedules/schedule_fires）、`backend/internal/core/task/task.go`（interrupted）、`backend/README.md` §M9–M13
 - `docs/m13-contract.md`（调度字段/错过补偿/fail-closed 现状）

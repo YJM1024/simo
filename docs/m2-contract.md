@@ -32,7 +32,7 @@
   type Provider interface { Stream(ctx context.Context, req ChatRequest) (<-chan Event, error) }
   ```
 - 实现：`deepseek.go`（OpenAI 兼容 SSE 客户端，用 net/http 读 SSE 流）。
-- 配置：`agentd/config.local.json` → `model`, `reasoning.byRole`, `maxOutputTokens`。
+- 配置：`backend/config.local.json` → `model`, `reasoning.byRole`, `maxOutputTokens`。
 - **纪律**：
   - 带 `tools` 的请求，后续消息必须回传 `reasoning_content`；
   - `reasoning_content` 只入执行轨迹（WS 可发 `trace.reasoning`），**不进入给用户看的正文**；

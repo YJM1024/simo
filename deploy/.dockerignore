@@ -9,8 +9,8 @@
 # 本文件即 deploy/.dockerignore 的规范内容，见 README「构建上下文与 .dockerignore」。
 
 # 依赖与构建产物（一律在镜像内重建）
-web/node_modules/
-agentd/internal/webui/dist/
+frontend/node_modules/
+backend/internal/webui/dist/
 **/node_modules/
 
 # 本机自包含工具链（Windows 版 Go，数百 MB，且与 linux 构建无关）
@@ -56,8 +56,8 @@ deploy/README.md
 
 # 数据目录/运行时状态（绝不能进镜像）
 data/
-agentd.db
-agentd.db-*
+simo.db
+simo.db-*
 artifacts/
 workspace/
 logs/

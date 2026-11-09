@@ -319,7 +319,7 @@ recent: <最近 3 条 spec 事件>
 
 ### 7.6 迁移顺序与回滚
 
-1. 备份 `AGENTD_HOME`；
+1. 备份 `SIMO_HOME`；
 2. sessions v6：扩展 `specs`、建 `spec_transitions`/`spec_evidence`、扩展 `session_overviews`；旧 Spec 行填默认值；
 3. tasks v5：加列；旧任务 `acceptance_keys=[]`、`executor_agent_id=''`；
 4. 回填：旧 `tasks` 的 done 任务建议生成 `task:<id>` evidence（可配置为迁移期回填，避免归档门禁卡住）；旧 `specs.evidence` 只读保留；
@@ -407,7 +407,7 @@ type Service interface {
 | 集成 | 概览刷新：Spec version/dirty/缓存；字段结构；无 spec 字段 | API + 快照 |
 | 集成 | NPC vs simo：NPC 不发消息、不改 Spec；simo 报告归属 | WS/REST 审计 |
 | 迁移 | M13 数据 + 旧 specs/overviews → v6/v5；备份/失败回滚 | 迁移测试 + 启动检查 |
-| E2E | 一个需求：Spec→计划→任务→汇报→概览→归档→reopen | 干净 AGENTD_HOME |
+| E2E | 一个需求：Spec→计划→任务→汇报→概览→归档→reopen | 干净 SIMO_HOME |
 | 回归 | M1–M17 mock 套件 | 全绿（或注明已知） |
 | 安全 | 公开 API 扫描无 specId/specVersion；debug 仅 loopback；无 key | 扫描 + 权限测试 |
 

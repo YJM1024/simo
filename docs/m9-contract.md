@@ -48,7 +48,7 @@
 - `pwsh`：进程树执行；`cwd` 默认 `workspace/`；**每次重建环境变量**（只传 PATH/HOME/TEMP 等白名单，不继承 API key）；`DSH_*` 类变量不注入。
 - `[exit code: N]` 是**正常结果**，不是工具错误。
 - 超时：默认 120s，超时终止进程树并返回结构化结果；可选转后台作业（M9 先不做持久终端）。
-- 输出：stdout/stderr 各 ≤64KB inline；超出落盘到 `AGENTD_HOME/artifacts/spill/<id>.txt`，返回 `Omitted N bytes; full result at <path>`。
+- 输出：stdout/stderr 各 ≤64KB inline；超出落盘到 `SIMO_HOME/artifacts/spill/<id>.txt`，返回 `Omitted N bytes; full result at <path>`。
 - 写操作：先 canonicalize 路径，校验在允许根内（workspace/artifacts/uploads）；**写前校验读权限**（读不到的路径不能写）；拒绝符号链接穿越。
 - 危险命令模式（删除、格式化、关机、注册表等）**一律 ask**，`never` 下直接拒绝。
 

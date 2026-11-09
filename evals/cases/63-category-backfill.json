@@ -2,7 +2,7 @@
   "id": "category-backfill",
   "name": "分类回填（旧库升级：历史 agent 消息统一记为 consultation；user 消息保持为空）",
   "tier": "critical",
-  "pending": "需要「旧版本建库 → 新版本升级迁移」两步，单次 run.mjs 做不到 → 由 evals/category-backfill.ps1 真实执行（用 M13 旧二进制建库并产生若干 agent 回复 → 用当前二进制在同一 home 启动触发 chat v10 迁移 → 断言历史 agent 消息 category=consultation、旧 user 消息为空、sessionPath 可用）。脚本自建端口+临时 AGENTD_HOME，不碰 8787。",
+  "pending": "需要「旧版本建库 → 新版本升级迁移」两步，单次 run.mjs 做不到 → 由 evals/category-backfill.ps1 真实执行（用 M13 旧二进制建库并产生若干 agent 回复 → 用当前二进制在同一 home 启动触发 chat v10 迁移 → 断言历史 agent 消息 category=consultation、旧 user 消息为空、sessionPath 可用）。脚本自建端口+临时 SIMO_HOME，不碰 8787。",
   "vars": {
     "probe": "evals-backfill-{{runId}}"
   },

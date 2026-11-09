@@ -15,11 +15,11 @@
 # Usage:
 #   powershell -NoProfile -ExecutionPolicy Bypass -File deploy\package.ps1
 #   powershell -NoProfile -ExecutionPolicy Bypass -File deploy\package.ps1 -SkipBuild -Version M29-dev
-#   powershell -NoProfile -ExecutionPolicy Bypass -File deploy\package.ps1 -SkipWebBuild   # reuse existing web/dist, still build Go
+#   powershell -NoProfile -ExecutionPolicy Bypass -File deploy\package.ps1 -SkipWebBuild   # reuse existing frontend/dist, still build Go
 #
 # Notes:
-#   - Full build needs Node + pnpm deps (web/) and the Go toolchain (toolchain/go.ps1 or `go` in PATH).
-#     This environment may lack a working esbuild native binary -> use -SkipWebBuild when web/dist is current.
+#   - Full build needs Node + pnpm deps (frontend/) and the Go toolchain (toolchain/go.ps1 or `go` in PATH).
+#     This environment may lack a working esbuild native binary -> use -SkipWebBuild when frontend/dist is current.
 #   - This script never deletes existing directories. Output zip is only written when absent or -Force is set.
 # NOTE: keep this file ASCII-only (Windows PowerShell 5.1 misreads UTF-8 without BOM).
 
@@ -72,31 +72,36 @@ $exeDst = Join-Path $stage 'simo.exe'
 
 if (-not $SkipBuild) {
   if (-not $SkipWebBuild) {
-    $buildScript = Join-Path $repo 'web\build.mjs'
-    if (-not (Test-Path $buildScript)) { Fail "missing web\build.mjs" }
-    Write-Step "building web assets (node web\build.mjs) ..."
-    Push-Location (Join-Path $repo 'web')
+    $buildScript = Join-Path $repo 'frontend\build.mjs'
+    if (-not (Test-Path $buildScript)) { Fail "missing frontend\build.mjs" }
+    Write-Step "building web assets (node frontend\build.mjs) ..."
+    Push-Location (Join-Path $repo 'frontend')
     try {
       & $Node 'build.mjs'
-      if ($LASTEXITCODE -ne 0) { Fail "web build failed (exit $LASTEXITCODE). Use -SkipWebBuild to reuse the existing agentd\internal\webui\dist." }
+      if ($LASTEXITCODE -ne 0) { Fail "web build failed (exit $LASTEXITCODE). Use -SkipWebBuild to reuse the existing backend\internal\webui\dist." }
+      $frontendDist = Join-Path $repo 'frontend\dist'
+      $embedDist = Join-Path $repo 'backend\internal\webui\dist'
+      if (-not (Test-Path (Join-Path $frontendDist 'index.html'))) { Fail 'frontend/dist/index.html not produced' }
+      New-Item -ItemType Directory -Force -Path $embedDist | Out-Null
+      Copy-Item -Path (Join-Path $frontendDist '*') -Destination $embedDist -Recurse -Force
     } finally { Pop-Location }
   } else {
-    Write-Step "skipping web build; reusing agentd\internal\webui\dist"
+    Write-Step "skipping web build; reusing backend\internal\webui\dist"
   }
 
   $goPs1 = Join-Path $repo 'toolchain\go.ps1'
   $goBin = Join-Path $repo 'toolchain\go\bin\go.exe'
   Write-Step "building simo.exe from source ..."
-  Push-Location (Join-Path $repo 'agentd')
+  Push-Location (Join-Path $repo 'backend')
   try {
     $ldflags = '-s -w'
-    $goArgs = @('build', '-trimpath', '-buildvcs=false', '-ldflags', $ldflags, '-o', $exeDst, './cmd/agentd')
+    $goArgs = @('build', '-trimpath', '-buildvcs=false', '-ldflags', $ldflags, '-o', $exeDst, './cmd/simo')
     if (Test-Path $goPs1) { & $goPs1 @goArgs } elseif (Test-Path $goBin) { & $goBin @goArgs } else { & 'go' @goArgs }
     if ($LASTEXITCODE -ne 0) { Fail "go build failed (exit $LASTEXITCODE)" }
   } finally { Pop-Location }
 } else {
   if (-not $Exe) {
-    foreach ($candidate in @((Join-Path $repo 'agentd\simo.exe'), (Join-Path $repo 'simo.exe'))) {
+    foreach ($candidate in @((Join-Path $repo 'backend\simo.exe'), (Join-Path $repo 'simo.exe'))) {
       if (Test-Path $candidate) { $Exe = $candidate; break }
     }
   }
@@ -141,7 +146,7 @@ Built: $buildTime
 
 ## Data and logs
 
-  .\data\                 AGENTD_HOME (db, artifacts, workspace, logs, config.local.json)
+  .\data\                 SIMO_HOME (db, artifacts, workspace, logs, config.local.json)
   .\data\logs\            server stdout/stderr logs
   .\data\.simo-instance.json  pid/port record used by -Stop
 

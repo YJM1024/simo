@@ -1,4 +1,4 @@
-# deploy/backup.ps1 -- consistent backup of a Simo AGENTD_HOME
+# deploy/backup.ps1 -- consistent backup of a Simo SIMO_HOME
 #
 # - Prefers a consistent SQLite backup via Python's sqlite3 backup API (safe while the server runs).
 # - Falls back to a plain file copy only when the instance is stopped (WAL files are copied too).
@@ -24,8 +24,8 @@ function Fail([string]$m) { Write-Host ("[backup] ERROR: " + $m); exit 1 }
 function Info([string]$m) { Write-Host ("[backup] " + $m) }
 
 $DataDir = [System.IO.Path]::GetFullPath($DataDir)
-$db = Join-Path $DataDir 'agentd.db'
-if (-not (Test-Path $db)) { Fail "agentd.db not found under $DataDir" }
+$db = Join-Path $DataDir 'simo.db'
+if (-not (Test-Path $db)) { Fail "simo.db not found under $DataDir" }
 if (-not $OutDir) { $OutDir = Join-Path $DataDir 'backups' }
 $OutDir = [System.IO.Path]::GetFullPath($OutDir)
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
@@ -60,7 +60,7 @@ if ($running -and -not $havePython) {
 
 $stage = Join-Path ([System.IO.Path]::GetTempPath()) ("simo-backup-" + [guid]::NewGuid().ToString('N').Substring(0, 10))
 New-Item -ItemType Directory -Force -Path $stage | Out-Null
-$stageDb = Join-Path $stage 'agentd.db'
+$stageDb = Join-Path $stage 'simo.db'
 
 if ($havePython) {
   $pyScript = Join-Path $stage '_sqlite_backup.py'

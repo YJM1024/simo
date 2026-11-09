@@ -4,17 +4,17 @@
 //
 // 用法：
 //   node evals/release-smoke.mjs                 # 用已有构建，或先 go build
-//   node evals/release-smoke.mjs --exe <path>    # 指定现成的 agentd 可执行文件
+//   node evals/release-smoke.mjs --exe <path>    # 指定现成的 simo 可执行文件
 //   node evals/release-smoke.mjs --build         # 先 go build（toolchain/go.ps1）
 //   node evals/release-smoke.mjs --keep          # 保留临时目录便于排查
 //
 // 覆盖（对应 M7 §3 交付冒烟）：
 //   1) 单文件二进制：把 exe 单独拷到空目录，不依赖仓库任何文件即可启动
-//   2) 冷启动：全新 AGENTD_HOME → /api/health → GET / 首页 → WS hello → POST /api/chat → 消息落库
+//   2) 冷启动：全新 SIMO_HOME → /api/health → GET / 首页 → WS hello → POST /api/chat → 消息落库
 //   3) 重启持久：同一 home 重启 → 之前消息仍在
 //   4) 换 home 空数据：另一个全新 home → 消息为 0
-//   5) preflight：AGENTD_HOME 不可创建时，进程非 0 退出且 stderr 有明确原因
-//   6) deploy/ 静态核对：Dockerfile/compose 与 AGENTD_HOME/端口/非 root 一致（本机无容器 → 标注未实测）
+//   5) preflight：SIMO_HOME 不可创建时，进程非 0 退出且 stderr 有明确原因
+//   6) deploy/ 静态核对：Dockerfile/compose 与 SIMO_HOME/端口/非 root 一致（本机无容器 → 标注未实测）
 //
 // 说明：本沙箱禁止 Node 用管道 spawn 子进程（EPERM），所以服务进程统一**经 cmd.exe 重定向到日志文件**启动，
 //       stderr 从文件读，既绕开管道限制，又能保留完整错误信息。
@@ -100,9 +100,9 @@ async function probeMode() {
     try {
       const r = await request(base, { path: '/api/messages?sessionId=main', timeoutMs: 5_000 });
       const n = Array.isArray(r.json?.messages) ? r.json.messages.length : -1;
-      push('新 AGENTD_HOME 为空数据', n === 0, `messages = ${n}`);
+      push('新 SIMO_HOME 为空数据', n === 0, `messages = ${n}`);
     } catch (e) {
-      push('新 AGENTD_HOME 为空数据', false, e.message);
+      push('新 SIMO_HOME 为空数据', false, e.message);
     }
   }
 
@@ -171,29 +171,29 @@ async function main() {
   }
 
   const keep = flag('--keep');
-  const work = await fs.mkdtemp(path.join(os.tmpdir(), 'agentd-release-smoke-'));
+  const work = await fs.mkdtemp(path.join(os.tmpdir(), 'simo-release-smoke-'));
   console.log(`临时目录：${work}`);
   console.log('');
 
   // ---------------------------------------------------------------- 0) 取二进制
   let exe = value('--exe');
   if (flag('--build') || !exe) {
-    exe = path.join(work, 'agentd.exe');
+    exe = path.join(work, 'simo.exe');
     const built = await goBuild(exe);
     add('Go 构建（单二进制）', built.ok, built.note);
     if (!built.ok) return finish(work, keep);
   } else {
-    await fs.copyFile(exe, path.join(work, 'agentd.exe'));
-    exe = path.join(work, 'agentd.exe');
+    await fs.copyFile(exe, path.join(work, 'simo.exe'));
+    exe = path.join(work, 'simo.exe');
   }
 
   // 单文件：exe 拷到**全新空目录**，确认旁边没有任何依赖
   const binDir = path.join(work, 'bin');
   await fs.mkdir(binDir, { recursive: true });
-  const soloExe = path.join(binDir, 'agentd.exe');
+  const soloExe = path.join(binDir, 'simo.exe');
   await fs.copyFile(exe, soloExe);
   const binEntries = await fs.readdir(binDir);
-  add('单文件交付（exe 独立于仓库）', binEntries.length === 1 && binEntries[0] === 'agentd.exe', `目录内容 = [${binEntries.join(', ')}]`);
+  add('单文件交付（exe 独立于仓库）', binEntries.length === 1 && binEntries[0] === 'simo.exe', `目录内容 = [${binEntries.join(', ')}]`);
 
   const port = await freePort();
 
@@ -226,7 +226,7 @@ async function main() {
   const a2 = await startServer({ exe: soloExe, home: homeA, port, label: 'restart' });
   const afterRestart = await request(`http://127.0.0.1:${port}`, { path: '/api/messages?sessionId=main', timeoutMs: 5_000 });
   add(
-    '重启后数据仍在（同一 AGENTD_HOME）',
+    '重启后数据仍在（同一 SIMO_HOME）',
     a2.healthy && afterRestart.status === 200 && afterRestart.body.includes(probe),
     a2.healthy ? `HTTP ${afterRestart.status}${afterRestart.body.includes(probe) ? '，含此前消息' : '，**不含**此前消息'}` : a2.note,
   );
@@ -237,7 +237,7 @@ async function main() {
   const b1 = await startServer({ exe: soloExe, home: homeB, port, label: 'fresh-home' });
   const fresh = await request(`http://127.0.0.1:${port}`, { path: '/api/messages?sessionId=main', timeoutMs: 5_000 });
   const freshCount = Array.isArray(fresh.json?.messages) ? fresh.json.messages.length : -1;
-  add('换 AGENTD_HOME → 空数据', b1.healthy && freshCount === 0, b1.healthy ? `messages = ${freshCount}` : b1.note);
+  add('换 SIMO_HOME → 空数据', b1.healthy && freshCount === 0, b1.healthy ? `messages = ${freshCount}` : b1.note);
   await b1.stop();
 
   // ---------------------------------------------------------------- 4) preflight（不可用 home）
@@ -247,7 +247,7 @@ async function main() {
   const bad = await runServerExpectFail({ exe: soloExe, home: badHome, port, timeoutMs: 12_000 });
   const clearMsg = /(home|目录|路径|创建|权限|不可写|permission|denied|mkdir|HOME)/i.test(bad.stderr + bad.stdout);
   add(
-    'preflight：不可用 AGENTD_HOME 明确报错',
+    'preflight：不可用 SIMO_HOME 明确报错',
     bad.exited && bad.code !== 0 && clearMsg,
     bad.exited
       ? `exit=${bad.code}；stderr 首行：${(bad.stderr.split(/\r?\n/).find((l) => l.trim()) || '（空）').slice(0, 160)}`
@@ -277,9 +277,9 @@ async function goBuild(outExe) {
     await fs.mkdir(path.dirname(outExe), { recursive: true });
     // 注意：必须用 -File 调用 go.ps1（cmd /c 里套 `& script` 容易被引号/执行策略搞坏）
     const line =
-      `cd /d "${path.join(REPO, 'agentd')}" && ` +
+      `cd /d "${path.join(REPO, 'backend')}" && ` +
       `powershell -NoProfile -ExecutionPolicy Bypass -File "${path.join(REPO, 'toolchain', 'go.ps1')}" ` +
-      `build -o "${outExe}" ./cmd/agentd`;
+      `build -o "${outExe}" ./cmd/simo`;
     const code = await spawnShell(line);
     const stat = await fs.stat(outExe).catch(() => null);
     if (code !== 0 || !stat) return { ok: false, note: `构建失败（exit=${code}）` };
@@ -312,7 +312,7 @@ async function freePort() {
 async function startServer({ exe, home, port, label }) {
   await fs.mkdir(home, { recursive: true });
   const log = path.join(path.dirname(home), `${label}.log`);
-  const cmd = `set AGENTD_HOME=${home}&& set AGENTD_LLM=mock&& set AGENTD_DEBUG=1&& "${exe}" serve -addr 127.0.0.1:${port} > "${log}" 2>&1`;
+  const cmd = `set SIMO_HOME=${home}&& set SIMO_LLM=mock&& set SIMO_DEBUG=1&& "${exe}" serve -addr 127.0.0.1:${port} > "${log}" 2>&1`;
   const child = spawn('cmd.exe', ['/d', '/c', cmd], { stdio: 'ignore', windowsHide: true, detached: false });
   const deadline = Date.now() + 20_000;
   let healthy = false;
@@ -338,7 +338,7 @@ async function startServer({ exe, home, port, label }) {
 /** 启动一个**预期失败**的服务，读取它的 stderr（用于 preflight 断言）。 */
 async function runServerExpectFail({ exe, home, port, timeoutMs }) {
   const log = path.join(path.dirname(home) + '-bad.log');
-  const cmd = `set AGENTD_HOME=${home}&& "${exe}" serve -addr 127.0.0.1:${port} > "${log}" 2>&1`;
+  const cmd = `set SIMO_HOME=${home}&& "${exe}" serve -addr 127.0.0.1:${port} > "${log}" 2>&1`;
   const child = spawn('cmd.exe', ['/d', '/c', cmd], { stdio: 'ignore', windowsHide: true });
   const deadline = Date.now() + timeoutMs;
   let exited = false;
@@ -421,8 +421,8 @@ async function checkDeploy() {
   }
   out.push({ name: 'deploy/Dockerfile 存在', ok: true, note: `${dockerfile.split(/\r?\n/).length} 行` });
 
-  const homeRef = /AGENTD_HOME/.test(dockerfile) && /AGENTD_HOME/.test(compose);
-  out.push({ name: 'AGENTD_HOME 在 Dockerfile 与 compose 中一致出现', ok: homeRef, note: homeRef ? '两处均声明' : '有一处未声明' });
+  const homeRef = /SIMO_HOME/.test(dockerfile) && /SIMO_HOME/.test(compose);
+  out.push({ name: 'SIMO_HOME 在 Dockerfile 与 compose 中一致出现', ok: homeRef, note: homeRef ? '两处均声明' : '有一处未声明' });
 
   const portRef = /8787/.test(dockerfile) && /8787/.test(compose);
   out.push({ name: '端口 8787 一致', ok: portRef, note: portRef ? '两处均为 8787' : '端口声明不一致' });

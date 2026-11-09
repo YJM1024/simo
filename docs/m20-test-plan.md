@@ -37,12 +37,12 @@
 
 | 项 | 约定 |
 |---|---|
-| 数据隔离 | 每个 suite 用**独立临时 `AGENTD_HOME`**（`<tmp>/m20-<case>-<pid>`），**绝不写用户真实 `~/.agentd`**；结束后清理（失败保留供诊断） |
+| 数据隔离 | 每个 suite 用**独立临时 `SIMO_HOME`**（`<tmp>/m20-<case>-<pid>`），**绝不写用户真实 `~/.simo`**；结束后清理（失败保留供诊断） |
 | 端口隔离 | 独立端口（默认从 **18900** 起分配，按 suite 递增）；**不占用用户实例 8787** |
-| 模型 | 默认 `AGENTD_LLM=mock`（确定性）；真模型 smoke 单列（§11 阶段 7），不进常规门禁 |
-| 服务生命周期 | suite 自己起 `simo serve`（或现有 agentd 入口）→ 等 `/api/health` → 跑 → 杀进程；重启类 case 用 `.ps1` 脚本（沿用 `evals/*-restart.ps1` 模式） |
+| 模型 | 默认 `SIMO_LLM=mock`（确定性）；真模型 smoke 单列（§11 阶段 7），不进常规门禁 |
+| 服务生命周期 | suite 自己起 `simo serve`（或现有 simo 入口）→ 等 `/api/health` → 跑 → 杀进程；重启类 case 用 `.ps1` 脚本（沿用 `evals/*-restart.ps1` 模式） |
 | CLI 调用 | 子进程直接执行 `simo.exe`（构建产物路径由 `SIMO_BIN` 指定），捕获 stdout/stderr/exit code；**禁 shell 拼接**（防参数注入，测试本身要证明 `--` 与空格路径安全） |
-| 时钟 | 审批超时/跨天 case 用**可注入时钟**（`AGENTD_FAKE_NOW` 或测试专用 debug 端点），不真等 |
+| 时钟 | 审批超时/跨天 case 用**可注入时钟**（`SIMO_FAKE_NOW` 或测试专用 debug 端点），不真等 |
 | 夹具 | 每个 case 自带 seed：预置会话/任务/工作流/记忆/文件（通过动作层做准备，验证动作层自洽） |
 
 ---
@@ -184,8 +184,8 @@ simo system health --json
 
 | 方法 | 做法 | 用途 |
 |---|---|---|
-| **A. 运行时枚举（首选）** | debug 模式新增 `GET /api/debug/routes`（仅 `-debug`/`AGENTD_DEBUG=1` 且 loopback），返回 `[{method,pattern,source}]`，来源用模块注册信息 | 真实注册表，不靠文本推断 |
-| **B. 源码枚举（兜底/CI 无服务时）** | 扫描 `agentd/**/*.go` 中 `mux.HandleFunc("METHOD /path")` 字面量（现有 66 处；`agentd/internal/modules/{sessions,chat,tasks,memory}/http*.go`、`module.go`、`platform/httpserver/server.go`），归一化（`{id}`→`:param`） | 无服务也能跑覆盖率门禁；与 A 交叉验证 |
+| **A. 运行时枚举（首选）** | debug 模式新增 `GET /api/debug/routes`（仅 `-debug`/`SIMO_DEBUG=1` 且 loopback），返回 `[{method,pattern,source}]`，来源用模块注册信息 | 真实注册表，不靠文本推断 |
+| **B. 源码枚举（兜底/CI 无服务时）** | 扫描 `backend/**/*.go` 中 `mux.HandleFunc("METHOD /path")` 字面量（现有 66 处；`backend/internal/modules/{sessions,chat,tasks,memory}/http*.go`、`module.go`、`platform/httpserver/server.go`），归一化（`{id}`→`:param`） | 无服务也能跑覆盖率门禁；与 A 交叉验证 |
 
 ### 7.2 动作目录侧
 
@@ -273,7 +273,7 @@ CI 门禁：`missing==0 && extra==0 && allowlist 全部有效`；覆盖率不达
 
 ```json
 { "suite": "m20", "schema": 1, "startedAt": "...", "durationMs": 0,
-  "env": { "agentdHome": "<tmp>", "baseUrl": "127.0.0.1:18900", "llm": "mock",
+  "env": { "simoHome": "<tmp>", "baseUrl": "127.0.0.1:18900", "llm": "mock",
            "simoVersion": "...", "actionsCount": 0, "routesCount": 0 },
   "summary": { "total": 0, "pass": 0, "fail": 0, "skip": 0, "criticalFail": 0, "exitCode": 0 },
   "coverage": { "ok": false, "missing": [], "extra": [], "allowlisted": [] },
@@ -375,5 +375,5 @@ CI 门禁：`missing==0 && extra==0 && allowlist 全部有效`；覆盖率不达
 - `docs/m1-contract.md`（REST/WS 契约与 M1 验收）、`docs/m13-contract.md`（schedule 触发/错过补偿）
 - `design/17-评测设计-v0.md`（E0：L1/L2、grader、隔离、门禁纪律、WITH/W/OUT）
 - `evals/run.mjs`（现有 case/steps/graders/exit code 0/1/2、独立端口/home、token 统计、契约诊断）
-- 现有路由清单（覆盖率基线）：`agentd/internal/modules/{sessions,chat,tasks,memory}/http*.go` + `module.go` + `platform/httpserver/server.go`（本次 grep 得 **66 处 `mux.HandleFunc`**）
-- `agentd/README.md` §M9–M13（审批/审计/pwsh/spill/工作流/调度现状）
+- 现有路由清单（覆盖率基线）：`backend/internal/modules/{sessions,chat,tasks,memory}/http*.go` + `module.go` + `platform/httpserver/server.go`（本次 grep 得 **66 处 `mux.HandleFunc`**）
+- `backend/README.md` §M9–M13（审批/审计/pwsh/spill/工作流/调度现状）

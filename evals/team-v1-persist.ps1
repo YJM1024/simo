@@ -1,12 +1,12 @@
 # team-v1-persist.ps1 -- M24 team V1 persistence across restart
 #
 # Why a separate script: verifying "members + internal messages survive restart" needs two
-# processes on the SAME AGENTD_HOME, which a single run.mjs invocation cannot do.
+# processes on the SAME SIMO_HOME, which a single run.mjs invocation cannot do.
 #   1) start server -> team.template.upsert + team.create (2 members, generic + template)
 #   2) send one internal team message (team.message.send, not visible in user main window)
 #   3) kill the process -> restart on the same home
 #   4) assert: same team id/members, internal messages still present, member sessions still listed
-# Owns its own port + temp AGENTD_HOME and only stops the PIDs it started (never touches 8787).
+# Owns its own port + temp SIMO_HOME and only stops the PIDs it started (never touches 8787).
 #
 # Usage: powershell -NoProfile -ExecutionPolicy Bypass -File evals/team-v1-persist.ps1 [-Exe path] [-Port 18916]
 # NOTE: keep this file ASCII-only (Windows PowerShell 5.1 misreads UTF-8 without BOM).
@@ -28,10 +28,10 @@ function Add-Check([string]$name, [bool]$ok, [string]$note) {
 }
 
 $repo = Split-Path -Parent $PSScriptRoot
-if (-not $Exe) { $Exe = Join-Path $repo 'agentd\simo.exe' }
+if (-not $Exe) { $Exe = Join-Path $repo 'backend\simo.exe' }
 if (-not (Test-Path $Exe)) { Write-Host "FAIL: exe not found: $Exe"; exit 2 }
 
-$work = Join-Path ([System.IO.Path]::GetTempPath()) ("agentd-teampersist-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
+$work = Join-Path ([System.IO.Path]::GetTempPath()) ("simo-teampersist-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
 $homeDir = Join-Path $work 'home'
 New-Item -ItemType Directory -Force -Path $homeDir | Out-Null
 $base = "http://127.0.0.1:$Port"
@@ -41,9 +41,9 @@ Write-Host "exe: $Exe"
 Write-Host "port: $Port"
 Write-Host ''
 
-$env:AGENTD_HOME = $homeDir
-$env:AGENTD_LLM = 'mock'
-$env:AGENTD_DEBUG = '1'
+$env:SIMO_HOME = $homeDir
+$env:SIMO_LLM = 'mock'
+$env:SIMO_DEBUG = '1'
 
 function Start-Backend([string]$label) {
   $log = Join-Path $work ($label + '.log')
@@ -107,7 +107,7 @@ Stop-Backend $s1
 
 # ---------------------------------------------------------------- phase 2: restart same home
 $s2 = Start-Backend 'second'
-Add-Check 'Backend restarts on same AGENTD_HOME' $s2.Ready $(if ($s2.Ready) { $base } else { 'no /api/health' })
+Add-Check 'Backend restarts on same SIMO_HOME' $s2.Ready $(if ($s2.Ready) { $base } else { 'no /api/health' })
 if (-not $s2.Ready) { Stop-Backend $s2; exit 1 }
 
 $teamAfter = Get-Json ('/api/teams/' + $teamId)

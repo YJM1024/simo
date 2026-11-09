@@ -1,7 +1,7 @@
 # workflow-restart.ps1 -- M10 restart-recovery check (real process restart)
 #
 # Why a separate script: run.mjs assumes an already-running server, but this check
-# must kill and restart the process. The script owns its own port + temp AGENTD_HOME
+# must kill and restart the process. The script owns its own port + temp SIMO_HOME
 # and only stops the PID it started, so the user's 8787 instance is never touched.
 #
 # Usage:
@@ -35,13 +35,13 @@ function Add-Check([string]$name, [bool]$ok, [string]$note) {
 $script:total = 0
 $script:failures = @()
 $repo = Split-Path -Parent $PSScriptRoot
-if (-not $Exe) { $Exe = Join-Path $repo 'toolchain\tmp\release\agentd.exe' }
+if (-not $Exe) { $Exe = Join-Path $repo 'toolchain\tmp\release\simo.exe' }
 if (-not (Test-Path $Exe)) {
-  Write-Host "FAIL: agentd exe not found: $Exe"
+  Write-Host "FAIL: simo exe not found: $Exe"
   exit 2
 }
 
-$work = Join-Path ([System.IO.Path]::GetTempPath()) ("agentd-wfrestart-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
+$work = Join-Path ([System.IO.Path]::GetTempPath()) ("simo-wfrestart-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
 $homeDir = Join-Path $work 'home'
 New-Item -ItemType Directory -Force -Path $homeDir | Out-Null
 $base = "http://127.0.0.1:$Port"
@@ -50,9 +50,9 @@ Write-Host "exe: $Exe"
 Write-Host "port: $Port"
 Write-Host ''
 
-$env:AGENTD_HOME = $homeDir
-$env:AGENTD_LLM = 'mock'
-$env:AGENTD_DEBUG = '1'
+$env:SIMO_HOME = $homeDir
+$env:SIMO_LLM = 'mock'
+$env:SIMO_DEBUG = '1'
 
 function Start-Backend([string]$label) {
   $log = Join-Path $work ($label + '.log')
@@ -104,7 +104,7 @@ $alive1 = $null -ne (Get-Process -Id $s1.Proc.Id -ErrorAction SilentlyContinue)
 Add-Check 'Process stopped before restart' (-not $alive1) ("pid=" + $s1.Proc.Id)
 
 $s2 = Start-Backend 'after'
-Add-Check 'Backend restarts on same AGENTD_HOME' $s2.Ready $(if ($s2.Ready) { $base } else { 'no /api/health in 20s' })
+Add-Check 'Backend restarts on same SIMO_HOME' $s2.Ready $(if ($s2.Ready) { $base } else { 'no /api/health in 20s' })
 if (-not $s2.Ready) { Stop-Backend $s2; Write-Host 'aborted'; exit 1 }
 
 # ---------------------------------------------------------------- 3) assertions after restart

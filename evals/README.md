@@ -24,23 +24,23 @@ node evals/selftest.mjs                              # 只跑 harness 自检（7
 ### 服务侧环境（M2 起）
 
 ```powershell
-$env:AGENTD_HOME = "E:\tmp\agentd-home"   # 独立数据根，别用真实 ~/.agentd
-$env:AGENTD_LLM  = "mock"                 # 确定性 mock
-$env:AGENTD_DEBUG = "1"                   # 打开 /api/debug/last-llm-request
-agentd.exe serve -addr 127.0.0.1:8899
+$env:SIMO_HOME = "E:\tmp\simo-home"   # 独立数据根，别用真实 ~/.simo
+$env:SIMO_LLM  = "mock"                 # 确定性 mock
+$env:SIMO_DEBUG = "1"                   # 打开 /api/debug/last-llm-request
+simo.exe serve -addr 127.0.0.1:8899
 node evals/run.mjs --base-url http://127.0.0.1:8899
 ```
 
 > **并行跑评测必须换端口 + 换 home**。两个评测共用一个端口时，请求会连到别人的实例：
 > 审批写进了别人的 workspace（表现为"allow 后文件不存在"）、任务状态互相干扰（WS 错误/超时）。
-> 诊断项「被测服务写入本 AGENTD_HOME」就是用来抓这类**假失败**的。
-> **eval 进程自身也要设同一个 `AGENTD_HOME`**：`{{agentdHome}}` 变量由 run.mjs 从自己的 env 读取，用来断文件（如 `permission-ask` 的 mock-write.txt）；只给服务设、不给评测设会误报"文件不存在"。
+> 诊断项「被测服务写入本 SIMO_HOME」就是用来抓这类**假失败**的。
+> **eval 进程自身也要设同一个 `SIMO_HOME`**：`{{simoHome}}` 变量由 run.mjs 从自己的 env 读取，用来断文件（如 `permission-ask` 的 mock-write.txt）；只给服务设、不给评测设会误报"文件不存在"。
 
 ### 交付冒烟（M7）
 
 ```powershell
 powershell -NoProfile -File evals/release-smoke.ps1              # 构建 + 单二进制冷启动冒烟
-powershell -NoProfile -File evals/release-smoke.ps1 -SkipBuild   # 复用已有 toolchain/tmp/release/agentd.exe
+powershell -NoProfile -File evals/release-smoke.ps1 -SkipBuild   # 复用已有 toolchain/tmp/release/simo.exe
 node evals/release-smoke.mjs --probe --base-url <url>            # 只断言已运行的服务（不 spawn）
 node evals/release-smoke.mjs --deploy-check                      # deploy/ 静态核对（无容器 → 未实测）
 ```
@@ -77,9 +77,9 @@ node evals/release-smoke.mjs --deploy-check                      # deploy/ 静�
 | M24 | `team-v1-enter` / `team-v1-members` / `team-v1-messages` / `team-v1-persist` | 3/3 PASS + 1 PENDING（持久化由 `team-v1-persist.ps1` 12/12 覆盖） |
 | M25 | `team-v2-template` / `team-v2-instance` / `team-v2-owner` / `team-v2-trigger` / `team-v2-hidden` | 5/5 PASS |
 | M26 | `view-create` / `view-validate` / `view-rollback` / `view-hidden` / `view-equivalence` | 5/5 PASS |
-| M27 | `recall-r2-twohop` / `recall-r2-agentic` / `recall-r2-switch` | 2/2 PASS + 1 PENDING（`AGENTD_RECALL_R2=0` 由 `m27-m30-env.ps1` 8/8 覆盖） |
+| M27 | `recall-r2-twohop` / `recall-r2-agentic` / `recall-r2-switch` | 2/2 PASS + 1 PENDING（`SIMO_RECALL_R2=0` 由 `m27-m30-env.ps1` 8/8 覆盖） |
 | M28 | `view-editor` | 1/1 PASS（patch add/remove/replace + 409 + rollback 内容一致） |
-| M30 | `memory-consolidate-basic` / `memory-consolidate-idempotent` / `memory-consolidate-conflict` / `memory-consolidate-agent` / `memory-consolidate-off` | 4/4 PASS + 1 PENDING（`AGENTD_MEMORY_CONSOLIDATE=0` 由 `m27-m30-env.ps1` 覆盖） |
+| M30 | `memory-consolidate-basic` / `memory-consolidate-idempotent` / `memory-consolidate-conflict` / `memory-consolidate-agent` / `memory-consolidate-off` | 4/4 PASS + 1 PENDING（`SIMO_MEMORY_CONSOLIDATE=0` 由 `m27-m30-env.ps1` 覆盖） |
 | M31 | `team-ws-events` | 1/1 PASS（team.created/member.added/trigger.fired、幂等 fire 不重复、不进 chat 消息流） |
 | M32 | `recall-vector` | PENDING→`m32-vector-env.ps1` 8/8（vector=1：trace.paths 含 vector、items 非空、vector_used；默认关由 `m27-m30-env.ps1` 12/12 覆盖） |
 | M41 | `card-send` / `card-validation` / `card-agent-route` / `card-action-route` / `card-idempotency` / `card-version` / `card-action-approval` / `card-persist` | 7/7 PASS + 1 PENDING（`card-persist` 由 `card-persist.ps1` 6/6 覆盖） |
@@ -94,7 +94,7 @@ node evals/release-smoke.mjs --deploy-check                      # deploy/ 静�
 |---|---|
 | `id` / `name` / `tier` | 必填 id；tier = `critical`/`normal` |
 | `pending` | 字符串原因；有则整条跳过 |
-| `vars` | 模板变量；内置 `{{runId}}`、`{{caseSession}}`（每条 case 独立会话）、`{{agentdHome}}` |
+| `vars` | 模板变量；内置 `{{runId}}`、`{{caseSession}}`（每条 case 独立会话）、`{{simoHome}}` |
 | `steps[]` / `graders[]` | 见下 |
 
 **两套插值**：
@@ -209,7 +209,7 @@ node evals/release-smoke.mjs --deploy-check                      # deploy/ 静�
 ```powershell
 # 真实模型 smoke（自建临时 home + 独立端口 18903 + 只停自己 PID；不碰 8787）
 powershell -NoProfile -ExecutionPolicy Bypass -File evals/real-smoke.ps1 ^
-  -Exe agentd\simo.exe -Port 18903 -TokenBudget 45000 -PriceIn 0.5 -PriceOut 2
+  -Exe simo\simo.exe -Port 18903 -TokenBudget 45000 -PriceIn 0.5 -PriceOut 2
 
 # 直接跑（服务已由人工以真实模型启动时）
 node evals/run.mjs --real --base-url http://127.0.0.1:18903 --price-in 0.5 --price-out 2
@@ -233,7 +233,7 @@ node evals/run.mjs --real --base-url http://127.0.0.1:18903 --price-in 0.5 --pri
 **token 控制**：
 
 - prompt 只有一句话；每个 case 独立新会话（短历史）；**不断言具体文案**；
-- `AGENTD_MAX_OUTPUT_TOKENS=256`（默认）、`AGENTD_REASONING_DEFAULT=low`（默认）——real-smoke.ps1 已设置；
+- `SIMO_MAX_OUTPUT_TOKENS=256`（默认）、`SIMO_REASONING_DEFAULT=low`（默认）——real-smoke.ps1 已设置；
 - 运行结束打印 `/api/usage` 差值与**逐 case token**；`--price-in/--price-out`（元/百万 token）给成本估算，不给则只报 token。
 
 **实测一次（2026-11-07，deepseek-flash，maxOutputTokens=256 / reasoning=low）**：
@@ -274,9 +274,9 @@ node evals/run.mjs --real --base-url http://127.0.0.1:18903 --price-in 0.5 --pri
 **M12 运行前提（评测/冒烟起服时需要）**：
 
 ```powershell
-$env:AGENTD_PYTHON = "E:\dsh_home\dsh-runtimes\dsh-primary-runtime\dependencies\python\python.exe"  # 自带 python（含 python-docx/openpyxl/python-pptx）
-$env:AGENTD_SCRIPTS = "<repo>\agentd\scripts"        # office_helper.py 所在目录
-$env:AGENTD_CHROME = "C:\Program Files\Google\Chrome\Application\chrome.exe"  # make_pdf 用；缺省会自动探测 Program Files
+$env:SIMO_PYTHON = "E:\dsh_home\dsh-runtimes\dsh-primary-runtime\dependencies\python\python.exe"  # 自带 python（含 python-docx/openpyxl/python-pptx）
+$env:SIMO_SCRIPTS = "<repo>\simo\scripts"        # office_helper.py 所在目录
+$env:SIMO_CHROME = "C:\Program Files\Google\Chrome\Application\chrome.exe"  # make_pdf 用；缺省会自动探测 Program Files
 ```
 
 缺依赖时工具会返回 `code=chrome_missing` / `code=python_missing` / `code=helper_missing`（清晰错误，不静默降级）——case 会因此红，属环境缺依赖而非断言错。
@@ -345,7 +345,7 @@ $env:AGENTD_CHROME = "C:\Program Files\Google\Chrome\Application\chrome.exe"  # 
 | `python-file` | critical | `mock:python-file`：cwd=workspace，写 `python-written.txt` → `[exit code: 0]` + 文件真的落盘（fs 存在且 size>0） |
 | `python-timeout` | normal | `mock:python-sleep`（code sleep 5s / timeout_ms=1000）→ `code=TIMEOUT` + `[exit code: -1]`，不出现 exit 0 |
 | `python-spill` | normal | `mock:python-big`（print 100KB > 64KB）→ `Omitted N bytes; full result at <path>` + `[exit code: 0]` |
-| `python-env` | critical | `mock:python-env`：子进程 env 白名单——`AGENTD_HOME` 可见、`PATH_SET=True`；**不含** `DEEPSEEK_API_KEY/AGENTD_API_KEY/OPENAI_API_KEY/sk-` |
+| `python-env` | critical | `mock:python-env`：子进程 env 白名单——`SIMO_HOME` 可见、`PATH_SET=True`；**不含** `DEEPSEEK_API_KEY/SIMO_API_KEY/OPENAI_API_KEY/sk-` |
 | `python-escape` | critical | `mock:python-outside`（`{"path":"../outside.py"}`）→ `path_denied`（越界被拒），不出现 exit 0、不泄露外部内容 |
 
 **M17 mock 触发约定（后端已实现）**：
@@ -353,7 +353,7 @@ $env:AGENTD_CHROME = "C:\Program Files\Google\Chrome\Application\chrome.exe"  # 
 - 通用：`mock:python:<code>` —— `<code>` 直接作为 run_python 的 code（也可用 `mock:run-python:code=...` / `path=...`）
 - 专用：`mock:python-sleep` / `mock:python-big` / `mock:python-env` / `mock:python-file` / `mock:python-outside`
 - 结果文本：成功末行 `[exit code: N]`；超时 `Error: python timed out after <dur> (code=TIMEOUT)` + `[exit code: -1]`；spill 沿用 `Omitted N bytes; full result at <path>`（阈值 64KB）
-- 工具名 `run_python`，审批 ask（R2）；read-only 模式下直接 `sandbox_denied`；cwd=workspace，env 白名单（`AGENTD_HOME`+PATH 等，无密钥）
+- 工具名 `run_python`，审批 ask（R2）；read-only 模式下直接 `sandbox_denied`；cwd=workspace，env 白名单（`SIMO_HOME`+PATH 等，无密钥）
 
 **M17 评测要点（踩坑）**：
 
@@ -390,7 +390,7 @@ $env:AGENTD_CHROME = "C:\Program Files\Google\Chrome\Application\chrome.exe"  # 
 
 ## 3.18 M20（动作层 CLI）——7 条
 
-运行方式：`node evals/run.mjs --base-url http://127.0.0.1:18901 --cli <repo>/agentd/simo.exe`（`cli` 步骤用 spawnSync + stdout/stderr 重定向到临时文件，绕开沙箱 Node 管道限制）。
+运行方式：`node evals/run.mjs --base-url http://127.0.0.1:18901 --cli <repo>/simo/simo.exe`（`cli` 步骤用 spawnSync + stdout/stderr 重定向到临时文件，绕开沙箱 Node 管道限制）。
 
 | id | tier | 断言什么 |
 |---|---|---|
@@ -417,7 +417,7 @@ $env:AGENTD_CHROME = "C:\Program Files\Google\Chrome\Application\chrome.exe"  # 
 - M3：记忆三端点结构、`conflicts` 是否 `status:"disputed" + items[]`、`items?q=` 是否生效、**记忆只读**（读 200 且写 404 才算 ✓，否则报"无法判断"，避免假绿）
 - M4：`/api/sessions/tree`（含 `children`/`parentId`）、`includeChildren`、`PATCH /api/sessions/<真实 id>`（用真实会话、改成它自己，幂等）
 - M5/M6：tasks 明细/取消/重试/artifacts/approvals、归档端点、`/api/specs` → 404、产物按 sessionId 过滤
-- 通用：**「被测服务写入本 AGENTD_HOME」**（本次运行是否真写进这个 home，抓端口/home 错配）
+- 通用：**「被测服务写入本 SIMO_HOME」**（本次运行是否真写进这个 home，抓端口/home 错配）
 
 ## 5. harness 自检（评测工具的回归测试）
 
@@ -435,36 +435,36 @@ run.mjs 默认先跑自检，失败 `exit 2` 并拒绝出分（`--no-selfcheck` 
 - 本环境对 >60–120s 的进程有回收行为 → 全量 30 条（≈110–120s）实测时用 `--only` 拆批跑通
 - 前端 `esbuild` 在本环境不可用（原生二进制缺失 + 沙箱禁 pipe spawn）；`tsc`/Tailwind 可跑
 - 容器交付物仅静态核对（无 Docker 运行时）
-- 全部评测在 `AGENTD_LLM=mock` 下；真模型下 `parallel-tasks`/`ambiguity`/`reasoning-echo` 可能波动，建议保持 `normal`
+- 全部评测在 `SIMO_LLM=mock` 下；真模型下 `parallel-tasks`/`ambiguity`/`reasoning-echo` 可能波动，建议保持 `normal`
 - **已知时序 flake（非阻塞）**：`workflow-advance` 的 `numeric near(collectDoneAt, draftDoneAt, tolerance=5000ms)` 依赖 mock 工作流两个无依赖任务的 `updatedAt` 间隔；机器负载高时可能超过 5000ms（M21–M26 最终验收 block2 实测一次 Δ=8049ms）。单跑连续 2 次 7/7 PASS，属时序容差问题、不是契约失败；CI 偶发时重跑该 case 即可，不据此判红。
 
 ## 7. M21–M26 终值（2026-11-08 最终验收）
 
-> 被测：`agentd/simo.exe`（21,673,472 bytes，2026-11-08 04:46，含 M26 视图 Schema）。环境：`AGENTD_LLM=mock AGENTD_DEBUG=1`、独立端口 **18901**、新建 GUID 临时 `AGENTD_HOME`（4 块各起一次新服务；不碰 8787 / simo-live.exe）。评测进程同时设同一 `AGENTD_HOME`。
+> 被测：`simo/simo.exe`（21,673,472 bytes，2026-11-08 04:46，含 M26 视图 Schema）。环境：`SIMO_LLM=mock SIMO_DEBUG=1`、独立端口 **18901**、新建 GUID 临时 `SIMO_HOME`（4 块各起一次新服务；不碰 8787 / simo-live.exe）。评测进程同时设同一 `SIMO_HOME`。
 
 | 块 | 范围 | run.mjs 结果 |
 |---|---|---|
 | block1 | M1–M8（34 条） | **34/34 PASS** |
 | block2 | M9–M15（33 条） | **28/29 PASS + 4 PENDING**（1 条 flake 重跑 PASS，见下） |
-| block3 | M17–M20（27 条，含 CLI，`--cli agentd\simo.exe`） | **25/25 PASS + 2 PENDING** |
+| block3 | M17–M20（27 条，含 CLI，`--cli simo\simo.exe`） | **25/25 PASS + 2 PENDING** |
 | block4 | M21–M26（30 条） | **27/27 PASS + 3 PENDING** |
 
 - **合计**：124 条 case = **115 条可执行（114 PASS + 1 次 flake，重跑 2/2 PASS） + 9 条 PENDING**；PENDING 全部由 9 个专项 `.ps1` 覆盖：`workflow-restart.ps1` **13/13**、`schedule-restart.ps1` **11/11**、`category-backfill.ps1` **8/8**、`reply-persist.ps1` **15/15**、`runtime-recovery.ps1` **11/11**、`runtime-long-approval.ps1` **12/12**、`team-concurrency.ps1` **6/6**、`team-executor.ps1` **4/4**、`team-v1-persist.ps1` **12/12**（本轮新增）。
 - **Flake 记录**：`workflow-advance` 的 `numeric near(collectDoneAt, draftDoneAt, tol=5000)` 在 block2 首次出现 Δ=8049（机器负载相关），单跑连续 2 次 7/7 PASS；属时序 flake，不影响契约判定，已在此记录。
-- **real-smoke**（`evals\real-smoke.ps1 -Exe agentd\simo.exe -Port 18903 -TokenBudget 45000`，3 次）：3 次均 **7/7 PASS**；token = **37,725 / 39,868 / 40,432**，**中位数 39,868**（range 37,725–40,432，目标 ≤45,000 达标）；calls = 17/18/19。
+- **real-smoke**（`evals\real-smoke.ps1 -Exe simo\simo.exe -Port 18903 -TokenBudget 45000`，3 次）：3 次均 **7/7 PASS**；token = **37,725 / 39,868 / 40,432**，**中位数 39,868**（range 37,725–40,432，目标 ≤45,000 达标）；calls = 17/18/19。
 - **验收结论**：M1–M26 无阻塞失败；M21/M22 P0 复验 5/5；M23/M24 3/3（2 PENDING→脚本 6/6、4/4）；**M25 5/5**；**M26 5/5**；默认门禁 = 124 条 mock 套件（9 PENDING 由脚本覆盖，不计入 PASS/FAIL）。
 - **事故留档**：验收开始时的临时目录清理事故已完整留档于 `evals/incident/incident-2026-11-08.md`（含命令/时间线/根因/影响面/证据）；后续验收全程只读+新建 GUID home，未再删除任何目录。
 - **已知产品问题（已转后端，不阻塞本次验收）**：team 相关内部事件类型未注册——`team.template.applied` / `team.created` 写内部事件时服务端报 `未知事件类型`（动作仍 HTTP 200）；M25/M26 case 已避开事件断言。
 
 ## 8. M27/M28/M30 终值（上一构建 12:29；最终以 §9 为准）
 
-> 被测：`agentd/simo.exe`（21,810,688 bytes，2026-11-08 12:29，含 M27 R2 召回 + M28 视图编辑 + M30 记忆巩固）。环境：`AGENTD_LLM=mock AGENTD_DEBUG=1`、独立端口 18941–18946、每块新建 GUID 临时 `AGENTD_HOME`；评测进程同时设同一 `AGENTD_HOME`；不碰 8787 / `simo-live.exe`。
+> 被测：`simo/simo.exe`（21,810,688 bytes，2026-11-08 12:29，含 M27 R2 召回 + M28 视图编辑 + M30 记忆巩固）。环境：`SIMO_LLM=mock SIMO_DEBUG=1`、独立端口 18941–18946、每块新建 GUID 临时 `SIMO_HOME`；评测进程同时设同一 `SIMO_HOME`；不碰 8787 / `simo-live.exe`。
 
 | 块 | 范围 | run.mjs 结果 |
 |---|---|---|
 | block1 | M1–M8（34 条） | **34/34 PASS** |
 | block2 | M9–M15（33 条） | **28/29 PASS + 4 PENDING**（`workflow-advance` 1 次时序 flake Δ=8044ms，单跑 2/2 PASS） |
-| block3 | M17–M20 + UI-1（27 条，含 CLI，`--cli agentd\simo.exe`） | **25/25 PASS + 2 PENDING** |
+| block3 | M17–M20 + UI-1（27 条，含 CLI，`--cli simo\simo.exe`） | **25/25 PASS + 2 PENDING** |
 | block4 | M21–M30（39 条） | **34/34 PASS + 5 PENDING** |
 
 - **合计**：133 条 case = **122 条可执行（122 PASS；1 次 flake 重跑 2/2 PASS） + 11 条 PENDING**；PENDING 由 10 个专项 `.ps1` 覆盖：`workflow-restart.ps1` 13/13、`schedule-restart.ps1` 11/11、`category-backfill.ps1` 8/8、`reply-persist.ps1` 15/15、`runtime-recovery.ps1` 11/11、`runtime-long-approval.ps1` 12/12、`team-concurrency.ps1` 6/6、`team-executor.ps1` 4/4、`team-v1-persist.ps1` 12/12、**`m27-m30-env.ps1` 8/8**（新增：R2=0 / CONSOLIDATE=0 两条 env 门禁）。
@@ -479,7 +479,7 @@ run.mjs 默认先跑自检，失败 `exit 2` 并拒绝出分（`--no-selfcheck` 
 
 ## 9. M1–M33 构建终值（2026-11-08 13:53；M34–M40 最终构建见 §10）
 
-> 被测：`agentd/simo.exe`（**21,860,864 bytes，2026-11-08 13:53:05**，sha256 `ADB4EA28…BFD`；M32 向量召回 + M33 前端 656,064）。环境：`AGENTD_LLM=mock AGENTD_DEBUG=1`、独立端口 19070–19079、每块新建 GUID 临时 `AGENTD_HOME`；评测进程同时设同一 `AGENTD_HOME`；不碰 8787 / `simo-live.exe`。
+> 被测：`simo/simo.exe`（**21,860,864 bytes，2026-11-08 13:53:05**，sha256 `ADB4EA28…BFD`；M32 向量召回 + M33 前端 656,064）。环境：`SIMO_LLM=mock SIMO_DEBUG=1`、独立端口 19070–19079、每块新建 GUID 临时 `SIMO_HOME`；评测进程同时设同一 `SIMO_HOME`；不碰 8787 / `simo-live.exe`。
 
 ### 9.1 recall 修复 + M32 向量验证（先跑）
 
@@ -488,7 +488,7 @@ run.mjs 默认先跑自检，失败 `exit 2` 并拒绝出分（`--no-selfcheck` 
 | `recall-entity-binding`（seed `memoryItems[].entityRefs` → recall 命中） | **PASS 4/4** | **3 ms**（原 30,003 ms，已不再自锁） |
 | `recall-r1` | PASS 11/11 | 5 ms |
 | `recall-rebuild` | PASS 10/10 | 11 ms |
-| `recall-vector`（`AGENTD_RECALL_VECTOR=1`） | **PENDING→`m32-vector-env.ps1` 8/8** | seed/rebuild documents=2；items=1；trace.paths=graph,vector,fts；`vector_used`；hopLimit=2 |
+| `recall-vector`（`SIMO_RECALL_VECTOR=1`） | **PENDING→`m32-vector-env.ps1` 8/8** | seed/rebuild documents=2；items=1；trace.paths=graph,vector,fts；`vector_used`；hopLimit=2 |
 | 默认关向量（`m27-m30-env.ps1`） | **PASS 4/4** | FTS still returns items=1；paths=graph,alias（无 vector）；无 `vector_used` |
 
 ### 9.2 全量分块（136 条 = 124 可执行 + 12 PENDING）
@@ -528,8 +528,8 @@ run.mjs 默认先跑自检，失败 `exit 2` 并拒绝出分（`--no-selfcheck` 
 
 ## 10. M34–M40 构建（2026-11-08 18:44；历史构建，最终 M41 见 §11）
 
-> 被测：`agentd/simo.exe`（**21,893,120 bytes，2026-11-08 18:44:40**，sha256 `9282B56228934C98CDD22C496D59CBD6D05D63B31A6B2372EC3E2168B92D949D`；内嵌 `app.js` **667,866 bytes**）。
-> 最终包：`deploy/dist/simo-M40-win-x64.zip`（**11.57 MiB / 12,127,288 B**，sha256 `62EA417C4305C0EB45C153C5B17FB488749E982766FAEDAC30A90C1FFEACE674`；包内 exe sha256 `9282B562…D949D`，与 `agentd/simo.exe` 一致）。
+> 被测：`simo/simo.exe`（**21,893,120 bytes，2026-11-08 18:44:40**，sha256 `9282B56228934C98CDD22C496D59CBD6D05D63B31A6B2372EC3E2168B92D949D`；内嵌 `app.js` **667,866 bytes**）。
+> 最终包：`deploy/dist/simo-M40-win-x64.zip`（**11.57 MiB / 12,127,288 B**，sha256 `62EA417C4305C0EB45C153C5B17FB488749E982766FAEDAC30A90C1FFEACE674`；包内 exe sha256 `9282B562…D949D`，与 `simo/simo.exe` 一致）。
 
 ### 10.1 里程碑
 
@@ -556,7 +556,7 @@ run.mjs 默认先跑自检，失败 `exit 2` 并拒绝出分（`--no-selfcheck` 
 
 ## 11. M41 最终构建（2026-11-09 00:20:56；交互卡片）
 
-> 被测：`agentd/simo.exe`（**22,002,688 bytes，2026-11-09 00:20:56**，sha256 `4905F6C7C932021EF5EC548C0D14093795617E3BEF6ADE4373412EB8C2D89421`；内嵌 `app.js` **675,939 bytes**；动作目录含 `chat.send_card`，`/api/cards/{id}` 可用）。环境：`AGENTD_LLM=mock AGENTD_DEBUG=1`、独立端口 19110–19114、每块新建 GUID 临时 `AGENTD_HOME`；评测进程同时设同一 `AGENTD_HOME`；不碰 8787 / `simo-live.exe`。
+> 被测：`simo/simo.exe`（**22,002,688 bytes，2026-11-09 00:20:56**，sha256 `4905F6C7C932021EF5EC548C0D14093795617E3BEF6ADE4373412EB8C2D89421`；内嵌 `app.js` **675,939 bytes**；动作目录含 `chat.send_card`，`/api/cards/{id}` 可用）。环境：`SIMO_LLM=mock SIMO_DEBUG=1`、独立端口 19110–19114、每块新建 GUID 临时 `SIMO_HOME`；评测进程同时设同一 `SIMO_HOME`；不碰 8787 / `simo-live.exe`。
 
 ### 11.1 M41 交互卡片（8 条 = 7 活跃 + 1 PENDING）
 

@@ -192,7 +192,7 @@
 | 来源 | 借 | 我们的改造 | 不借 |
 |---|---|---|---|
 | **Codex CLI** | Thread/Turn/Item 三层；`turn/steer` 与 queue 二分；中断是请求而非杀进程；`turn.completed` 带 usage；goal 三要素（Outcome/Constraints/Verification） | Thread=会话/Spec；Turn=13 的「步」；Item=事件条目；steer/queue 落成输入队列 + 检查点；goal 三要素压进 `acceptance[]` | Item 类型枚举绑产品面；TUI 键位；slash 命令形态；重发 prompt 式续跑 |
-| **Claude Agent SDK** | 五类消息；Result 五态（+所有 subtype 带 cost/usage）；`maxTurns` 口径；流结束再 break；只读并发/写串行；六步权限顺序；“无模式自动批准”清单；plan 对子代理生效；AgentDefinition 声明式边界；输出指令形态中和；预算软上限诚实语义 | 五类消息改造成 SSE 语义事件 + 三栏投影；Result 五态映射为 Turn 终态；权限保留顺序但不抄 30 hooks；子代理接口用 DB 三文件而非 prompt 字符串唯一通道 | 子进程=session；JSONL 存储；`canUseTool` 静默绕过；30 hooks；从文本正则提 agentId；Workflow 脚本 |
+| **Claude Agent SDK** | 五类消息；Result 五态（+所有 subtype 带 cost/usage）；`maxTurns` 口径；流结束再 break；只读并发/写串行；六步权限顺序；“无模式自动批准”清单；plan 对子代理生效；Agent Definition 声明式边界；输出指令形态中和；预算软上限诚实语义 | 五类消息改造成 SSE 语义事件 + 三栏投影；Result 五态映射为 Turn 终态；权限保留顺序但不抄 30 hooks；子代理接口用 DB 三文件而非 prompt 字符串唯一通道 | 子进程=session；JSONL 存储；`canUseTool` 静默绕过；30 hooks；从文本正则提 agentId；Workflow 脚本 |
 | **DSH** | turn/step 两层；五段工具管线（pre-execute → guard → execute → post → result）；参数冻结；并行安全/独占屏障；三态取消；三屏障 fail-closed 检查点；“模型可见 ⟺ 已记录”；surface 区间替换；压缩三段式（引用 E2）；结算通知而非阻塞；委派双层预算 | checkpoint 落 SQLite 单写者；三态取消 + Ledger 恢复协议；Turn/Step 状态机显式化；委派接口换成三文件 + 双裁决（Superpowers） | 进程内 job/所有权图跨进程；Cordis 插件；workflow/team/ralph；无 turn 预算 |
 | **Superpowers** | spec 权威 / plan 论证 + plan 回链；三文件交接（父只传路径）；双裁决；修复环 ≤5 轮 + ledger；Gate Function（证据化完成）；bootstrap 重注入 | 三文件落 DB（documents）传 handle；门禁绑定框架证据（不可伪造）；修复环做成显式状态机；bootstrap 进“规则每轮重注入” | 提示词软门禁；人审 Spec 硬门（与 Spec 不可见冲突）；全量 TDD 铁律；16 技能包；文件即真相 |
 

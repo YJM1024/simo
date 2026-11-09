@@ -1,4 +1,4 @@
-# deploy/restore.ps1 -- verify and restore a Simo backup into an AGENTD_HOME
+# deploy/restore.ps1 -- verify and restore a Simo backup into an SIMO_HOME
 #
 # Safety:
 #   - verifies the zip sha256 (if <zip>.sha256 exists) and every file sha256 in manifest.json
@@ -60,8 +60,8 @@ foreach ($entry in @($manifest.files)) {
 if ($bad.Count -gt 0) { Fail ("manifest verification failed: " + ($bad -join '; ')) }
 Info ("manifest ok: " + @($manifest.files).Count + " files")
 
-$dbSrc = Join-Path $stage 'agentd.db'
-if (-not (Test-Path $dbSrc)) { Fail "agentd.db missing in backup" }
+$dbSrc = Join-Path $stage 'simo.db'
+if (-not (Test-Path $dbSrc)) { Fail "simo.db missing in backup" }
 
 if (-not $Python) {
   if ($env:SIMO_PYTHON -and (Test-Path $env:SIMO_PYTHON)) { $Python = $env:SIMO_PYTHON }
@@ -94,7 +94,7 @@ con.close()
 
 if ($VerifyOnly) { Info "verify-only: backup is valid"; exit 0 }
 
-if (-not $DataDir) { Fail "pass -DataDir <target AGENTD_HOME> (or -VerifyOnly)" }
+if (-not $DataDir) { Fail "pass -DataDir <target SIMO_HOME> (or -VerifyOnly)" }
 $DataDir = [System.IO.Path]::GetFullPath($DataDir)
 $statePath = Join-Path $DataDir '.simo-instance.json'
 if (Test-Path $statePath) {
@@ -106,10 +106,10 @@ if (Test-Path $statePath) {
   } catch { }
 }
 
-$targetDb = Join-Path $DataDir 'agentd.db'
+$targetDb = Join-Path $DataDir 'simo.db'
 New-Item -ItemType Directory -Force -Path $DataDir | Out-Null
 if ((Test-Path $targetDb) -and -not $Force) {
-  Fail "target already has agentd.db: $targetDb (use -Force to back it up and replace)"
+  Fail "target already has simo.db: $targetDb (use -Force to back it up and replace)"
 }
 
 $preDir = ''
@@ -123,7 +123,7 @@ if (Test-Path $targetDb) {
   $stamp = (Get-Date).ToString('yyyyMMdd-HHmmss')
   $preDir = Join-Path $DataDir ('pre-restore-' + $stamp)
   New-Item -ItemType Directory -Force -Path $preDir | Out-Null
-  foreach ($name in @('agentd.db', 'agentd.db-wal', 'agentd.db-shm')) {
+  foreach ($name in @('simo.db', 'simo.db-wal', 'simo.db-shm')) {
     $src = Join-Path $DataDir $name
     if (Test-Path $src) { Move-Item -Path $src -Destination (Join-Path $preDir $name) -Force }
   }
@@ -133,7 +133,7 @@ if (Test-Path $targetDb) {
 Copy-Item -Path $dbSrc -Destination $targetDb -Force
 # also restore WAL/SHM if the backup captured a stopped-server copy (data may live in the WAL)
 foreach ($suffix in @('-wal', '-shm')) {
-  $srcW = Join-Path $stage ('agentd.db' + $suffix)
+  $srcW = Join-Path $stage ('simo.db' + $suffix)
   if (Test-Path $srcW) { Copy-Item -Path $srcW -Destination ($targetDb + $suffix) -Force }
 }
 if ((Test-Path (Join-Path $stage 'config.local.json')) -and $RestoreConfig) {

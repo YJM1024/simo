@@ -4,7 +4,7 @@
   "tier": "critical",
   "vars": {
     "probe": "evals-pwsh-{{runId}}",
-    "outside": "{{agentdHome}}/outside-m9.txt"
+    "outside": "{{simoHome}}/outside-m9.txt"
   },
   "steps": [
     {

@@ -1,8 +1,8 @@
 {
   "id": "team-v0-concurrency",
-  "name": "团队并发约束（AGENTD_MAX_CONCURRENCY=1：同时 running≤1，其余 queued 且带 stateReason；workflow 并发同样）",
+  "name": "团队并发约束（SIMO_MAX_CONCURRENCY=1：同时 running≤1，其余 queued 且带 stateReason；workflow 并发同样）",
   "tier": "critical",
-  "pending": "需要以 AGENTD_MAX_CONCURRENCY=1 / AGENTD_WORKFLOW_CONCURRENCY=1 启动被测服务，单次 run.mjs 不能改 env → 由 evals/team-concurrency.ps1 真实执行（起服→2 个 workflow/多任务→断言 running≤1、queued 带 stateReason、/api/team 的 globalConcurrency=1）。脚本自建端口+临时 home，不碰 8787。",
+  "pending": "需要以 SIMO_MAX_CONCURRENCY=1 / SIMO_WORKFLOW_CONCURRENCY=1 启动被测服务，单次 run.mjs 不能改 env → 由 evals/team-concurrency.ps1 真实执行（起服→2 个 workflow/多任务→断言 running≤1、queued 带 stateReason、/api/team 的 globalConcurrency=1）。脚本自建端口+临时 home，不碰 8787。",
   "vars": {
     "probe": "evals-team-conc-{{runId}}"
   },

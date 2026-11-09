@@ -2,7 +2,7 @@
 
 > **前置**：M3（记忆地基，已交付）、M9（权限/审批）、M18（SpecCore，`canArchive`）、M19（长程运行时）、M20（动作层，`memory` 命名空间）。
 > **版本**：v0.1（2026-11-08，初稿待评审）；字段名/表名/接口形状经评审后即为锁定面。
-> **依据**：[`design/24-记忆模型-v0.3.md`](../design/24-记忆模型-v0.3.md)（**v0.3.1 定稿，Lead 拍板**）、[`docs/design-core.md`](design-core.md)（用户 2026-11-07 确认的核心模型）、[`design/22-记忆与RAG-v0.md`](../design/22-记忆与RAG-v0.md)（读路径/预算/cite/打分）、[`docs/m3-contract.md`](m3-contract.md)（已实现记忆地基）、`agentd/internal/modules/memory`（现有实现，只读参考）、[`docs/m18-contract.md`](m18-contract.md)、[`docs/m19-contract.md`](m19-contract.md)、[`docs/m20-contract.md`](m20-contract.md)。
+> **依据**：[`design/24-记忆模型-v0.3.md`](../design/24-记忆模型-v0.3.md)（**v0.3.1 定稿，Lead 拍板**）、[`docs/design-core.md`](design-core.md)（用户 2026-11-07 确认的核心模型）、[`design/22-记忆与RAG-v0.md`](../design/22-记忆与RAG-v0.md)（读路径/预算/cite/打分）、[`docs/m3-contract.md`](m3-contract.md)（已实现记忆地基）、`backend/internal/modules/memory`（现有实现，只读参考）、[`docs/m18-contract.md`](m18-contract.md)、[`docs/m19-contract.md`](m19-contract.md)、[`docs/m20-contract.md`](m20-contract.md)。
 > **定位**：把 design/24 的语义**锁定为字段名/表名/接口形状/迁移步骤**，让后端、前端记忆页、评测三方可并行实现而不各写一套。**本契约不写代码**；SQL 只以语义描述（字段/约束/索引），不贴 DDL。
 > **纪律**：本文所有数字（阈值、批量、超时、性能目标）都是**工程默认、可配置、非验收承诺**；验收以 §9 的行为断言为准，数字按 M21 基线校准。
 
@@ -71,7 +71,7 @@
 
 | 边界 | 规则 |
 |---|---|
-| `chat`/`sessions`/`tasks` ↔ `memory` | 只经 `agentd/internal/core/memory` 接口；**不得 import memory 模块**，不得直接 SQL 读写记忆表（架构测试强制） |
+| `chat`/`sessions`/`tasks` ↔ `memory` | 只经 `backend/internal/core/memory` 接口；**不得 import memory 模块**，不得直接 SQL 读写记忆表（架构测试强制） |
 | 事件 | memory 模块 `Start` 订阅 `eventlog`（现有）；写完后 `emit` `memory.*` 事件（§6.6） |
 | 单写者 | 所有记忆真相写操作走 `memory.Module.Submit`（单 goroutine/串行事务）；其他 goroutine 只能读 |
 | 迁移 | 只在 `memory` 模块迁移命名空间（`schema_migrations(module='memory')`）；**不碰** chat/sessions/tasks 表结构（raw 由消息事件复制而来，不回写 chat） |
@@ -566,7 +566,7 @@
 
 ### 6.2 内部写端口（Go interface，不暴露 HTTP）
 
-`agentd/internal/core/memory` 采用**加法扩展**（chat/其它模块现有 `Search/Submit` 调用不变）：
+`backend/internal/core/memory` 采用**加法扩展**（chat/其它模块现有 `Search/Submit` 调用不变）：
 
 | 方法 | 用途 | 约束 |
 |---|---|---|
@@ -715,7 +715,7 @@
 
 ### 8.4 E2E / evals
 
-- **回归**：M1–M20 全部 evals 必须全绿（独立端口 + 独立 `AGENTD_HOME`，不动 8787）。
+- **回归**：M1–M20 全部 evals 必须全绿（独立端口 + 独立 `SIMO_HOME`，不动 8787）。
 - **新增 case（evals 侧，tier 标注）**：
 
 | case | 断言 |
@@ -836,7 +836,7 @@
 - [`docs/design-core.md`](design-core.md)（2026-11-07 用户确认：全局唯一库/五类型/金字塔/写入/canonical/不隔离/人格四项）
 - [`design/22-记忆与RAG-v0.md`](../design/22-记忆与RAG-v0.md)（读路径七步/预算 8% A/K=8/≤400 token/cite 硬要求/打分公式/写触发 W1–W3）
 - [`docs/m3-contract.md`](m3-contract.md)（已实现记忆地基：memory_items/history/candidates/conflicts/fts、API、无写接口纪律）
-- `agentd/internal/modules/memory`（现有 migrations.go/service.go/http.go/module.go）与 `agentd/internal/core/memory/memory.go`（Service/Candidate/Search 契约）
+- `backend/internal/modules/memory`（现有 migrations.go/service.go/http.go/module.go）与 `backend/internal/core/memory/memory.go`（Service/Candidate/Search 契约）
 - [`docs/m18-contract.md`](m18-contract.md)（canArchive/acceptanceKeys/boundary）、[`docs/m19-contract.md`](m19-contract.md)（长任务/归档只读/幂等）、[`docs/m20-contract.md`](m20-contract.md)（memory 动作命名空间）
 - `research/memory-first-prior-art.md`（双时态/ADD-only/实体图/失效不删的先行方案证据）
 

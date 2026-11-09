@@ -1,8 +1,8 @@
 {
   "id": "recall-vector",
-  "name": "M32 本地向量召回（AGENTD_RECALL_VECTOR=1：seed/rebuild → trace.paths 含 vector、items 非空、vector_used）",
+  "name": "M32 本地向量召回（SIMO_RECALL_VECTOR=1：seed/rebuild → trace.paths 含 vector、items 非空、vector_used）",
   "tier": "critical",
-  "pending": "需要以 AGENTD_RECALL_VECTOR=1 启动被测服务，单次 run.mjs 不能改 env → 由 evals/m32-vector-env.ps1 真实执行（起服→seed/rebuild→recall 命中向量路径→停止）；默认关闭（无 vector 路径、FTS 可用）由 m27-m30-env.ps1 覆盖。",
+  "pending": "需要以 SIMO_RECALL_VECTOR=1 启动被测服务，单次 run.mjs 不能改 env → 由 evals/m32-vector-env.ps1 真实执行（起服→seed/rebuild→recall 命中向量路径→停止）；默认关闭（无 vector 路径、FTS 可用）由 m27-m30-env.ps1 覆盖。",
   "vars": {
     "probe": "VectorProbe-{{runId}}",
     "entity": "ent-vector-{{runId}}",

@@ -35,7 +35,7 @@
 
 - `POST /api/uploads?sessionId=<id>`：`multipart/form-data`，字段名 `file`（可多次）。
 - 限额：单文件 ≤ **20 MiB**、单条消息 ≤ **5** 个附件；超限 413/400 + 统一错误信封。
-- 存储：`AGENTD_HOME/workspace/uploads/<sessionId>/<attId>-<safeName>`；文件名净化（去路径分隔符/控制字符），禁止 `..` 与绝对路径。
+- 存储：`SIMO_HOME/workspace/uploads/<sessionId>/<attId>-<safeName>`；文件名净化（去路径分隔符/控制字符），禁止 `..` 与绝对路径。
 - 返回：`{ok:true, attachments:[{id,name,mime,size,createdAt}]}`。
 
 ### 3.2 发送消息带附件

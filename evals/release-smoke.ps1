@@ -35,7 +35,7 @@ function Add-Check([string]$name, [bool]$ok, [string]$note) {
   if (-not $ok) { $script:failures += $name }
 }
 
-$work = Join-Path ([System.IO.Path]::GetTempPath()) ("agentd-release-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
+$work = Join-Path ([System.IO.Path]::GetTempPath()) ("simo-release-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
 New-Item -ItemType Directory -Force -Path $work | Out-Null
 Write-Host "workdir: $work"
 Write-Host ''
@@ -51,11 +51,11 @@ Write-Host "port: $Port"
 Write-Host ''
 
 # ---------------------------------------------------------------- 1) build
-if (-not $Exe) { $Exe = Join-Path $repo 'toolchain\tmp\release\agentd.exe' }
+if (-not $Exe) { $Exe = Join-Path $repo 'toolchain\tmp\release\simo.exe' }
 if (-not $SkipBuild) {
   New-Item -ItemType Directory -Force -Path (Split-Path $Exe -Parent) | Out-Null
   $buildLog = Join-Path $work 'build.log'
-  $buildLine = 'cd /d "{0}\agentd" && powershell -NoProfile -ExecutionPolicy Bypass -File "{1}\toolchain\go.ps1" build -o "{2}" ./cmd/agentd > "{3}" 2>&1' -f $repo, $repo, $Exe, $buildLog
+  $buildLine = 'cd /d "{0}\backend" && powershell -NoProfile -ExecutionPolicy Bypass -File "{1}\toolchain\go.ps1" build -o "{2}" ./cmd/simo > "{3}" 2>&1' -f $repo, $repo, $Exe, $buildLog
   cmd.exe /d /c $buildLine
   $ok = ($LASTEXITCODE -eq 0) -and (Test-Path $Exe)
   $size = 0
@@ -70,18 +70,18 @@ if (-not $SkipBuild) {
 # ---------------------------------------------------------------- 2) single-file delivery
 $binDir = Join-Path $work 'bin'
 New-Item -ItemType Directory -Force -Path $binDir | Out-Null
-$solo = Join-Path $binDir 'agentd.exe'
+$solo = Join-Path $binDir 'simo.exe'
 Copy-Item $Exe $solo -Force
 $entries = @(Get-ChildItem $binDir | Select-Object -ExpandProperty Name)
-$soloOk = ($entries.Count -eq 1) -and ($entries[0] -eq 'agentd.exe')
+$soloOk = ($entries.Count -eq 1) -and ($entries[0] -eq 'simo.exe')
 Add-Check 'Single-file delivery (exe stands alone)' $soloOk ("dir = [" + ($entries -join ', ') + "]")
 
-function Start-Agentd([string]$homeDir, [string]$label) {
+function Start-Simo([string]$homeDir, [string]$label) {
   New-Item -ItemType Directory -Force -Path $homeDir | Out-Null
   $log = Join-Path $work ($label + '.log')
-  $env:AGENTD_HOME = $homeDir
-  $env:AGENTD_LLM = 'mock'
-  $env:AGENTD_DEBUG = '1'
+  $env:SIMO_HOME = $homeDir
+  $env:SIMO_LLM = 'mock'
+  $env:SIMO_DEBUG = '1'
   $p = Start-Process -FilePath $solo -ArgumentList 'serve', '-addr', ("127.0.0.1:" + $Port) `
     -RedirectStandardOutput $log -RedirectStandardError ($log + '.err') -WindowStyle Hidden -PassThru
   $deadline = (Get-Date).AddSeconds(20)
@@ -95,7 +95,7 @@ function Start-Agentd([string]$homeDir, [string]$label) {
   return [pscustomobject]@{ Proc = $p; Ready = $ready; Log = $log; Home = $homeDir }
 }
 
-function Stop-Agentd($h) {
+function Stop-Simo($h) {
   if ($h -and $h.Proc) { Stop-Process -Id $h.Proc.Id -Force -ErrorAction SilentlyContinue }
   Start-Sleep -Milliseconds 300
 }
@@ -105,7 +105,7 @@ $smokeScript = Join-Path $repo 'evals\release-smoke.mjs'
 # ---------------------------------------------------------------- 3) cold start
 $homeA = Join-Path $work 'home-a'
 $probeId = 'release-smoke-' + [guid]::NewGuid().ToString('N').Substring(0, 8)
-$a1 = Start-Agentd $homeA 'cold-start'
+$a1 = Start-Simo $homeA 'cold-start'
 if ($a1.Ready) { Add-Check 'Cold start: server ready (/api/health 200)' $true $base }
 else {
   $tail = (Get-Content $a1.Log -Tail 3 -ErrorAction SilentlyContinue) -join ' | '
@@ -113,27 +113,27 @@ else {
 }
 & $node $smokeScript --probe --base-url $base --chat ($probeId + ' cold start message') --expect $probeId
 Add-Check 'Cold start probe (homepage/WS/message persisted)' ($LASTEXITCODE -eq 0) ("probe exit=$LASTEXITCODE")
-Stop-Agentd $a1
+Stop-Simo $a1
 
 # ---------------------------------------------------------------- 4) restart persistence
-$a2 = Start-Agentd $homeA 'restart'
+$a2 = Start-Simo $homeA 'restart'
 & $node $smokeScript --probe --base-url $base --expect $probeId
-Add-Check 'Restart keeps data (same AGENTD_HOME)' (($LASTEXITCODE -eq 0) -and $a2.Ready) ("restart exit=$LASTEXITCODE")
-Stop-Agentd $a2
+Add-Check 'Restart keeps data (same SIMO_HOME)' (($LASTEXITCODE -eq 0) -and $a2.Ready) ("restart exit=$LASTEXITCODE")
+Stop-Simo $a2
 
 # ---------------------------------------------------------------- 5) fresh home -> empty
 $homeB = Join-Path $work 'home-b'
-$b1 = Start-Agentd $homeB 'fresh-home'
+$b1 = Start-Simo $homeB 'fresh-home'
 & $node $smokeScript --probe --base-url $base --expect-empty
-Add-Check 'Fresh AGENTD_HOME -> empty data' (($LASTEXITCODE -eq 0) -and $b1.Ready) ("fresh-home exit=$LASTEXITCODE")
-Stop-Agentd $b1
+Add-Check 'Fresh SIMO_HOME -> empty data' (($LASTEXITCODE -eq 0) -and $b1.Ready) ("fresh-home exit=$LASTEXITCODE")
+Stop-Simo $b1
 
 # ---------------------------------------------------------------- 6) preflight: unusable home
 $blocker = Join-Path $work 'blocker'
 Set-Content -Path $blocker -Value 'not a directory' -NoNewline
 $badHome = Join-Path $blocker 'home'
 $badLog = Join-Path $work 'preflight.log'
-$env:AGENTD_HOME = $badHome
+$env:SIMO_HOME = $badHome
 $badProc = Start-Process -FilePath $solo -ArgumentList 'serve', '-addr', ("127.0.0.1:" + $Port) `
   -RedirectStandardOutput $badLog -RedirectStandardError ($badLog + '.err') -WindowStyle Hidden -PassThru
 $exited = $badProc.WaitForExit(12000)
@@ -148,7 +148,7 @@ if ($firstLine.Length -gt 160) { $firstLine = $firstLine.Substring(0, 160) }
 $exitCodeText = 'still running'
 if ($exited) { $exitCodeText = [string]$badProc.ExitCode }
 $preflightOk = $exited -and ($badProc.ExitCode -ne 0) -and $clear
-Add-Check 'Preflight: unusable AGENTD_HOME reports clear error' $preflightOk ("exit=" + $exitCodeText + "; first line: " + $firstLine)
+Add-Check 'Preflight: unusable SIMO_HOME reports clear error' $preflightOk ("exit=" + $exitCodeText + "; first line: " + $firstLine)
 
 # ---------------------------------------------------------------- 7) deploy static check
 Write-Host ''

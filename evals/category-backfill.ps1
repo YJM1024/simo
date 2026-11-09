@@ -1,18 +1,18 @@
 # category-backfill.ps1 -- M14 migration backfill check (old schema -> upgrade -> backfill)
 #
-# Why a separate script: verifying backfill needs TWO binaries on the SAME AGENTD_HOME:
+# Why a separate script: verifying backfill needs TWO binaries on the SAME SIMO_HOME:
 #   1) start an OLD build (pre-M14) -> create a session with a couple of agent replies
 #      (messages exist, but the `category` column does not exist yet)
 #   2) stop it, start the CURRENT build on the same home -> chat migration v10 runs
 #   3) GET /api/messages -> historical AGENT messages must be backfilled to `consultation`,
 #      historical USER messages keep empty category, and sessionPath is available
 #
-# Owns its own port + temp AGENTD_HOME and only stops the PIDs it started (never touches 8787).
+# Owns its own port + temp SIMO_HOME and only stops the PIDs it started (never touches 8787).
 #
 # Usage:
 #   powershell -NoProfile -ExecutionPolicy Bypass -File evals/category-backfill.ps1
 #   powershell -NoProfile -ExecutionPolicy Bypass -File evals/category-backfill.ps1 `
-#       -OldExe toolchain\tmp\agentd-m13.exe -NewExe toolchain\tmp\release\agentd.exe -Port 18905
+#       -OldExe toolchain\tmp\simo-m13.exe -NewExe toolchain\tmp\release\simo.exe -Port 18905
 #
 # NOTE: keep this file ASCII-only (Windows PowerShell 5.1 misreads UTF-8 without BOM).
 
@@ -34,12 +34,12 @@ function Add-Check([string]$name, [bool]$ok, [string]$note) {
 }
 
 $repo = Split-Path -Parent $PSScriptRoot
-if (-not $OldExe) { $OldExe = Join-Path $repo 'toolchain\tmp\agentd-m13.exe' }
-if (-not $NewExe) { $NewExe = Join-Path $repo 'agentd\simo.exe' }
+if (-not $OldExe) { $OldExe = Join-Path $repo 'toolchain\tmp\simo-m13.exe' }
+if (-not $NewExe) { $NewExe = Join-Path $repo 'backend\simo.exe' }
 if (-not (Test-Path $OldExe)) { Write-Host "FAIL: old (pre-M14) exe not found: $OldExe"; exit 2 }
 if (-not (Test-Path $NewExe)) { Write-Host "FAIL: current exe not found: $NewExe"; exit 2 }
 
-$work = Join-Path ([System.IO.Path]::GetTempPath()) ("agentd-backfill-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
+$work = Join-Path ([System.IO.Path]::GetTempPath()) ("simo-backfill-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
 $homeDir = Join-Path $work 'home'
 New-Item -ItemType Directory -Force -Path $homeDir | Out-Null
 $base = "http://127.0.0.1:$Port"
@@ -50,9 +50,9 @@ Write-Host "new exe: $NewExe"
 Write-Host "port: $Port"
 Write-Host ''
 
-$env:AGENTD_HOME = $homeDir
-$env:AGENTD_LLM = 'mock'
-$env:AGENTD_DEBUG = '1'
+$env:SIMO_HOME = $homeDir
+$env:SIMO_LLM = 'mock'
+$env:SIMO_DEBUG = '1'
 
 function Start-Backend([string]$exe, [string]$label) {
   $l = Join-Path $work ($label + '.log')
@@ -99,8 +99,8 @@ Add-Check 'Old build has agent messages before upgrade' ($oldAgents.Count -ge 1)
 Stop-Backend $old
 
 # sanity: db file exists for the upgrade
-$dbPath = Join-Path $homeDir 'agentd.db'
-Add-Check 'AGENTD_HOME db file exists before upgrade' (Test-Path $dbPath) $dbPath
+$dbPath = Join-Path $homeDir 'simo.db'
+Add-Check 'SIMO_HOME db file exists before upgrade' (Test-Path $dbPath) $dbPath
 if (-not (Test-Path $dbPath)) { Write-Host 'aborted'; exit 1 }
 
 # ---------------------------------------------------------------- 2) CURRENT build: upgrade migration

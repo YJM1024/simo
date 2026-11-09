@@ -462,4 +462,4 @@ rendererRegistry: {
 - `docs/m19-contract.md`（审批/长时等待/幂等/预算；视图动作沿用）
 - `docs/m21-memory-contract.md`、`docs/m22-recall-contract.md`（记忆/召回绑定源与不可信内容）
 - `docs/m1-contract.md` §3（现有 REST/WS 契约）、`docs/m11-contract.md`（文件/概览绑定源）
-- 现有前端模块（渲染器起点）：`web/src/features/{chat,tasks,memory,schedules,agents,workbench,sessions}`（MessageList/ChatCenter、SessionFilesView/DeliverablesBar、TaskPanel/TaskDetail、MemoryPage、UsagePage、HistoryRail、MarkdownMessage 等）
+- 现有前端模块（渲染器起点）：`frontend/src/features/{chat,tasks,memory,schedules,agents,workbench,sessions}`（MessageList/ChatCenter、SessionFilesView/DeliverablesBar、TaskPanel/TaskDetail、MemoryPage、UsagePage、HistoryRail、MarkdownMessage 等）

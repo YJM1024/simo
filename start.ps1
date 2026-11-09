@@ -1,7 +1,7 @@
 # Simo one-click launcher (Windows PowerShell 5.1+ / PowerShell 7)
 #
 # What it does:
-#   - resolves simo.exe next to this script (or in .\agentd\, .\bin\)
+#   - resolves simo.exe next to this script (or in .\backend\, .\bin\)
 #   - single-instance lock per data directory (state file + exclusive file lock)
 #   - port-in-use detection (distinguishes an existing Simo from another program)
 #   - starts the server, then polls /api/health until ready
@@ -50,12 +50,12 @@ function Resolve-SimoExe {
   }
   foreach ($candidate in @(
       (Join-Path $root 'simo.exe'),
-      (Join-Path $root 'agentd\simo.exe'),
+      (Join-Path $root 'backend\simo.exe'),
       (Join-Path $root 'bin\simo.exe')
     )) {
     if (Test-Path $candidate) { return [System.IO.Path]::GetFullPath($candidate) }
   }
-  throw "simo.exe not found next to start.ps1 (looked: .\simo.exe, .\agentd\simo.exe, .\bin\simo.exe). Pass -Exe <path>."
+  throw "simo.exe not found next to start.ps1 (looked: .\simo.exe, .\backend\simo.exe, .\bin\simo.exe). Pass -Exe <path>."
 }
 
 function Get-ListenHostPort {
@@ -171,9 +171,8 @@ $stamp = (Get-Date).ToString('yyyyMMdd-HHmmss')
 $outLog = Join-Path $LogDir ("simo-" + $stamp + ".out.log")
 $errLog = Join-Path $LogDir ("simo-" + $stamp + ".err.log")
 
-$env:AGENTD_HOME = $DataDir
 $env:SIMO_HOME = $DataDir
-if ($Model -eq 'mock') { $env:AGENTD_MODEL = 'mock'; $env:AGENTD_LLM = 'mock' } else { $env:AGENTD_MODEL = 'real' }
+if ($Model -eq 'mock') { $env:SIMO_MODEL = 'mock'; $env:SIMO_LLM = 'mock' } else { $env:SIMO_MODEL = 'real' }
 
 Write-Host "[start] Simo"
 Write-Host "        exe:   $exePath"

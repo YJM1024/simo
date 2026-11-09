@@ -20,21 +20,21 @@
 
 ## 2.5 运行拓扑：持久化沙盒（所有会话共享一个常驻实例）
 
-- **一个常驻实例**：`agentd` 是长生命周期服务；会话/子会话/任务都是它内部的数据，**不按会话创建容器**。
-- **持久数据根 `AGENTD_HOME`**（默认 `%USERPROFILE%\.agentd`，可用环境变量覆盖）：
+- **一个常驻实例**：`simo` 是长生命周期服务；会话/子会话/任务都是它内部的数据，**不按会话创建容器**。
+- **持久数据根 `SIMO_HOME`**（默认 `%USERPROFILE%\.simo`，可用环境变量覆盖）：
   ```
-  AGENTD_HOME/
-  ├── agentd.db          # SQLite（事件日志/会话/消息/任务）
+  SIMO_HOME/
+  ├── simo.db          # SQLite（事件日志/会话/消息/任务）
   ├── artifacts/         # 产物
   ├── workspace/         # 工具执行沙盒（读写限定在此）
   ├── logs/
   └── config.local.json  # 可选，覆盖默认配置
   ```
-- **迁移/上云**：拷贝或挂载 `AGENTD_HOME` + 同一镜像即可；业务代码禁止硬编码宿主绝对路径。
+- **迁移/上云**：拷贝或挂载 `SIMO_HOME` + 同一镜像即可；业务代码禁止硬编码宿主绝对路径。
 - **沙盒边界**：工具读写限定在 `workspace/` 与 `artifacts/`（权限层强制）；V1 无 OS 级隔离，容器版由容器提供。
 - **部署形态**：
   - 本机（当前）：单二进制常驻进程 + 持久目录（逻辑沙盒，等价语义）；
-  - 容器（交付物）：`deploy/Dockerfile` + `deploy/compose.yaml`（多阶段构建、非 root、只挂载 `AGENTD_HOME` 卷）；
+  - 容器（交付物）：`deploy/Dockerfile` + `deploy/compose.yaml`（多阶段构建、非 root、只挂载 `SIMO_HOME` 卷）；
   - 云端：同镜像 + 持久卷；对外访问需加鉴权（P1）。
 - **本机限制**：当前机器无 Docker/WSL/Podman，容器交付物**无法本地实测**，标记为"已编写、待容器环境验证"。
 
@@ -47,7 +47,7 @@
 | **流式** | **WebSocket**（`github.com/coder/websocket` **v1.8.15**）；端点 `/api/ws` |
 | 数据库 | **SQLite**（`modernc.org/sqlite` **v1.61.x**，纯 Go、WAL、单写者） |
 | 迁移 | 自研 `schema_migrations(module, version)` |
-| 配置 | JSON 本地文件 + 环境变量覆盖（`agentd/config.local.json` 不入库） |
+| 配置 | JSON 本地文件 + 环境变量覆盖（`backend/config.local.json` 不入库） |
 | 日志 | `log/slog` |
 | 测试 | `go test` + `httptest` + 架构测试 |
 | 模块化 | 自研 `Module` 接口 + Registry |
@@ -86,16 +86,17 @@
 ## 6. 构建与运行
 
 ```powershell
-cd web
+cd frontend
 node ..\toolchain\pnpm-run.mjs install   # 首次（或按现有方式跑 pnpm）
-node build.mjs                           # Tailwind CSS + esbuild JS + tsc --noEmit
+node build.mjs                           # 产物 frontend/dist/（Tailwind + esbuild + tsc --noEmit）
+Copy-Item .\dist\* ..\backend\internal\webui\dist\ -Recurse -Force
 
-cd ..\agentd
-..\toolchain\go.ps1 build -o simo.exe ./cmd/agentd
+cd ..\backend
+..\toolchain\go.ps1 build -o simo.exe ./cmd/simo
 .\simo.exe serve -addr 127.0.0.1:8787
 ```
 
-- 产物：`agentd/internal/webui/dist/{index.html,app.js,app.css}`。
+- 产物：`frontend/dist/{index.html,app.js,app.css}` → 复制到 `backend/internal/webui/dist/`；Go `embed` 只读后者。
 - 开发：`node build.mjs --watch`（esbuild + tailwind watch）；不引入 Vite。
 
 ## 7. 质量门禁

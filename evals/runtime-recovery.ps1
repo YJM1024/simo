@@ -7,7 +7,7 @@
 #   4) the session receives a recovery/interruption report message (no silent loss)
 #   5) when /api/debug/runtime exists (M19 debug hook), recoveries[] audit is non-empty
 #
-# Owns its own port + temp AGENTD_HOME and only stops the PIDs it started (never touches 8787).
+# Owns its own port + temp SIMO_HOME and only stops the PIDs it started (never touches 8787).
 #
 # Usage:
 #   powershell -NoProfile -ExecutionPolicy Bypass -File evals/runtime-recovery.ps1
@@ -44,10 +44,10 @@ function Add-Skip([string]$name, [string]$note) {
 }
 
 $repo = Split-Path -Parent $PSScriptRoot
-if (-not $Exe) { $Exe = Join-Path $repo 'toolchain\tmp\release\agentd.exe' }
-if (-not (Test-Path $Exe)) { Write-Host "FAIL: agentd exe not found: $Exe"; exit 2 }
+if (-not $Exe) { $Exe = Join-Path $repo 'toolchain\tmp\release\simo.exe' }
+if (-not (Test-Path $Exe)) { Write-Host "FAIL: simo exe not found: $Exe"; exit 2 }
 
-$work = Join-Path ([System.IO.Path]::GetTempPath()) ("agentd-recovery-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
+$work = Join-Path ([System.IO.Path]::GetTempPath()) ("simo-recovery-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
 $homeDir = Join-Path $work 'home'
 New-Item -ItemType Directory -Force -Path $homeDir | Out-Null
 $base = "http://127.0.0.1:$Port"
@@ -57,9 +57,9 @@ Write-Host "exe: $Exe"
 Write-Host "port: $Port"
 Write-Host ''
 
-$env:AGENTD_HOME = $homeDir
-$env:AGENTD_LLM = 'mock'
-$env:AGENTD_DEBUG = '1'
+$env:SIMO_HOME = $homeDir
+$env:SIMO_LLM = 'mock'
+$env:SIMO_DEBUG = '1'
 
 function Start-Backend([string]$label) {
   $l = Join-Path $work ($label + '.log')
@@ -124,7 +124,7 @@ Add-Check 'Process killed mid-workflow' ($null -eq (Get-Process -Id $s1.Proc.Id 
 
 # ---------------------------------------------------------------- 2) restart + assertions
 $s2 = Start-Backend 'after'
-Add-Check 'Backend restarts on same AGENTD_HOME' $s2.Ready $(if ($s2.Ready) { $base } else { 'no /api/health in 25s' })
+Add-Check 'Backend restarts on same SIMO_HOME' $s2.Ready $(if ($s2.Ready) { $base } else { 'no /api/health in 25s' })
 if (-not $s2.Ready) { Stop-Backend $s2; exit 1 }
 
 $list2 = Get-Json ('/api/workflows?sessionId=' + $sid)

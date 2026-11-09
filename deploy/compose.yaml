@@ -1,21 +1,21 @@
-# agentd 本地/单机部署（Compose v2）
+# simo 本地/单机部署（Compose v2）
 #
 # 用法（在仓库根执行）：
 #   docker compose -f deploy/compose.yaml build
 #   docker compose -f deploy/compose.yaml up -d
 #   docker compose -f deploy/compose.yaml ps
-#   docker compose -f deploy/compose.yaml logs -f agentd
+#   docker compose -f deploy/compose.yaml logs -f simo
 #   docker compose -f deploy/compose.yaml down            # 保留命名卷
 #
 # 诚实声明：本机无 Docker/WSL/Podman，**本文件未实际运行验证**（见 README「验证状态」）。
 
-name: agentd
+name: simo
 
 services:
-  agentd:
-    image: agentd:local
+  simo:
+    image: simo:local
     build:
-      # 构建上下文 = 仓库根（需要同时 COPY web/ 与 agentd/）
+      # 构建上下文 = 仓库根（需要同时 COPY frontend/ 与 backend/）
       context: ..
       dockerfile: deploy/Dockerfile
       args:
@@ -28,39 +28,39 @@ services:
         TZ: ${TZ:-Asia/Shanghai}
 
     # 只绑本机回环；默认宿主 18787，避免与用户正在使用的 8787 实例冲突。
-    # 确需 8787 且未占用时：$env:AGENTD_PORT="8787"; docker compose ... up -d
+    # 确需 8787 且未占用时：$env:SIMO_PORT="8787"; docker compose ... up -d
     ports:
-      - "127.0.0.1:${AGENTD_PORT:-18787}:8787"
+      - "127.0.0.1:${SIMO_PORT:-18787}:8787"
 
     environment:
-      AGENTD_HOME: /data
+      SIMO_HOME: /data
       # 关键：默认 127.0.0.1 只在容器内回环，端口映射会不通
-      AGENTD_ADDR: 0.0.0.0:8787
+      SIMO_ADDR: 0.0.0.0:8787
       # M1 只有 mock；M2 接真实模型时再改为 real（密钥走 env/挂载，见 README）
-      AGENTD_MODEL: mock
+      SIMO_MODEL: mock
       TZ: ${TZ:-Asia/Shanghai}
-      # 可选：模块开关（逗号分隔），例如 AGENTD_DISABLE_MODULES: "tasks"
-      # AGENTD_DISABLE_MODULES: ""
+      # 可选：模块开关（逗号分隔），例如 SIMO_DISABLE_MODULES: "tasks"
+      # SIMO_DISABLE_MODULES: ""
       # 可选：记忆/召回开关（默认值见 deploy/README.md）
-      # AGENTD_MEMORY_CONSOLIDATE: "1"
-      # AGENTD_RECALL_R2: "1"
-      # AGENTD_RECALL_VECTOR: "0"
+      # SIMO_MEMORY_CONSOLIDATE: "1"
+      # SIMO_RECALL_R2: "1"
+      # SIMO_RECALL_VECTOR: "0"
 
     # 可选：用 .env 注入（.env 不进镜像、不入库；见 README「配置与密钥」）
     # env_file:
     #   - ../.env
 
     volumes:
-      # 默认命名卷；设置 AGENTD_DATA_MOUNT 可改为宿主目录（Windows 示例：
-      #   $env:AGENTD_DATA_MOUNT="E:/simo-data"; docker compose ... up -d
+      # 默认命名卷；设置 SIMO_DATA_MOUNT 可改为宿主目录（Windows 示例：
+      #   $env:SIMO_DATA_MOUNT="E:/simo-data"; docker compose ... up -d
       # 注意短语法里的容器路径固定为 /data）。
-      - "${AGENTD_DATA_MOUNT:-agentd-data}:/data"
+      - "${SIMO_DATA_MOUNT:-simo-data}:/data"
 
     restart: unless-stopped
 
     # 让 PID 1 由 tini 处理信号/回收僵尸进程（Go 自身已处理 SIGTERM，双保险）
     init: true
-    # 优雅停机：agentd 内部 shutdown 超时 10s（cmd/agentd/main.go），留余量
+    # 优雅停机：simo 内部 shutdown 超时 10s（cmd/simo/main.go），留余量
     stop_grace_period: 15s
 
     healthcheck:
@@ -78,7 +78,7 @@ services:
       - ALL
 
     # 可选：只读根文件系统（--read-only + /tmp tmpfs）。
-    # 未验证：开启前先确认 agentd 只写 /data；本机无容器无法实测，故默认注释。
+    # 未验证：开启前先确认 simo 只写 /data；本机无容器无法实测，故默认注释。
     # read_only: true
     # tmpfs:
     #   - /tmp
@@ -94,6 +94,6 @@ services:
     # cpus: "2.0"
 
 volumes:
-  agentd-data:
+  simo-data:
     # 命名卷由 Docker 管理；备份/迁移见 README（tar 打包即可换机）
-    name: agentd-data
+    name: simo-data

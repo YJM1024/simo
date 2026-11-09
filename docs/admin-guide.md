@@ -1,14 +1,14 @@
 # 司墨管理员指南（M41 完成态）
 
 > 面向部署/维护者：安装、配置、数据目录、日志、Key 安全、外部依赖、定时任务、备份迁移与故障排查。
-> 可执行文件名为 **`simo.exe`**（司墨）；内部 Go module 仍叫 `agentd`（源码路径/构建包名不变，不影响运行与使用）。
+> 可执行文件名为 **`simo.exe`**（司墨）；内部 Go module 仍叫 `simo`（源码路径/构建包名不变，不影响运行与使用）。
 > 使用者请先看 [`user-guide.md`](user-guide.md)；版本能力与限制见 [`release-notes-v1.md`](release-notes-v1.md)。
 
 ## 1. 运行形态
 
 - **单二进制** `simo.exe`（Windows x64），内嵌前端；运行时不需要 Node、不需要额外数据库服务；
 - **默认真实模型**（DeepSeek `deepseek-flash`），需要 API Key；离线体验用 `-model mock`；
-- 一个数据目录 `AGENTD_HOME`（默认 `%USERPROFILE%\.agentd`）：SQLite、产物、工作区、上传附件、临时文件；
+- 一个数据目录 `SIMO_HOME`（默认 `%USERPROFILE%\.simo`）：SQLite、产物、工作区、上传附件、临时文件；
 - **单实例**：同一数据目录只允许一个进程；第二个实例会被文件锁拒绝；
 - 默认只监听 `127.0.0.1:8787`，**无登录/鉴权**，只适合本机。
 
@@ -18,7 +18,7 @@
 
 在 `simo.exe` 所在目录：
 
-> 若使用仓库根目录的 `start.ps1`：它会**优先启动 `simo.exe`，并兼容旧 `agentd.exe`**（适合从旧版本升级、尚未重建的场景）。
+> 若使用仓库根目录的 `start.ps1`：它会**优先启动 `simo.exe`，并兼容旧版二进制**（适合从旧版本升级、尚未重建的场景）。
 
 ```powershell
 # 启动（默认真实模型；需要先配好 Key）
@@ -43,7 +43,7 @@
 | flag | 说明 |
 |---|---|
 | `-addr` | 监听地址，默认 `127.0.0.1:8787` |
-| `-db` | SQLite 路径；相对路径相对 `AGENTD_HOME` |
+| `-db` | SQLite 路径；相对路径相对 `SIMO_HOME` |
 | `-model` | `real`（默认，需 Key）或 `mock`（离线） |
 | `-llm-model` | 模型名，默认 `deepseek-flash` |
 | `-debug` | 只读调试端点（仅本机，默认关闭） |
@@ -62,12 +62,12 @@
 
 `config.local.json` 的读取顺序（后者覆盖前者）：
 
-1. `%AGENTD_HOME%\config.local.json`
+1. `%SIMO_HOME%\config.local.json`
 2. 当前工作目录下的 `config.local.json`
 3. `simo.exe` 同目录下的 `config.local.json`
-4. `AGENTD_CONFIG` 指定的文件
+4. `SIMO_CONFIG` 指定的文件
 
-> 日常使用建议只放一份：`%AGENTD_HOME%\config.local.json`，避免从不同目录启动读到不同配置。
+> 日常使用建议只放一份：`%SIMO_HOME%\config.local.json`，避免从不同目录启动读到不同配置。
 
 ### 3.1 配置示例（默认真实模型）
 
@@ -121,29 +121,29 @@
 
 | 变量 | 作用 |
 |---|---|
-| `AGENTD_HOME` | 数据根目录（默认 `%USERPROFILE%\.agentd`） |
-| `AGENTD_CONFIG` | 额外指定一个配置文件 |
-| `AGENTD_ADDR` | 监听地址 |
-| `AGENTD_MODEL` | `real` / `mock` |
-| `AGENTD_LLM` | `real` / `mock`（与 `AGENTD_MODEL` 同义，便于脚本切换） |
-| `AGENTD_LLM_MODEL` | 模型名 |
-| `AGENTD_PROVIDER` / `AGENTD_BASE_URL` | 模型服务/地址 |
-| `AGENTD_API_KEY` / `DEEPSEEK_API_KEY` | API Key |
-| `AGENTD_MAX_OUTPUT_TOKENS` | 输出上限（低 token 测试用 256） |
-| `AGENTD_REASONING_DEFAULT` | 默认思考强度（低 token 测试用 `low`） |
-| `AGENTD_CHROME` / `AGENTD_PYTHON` / `AGENTD_SCRIPTS` | 外部工具路径（可选） |
-| `AGENTD_MEMORY_V3` | 记忆 v0.3 读开关；默认开；`0/false/off/v2` 回退旧表（排障/回滚用） |
-| `AGENTD_RECALL_R2` | 召回 R2（2 跳+agentic）；默认开；`0/false/off/v1/r1` 关闭回 R1 |
-| `AGENTD_RECALL_VECTOR` | 本地字符 n-gram TF-IDF 向量召回；默认关；`1/true/on/yes` 启用并与关键词/图谱融合；索引在 `recall_vectors`/`recall_vector_terms`，由 rebuild 维护 |
-| `AGENTD_MEMORY_CONSOLIDATE` | 记忆自动巩固；默认开；`0/false/off/no` 关闭 |
-| `AGENTD_MEMORY_CONSOLIDATE_THRESHOLD` | 触发巩固的未处理消息阈值；默认 8，正整数 |
-| `AGENTD_MEMORY_CONSOLIDATE_INTERVAL_SEC` | 定时巩固间隔秒；默认 300，最小 1 |
-| `AGENTD_MAX_CONCURRENCY` | 全局任务并发上限；默认 3，正整数，最大夹到 32 |
-| `AGENTD_WORKFLOW_CONCURRENCY` | 单工作流并发上限；默认 3，正整数，最大夹到 32 |
-| `AGENTD_TASK_EXECUTOR` | 子任务执行者：`task-npc`（默认）/ `simo`；内部会规范为 `agent:*` |
-| `AGENTD_MODULES` | 启用模块列表（逗号分隔，覆盖配置文件） |
-| `AGENTD_DISABLE_MODULES` | 禁用模块列表（逗号分隔） |
-| `AGENTD_DEBUG` | `1`/`true`/`yes` 打开调试端点 |
+| `SIMO_HOME` | 数据根目录（默认 `%USERPROFILE%\.simo`） |
+| `SIMO_CONFIG` | 额外指定一个配置文件 |
+| `SIMO_ADDR` | 监听地址 |
+| `SIMO_MODEL` | `real` / `mock` |
+| `SIMO_LLM` | `real` / `mock`（与 `SIMO_MODEL` 同义，便于脚本切换） |
+| `SIMO_LLM_MODEL` | 模型名 |
+| `SIMO_PROVIDER` / `SIMO_BASE_URL` | 模型服务/地址 |
+| `SIMO_API_KEY` / `DEEPSEEK_API_KEY` | API Key |
+| `SIMO_MAX_OUTPUT_TOKENS` | 输出上限（低 token 测试用 256） |
+| `SIMO_REASONING_DEFAULT` | 默认思考强度（低 token 测试用 `low`） |
+| `SIMO_CHROME` / `SIMO_PYTHON` / `SIMO_SCRIPTS` | 外部工具路径（可选） |
+| `SIMO_MEMORY_V3` | 记忆 v0.3 读开关；默认开；`0/false/off/v2` 回退旧表（排障/回滚用） |
+| `SIMO_RECALL_R2` | 召回 R2（2 跳+agentic）；默认开；`0/false/off/v1/r1` 关闭回 R1 |
+| `SIMO_RECALL_VECTOR` | 本地字符 n-gram TF-IDF 向量召回；默认关；`1/true/on/yes` 启用并与关键词/图谱融合；索引在 `recall_vectors`/`recall_vector_terms`，由 rebuild 维护 |
+| `SIMO_MEMORY_CONSOLIDATE` | 记忆自动巩固；默认开；`0/false/off/no` 关闭 |
+| `SIMO_MEMORY_CONSOLIDATE_THRESHOLD` | 触发巩固的未处理消息阈值；默认 8，正整数 |
+| `SIMO_MEMORY_CONSOLIDATE_INTERVAL_SEC` | 定时巩固间隔秒；默认 300，最小 1 |
+| `SIMO_MAX_CONCURRENCY` | 全局任务并发上限；默认 3，正整数，最大夹到 32 |
+| `SIMO_WORKFLOW_CONCURRENCY` | 单工作流并发上限；默认 3，正整数，最大夹到 32 |
+| `SIMO_TASK_EXECUTOR` | 子任务执行者：`task-npc`（默认）/ `simo`；内部会规范为 `agent:*` |
+| `SIMO_MODULES` | 启用模块列表（逗号分隔，覆盖配置文件） |
+| `SIMO_DISABLE_MODULES` | 禁用模块列表（逗号分隔） |
+| `SIMO_DEBUG` | `1`/`true`/`yes` 打开调试端点 |
 
 **模块**：`sessions`（会话）、`chat`（对话/工具/定时任务）、`tasks`（任务/工作流）、`memory`（记忆）。默认全开；不确定时不要动。禁用 `chat`/`sessions` 会导致服务不可用。
 
@@ -161,14 +161,14 @@ $env:DEEPSEEK_API_KEY = "<由管理员填写，不要提交>"
 .\simo.exe serve
 ```
 
-或写入 `%AGENTD_HOME%\config.local.json` 的 `apiKey` 字段，并收紧文件权限（只允许当前用户读）。
+或写入 `%SIMO_HOME%\config.local.json` 的 `apiKey` 字段，并收紧文件权限（只允许当前用户读）。
 
 ### 4.2 离线体验
 
 ```powershell
 .\simo.exe serve -model mock
 # 或
-$env:AGENTD_LLM = "mock"; .\simo.exe serve
+$env:SIMO_LLM = "mock"; .\simo.exe serve
 ```
 
 mock 不联网、确定性，适合熟悉界面/评测；**不是**真实模型。
@@ -178,8 +178,8 @@ mock 不联网、确定性，适合熟悉界面/评测；**不是**真实模型�
 不改变功能，只压低单次生成与思考强度：
 
 ```powershell
-$env:AGENTD_MAX_OUTPUT_TOKENS = "256"
-$env:AGENTD_REASONING_DEFAULT = "low"
+$env:SIMO_MAX_OUTPUT_TOKENS = "256"
+$env:SIMO_REASONING_DEFAULT = "low"
 .\simo.exe serve
 ```
 
@@ -205,7 +205,7 @@ M12 起支持生成 PDF / Word / Excel / PPT / 图片；M17 起支持通用 `run
 - 默认探测常见安装路径（Program Files 下的 Chrome/Edge），也可显式指定：
 
 ```powershell
-$env:AGENTD_CHROME = "C:\Program Files\Google\Chrome\Application\chrome.exe"
+$env:SIMO_CHROME = "C:\Program Files\Google\Chrome\Application\chrome.exe"
 .\simo.exe serve
 ```
 
@@ -214,15 +214,15 @@ $env:AGENTD_CHROME = "C:\Program Files\Google\Chrome\Application\chrome.exe"
 ### 5.2 Python 运行时：Office 生成与 `run_python`
 
 - 需要本机 Python 3，以及 `python-docx`、`openpyxl`、`python-pptx`、`Pillow`；
-- **helper 脚本已内嵌在二进制里**（`office_helper.py`），运行时写到 `AGENTD_HOME/tmp`，**不依赖当前目录或 scripts 目录**；
+- **helper 脚本已内嵌在二进制里**（`office_helper.py`），运行时写到 `SIMO_HOME/tmp`，**不依赖当前目录或 scripts 目录**；
 - Python 解释器默认探测常见安装位置/PATH（若使用随包运行环境则自动可用），也可显式指定：
 
 ```powershell
-$env:AGENTD_PYTHON = "<python.exe 路径>"
+$env:SIMO_PYTHON = "<python.exe 路径>"
 .\simo.exe serve
 ```
 
-或配置 `tools.python`。`AGENTD_SCRIPTS` / `tools.scripts` 可用于兼容自定义脚本目录（可选）。
+或配置 `tools.python`。`SIMO_SCRIPTS` / `tools.scripts` 可用于兼容自定义脚本目录（可选）。
 
 - 缺 Python → `python_missing`；缺 helper → `helper_missing`；库缺失/生成失败 → `helper_failed`（错误会带原因）。
 - 若用自定义 Python，请先安装上述库：
@@ -236,30 +236,30 @@ $env:AGENTD_PYTHON = "<python.exe 路径>"
 - 工具参数：`code`（直接给代码）或 `path`（workspace 内 `.py` 脚本）、`args`（字符串数组）、`timeout_ms`（1000–120000，默认 120s）；
 - 执行目录固定为会话 **workspace**；stdout/stderr 合并，末尾 `[exit code: N]`；
 - 输出超过 64KB 落盘（`artifacts/spill/`），聊天里显示摘要 + 路径；
-- **环境白名单**：只传必要变量（如 `AGENTD_HOME`、PATH），**不继承 API Key**；`PYTHONUTF8=1`；
+- **环境白名单**：只传必要变量（如 `SIMO_HOME`、PATH），**不继承 API Key**；`PYTHONUTF8=1`；
 - **审批**：执行类风险 `R2`，走 M9 审批；`read-only` 沙盒直接 `sandbox_denied`，`never` 策略直接拒绝；
 - 超时会杀**进程树**；路径越界拒绝；找不到 Python 返回 `python_missing`；
 - **不是完整 OS 级沙箱**：Python 代码本身仍可执行其语言能力；只运行可信代码，生产上建议配合低权限账户/容器隔离。
 
 ### 5.3 临时目录
 
-- 生成过程的临时文件在 `AGENTD_HOME/tmp`（PDF 的临时 HTML/profile、内嵌 helper 等）；
-- 需要该目录可写、磁盘有空间；异常残留可停服务后清理 `AGENTD_HOME/tmp`（不影响数据库）。
+- 生成过程的临时文件在 `SIMO_HOME/tmp`（PDF 的临时 HTML/profile、内嵌 helper 等）；
+- 需要该目录可写、磁盘有空间；异常残留可停服务后清理 `SIMO_HOME/tmp`（不影响数据库）。
 
 ---
 
-## 6. 数据目录 `AGENTD_HOME`
+## 6. 数据目录 `SIMO_HOME`
 
 ### 6.1 布局
 
-默认 `%USERPROFILE%\.agentd`（容器内通常是 `/data`）：
+默认 `%USERPROFILE%\.simo`（容器内通常是 `/data`）：
 
 ```
-AGENTD_HOME/
-├── agentd.db              # SQLite 主库（会话/消息/任务/工作流/记忆/审批/定时任务等）
-├── agentd.db-wal          # WAL 日志（运行期存在）
-├── agentd.db-shm          # WAL 共享内存（运行期存在）
-├── agentd.db.lock         # 单实例锁（记录 pid；正常退出会删除）
+SIMO_HOME/
+├── simo.db              # SQLite 主库（会话/消息/任务/工作流/记忆/审批/定时任务等）
+├── simo.db-wal          # WAL 日志（运行期存在）
+├── simo.db-shm          # WAL 共享内存（运行期存在）
+├── simo.db.lock         # 单实例锁（记录 pid；正常退出会删除）
 ├── artifacts/             # 任务产物、生成的文件（按会话/任务分目录）
 ├── workspace/             # 工具执行工作区；上传附件在 workspace/uploads/
 ├── tmp/                   # 临时文件（PDF/Office helper 等；可清理）
@@ -270,11 +270,11 @@ AGENTD_HOME/
 ### 6.2 换数据目录
 
 ```powershell
-$env:AGENTD_HOME = "D:\agentd-data"
+$env:SIMO_HOME = "D:\simo-data"
 .\simo.exe serve
 ```
 
-目录不存在会自动创建；换目录 = 全新数据；旧目录不自动删除/迁移；一个 `AGENTD_HOME` 只能被一个进程使用。
+目录不存在会自动创建；换空目录 = 全新数据；首次启动会从旧路径自动迁移到 `SIMO_HOME`（**不删旧数据**）；一个 `SIMO_HOME` 只能被一个进程使用。
 
 ### 6.3 数据库与单写者
 
@@ -313,7 +313,7 @@ curl.exe -sS "http://127.0.0.1:8787/api/stats?metric=tokens&granularity=day&from
 
 ### 6.6 M18 表结构升级（sessions v6）
 
-M18 把 Spec 从“状态/验收键”扩展为执行内核；启动时自动迁移，**迁移前先停服务并备份整个 `AGENTD_HOME`**：
+M18 把 Spec 从“状态/验收键”扩展为执行内核；启动时自动迁移，**迁移前先停服务并备份整个 `SIMO_HOME`**：
 
 - `sessions` 模块 **v6**：`specs` 增加 `goal/constraints/current/plan/executor_agent_id/state_reason/reopened_count/last_injected_version`；
 - 新增 `spec_transitions`（Spec 状态迁移 append-only 审计：from/to/version/reason/actor/at）；
@@ -327,7 +327,7 @@ M18 把 Spec 从“状态/验收键”扩展为执行内核；启动时自动迁
 
 ### 6.7 M21–M33 迁移：memory / recall / team / views / consolidation
 
-> M21–M33 的迁移版本段为 **v2–v15**（按模块实际：memory v2→v6、chat v13→v15）；启动时自动执行，失败不进入服务。升级前停服务并备份整个 `AGENTD_HOME`。
+> M21–M33 的迁移版本段为 **v2–v15**（按模块实际：memory v2→v6、chat v13→v15）；启动时自动执行，失败不进入服务。升级前停服务并备份整个 `SIMO_HOME`。
 
 | 模块 | 版本 | 内容 |
 |---|---|---|
@@ -340,10 +340,10 @@ M18 把 Spec 从“状态/验收键”扩展为执行内核；启动时自动迁
 | chat | v14 | M25 团队 V2：`team_templates`/`team_template_roles`/`team_member_roles` + `teams.template_id/version` |
 | chat | v15 | M26 视图 Schema：`view_pages`（当前页/软删）、`view_versions`（不可变版本） |
 
-- `AGENTD_MEMORY_V3` 默认开；设为 `0/false/off/v2` 时记忆读路径回退旧表，用于排障/回滚（写路径与旧表兼容策略见 m21 契约）；
+- `SIMO_MEMORY_V3` 默认开；设为 `0/false/off/v2` 时记忆读路径回退旧表，用于排障/回滚（写路径与旧表兼容策略见 m21 契约）；
 - **M31 团队 WS 事件已上线**：`team.*` 已加入用户 WS 允许表（团队页实时刷新）；仍只投影状态/摘要，不显示成员内部消息正文；团队页另有 8s REST 轮询降级；
 - 视图事件 `view.updated/view.render/view.binding.failed/view.renderer.error` 属于用户 WS 允许表；视图 schema 版本不可变，回滚生成新版本；M28 受控编辑器只提交白名单 patch；
-- 召回 R2（M27）默认开 2 跳+agentic；`AGENTD_RECALL_VECTOR` 默认关（M32 本地字符 n-gram TF-IDF；需 rebuild 索引，未启用/未重建时降级）；
+- 召回 R2（M27）默认开 2 跳+agentic；`SIMO_RECALL_VECTOR` 默认关（M32 本地字符 n-gram TF-IDF；需 rebuild 索引，未启用/未重建时降级）；
 - **不要手改表结构**；迁移失败恢复备份再启动；旧二进制回滚需同时回滚数据备份。
 
 ### 6.8 M21–M41 主要 API（只读/动作）
@@ -351,11 +351,11 @@ M18 把 Spec 从“状态/验收键”扩展为执行内核；启动时自动迁
 | 能力 | 入口 |
 |---|---|
 | 记忆 | `GET /api/memory/items`、`/entities`、`/entities/{id}`、`/graph`、`/pyramid`、`/conflicts`、`/agents`、`/agents/{id}/memory`、`/canonical/{id}` |
-| 召回 | 仅 `-debug` 本机：`GET/POST /api/debug/recall`、`POST /api/debug/recall/seed|rebuild`；R2 由 `AGENTD_RECALL_R2` 控制；rebuild 会同时重建 `recall_vectors`/`recall_vector_terms` 并返回 vectors 统计 |
+| 召回 | 仅 `-debug` 本机：`GET/POST /api/debug/recall`、`POST /api/debug/recall/seed|rebuild`；R2 由 `SIMO_RECALL_R2` 控制；rebuild 会同时重建 `recall_vectors`/`recall_vector_terms` 并返回 vectors 统计 |
 | 自动巩固 | 仅 `-debug` 本机：`POST /api/debug/memory/consolidate`、`GET /api/debug/memory/consolidation`；默认由后台阈值/定时触发 |
 | 团队 | `GET /api/sessions/{id}/team`、`GET /api/teams/{id}`、`/members`、`/messages`、`/deliverables`、`/triggers`；写操作走 `team.*` 动作 |
 | 视图 | `GET /api/views?sessionId=`、`GET /api/views/{id}`、`/versions`、`/versions/{v}`、`/render-state`；生成/回滚走 `ui.set_view`/`ui.view.rollback` 动作；M28 编辑器调同一动作 |
-| 并发 | 任务列表/运行时接口会显示并发/排队原因；配置见 §3.2 的 `AGENTD_*_CONCURRENCY` |
+| 并发 | 任务列表/运行时接口会显示并发/排队原因；配置见 §3.2 的 `SIMO_*_CONCURRENCY` |
 
 > 以上均为只读展示/动作层入口；不要用 curl 直接改表。团队/记忆/视图页面没有编辑控件（M28 视图编辑器除外），写操作通过对话或动作层并审计。
 
@@ -372,13 +372,13 @@ M18 把 Spec 从“状态/验收键”扩展为执行内核；启动时自动迁
 
 ## 7. 定时任务（schedules）
 
-- 数据存在 `agentd.db` 的 `schedules` 表（没有单独文件）；重启不丢；
+- 数据存在 `simo.db` 的 `schedules` 表（没有单独文件）；重启不丢；
 - 进程内调度器约每 5 秒检查到期任务；
 - 到点向目标会话投递内容，按正常对话/任务/工作流执行；结果以汇报消息出现在目标会话；
 - 支持 `once / interval / daily / weekly / cron`、时区、启停、立即运行；
 - 停机错过：重算下次时间，**只补最近一次**，不补历史全部；
 - 需要审批但无人应答：**暂停该定时任务并汇报**（fail-closed），不会自动放行；
-- 备份/迁移：随 `agentd.db` 一起备份；恢复后下次运行时间自动重算。
+- 备份/迁移：随 `simo.db` 一起备份；恢复后下次运行时间自动重算。
 
 > 定时任务依赖服务进程常驻；服务停止期间不会触发。V1 不做事件触发/webhook（P2）。
 
@@ -386,14 +386,14 @@ M18 把 Spec 从“状态/验收键”扩展为执行内核；启动时自动迁
 
 ## 8. 日志与诊断
 
-- 当前日志输出到**标准错误**（结构化文本）；`AGENTD_HOME/logs/` 预留；需要留存可重定向：
+- 当前日志输出到**标准错误**（结构化文本）；`SIMO_HOME/logs/` 预留；需要留存可重定向：
 
   ```powershell
-  .\simo.exe serve 2>> "$env:AGENTD_HOME\logs\agentd.log"
+  .\simo.exe serve 2>> "$env:SIMO_HOME\logs\simo.log"
   ```
 
 - 正常启动会打印：监听地址、数据根、数据库路径、模块列表、模型模式、模型名、debug 开关；
-- 排障可临时打开 `-debug` 或 `AGENTD_DEBUG=1`：**debug 钩子只在 debug 开启时注册**，且每个处理函数都再次校验**仅 loopback**；默认关闭，未开启时相关路径 404。**不要长期开启或暴露到非本机**。
+- 排障可临时打开 `-debug` 或 `SIMO_DEBUG=1`：**debug 钩子只在 debug 开启时注册**，且每个处理函数都再次校验**仅 loopback**；默认关闭，未开启时相关路径 404。**不要长期开启或暴露到非本机**。
 
   | 端点 | 用途 |
   |---|---|
@@ -439,18 +439,18 @@ M19（长程运行时）已有预览 API，**不是完整 M19 交付**；字段/
 ```powershell
 # 1) 先停服务（Ctrl+C 或结束进程）
 # 2) 拷贝整个数据目录（含 artifacts/workspace/tmp；tmp 可清理）
-Copy-Item -Recurse -Force "$env:USERPROFILE\.agentd" "D:\backup\agentd-$(Get-Date -Format yyyyMMdd-HHmmss)"
+Copy-Item -Recurse -Force "$env:USERPROFILE\.simo" "D:\backup\simo-$(Get-Date -Format yyyyMMdd-HHmmss)"
 ```
 
-- **不要**在服务运行时直接复制 `agentd.db`：WAL 可能未合并，可能不一致；
-- 必须热备时用 SQLite 在线备份（如 `sqlite3 agentd.db ".backup backup.db"`），不要文件复制；
+- **不要**在服务运行时直接复制 `simo.db`：WAL 可能未合并，可能不一致；
+- 必须热备时用 SQLite 在线备份（如 `sqlite3 simo.db ".backup backup.db"`），不要文件复制；
 - 备份含会话、任务/工作流、记忆、产物、上传附件、定时任务（DB 内）；`config.local.json` 可能含 Key，妥善保管。
 
 ### 10.2 恢复
 
 ```powershell
 # 先停服务
-Copy-Item -Recurse -Force "D:\backup\agentd-20261107-120000" "$env:USERPROFILE\.agentd"
+Copy-Item -Recurse -Force "D:\backup\simo-20261107-120000" "$env:USERPROFILE\.simo"
 .\simo.exe serve
 ```
 
@@ -458,9 +458,9 @@ Copy-Item -Recurse -Force "D:\backup\agentd-20261107-120000" "$env:USERPROFILE\.
 
 ### 10.3 迁移到新机器
 
-1. 停旧机服务，打包整个 `AGENTD_HOME`；
+1. 停旧机服务，打包整个 `SIMO_HOME`；
 2. 新机放同版本 `simo.exe`；
-3. 解压到新机 `AGENTD_HOME`（或设置 `AGENTD_HOME`）；
+3. 解压到新机 `SIMO_HOME`（或设置 `SIMO_HOME`）；
 4. 启动并检查；外部依赖（Chrome/Python）需在新机可用。
 
 ### 10.4 升级
@@ -475,7 +475,7 @@ Copy-Item -Recurse -Force "D:\backup\agentd-20261107-120000" "$env:USERPROFILE\.
 
 ### 11.1 启动即失败：需要 API Key
 
-- 默认 `real`，需 `DEEPSEEK_API_KEY`/`AGENTD_API_KEY` 或配置 `apiKey`；临时离线用 `-model mock`。
+- 默认 `real`，需 `DEEPSEEK_API_KEY`/`SIMO_API_KEY` 或配置 `apiKey`；临时离线用 `-model mock`。
 
 ### 11.2 端口被占用
 
@@ -486,15 +486,15 @@ Get-Process -Id <OwningProcess>
 
 停占用进程或换端口（`-addr 127.0.0.1:8788`）。
 
-### 11.3 单实例锁（`agentd.db.lock`）
+### 11.3 单实例锁（`simo.db.lock`）
 
-- 启动报"数据库已被另一个 agentd 实例占用"：先确认是否真有实例在跑；
+- 启动报"数据库已被另一个 simo 实例占用"：先确认是否真有实例在跑；
 - 看锁文件 `pid=...`；若该 pid 已不存在（崩溃残留），可删锁后重启；
 - **不要**在另一实例运行时删锁（可能双写损坏）。
 
 ### 11.4 数据目录不可写
 
-- 确认 `AGENTD_HOME` 存在且当前用户可写；不要放在 `Program Files` 等受保护目录；换用户目录重试。
+- 确认 `SIMO_HOME` 存在且当前用户可写；不要放在 `Program Files` 等受保护目录；换用户目录重试。
 
 ### 11.5 配置解析失败
 
@@ -502,19 +502,19 @@ Get-Process -Id <OwningProcess>
 
 ### 11.6 生成 PDF 失败（`chrome_missing` / `pdf_failed`）
 
-- 本机无 Chrome/Edge：安装，或配置 `AGENTD_CHROME`/`tools.chrome` 指向 `chrome.exe`/`msedge.exe`；
+- 本机无 Chrome/Edge：安装，或配置 `SIMO_CHROME`/`tools.chrome` 指向 `chrome.exe`/`msedge.exe`；
 - Chrome 启动受限/权限问题：看日志中的 stderr 摘要；可先用 Edge 验证。
 
 ### 11.7 生成 Office/图片失败（`python_missing` / `helper_missing` / `helper_failed`）
 
 - 安装 Python 3 并安装 `python-docx openpyxl python-pptx Pillow`；
-- 配置 `AGENTD_PYTHON`/`tools.python`；
-- `helper_missing`：确认 `AGENTD_HOME/tmp` 可写（helper 会写到那里）；
+- 配置 `SIMO_PYTHON`/`tools.python`；
+- `helper_missing`：确认 `SIMO_HOME/tmp` 可写（helper 会写到那里）；
 - `helper_failed`：看错误中的库名/原因；自定义 Python 常见于缺库。
 
 ### 11.8 临时目录问题
 
-- `AGENTD_HOME/tmp` 不可写/满盘会导致 PDF/Office 生成失败；清理残留后重试；
+- `SIMO_HOME/tmp` 不可写/满盘会导致 PDF/Office 生成失败；清理残留后重试；
 - 停服务后清理 `tmp/` 是安全的。
 
 ### 11.9 定时任务不触发
@@ -552,7 +552,7 @@ Get-Process -Id <OwningProcess>
 
 ### 11.15 Python 执行失败（`run_python`）
 
-- `python_missing`：配置 `AGENTD_PYTHON` 或 `tools.python`，或确保 PATH 中有 Python 3；
+- `python_missing`：配置 `SIMO_PYTHON` 或 `tools.python`，或确保 PATH 中有 Python 3；
 - 被拒：检查沙盒模式是否 `read-only`（执行被禁止）、审批策略是否 `never`；
 - 超时：默认 120s，可在工具参数 `timeout_ms` 调整（≤120000）；
 - 路径/参数错误：脚本必须在 workspace 内；`code`/`path` 二选一；
@@ -567,12 +567,12 @@ Get-Process -Id <OwningProcess>
 
 - 本地全链路：`deploy/ci.ps1`（构建 `simo.exe` → mock evals → 可选 real smoke → 可选 docker config）；日志/数据都在工作区 `.tmp\ci-<GUID>\`，不碰 `8787`/实时实例；
 - GitHub Actions：`.github/workflows/ci.yml`（`build-test` 必跑；`docker`/real-smoke 为可选 job）；Key 只从仓库 secrets 注入；
-- 详见 [`deploy/CI.md`](../deploy/CI.md)（含跳过 web/go/evals、单 case、失败排查与已知环境限制）。
+- 详见 [`deploy/CI.md`](../deploy/CI.md)（含跳过 frontend/go/evals、单 case、失败排查与已知环境限制）。
 
 ### 12.2 容器
 
 - 文档：[`deploy/CONTAINER.md`](../deploy/CONTAINER.md)；构建入口 `deploy/docker-build.ps1`（本机无 Docker 时明确提示/exit 2，`-DryRun` 可静态自检）；
-- `Dockerfile` 多阶段 + `compose.yaml`；容器内 `AGENTD_HOME=/data`、`AGENTD_ADDR=0.0.0.0:8787`，宿主只发布回环端口；compose 默认宿主端口 `18787`（`AGENTD_PORT` 可覆盖，避免与本地 8787 冲突）；
+- `Dockerfile` 多阶段 + `compose.yaml`；容器内 `SIMO_HOME=/data`、`SIMO_ADDR=0.0.0.0:8787`，宿主只发布回环端口；compose 默认宿主端口 `18787`（`SIMO_PORT` 可覆盖，避免与本地 8787 冲突）；
 - 生成 PDF/Office 的 Chrome/Python 依赖容器内未内置/未验证；无鉴权，容器/云端必须自行加反代鉴权；
 - **本机无 Docker/WSL/Podman：镜像构建/运行未实测**，只做静态核对；有 Docker 环境按 CONTAINER.md 补测后再改状态。
 
@@ -587,12 +587,12 @@ Get-Process -Id <OwningProcess>
 ## 13. 安全检查清单
 
 - [ ] `simo.exe serve` 能启动；配好 Key 后健康检查 `ok:true`/`ready:true`；
-- [ ] `AGENTD_HOME` 指向预期目录、可写、磁盘足够；
+- [ ] `SIMO_HOME` 指向预期目录、可写、磁盘足够；
 - [ ] 只有一个实例，无残留锁；
 - [ ] 端口只监听 `127.0.0.1`（未暴露公网）；
 - [ ] Key 只在环境变量/受保护配置里，未提交、未打印；
 - [ ] Chrome/Edge 与 Python 文档库可用（要用 PDF/Office 时）；
-- [ ] 要用 `run_python` 时确认 `AGENTD_PYTHON`/PATH 可用，审批策略与沙盒模式符合预期；只运行可信代码；
+- [ ] 要用 `run_python` 时确认 `SIMO_PYTHON`/PATH 可用，审批策略与沙盒模式符合预期；只运行可信代码；
 - [ ] 已做停服后的整目录备份；
 - [ ] 定时任务时区/目标会话正确，审批有值守；
 - [ ] 升级前已备份，可回滚旧二进制 + 备份。

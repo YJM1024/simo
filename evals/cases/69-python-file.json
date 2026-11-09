@@ -4,7 +4,7 @@
   "tier": "critical",
   "vars": {
     "probe": "evals-pyfile-{{runId}}",
-    "target": "{{agentdHome}}/workspace/python-written.txt"
+    "target": "{{simoHome}}/workspace/python-written.txt"
   },
   "steps": [
     {

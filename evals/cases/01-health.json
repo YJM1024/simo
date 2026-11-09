@@ -9,6 +9,6 @@
   "graders": [
     { "type": "regex", "target": "health.body", "pattern": "\"ok\"\\s*:\\s*true" },
     { "type": "regex", "target": "health.body", "pattern": "\"time\"\\s*:\\s*\\d{10,}" },
-    { "type": "file_exists", "path": "agentd/internal/webui/dist/index.html" }
+    { "type": "file_exists", "path": "backend/internal/webui/dist/index.html" }
   ]
 }

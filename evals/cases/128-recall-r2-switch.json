@@ -1,8 +1,8 @@
 {
   "id": "recall-r2-switch",
-  "name": "M27 召回开关：AGENTD_RECALL_R2=0 → 1 跳、无 agentic steps（hop_capped）",
+  "name": "M27 召回开关：SIMO_RECALL_R2=0 → 1 跳、无 agentic steps（hop_capped）",
   "tier": "critical",
-  "pending": "需要以 AGENTD_RECALL_R2=0 启动被测服务，单次 run.mjs 不能改 env → 由 evals/m27-m30-env.ps1 真实执行（起服 R2=0→hopLimit=1、无 steps→停止）。",
+  "pending": "需要以 SIMO_RECALL_R2=0 启动被测服务，单次 run.mjs 不能改 env → 由 evals/m27-m30-env.ps1 真实执行（起服 R2=0→hopLimit=1、无 steps→停止）。",
   "vars": {
     "q": "不存在的东西-Switch-{{runId}}"
   },

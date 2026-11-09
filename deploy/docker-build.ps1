@@ -4,7 +4,7 @@
   Build the simo container image (multi-stage: web + Go + runtime).
 .DESCRIPTION
   If Docker is not installed, prints a clear message and exits 2.
-  Build context is always the repository root (needs web/ and agentd/).
+  Build context is always the repository root (needs frontend/ and backend/).
 .PARAMETER Tag
   Image tag. Default: simo:local
 .PARAMETER Platform
@@ -34,12 +34,12 @@ if (-not (Test-Path -LiteralPath $dockerfile)) {
     Write-Host "Dockerfile not found: $dockerfile" -ForegroundColor Red
     exit 1
 }
-if (-not (Test-Path -LiteralPath (Join-Path $repoRoot "agentd\go.mod"))) {
-    Write-Host "Incomplete build context: agentd\go.mod is missing (repo root=$repoRoot)" -ForegroundColor Red
+if (-not (Test-Path -LiteralPath (Join-Path $repoRoot "backend\go.mod"))) {
+    Write-Host "Incomplete build context: backend\go.mod is missing (repo root=$repoRoot)" -ForegroundColor Red
     exit 1
 }
-if (-not (Test-Path -LiteralPath (Join-Path $repoRoot "web\package.json"))) {
-    Write-Host "Incomplete build context: web\package.json is missing" -ForegroundColor Red
+if (-not (Test-Path -LiteralPath (Join-Path $repoRoot "frontend\package.json"))) {
+    Write-Host "Incomplete build context: frontend\package.json is missing" -ForegroundColor Red
     exit 1
 }
 

@@ -1,11 +1,11 @@
 # team-concurrency.ps1 -- M23 team V0 concurrency limits (env-driven)
 #
-# Starts the server with AGENTD_MAX_CONCURRENCY=1 and AGENTD_WORKFLOW_CONCURRENCY=1,
+# Starts the server with SIMO_MAX_CONCURRENCY=1 and SIMO_WORKFLOW_CONCURRENCY=1,
 # launches two mock workflows, then asserts:
 #   - /api/team reports globalConcurrency=1 / workflowConcurrency=1
 #   - at every sample, the number of running tasks is <= 1
 #   - at least one task is queued with a non-empty stateReason (concurrency queue)
-# Owns its own port + temp AGENTD_HOME; never touches 8787.
+# Owns its own port + temp SIMO_HOME; never touches 8787.
 #
 # Usage: powershell -NoProfile -ExecutionPolicy Bypass -File evals/team-concurrency.ps1 [-Exe path] [-Port 18914]
 # NOTE: keep this file ASCII-only (Windows PowerShell 5.1 misreads UTF-8 without BOM).
@@ -27,24 +27,24 @@ function Add-Check([string]$name, [bool]$ok, [string]$note) {
 }
 
 $repo = Split-Path -Parent $PSScriptRoot
-if (-not $Exe) { $Exe = Join-Path $repo 'agentd\simo.exe' }
+if (-not $Exe) { $Exe = Join-Path $repo 'backend\simo.exe' }
 if (-not (Test-Path $Exe)) { Write-Host "FAIL: exe not found: $Exe"; exit 2 }
 
-$work = Join-Path ([System.IO.Path]::GetTempPath()) ("agentd-teamconc-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
+$work = Join-Path ([System.IO.Path]::GetTempPath()) ("simo-teamconc-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
 $homeDir = Join-Path $work 'home'
 New-Item -ItemType Directory -Force -Path $homeDir | Out-Null
 $base = "http://127.0.0.1:$Port"
 
 Write-Host "workdir: $work"
 Write-Host "exe: $Exe"
-Write-Host "port: $Port (AGENTD_MAX_CONCURRENCY=1, AGENTD_WORKFLOW_CONCURRENCY=1)"
+Write-Host "port: $Port (SIMO_MAX_CONCURRENCY=1, SIMO_WORKFLOW_CONCURRENCY=1)"
 Write-Host ''
 
-$env:AGENTD_HOME = $homeDir
-$env:AGENTD_LLM = 'mock'
-$env:AGENTD_DEBUG = '1'
-$env:AGENTD_MAX_CONCURRENCY = '1'
-$env:AGENTD_WORKFLOW_CONCURRENCY = '1'
+$env:SIMO_HOME = $homeDir
+$env:SIMO_LLM = 'mock'
+$env:SIMO_DEBUG = '1'
+$env:SIMO_MAX_CONCURRENCY = '1'
+$env:SIMO_WORKFLOW_CONCURRENCY = '1'
 
 $log = Join-Path $work 'server.log'
 $proc = Start-Process -FilePath $Exe -ArgumentList 'serve', '-addr', ("127.0.0.1:" + $Port), '-debug' `

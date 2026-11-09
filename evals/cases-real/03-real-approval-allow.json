@@ -4,7 +4,7 @@
   "tier": "normal",
   "vars": {
     "probe": "evals-real-write-{{runId}}",
-    "target": "{{agentdHome}}/workspace/real-notes.txt"
+    "target": "{{simoHome}}/workspace/real-notes.txt"
   },
   "steps": [
     { "type": "fs", "op": "remove", "path": "{{target}}", "saveAs": "cleanup" },

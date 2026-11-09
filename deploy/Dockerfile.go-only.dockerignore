@@ -1,4 +1,4 @@
-# 与 deploy/.dockerignore 相同，但**不排除** agentd/internal/webui/dist
+# 与 deploy/.dockerignore 相同，但**不排除** backend/internal/webui/dist
 # （Dockerfile.go-only 依赖上下文中的前端产物）。
 #
 # 该文件因 BuildKit 规则 `<Dockerfile 路径>.dockerignore` 生效：
@@ -6,7 +6,7 @@
 #
 # 若某天允许把本文件复制为仓库根 `.dockerignore`，请同样保持该差异。
 
-web/node_modules/
+frontend/node_modules/
 **/node_modules/
 
 toolchain/
@@ -46,8 +46,8 @@ deploy/run-local.ps1
 deploy/README.md
 
 data/
-agentd.db
-agentd.db-*
+simo.db
+simo.db-*
 artifacts/
 workspace/
 logs/

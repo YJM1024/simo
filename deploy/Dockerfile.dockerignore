@@ -8,8 +8,8 @@
 #
 # 覆盖一致性靠人工维护：修改时请同步 deploy/.dockerignore。
 
-web/node_modules/
-agentd/internal/webui/dist/
+frontend/node_modules/
+backend/internal/webui/dist/
 **/node_modules/
 
 toolchain/
@@ -49,8 +49,8 @@ deploy/run-local.ps1
 deploy/README.md
 
 data/
-agentd.db
-agentd.db-*
+simo.db
+simo.db-*
 artifacts/
 workspace/
 logs/

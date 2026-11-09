@@ -4,7 +4,7 @@ import os
 import sys
 import urllib.request
 
-CONFIG = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "agentd", "config.local.json")
+CONFIG = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "backend", "config.local.json")
 
 with open(CONFIG, "r", encoding="utf-8") as fh:
     cfg = json.load(fh)

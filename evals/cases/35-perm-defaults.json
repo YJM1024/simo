@@ -4,7 +4,7 @@
   "tier": "critical",
   "vars": {
     "probe": "evals-perm-{{runId}}",
-    "target": "{{agentdHome}}/workspace/mock-write.txt"
+    "target": "{{simoHome}}/workspace/mock-write.txt"
   },
   "steps": [
     { "type": "http", "method": "GET", "path": "/api/permissions", "expectStatus": 200, "saveAs": "perms" },

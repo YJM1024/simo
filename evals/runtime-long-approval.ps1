@@ -1,7 +1,7 @@
 # runtime-long-approval.ps1 -- M19 long-running approval check
 #
 # Phase 1 (cross-restart persistence):
-#   trigger a write approval -> kill the process -> restart on the same AGENTD_HOME ->
+#   trigger a write approval -> kill the process -> restart on the same SIMO_HOME ->
 #   the same approval must still be pending -> allow -> it executes (approved, result present)
 #
 # Phase 2 (timeout is fail-closed):
@@ -10,7 +10,7 @@
 #   approval must be expired / decided by timeout, and must NOT be auto-approved
 #   (otherwise SKIP this phase and report that the hook is pending)
 #
-# Owns its own port + temp AGENTD_HOME and only stops the PIDs it started (never touches 8787).
+# Owns its own port + temp SIMO_HOME and only stops the PIDs it started (never touches 8787).
 #
 # Usage:
 #   powershell -NoProfile -ExecutionPolicy Bypass -File evals/runtime-long-approval.ps1
@@ -40,10 +40,10 @@ function Add-Skip([string]$name, [string]$note) {
 }
 
 $repo = Split-Path -Parent $PSScriptRoot
-if (-not $Exe) { $Exe = Join-Path $repo 'toolchain\tmp\release\agentd.exe' }
-if (-not (Test-Path $Exe)) { Write-Host "FAIL: agentd exe not found: $Exe"; exit 2 }
+if (-not $Exe) { $Exe = Join-Path $repo 'toolchain\tmp\release\simo.exe' }
+if (-not (Test-Path $Exe)) { Write-Host "FAIL: simo exe not found: $Exe"; exit 2 }
 
-$work = Join-Path ([System.IO.Path]::GetTempPath()) ("agentd-longappr-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
+$work = Join-Path ([System.IO.Path]::GetTempPath()) ("simo-longappr-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
 $homeDir = Join-Path $work 'home'
 New-Item -ItemType Directory -Force -Path $homeDir | Out-Null
 $base = "http://127.0.0.1:$Port"
@@ -53,9 +53,9 @@ Write-Host "exe: $Exe"
 Write-Host "port: $Port"
 Write-Host ''
 
-$env:AGENTD_HOME = $homeDir
-$env:AGENTD_LLM = 'mock'
-$env:AGENTD_DEBUG = '1'
+$env:SIMO_HOME = $homeDir
+$env:SIMO_LLM = 'mock'
+$env:SIMO_DEBUG = '1'
 
 function Start-Backend([string]$label) {
   $l = Join-Path $work ($label + '.log')
@@ -114,7 +114,7 @@ Stop-Backend $s1
 Add-Check 'Process killed while approval pending' ($null -eq (Get-Process -Id $s1.Proc.Id -ErrorAction SilentlyContinue)) ("pid=" + $s1.Proc.Id)
 
 $s2 = Start-Backend 'after'
-Add-Check 'Backend restarts on same AGENTD_HOME' $s2.Ready $(if ($s2.Ready) { $base } else { 'no /api/health in 25s' })
+Add-Check 'Backend restarts on same SIMO_HOME' $s2.Ready $(if ($s2.Ready) { $base } else { 'no /api/health in 25s' })
 if (-not $s2.Ready) { Stop-Backend $s2; exit 1 }
 
 $a2 = Get-Json '/api/approvals'

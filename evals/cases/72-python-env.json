@@ -1,6 +1,6 @@
 {
   "id": "python-env",
-  "name": "Python 环境隔离（子进程 env 白名单：AGENTD_HOME 可见、无任何 API key/sk- 密钥）",
+  "name": "Python 环境隔离（子进程 env 白名单：SIMO_HOME 可见、无任何 API key/sk- 密钥）",
   "tier": "critical",
   "vars": {
     "probe": "evals-pyenv-{{runId}}"
@@ -117,7 +117,7 @@
     {
       "type": "regex",
       "target": "resultText",
-      "pattern": "AGENTD_HOME=[^ \\r\\n]+"
+      "pattern": "SIMO_HOME=[^ \\r\\n]+"
     },
     {
       "type": "regex",
@@ -139,7 +139,7 @@
       "target": "resultText",
       "patterns": [
         "DEEPSEEK_API_KEY",
-        "AGENTD_API_KEY",
+        "SIMO_API_KEY",
         "OPENAI_API_KEY",
         "sk-[A-Za-z0-9]{10,}"
       ]

@@ -9,7 +9,7 @@
 # 全链路（默认；需要 pnpm/esbuild 可用）
 powershell -NoProfile -ExecutionPolicy Bypass -File deploy\ci.ps1
 
-# 本机没有 pnpm/esbuild 原生工具链时（复用现有 web/dist）
+# 本机没有 pnpm/esbuild 原生工具链时（复用现有 frontend/dist）
 powershell -NoProfile -ExecutionPolicy Bypass -File deploy\ci.ps1 -SkipWeb
 
 # 只跑一部分
@@ -23,8 +23,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File deploy\ci.ps1 -SkipWeb -Only
 | 阶段 | 内容 | 失败影响 |
 |---|---|---|
 | preflight | 检查 repo/工具（Go、Node、evals） | exit 2 |
-| go | `go vet ./...` + `go test ./...`（agentd，日志 `logs\go-*.log`） | exit 1 |
-| web | `node web/build.mjs`（tsc + tailwind + esbuild；`-SkipWeb` 可跳过） | exit 1 |
+| go | `go vet ./...` + `go test ./...`（simo，日志 `logs\go-*.log`） | exit 1 |
+| web | `node frontend/build.mjs`（tsc + tailwind + esbuild；`-SkipWeb` 可跳过） | exit 1 |
 | build | 构建 `simo.exe` 到 `.tmp\ci-<GUID>\simo.exe` | exit 1，跳过后续 |
 | evals | mock 评测 **4 块**（M1–M8 / M9–M15 / M17–M20 / M21+），**每块新起服务 + 新 GUID home + 独立端口**（默认 19001–19004） | exit 1（记录块与日志） |
 | package | `deploy/package.ps1 -SkipBuild` → `deploy\dist\simo-<版本>-win-x64.zip` + `.sha256` | exit 1 |
@@ -52,9 +52,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File deploy\ci.ps1 -SkipWeb -Only
 
 | 现象 | 原因 | 处理 |
 |---|---|---|
-| preflight 失败（exit 2） | Go/Node 不在 PATH，或缺 `agentd/go.mod`/`evals/run.mjs` | 安装工具链；或让 `toolchain/go.ps1` 存在；CI 由 setup-go/setup-node 保证 |
+| preflight 失败（exit 2） | Go/Node 不在 PATH，或缺 `backend/go.mod`/`evals/run.mjs` | 安装工具链；或让 `toolchain/go.ps1` 存在；CI 由 setup-go/setup-node 保证 |
 | go vet/test 失败 | 代码/测试问题 | 看 `.tmp\ci-<id>\logs\go-vet.log` / `go-test.log`，本地复现 `..\toolchain\go.ps1 test ./...` |
-| web 阶段失败 | pnpm 依赖未装 / esbuild 原生包缺失 | CI：`pnpm install --frozen-lockfile`；本地：可先 `-SkipWeb`，或补齐 `web/node_modules` |
+| web 阶段失败 | pnpm 依赖未装 / esbuild 原生包缺失 | CI：`pnpm install --frozen-lockfile`；本地：可先 `-SkipWeb`，或补齐 `frontend/node_modules` |
 | evals 块失败 | 产品回归 / 端口冲突 / 服务没起来 | 看 `logs\server-b<k>.err.log` 与 `logs\evals-<块>.log`；换 `-PortBase`；单条复现 `node evals/run.mjs --base-url ... --only <id>` |
 | package 失败 | `deploy/package.ps1` 或磁盘/权限 | 看 `logs\package.log`；确认 `deploy\dist` 可写 |
 | docker 阶段 SKIP | 本机无 docker（预期） | 不影响；需要时在有 Docker 的机器上跑 `docker compose -f deploy/compose.yaml build` |

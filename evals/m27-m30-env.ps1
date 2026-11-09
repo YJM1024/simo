@@ -1,6 +1,6 @@
 # m27-m30-env.ps1 -- M27/M30 env-driven acceptance (R2 off, consolidation off)
 #
-# Starts the server with AGENTD_RECALL_R2=0 and AGENTD_MEMORY_CONSOLIDATE=0,
+# Starts the server with SIMO_RECALL_R2=0 and SIMO_MEMORY_CONSOLIDATE=0,
 # then performs the env-gated assertions directly (the two eval cases are marked
 # pending in run.mjs because a single run.mjs process cannot change server env):
 #   - memory-consolidate-off : no auto consolidation above threshold; manual debug still works
@@ -27,7 +27,7 @@ function Add-Check([string]$name, [bool]$ok, [string]$note) {
 }
 
 $repo = Split-Path -Parent $PSScriptRoot
-if (-not $Exe) { $Exe = Join-Path $repo 'agentd\simo.exe' }
+if (-not $Exe) { $Exe = Join-Path $repo 'backend\simo.exe' }
 if (-not (Test-Path $Exe)) { Write-Host "FAIL: exe not found: $Exe"; exit 2 }
 
 $tmpRoot = Join-Path $repo '.tmp'
@@ -39,15 +39,15 @@ $base = "http://127.0.0.1:$Port"
 
 Write-Host "workdir: $work"
 Write-Host "exe: $Exe"
-Write-Host "port: $Port (AGENTD_RECALL_R2=0, AGENTD_MEMORY_CONSOLIDATE=0)"
+Write-Host "port: $Port (SIMO_RECALL_R2=0, SIMO_MEMORY_CONSOLIDATE=0)"
 Write-Host ''
 
-$env:AGENTD_HOME = $homeDir
-$env:AGENTD_LLM = 'mock'
-$env:AGENTD_DEBUG = '1'
-$env:AGENTD_RECALL_R2 = '0'
-$env:AGENTD_MEMORY_CONSOLIDATE = '0'
-Remove-Item Env:AGENTD_RECALL_VECTOR -ErrorAction SilentlyContinue
+$env:SIMO_HOME = $homeDir
+$env:SIMO_LLM = 'mock'
+$env:SIMO_DEBUG = '1'
+$env:SIMO_RECALL_R2 = '0'
+$env:SIMO_MEMORY_CONSOLIDATE = '0'
+Remove-Item Env:SIMO_RECALL_VECTOR -ErrorAction SilentlyContinue
 
 $log = Join-Path $work 'server.log'
 $proc = Start-Process -FilePath $Exe -ArgumentList 'serve', '-addr', ("127.0.0.1:" + $Port), '-debug' `

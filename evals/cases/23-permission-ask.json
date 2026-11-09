@@ -5,7 +5,7 @@
   "vars": {
     "wmsg": "请执行 mock:write 把 TODO 写进文件。",
     "dmsg": "请执行 mock:delete 删除临时文件。",
-    "notePath": "{{agentdHome}}/workspace/mock-write.txt"
+    "notePath": "{{simoHome}}/workspace/mock-write.txt"
   },
   "steps": [
     { "type": "fs", "op": "remove", "path": "{{notePath}}", "saveAs": "cleanup" },

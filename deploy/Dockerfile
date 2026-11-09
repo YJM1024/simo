@@ -1,18 +1,18 @@
-# agentd 容器镜像（多阶段构建）
+# simo 容器镜像（多阶段构建）
 #
 # 构建上下文 = 仓库根目录（不是 deploy/）：
-#   docker build -f deploy/Dockerfile -t agentd:local .
+#   docker build -f deploy/Dockerfile -t simo:local .
 #   docker compose -f deploy/compose.yaml build
 #
 # 阶段：
-#   1) web         : node 24 + pnpm 构建前端 → agentd/internal/webui/dist（被 Go embed 内嵌）
+#   1) web         : node 24 + pnpm 构建前端 → backend/internal/webui/dist（被 Go embed 内嵌）
 #   2) build       : golang 1.27 编译静态二进制（CGO_ENABLED=0）
 #   3) runtime     : alpine（非 root、带 HEALTHCHECK）  ← 默认目标
 #   3b) runtime-distroless : distroless static（更小，但无 shell/wget → 无内置 HEALTHCHECK）
 #
 # 备选（容器内 npm/网络不可用、想复用本机构建产物）：
-#   docker build -f deploy/Dockerfile.go-only -t agentd:local .
-#   前置：先在本机跑 web 的 `node build.mjs`，使 agentd/internal/webui/dist 存在；
+#   docker build -f deploy/Dockerfile.go-only -t simo:local .
+#   前置：先在本机跑 web 的 `node build.mjs`，使 backend/internal/webui/dist 存在；
 #   该专用 Dockerfile 跳过 node 阶段，只编译 Go（其忽略清单不排除 dist）。
 #
 # 诚实声明：本机无 Docker/WSL/Podman，本文件**未经过实际构建验证**，
@@ -28,7 +28,7 @@ ARG TZ=Asia/Shanghai
 
 # ── 阶段 1：前端构建 ────────────────────────────────────────────────────────
 FROM ${NODE_IMAGE} AS web
-WORKDIR /src/web
+WORKDIR /src/frontend
 
 # 契约版本（docs/tech-stack.md §2）：Node 24.21.0 / pnpm 11.28.5
 ARG PNPM_VERSION=11.28.5
@@ -40,18 +40,18 @@ RUN if command -v corepack >/dev/null 2>&1; then \
  && pnpm --version
 
 # 先只拷 manifest 与 lockfile，最大化依赖层缓存（lockfileVersion 9.0）
-COPY web/package.json web/pnpm-lock.yaml ./
+COPY frontend/package.json frontend/pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --config.strictDepBuilds=false
 
 # 再拷源码（node_modules 已被排除，见 .dockerignore / Dockerfile.dockerignore）
-COPY web/ ./
+COPY frontend/ ./
 
 # 构建：tsc --noEmit → tailwind CSS → esbuild JS → 复制 public/index.html
-# 输出目录由 web/build.mjs 固定为 ../agentd/internal/webui/dist
+# 前端产物固定输出 frontend/dist；后续再复制进 backend/internal/webui/dist 供 Go embed。
 RUN node build.mjs \
- && test -f /src/agentd/internal/webui/dist/index.html \
- && test -f /src/agentd/internal/webui/dist/app.js \
- && test -f /src/agentd/internal/webui/dist/app.css
+ && test -f /src/frontend/dist/index.html \
+ && test -f /src/frontend/dist/app.js \
+ && test -f /src/frontend/dist/app.css
 
 # ── 阶段 2：Go 编译（静态、无 CGO）──────────────────────────────────────────
 FROM ${GO_IMAGE} AS build
@@ -62,17 +62,17 @@ ARG GOPROXY=https://goproxy.cn,direct
 ENV GOPROXY=${GOPROXY} GOSUMDB=off GOTOOLCHAIN=local CGO_ENABLED=0
 
 # 依赖层缓存
-COPY agentd/go.mod agentd/go.sum ./agentd/
-RUN cd agentd && go mod download
+COPY backend/go.mod backend/go.sum ./backend/
+RUN cd backend && go mod download
 
 # 源码 + 前端产物（覆盖/创建 embed 目录，保证镜像内前端是最新构建）
-COPY agentd/ ./agentd/
-COPY --from=web /src/agentd/internal/webui/dist ./agentd/internal/webui/dist
+COPY backend/ ./backend/
+COPY --from=web /src/frontend/dist ./backend/internal/webui/dist
 
 # -trimpath/-s -w 减小体积；-buildvcs=false：容器内无 .git 时避免版本信息报错
 RUN mkdir -p /out \
- && cd agentd \
- && go build -trimpath -buildvcs=false -ldflags="-s -w" -o /out/simo ./cmd/agentd \
+ && cd backend \
+ && go build -trimpath -buildvcs=false -ldflags="-s -w" -o /out/simo ./cmd/simo \
  && mkdir -p /out/data
 
 # ── 阶段 3b：distroless（可选目标，--target runtime-distroless）──────────────
@@ -84,8 +84,8 @@ ARG TZ
 WORKDIR /app
 COPY --from=build --chown=65532:65532 /out/simo /simo
 COPY --from=build --chown=65532:65532 /out/data /data
-ENV AGENTD_HOME=/data \
-    AGENTD_ADDR=0.0.0.0:8787 \
+ENV SIMO_HOME=/data \
+    SIMO_ADDR=0.0.0.0:8787 \
     TZ=${TZ}
 EXPOSE 8787
 VOLUME ["/data"]
@@ -98,21 +98,21 @@ FROM ${RUNTIME_IMAGE} AS runtime
 ARG TZ
 
 # 非 root：固定 uid/gid=10001，避免依赖镜像默认用户
-RUN addgroup -g 10001 -S agentd \
- && adduser -u 10001 -S -G agentd -h /app -s /sbin/nologin agentd \
+RUN addgroup -g 10001 -S simo \
+ && adduser -u 10001 -S -G simo -h /app -s /sbin/nologin simo \
  && apk add --no-cache ca-certificates tzdata
 
 WORKDIR /app
 COPY --from=build /out/simo /simo
 
-# /data = AGENTD_HOME（SQLite/artifacts/workspace/logs）；先建再 chown，
+# /data = SIMO_HOME（SQLite/artifacts/workspace/logs）；先建再 chown，
 # 命名卷首次挂载时会继承该目录的属主（bind mount 需宿主侧自行 chown，见 README）。
 RUN mkdir -p /data && chown -R 10001:10001 /data
 
-# AGENTD_ADDR 必须改成 0.0.0.0：默认 127.0.0.1 只在容器内回环，端口映射不通。
-ENV AGENTD_HOME=/data \
-    AGENTD_ADDR=0.0.0.0:8787 \
-    AGENTD_MODEL=mock \
+# SIMO_ADDR 必须改成 0.0.0.0：默认 127.0.0.1 只在容器内回环，端口映射不通。
+ENV SIMO_HOME=/data \
+    SIMO_ADDR=0.0.0.0:8787 \
+    SIMO_MODEL=mock \
     TZ=${TZ}
 
 EXPOSE 8787

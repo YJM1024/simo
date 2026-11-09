@@ -70,12 +70,12 @@ DB：memory_items（真相，M3/v3） + entities/entity_relations/memory_item_en
 
 | 项 | 约定 |
 |---|---|
-| 代码位置 | `agentd/internal/modules/recall`（新模块）；实体层仓储同模块 `internal/modules/recall/store` |
+| 代码位置 | `backend/internal/modules/recall`（新模块）；实体层仓储同模块 `internal/modules/recall/store` |
 | 依赖方向 | recall → `core`（Retriever/事件/配置）；**chat 不 import recall**（沿用 M3 的架构测试规则，通过 `core` 接口调用） |
 | 单写者 | recall 本身**只读**；实体/关系/派生索引的写入只发生在 memory v3 迁移、memory 写路径后置抽取（单写者队列）与 `recallRebuild()`（迁移/维护命令） |
 | 迁移命名空间 | `schema_migrations(module='memory')` 次版本 +1（v3 迁移）；`recall_meta.schema_version` 单独记录派生 schema 版本 |
 | 关闭开关 | `recall.enabled`（默认 true 仅在 v3 迁移完成后；否则 false） |
-| 调试端点 | `GET /api/debug/recall`、`POST /api/debug/recall/seed` **仅 `AGENTD_DEBUG=1` 时注册**；不进入公开 API |
+| 调试端点 | `GET /api/debug/recall`、`POST /api/debug/recall/seed` **仅 `SIMO_DEBUG=1` 时注册**；不进入公开 API |
 
 ### 2.3 调用方与接口
 
@@ -621,7 +621,7 @@ CREATE TABLE IF NOT EXISTS recall_meta (
 | `warnings` | §3.2 |
 
 - 事件类型：`memory.recall`（append-only，进事件日志）；**不新增"召回真相表"**。
-- 脱敏：trace 不落用户原文全文（query 截断 ≤200 字符；content 只给 cite/hash）；debug 端点仅在 `AGENTD_DEBUG=1` 返回 full trace。
+- 脱敏：trace 不落用户原文全文（query 截断 ≤200 字符；content 只给 cite/hash）；debug 端点仅在 `SIMO_DEBUG=1` 返回 full trace。
 - 指标埋点：每次召回上报计数器（§8.1），供 evals/L3。
 
 ### 7.4 降级矩阵
@@ -700,7 +700,7 @@ CREATE TABLE IF NOT EXISTS recall_meta (
 }
 ```
 
-- **seed 注入**：`POST /api/debug/recall/seed`（`AGENTD_DEBUG=1`）在**单独测试 home/端口**写入 fixture（不走真实用户数据）；测试结束由 evals 的独立 home 丢弃。
+- **seed 注入**：`POST /api/debug/recall/seed`（`SIMO_DEBUG=1`）在**单独测试 home/端口**写入 fixture（不走真实用户数据）；测试结束由 evals 的独立 home 丢弃。
 - **断言**：现有 grader 组合——`state_delta`（返回集合数量/成员）、`regex`（cite 形如 `[mem:...@v]`）、`forbidden`（不应出现的实体/越权/编造）、`count`；**新增 `recall_metrics`**（读 `r.budgetReport` + `expected.minMetrics`，断言 entityRecall/memoryHit/pathSuccess/cost 上限），登记到 `evals/graders/index.mjs`（契约只定义输出格式：`{pass, detail}`）。
 - **case 清单（建议编号 31–40，flat 命名，沿用现有约定）**：
   - 31 别名同音（"私默"）；
@@ -716,14 +716,14 @@ CREATE TABLE IF NOT EXISTS recall_meta (
 - **运行**：`node evals/run.mjs --only recall-`（新增 `--only` 支持按 id 前缀/`tags` 过滤，若现有 runner 不支持则按 id 列表 `--only 31-recall-alias,...`）。
 
 > **harness 扩展点（契约级，实现时需同步改 evals 工具，但不在本文件）**：
-> 1. 新增 step 类型 `debug-recall`（调用 `/api/debug/recall`，`request` 传 RecallRequest，`saveAs` 存 RecallResult；仅 `AGENTD_DEBUG=1` 的服务可用）；
-> 2. 新增 seed 注入步骤（`POST /api/debug/recall/seed`，支持 §8.2 的 `seed` 结构；在独立 `AGENTD_HOME` 中执行）；
+> 1. 新增 step 类型 `debug-recall`（调用 `/api/debug/recall`，`request` 传 RecallRequest，`saveAs` 存 RecallResult；仅 `SIMO_DEBUG=1` 的服务可用）；
+> 2. 新增 seed 注入步骤（`POST /api/debug/recall/seed`，支持 §8.2 的 `seed` 结构；在独立 `SIMO_HOME` 中执行）；
 > 3. 新增 grader `recall_metrics`（读取 `saveAs` 的 RecallResult + `expected.minMetrics`，输出 `{pass,detail}` 并登记到 `evals/graders/index.mjs`）；
 > 4. 其余沿用现有 `state_delta`/`regex`/`forbidden`/`count`，不新增非确定性断言。
 
 ### 8.3 与 E0/M3 评测的对接
 
-- 复用现有 harness（`evals/run.mjs`、`AGENTD_HOME` 隔离、mock LLM、`state_delta`/`forbidden`/`regex`）。
+- 复用现有 harness（`evals/run.mjs`、`SIMO_HOME` 隔离、mock LLM、`state_delta`/`forbidden`/`regex`）。
 - 新增 debug 端点后，case 可**确定性**断言 RecallResult 结构，无需真实模型。
 - **Δ 消融（P1）**：关闭实体层 / 关闭图 / 关闭 agentic / 开启向量；`Δ≤0` 不进入默认路径（17 §2.5）。
 - 回归门禁：改 recall/实体层/22 检索 → 必跑 `evals/run.mjs --only recall-,memory-` + 全量回归。
@@ -737,7 +737,7 @@ CREATE TABLE IF NOT EXISTS recall_meta (
 | **单元** | 表驱动（Go test） | 规范化/提及/类型判定/关系模式；RRF 公式与 tie-break；E 实体分；打包（K×N、预算、每实体保底）；BFS 剪枝/约束；agentic 停止（mock） |
 | **契约** | `Retriever` stub（22） | 调用参数（kinds/topK/budget/filters）；错误码映射；cite/trust 透传；预算只收紧 |
 | **DDL/迁移** | 迁移 up/down、`recallRebuild` | 建表幂等；索引存在；canonical 不变；重建后计数对账；重复重建结果一致 |
-| **集成** | 独立 `AGENTD_HOME` + 端口；seed fixture | 端到端：seed → recall（debug）→ 断言 entities/items/paths；只读（无写入）；同一快照确定性 |
+| **集成** | 独立 `SIMO_HOME` + 端口；seed fixture | 端到端：seed → recall（debug）→ 断言 entities/items/paths；只读（无写入）；同一快照确定性 |
 | **E2E/评测** | `evals/run.mjs --only recall-` + 全量回归 | case 31–40；M1–M21 不回归；memory search 行为不变 |
 | **故障注入** | 测试开关 | v3 未迁移；FTS 表缺失；`recall_edges` 空/损坏；22 超时/不可用；预算极小；`deadlineMs=1`；R2 模型不可用 |
 | **性能 smoke** | seed 1k/10k 记忆、100 实体、1000 关系 | p50/p95 基线；无全表扫描（EXPLAIN 断言关键查询走索引） |
@@ -809,4 +809,4 @@ node evals/selftest.mjs                      # harness 自检
 - [`docs/m18-contract.md`](m18-contract.md)（Spec 属会话；记忆只引用 `spec:`）
 - [`design/17-评测设计-v0.md`](../design/17-评测设计-v0.md)（L1-5/L1-9/L1-11、grader 六种 + 新增四种、目标 TBD）
 - `evals/README.md`、`evals/run.mjs`、`evals/graders/*`（现有 harness 与 grader 约定）
-- 现有实现：`agentd/internal/modules/memory`（M3 表/迁移/检索）、`agentd/internal/modules/chat`（组装调用点）
+- 现有实现：`backend/internal/modules/memory`（M3 表/迁移/检索）、`backend/internal/modules/chat`（组装调用点）

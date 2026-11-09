@@ -21,14 +21,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\publish-github.ps1 `
 脚本会：
 
 1. `git init`（分支 main）+ `git add -A`；
-2. 检查有没有把 `agentd/config.local.json`、`data/agentd.db` 这类敏感文件 staged，有就拒绝；
+2. 检查有没有把 `backend/config.local.json`、`data/simo.db` 这类敏感文件 staged，有就拒绝；
 3. 本地提交、打 tag；
 4. 用 token 推送到 GitHub；
 5. 提示你配置 Actions secret：`DEEPSEEK_API_KEY`（真实模型 smoke 用）。
 
 **安全**：`.gitignore` 已排除
 
-- `agentd/config.local.json`（含 DeepSeek key）；
+- `backend/config.local.json`（含 DeepSeek key）；
 - `data/`（本地数据库/上传/产物）；
 - `.tmp/`、`.trash/`、`*.exe`、`deploy/dist/`（二进制与打包产物）；
 - `node_modules/`、日志。
@@ -45,8 +45,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\publish-github.ps1 `
 ## 仓库里有什么
 
 ```
-agentd/       Go 后端（cmd/agentd, internal/{platform,core,modules}）
-web/          React 19 + TS 前端（esbuild 构建）
+backend/       Go 后端（cmd/simo, internal/{platform,core,modules}）
+frontend/          React 19 + TS 前端（esbuild 构建）
 docs/         契约与手册（design-core、m11–m41、user/admin guide）
 design/       设计记录、路线图 design/15
 deploy/       Dockerfile/compose/CI/安装升级备份脚本

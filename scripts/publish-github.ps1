@@ -10,7 +10,7 @@
 #   -DryRun                initialize + commit locally only, don't push
 #
 # Safety:
-#   - .gitignore excludes agentd/config.local.json, data/, .tmp/, *.exe, deploy/dist/
+#   - .gitignore excludes backend/config.local.json, data/, .tmp/, *.exe, deploy/dist/
 #   - refuses to run if a tracked secret-looking file is about to be committed
 #   - ASCII only
 
@@ -35,7 +35,7 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
 if (-not (Test-Path '.gitignore')) { Fail ".gitignore missing; run this from the repo root" }
 
 # ---- safety: no secrets in the index
-$forbidden = @('agentd/config.local.json', 'data/agentd.db')
+$forbidden = @('backend/config.local.json', 'data/simo.db')
 foreach ($f in $forbidden) {
   if (Test-Path $f) { Info ("excluded by .gitignore: " + $f) }
 }
@@ -46,7 +46,7 @@ if (-not (Test-Path '.git')) {
 }
 git add -A
 $staged = git status --short
-if ($staged -match 'config\.local\.json|data/agentd\.db|\.env') {
+if ($staged -match 'config\.local\.json|data/backend\.db|\.env') {
   Fail "refusing to commit: a secret-looking file is staged. Check .gitignore."
 }
 Info "staged files:"

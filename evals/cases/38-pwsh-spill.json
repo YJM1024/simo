@@ -44,7 +44,7 @@
       "timeoutMs": 20000,
       "until": { "path": "json.approvals", "matchSome": { "id": "{{@bigId}}", "status": "approved" } }
     },
-    { "type": "fs", "path": "{{agentdHome}}/artifacts/spill", "saveAs": "spillDir" },
+    { "type": "fs", "path": "{{simoHome}}/artifacts/spill", "saveAs": "spillDir" },
     {
       "type": "ws",
       "path": "/api/ws",

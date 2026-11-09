@@ -13,7 +13,7 @@
       "type": "ws",
       "path": "/api/ws",
       "sessionId": "{{@sid}}",
-      "chat": { "text": "mock:web-search agentd 是什么" },
+      "chat": { "text": "mock:web-search simo 是什么" },
       "saveAs": "stream",
       "until": { "type": ["reply.done", "message.done"], "timeoutMs": 60000 },
       "drainMs": 800

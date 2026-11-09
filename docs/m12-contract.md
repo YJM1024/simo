@@ -13,7 +13,7 @@
 | `make_image` | `prompt`（文本绘图占位）或 `svg`/`png` 输入 | Pillow 生成/处理 | ask |
 
 - 统一返回：`{ok,artifact:{id,name,mime,size,path,previewUrl,downloadUrl}}`；
-- 落盘目录：`AGENTD_HOME/artifacts/<sessionId>/`；文件名净化；大小上限（PDF/图片 ≤20MB）；
+- 落盘目录：`SIMO_HOME/artifacts/<sessionId>/`；文件名净化；大小上限（PDF/图片 ≤20MB）；
 - 依赖发现：Chrome 路径（`tools.chrome` 配置，默认探测 Program Files）、Python 路径（`tools.python`，默认自带）；缺失时返回清晰错误，不静默降级；
 - **不执行宏/脚本**；HTML 输入做基本净化（禁 `<script>`）。
 - 错误即数据：`Error: <code>` + recovery hint，不结束 turn。

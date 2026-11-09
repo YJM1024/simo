@@ -12,7 +12,7 @@
 //
 // 环境变量：
 //   BASE_URL      被测服务地址（默认 127.0.0.1:8787）
-//   AGENTD_HOME   被测服务的**持久数据根**（默认 %USERPROFILE%\.agentd）。
+//   SIMO_HOME   被测服务的**持久数据根**（默认 %USERPROFILE%\.simo）。
 //                 跑评测建议指向独立临时目录，避免污染真实数据；run.mjs 只读取该值用于
 //                 打印与诊断，**不会往里写任何东西**（唯一写盘是 M2 的自启临时目录）。
 //
@@ -42,17 +42,17 @@ const CASES_DIR = path.join(HERE, 'cases');
 const CASES_REAL_DIR = path.join(HERE, 'cases-real'); // 真实模型 smoke（低 token，结构断言）
 
 const DEFAULT_BASE_URL = '127.0.0.1:8787';
-const DEFAULT_AGENTD_HOME = path.join(os.homedir(), '.agentd');
+const DEFAULT_SIMO_HOME = path.join(os.homedir(), '.simo');
 
 // ---------------------------------------------------------------- CLI
 
 function parseArgs(argv) {
   const opts = {
     baseURL: process.env.BASE_URL || DEFAULT_BASE_URL,
-    // 持久数据根：优先 --agentd-home，其次 AGENTD_HOME，最后平台默认。
+    // 持久数据根：优先 --simo-home，其次 SIMO_HOME，最后平台默认。
     // 只用于显示与诊断；M1 不自行起服，所以真正用哪个由**被测服务进程**的环境决定。
-    agentdHome: process.env.AGENTD_HOME || DEFAULT_AGENTD_HOME,
-    agentdHomeSource: process.env.AGENTD_HOME ? 'AGENTD_HOME' : 'default',
+    simoHome: process.env.SIMO_HOME || DEFAULT_SIMO_HOME,
+    simoHomeSource: process.env.SIMO_HOME ? 'SIMO_HOME' : 'default',
     caseId: null,
     real: false, // --real：跑 cases-real/（真实模型 smoke），并统计 token
     priceIn: 0, // 每 100 万 input token 的价格（元），用于成本估算；0 = 只报 token
@@ -63,7 +63,7 @@ function parseArgs(argv) {
     diagnostics: true,
     selfCheck: true,
     timeoutMs: 15_000,
-    cliBin: '', // --cli：simo.exe 路径（M20 CLI 矩阵用；默认 <repo>/simo.exe）
+    cliBin: '', // --cli：simo.exe 路径（M20 CLI 矩阵用；默认 <repo>/backend/simo.exe）
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -100,9 +100,9 @@ function parseArgs(argv) {
           .filter(Boolean);
         break;
       }
-      case '--agentd-home':
-        opts.agentdHome = next();
-        opts.agentdHomeSource = '--agentd-home';
+      case '--simo-home':
+        opts.simoHome = next();
+        opts.simoHomeSource = '--simo-home';
         break;
       case '--verbose':
       case '-v':
@@ -145,8 +145,8 @@ function printHelp() {
   --base-url <url>   被测服务地址（默认 ${DEFAULT_BASE_URL}，也可用 BASE_URL 环境变量）
   --case <id>        只跑指定 case
   --only <a,b,c>     只跑逗号分隔的若干 case（分批跑用；套件变长后更稳）
-  --cli <path>       simo.exe 路径（M20 CLI 步骤默认 <repo>/simo.exe）
-  --agentd-home <p>  被测服务的持久数据根（默认 $AGENTD_HOME 或 ~/.agentd）；只用于显示与诊断
+  --cli <path>       simo.exe 路径（M20 CLI 步骤默认 <repo>/backend/simo.exe）
+  --simo-home <p>  被测服务的持久数据根（默认 $SIMO_HOME 或 ~/.simo）；只用于显示与诊断
   --list             列出全部 case 后退出
   --verbose, -v      打印每个 grader 的判定细节
   --baseline <file>  WITH/W/OUT 基线（M1 占位：只记录、不参与判定）
@@ -155,9 +155,9 @@ function printHelp() {
   --timeout <ms>     单步默认超时（默认 15000）
   --help, -h         本帮助
 
-  环境变量: BASE_URL（服务地址） / AGENTD_HOME（持久数据根）
-  ⚠ 跑评测建议让被测服务用**独立的临时 AGENTD_HOME**，避免污染真实数据：
-      $env:AGENTD_HOME="$env:TEMP\agentd-eval"; agentd serve
+  环境变量: BASE_URL（服务地址） / SIMO_HOME（持久数据根）
+  ⚠ 跑评测建议让被测服务用**独立的临时 SIMO_HOME**，避免污染真实数据：
+      $env:SIMO_HOME="$env:TEMP\simo-eval"; simo serve
 
   退出码: 0 全过 / 1 有失败 / 2 前置不满足（服务未启动等）
 `);
@@ -174,11 +174,11 @@ function fail(msg) {
  * 所以文案写"应与被测服务一致"，而不是断言服务正在用它。
  */
 function printDataRoot(opts) {
-  const suffix = opts.agentdHomeSource === 'default' ? '（默认值）' : `（来自 ${opts.agentdHomeSource}）`;
-  console.log(`持久数据根：${opts.agentdHome}${suffix}`);
-  if (opts.agentdHomeSource === 'default') {
-    console.log('  ⚠ 未设置 AGENTD_HOME：若被测服务也用默认值，评测会写进真实数据目录。');
-    console.log('    建议：$env:AGENTD_HOME="$env:TEMP\\agentd-eval"; 再起服务与跑评测（见 README §1）');
+  const suffix = opts.simoHomeSource === 'default' ? '（默认值）' : `（来自 ${opts.simoHomeSource}）`;
+  console.log(`持久数据根：${opts.simoHome}${suffix}`);
+  if (opts.simoHomeSource === 'default') {
+    console.log('  ⚠ 未设置 SIMO_HOME：若被测服务也用默认值，评测会写进真实数据目录。');
+    console.log('    建议：$env:SIMO_HOME="$env:TEMP\\simo-eval"; 再起服务与跑评测（见 README §1）');
   }
   console.log('');
 }
@@ -327,7 +327,7 @@ async function runCase(c, opts, runId, bag) {
     // 后端接受任意 sessionId（首次写入即建），所以不需要先创建会话。
     caseSession: `evals-${c.id}-${runId}`,
     // 被测服务的持久数据根：M5 起要断言"产物真的写进 workspace"（如 <home>/workspace/notes.md）
-    agentdHome: opts.agentdHome,
+    simoHome: opts.simoHome,
     ...(c.vars || {}),
   };
 
@@ -397,7 +397,7 @@ async function runCase(c, opts, runId, bag) {
  * 观测：{ exitCode, signal, stdout, stderr, timedOut, args, bin }
  */
 async function cliStep(step, opts) {
-  const bin = step.bin || opts.cliBin || path.join(REPO_ROOT, 'simo.exe');
+  const bin = step.bin || opts.cliBin || path.join(REPO_ROOT, 'backend', 'simo.exe');
   if (!fsSync.existsSync(bin)) {
     throw new Error(`cli: 找不到 CLI 可执行文件 ${bin}（用 --cli 指定）`);
   }
@@ -407,7 +407,7 @@ async function cliStep(step, opts) {
   const errPath = path.join(dir, 'stderr.txt');
   const outFd = fsSync.openSync(outPath, 'w');
   const errFd = fsSync.openSync(errPath, 'w');
-  const env = { ...process.env, SIMO_BASE_URL: opts.baseURL, AGENTD_HOME: opts.agentdHome, ...(step.env || {}) };
+  const env = { ...process.env, SIMO_BASE_URL: opts.baseURL, SIMO_HOME: opts.simoHome, ...(step.env || {}) };
   let res;
   try {
     res = spawnSync(bin, args, {
@@ -1015,8 +1015,8 @@ async function assertServiceUp(baseURL) {
     console.error(`  无法连接 ${baseURL}（${hint}）`);
     console.error('');
     console.error('  请先在另一个终端启动被测服务，例如：');
-    console.error('    agentd serve                       # 默认 127.0.0.1:8787');
-    console.error('    agentd serve -addr 127.0.0.1:9000 # 换端口后用 --base-url 指过来');
+    console.error('    simo serve                       # 默认 127.0.0.1:8787');
+    console.error('    simo serve -addr 127.0.0.1:9000 # 换端口后用 --base-url 指过来');
     console.error('');
     process.exit(2);
   }
@@ -1037,28 +1037,28 @@ async function printContractDiagnostics(baseURL, bag, opts) {
   const rows = [];
   const add = (name, ok, note) => rows.push({ name, ok, note });
 
-  // 0) 被测服务真的在用这个 AGENTD_HOME 吗？
+  // 0) 被测服务真的在用这个 SIMO_HOME 吗？
   //    两套服务/评测进程共用同一端口时，评测会连到**别人的实例**：审批写进了别人的 workspace、
   //    任务状态来自别人的库 → 表现为"allow 后文件不存在""WS 错误/超时"这类假失败。
   //    判据：本 case 刚跑完 ~1 分钟，若该目录最近一次写入已超过 120s，就说明本次运行没写进这里。
   try {
-    const newest = await newestHomeMtime(opts.agentdHome);
+    const newest = await newestHomeMtime(opts.simoHome);
     if (!newest) {
       add(
-        '被测服务写入本 AGENTD_HOME',
+        '被测服务写入本 SIMO_HOME',
         false,
-        `${opts.agentdHome} 下没有任何文件（服务很可能在用别的 AGENTD_HOME）`,
+        `${opts.simoHome} 下没有任何文件（服务很可能在用别的 SIMO_HOME）`,
       );
     } else {
       const ageSec = Math.round((Date.now() - newest) / 1000);
       add(
-        '被测服务写入本 AGENTD_HOME',
+        '被测服务写入本 SIMO_HOME',
         ageSec < 120,
-        ageSec < 120 ? `最近写入 ${ageSec}s 前` : `最近写入 ${ageSec}s 前（超过 120s：**疑似连到了另一个 agentd 实例/home**）`,
+        ageSec < 120 ? `最近写入 ${ageSec}s 前` : `最近写入 ${ageSec}s 前（超过 120s：**疑似连到了另一个 simo 实例/home**）`,
       );
     }
   } catch (e) {
-    add('被测服务写入本 AGENTD_HOME', false, e.message);
+    add('被测服务写入本 SIMO_HOME', false, e.message);
   }
 
   // 1) GET /api/sessions（契约 §3）

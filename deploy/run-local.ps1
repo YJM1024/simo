@@ -1,8 +1,8 @@
-# agentd local container-semantics smoke test (Windows PowerShell 5.1+).
+# simo local container-semantics smoke test (Windows PowerShell 5.1+).
 #
 # Purpose: on a machine WITHOUT Docker, reproduce most of the RUNTIME semantics
 # that the container deliverable is supposed to guarantee:
-#   - all state lives under AGENTD_HOME (throwaway dir == named volume /data)
+#   - all state lives under SIMO_HOME (throwaway dir == named volume /data)
 #   - the listener binds 127.0.0.1 only (compose publishes 127.0.0.1:8787)
 #   - readiness is checked via GET /api/health (== Docker HEALTHCHECK)
 #   - shutdown sends a terminate signal (Go handles SIGTERM with 10s grace)
@@ -20,19 +20,19 @@
 #   powershell -ExecutionPolicy Bypass -File deploy\run-local.ps1
 #   powershell -ExecutionPolicy Bypass -File deploy\run-local.ps1 -Listen 127.0.0.1:8899 -KeepData
 #   powershell -ExecutionPolicy Bypass -File deploy\run-local.ps1 -Build
-#   powershell -ExecutionPolicy Bypass -File deploy\run-local.ps1 -DataHome D:\tmp\agentd-home
+#   powershell -ExecutionPolicy Bypass -File deploy\run-local.ps1 -DataHome D:\tmp\simo-home
 #
 # Exit code: 0 = health check passed and process stopped; 1 = failure.
 
 [CmdletBinding()]
 param(
-  [string]$DataHome = $(Join-Path $env:TEMP ("agentd-home-" + [guid]::NewGuid().ToString('N').Substring(0, 8))),
+  [string]$DataHome = $(Join-Path $env:TEMP ("simo-home-" + [guid]::NewGuid().ToString('N').Substring(0, 8))),
   [string]$Listen = '127.0.0.1:8787',
   [int]$WaitSeconds = 25,
   [switch]$Build,
   [switch]$KeepData,
   # Optional explicit binary path (useful when the in-repo simo.exe is stale);
-  # defaults to agentd/simo.exe, simo.exe, agentd/simo in that order.
+  # defaults to backend/simo.exe, simo.exe, backend/simo in that order.
   [string]$Exe = ''
 )
 
@@ -44,32 +44,32 @@ $script:logErr = $null
 function Resolve-RepoRoot {
   # This script lives in <repo>/deploy/
   $root = Split-Path -Parent $PSScriptRoot
-  $marker = Join-Path $root 'agentd\cmd\agentd\main.go'
+  $marker = Join-Path $root 'backend\cmd\simo\main.go'
   if (-not (Test-Path -LiteralPath $marker)) {
     throw "repo root not found (expected $marker)"
   }
   return $root
 }
 
-function Get-AgentdExe([string]$RepoRoot) {
+function Get-SimoExe([string]$RepoRoot) {
   $candidates = @(
-    (Join-Path $RepoRoot 'agentd\simo.exe'),
+    (Join-Path $RepoRoot 'backend\simo.exe'),
     (Join-Path $RepoRoot 'simo.exe'),
-    (Join-Path $RepoRoot 'agentd\simo')
+    (Join-Path $RepoRoot 'backend\simo')
   )
   foreach ($c in $candidates) {
     if (Test-Path -LiteralPath $c) { return $c }
   }
-  throw "simo binary not found; build it first (cd agentd; ..\toolchain\go.ps1 build -o simo.exe ./cmd/agentd) or pass -Build"
+  throw "simo binary not found; build it first (cd backend; ..\toolchain\go.ps1 build -o simo.exe ./cmd/simo) or pass -Build"
 }
 
-function Build-Agentd([string]$RepoRoot) {
+function Build-Simo([string]$RepoRoot) {
   $goPs1 = Join-Path $RepoRoot 'toolchain\go.ps1'
   if (-not (Test-Path -LiteralPath $goPs1)) { throw "missing toolchain\go.ps1; cannot -Build" }
-  Write-Host "[build] go build -o simo.exe ./cmd/agentd" -ForegroundColor Cyan
-  Push-Location (Join-Path $RepoRoot 'agentd')
+  Write-Host "[build] go build -o simo.exe ./cmd/simo" -ForegroundColor Cyan
+  Push-Location (Join-Path $RepoRoot 'backend')
   try {
-    & $goPs1 build -o simo.exe ./cmd/agentd
+    & $goPs1 build -o simo.exe ./cmd/simo
     if ($LASTEXITCODE -ne 0) { throw "go build failed (exit=$LASTEXITCODE)" }
   } finally {
     Pop-Location
@@ -103,18 +103,18 @@ $exitCode = 0
 $repoRoot = Resolve-RepoRoot
 Write-Host "[info] repo root : $repoRoot" -ForegroundColor Cyan
 
-if ($Build) { Build-Agentd $repoRoot }
+if ($Build) { Build-Simo $repoRoot }
 if ($Exe) {
   if (-not (Test-Path -LiteralPath $Exe)) { throw "binary not found: $Exe" }
   $exe = (Resolve-Path -LiteralPath $Exe).Path
 } else {
-  $exe = Get-AgentdExe $repoRoot
+  $exe = Get-SimoExe $repoRoot
 }
 Write-Host "[info] binary    : $exe" -ForegroundColor Cyan
 
 $port = Get-FreePort $Listen
 $homeFull = [System.IO.Path]::GetFullPath($DataHome)
-Write-Host "[info] AGENTD_HOME = $homeFull  (simulates container /data volume)" -ForegroundColor Cyan
+Write-Host "[info] SIMO_HOME = $homeFull  (simulates container /data volume)" -ForegroundColor Cyan
 Write-Host "[info] listen      = $Listen  (simulates host 127.0.0.1 publish)" -ForegroundColor Cyan
 
 # Pre-create data dirs (the image does this via mkdir/chown).
@@ -126,14 +126,14 @@ $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $script:logOut = Join-Path $homeFull ("stdout-$stamp.log")
 $script:logErr = Join-Path $homeFull ("stderr-$stamp.log")
 
-# Same env semantics as the container: AGENTD_HOME points at isolated dir,
-# AGENTD_ADDR overrides the listen address.
-$oldHome = $env:AGENTD_HOME
-$oldAddr = $env:AGENTD_ADDR
-$oldModel = $env:AGENTD_MODEL
-$env:AGENTD_HOME = $homeFull
-$env:AGENTD_ADDR = $Listen
-$env:AGENTD_MODEL = 'mock'
+# Same env semantics as the container: SIMO_HOME points at isolated dir,
+# SIMO_ADDR overrides the listen address.
+$oldHome = $env:SIMO_HOME
+$oldAddr = $env:SIMO_ADDR
+$oldModel = $env:SIMO_MODEL
+$env:SIMO_HOME = $homeFull
+$env:SIMO_ADDR = $Listen
+$env:SIMO_MODEL = 'mock'
 
 try {
   Write-Host "[run] $exe serve" -ForegroundColor Green
@@ -147,7 +147,7 @@ try {
   $health = $null
   while ((Get-Date) -lt $deadline) {
     if ($script:proc.HasExited) {
-      Write-Host "[fail] agentd exited early (exit=$($script:proc.ExitCode))" -ForegroundColor Red
+      Write-Host "[fail] simo exited early (exit=$($script:proc.ExitCode))" -ForegroundColor Red
       Show-Tail $script:logErr
       Show-Tail $script:logOut
       $exitCode = 1
@@ -167,7 +167,7 @@ try {
     } else {
       Write-Host "[ok]   /api/health => $health" -ForegroundColor Green
       Write-Host "[ok]   browser: http://127.0.0.1:$port/" -ForegroundColor Green
-      Write-Host "[ok]   data dir: $homeFull (agentd.db / artifacts / workspace / logs)" -ForegroundColor Green
+      Write-Host "[ok]   data dir: $homeFull (simo.db / artifacts / workspace / logs)" -ForegroundColor Green
     }
   }
 } finally {
@@ -180,9 +180,9 @@ try {
       Write-Host "[warn] failed to stop process: $($_.Exception.Message)" -ForegroundColor Yellow
     }
   }
-  $env:AGENTD_HOME = $oldHome
-  $env:AGENTD_ADDR = $oldAddr
-  $env:AGENTD_MODEL = $oldModel
+  $env:SIMO_HOME = $oldHome
+  $env:SIMO_ADDR = $oldAddr
+  $env:SIMO_MODEL = $oldModel
 }
 
 # Data retention: default cleans the throwaway dir (like removing a container),

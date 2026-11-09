@@ -1,6 +1,6 @@
-# m32-vector-env.ps1 -- M32 local vector recall acceptance (AGENTD_RECALL_VECTOR=1)
+# m32-vector-env.ps1 -- M32 local vector recall acceptance (SIMO_RECALL_VECTOR=1)
 #
-# Starts the server with AGENTD_RECALL_VECTOR=1, then asserts the env-gated case
+# Starts the server with SIMO_RECALL_VECTOR=1, then asserts the env-gated case
 # directly (the eval case `recall-vector` is marked pending because a single
 # run.mjs process cannot change server env):
 #   - seed/rebuild -> vectors.documents >= 1
@@ -30,7 +30,7 @@ function Add-Check([string]$name, [bool]$ok, [string]$note) {
 }
 
 $repo = Split-Path -Parent $PSScriptRoot
-if (-not $Exe) { $Exe = Join-Path $repo 'agentd\simo.exe' }
+if (-not $Exe) { $Exe = Join-Path $repo 'backend\simo.exe' }
 if (-not (Test-Path $Exe)) { Write-Host "FAIL: exe not found: $Exe"; exit 2 }
 
 $tmpRoot = Join-Path $repo '.tmp'
@@ -42,15 +42,15 @@ $base = "http://127.0.0.1:$Port"
 
 Write-Host "workdir: $work"
 Write-Host "exe: $Exe"
-Write-Host "port: $Port (AGENTD_RECALL_VECTOR=1)"
+Write-Host "port: $Port (SIMO_RECALL_VECTOR=1)"
 Write-Host ''
 
-$env:AGENTD_HOME = $homeDir
-$env:AGENTD_LLM = 'mock'
-$env:AGENTD_DEBUG = '1'
-$env:AGENTD_RECALL_VECTOR = '1'
-Remove-Item Env:AGENTD_MEMORY_CONSOLIDATE -ErrorAction SilentlyContinue
-Remove-Item Env:AGENTD_RECALL_R2 -ErrorAction SilentlyContinue
+$env:SIMO_HOME = $homeDir
+$env:SIMO_LLM = 'mock'
+$env:SIMO_DEBUG = '1'
+$env:SIMO_RECALL_VECTOR = '1'
+Remove-Item Env:SIMO_MEMORY_CONSOLIDATE -ErrorAction SilentlyContinue
+Remove-Item Env:SIMO_RECALL_R2 -ErrorAction SilentlyContinue
 
 $log = Join-Path $work 'server.log'
 $proc = Start-Process -FilePath $Exe -ArgumentList 'serve', '-addr', ("127.0.0.1:" + $Port), '-debug' `
@@ -62,7 +62,7 @@ while ((Get-Date) -lt $deadline) {
     if ((Invoke-WebRequest ($base + '/api/health') -TimeoutSec 2 -UseBasicParsing).StatusCode -eq 200) { $ready = $true; break }
   } catch { Start-Sleep -Milliseconds 300 }
 }
-Add-Check 'Backend starts with AGENTD_RECALL_VECTOR=1' $ready $(if ($ready) { $base } else { 'no /api/health in 25s' })
+Add-Check 'Backend starts with SIMO_RECALL_VECTOR=1' $ready $(if ($ready) { $base } else { 'no /api/health in 25s' })
 if (-not $ready) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue; exit 1 }
 
 function Post-Json([string]$path, [hashtable]$body) {

@@ -26,7 +26,7 @@ function Add-Check([string]$name, [bool]$ok, [string]$note) {
 }
 
 $repo = Split-Path -Parent $PSScriptRoot
-if (-not $Exe) { $Exe = Join-Path $repo 'agentd\simo.exe' }
+if (-not $Exe) { $Exe = Join-Path $repo 'backend\simo.exe' }
 if (-not (Test-Path $Exe)) { Write-Host "FAIL: exe not found: $Exe"; exit 2 }
 
 $tmpRoot = Join-Path $repo '.tmp'
@@ -41,12 +41,12 @@ Write-Host "exe: $Exe"
 Write-Host "port: $Port"
 Write-Host ''
 
-$env:AGENTD_HOME = $homeDir
-$env:AGENTD_LLM = 'mock'
-$env:AGENTD_DEBUG = '1'
-Remove-Item Env:AGENTD_RECALL_VECTOR -ErrorAction SilentlyContinue
-Remove-Item Env:AGENTD_RECALL_R2 -ErrorAction SilentlyContinue
-Remove-Item Env:AGENTD_MEMORY_CONSOLIDATE -ErrorAction SilentlyContinue
+$env:SIMO_HOME = $homeDir
+$env:SIMO_LLM = 'mock'
+$env:SIMO_DEBUG = '1'
+Remove-Item Env:SIMO_RECALL_VECTOR -ErrorAction SilentlyContinue
+Remove-Item Env:SIMO_RECALL_R2 -ErrorAction SilentlyContinue
+Remove-Item Env:SIMO_MEMORY_CONSOLIDATE -ErrorAction SilentlyContinue
 
 function Start-Backend {
   $log = Join-Path $work ('server-' + [guid]::NewGuid().ToString('N').Substring(0, 6) + '.log')

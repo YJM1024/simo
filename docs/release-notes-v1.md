@@ -1,6 +1,6 @@
 # 司墨发布说明（M41 完成态）
 
-> 对应本地单机版 `agentd`（交付二进制 **`simo.exe`**，内部 module 名仍为 `agentd`）。本文说明：当前具备什么、M1–M41 与 UI-1/UI-2 做了什么、测试证据、已知限制、下一步计划。
+> 对应本地单机版 `simo`（交付二进制 **`simo.exe`**，内部 module 名仍为 `simo`）。本文说明：当前具备什么、M1–M41 与 UI-1/UI-2 做了什么、测试证据、已知限制、下一步计划。
 > 使用方式见 [`user-guide.md`](user-guide.md)；配置/备份/排障见 [`admin-guide.md`](admin-guide.md)。
 > **状态（2026-11-08）**：V1（M1–M7）/V1.1（M1–M13）已交付；M14–M20/UI-1 accepted；M16 canceled；**M21–M41 已上线**（最终通过数见 `evals/RELEASE.md` 终值）；**UI-2 前端骨架**。**默认真实模型**；离线体验需显式 `-model mock`。
 
@@ -11,7 +11,7 @@
 ### 1.1 基本形态
 
 - **本地 Web 应用**：单二进制 `simo.exe`（Windows x64），内嵌前端，一条命令启动；
-- **只监听本机** `127.0.0.1:8787`，数据在本机 `AGENTD_HOME`；
+- **只监听本机** `127.0.0.1:8787`，数据在本机 `SIMO_HOME`；
 - **单实例**：同一数据目录只允许一个进程；SQLite 持久化；
 - **一位司墨**：用户只跟一个司墨对话；执行由工作流/任务推进；会话负责人通过 agents/owner 接口配置（默认 `simo`）。
 
@@ -124,7 +124,7 @@
 ### 1.17 M27：召回 R2
 
 - 默认开启 **2 跳**实体/关系召回 + agentic（plan/recall/assess/refine）；信息不足时会追问（缺失实体/歧义）；
-- `AGENTD_RECALL_R2` 可关闭回 R1；`AGENTD_RECALL_VECTOR` 默认关（M32 本地字符 n-gram TF-IDF，开启后与关键词/图谱融合；未重建索引时降级）；
+- `SIMO_RECALL_R2` 可关闭回 R1；`SIMO_RECALL_VECTOR` 默认关（M32 本地字符 n-gram TF-IDF，开启后与关键词/图谱融合；未重建索引时降级）；
 - 召回入口仍为 `-debug` 本机；普通对话只在需要时使用。
 
 ### 1.18 M28：受控视图编辑器
@@ -142,7 +142,7 @@
 ### 1.20 M30：记忆自动巩固
 
 - 默认开启；未处理消息达到阈值（默认 8）或每 300 秒自动巩固会话内容为记忆候选并写入；
-- `AGENTD_MEMORY_CONSOLIDATE` 可关闭，`_THRESHOLD`/`_INTERVAL_SEC` 可调；memory migration v5 新增 jobs/state/writeback audit；
+- `SIMO_MEMORY_CONSOLIDATE` 可关闭，`_THRESHOLD`/`_INTERVAL_SEC` 可调；memory migration v5 新增 jobs/state/writeback audit；
 - 巩固是幂等的（job idempotency key），不改原文；冲突仍 disputed；`-debug` 本机可手动触发/查状态。
 
 ### 1.21 M31：团队 WS 事件
@@ -151,7 +151,7 @@
 
 ### 1.22 M32：向量召回（本地 TF-IDF）
 
-- 可选开启 `AGENTD_RECALL_VECTOR=1`：本地**字符 n-gram TF-IDF** 向量，无第三方/外部服务依赖；与关键词/图谱结果融合评分；
+- 可选开启 `SIMO_RECALL_VECTOR=1`：本地**字符 n-gram TF-IDF** 向量，无第三方/外部服务依赖；与关键词/图谱结果融合评分；
 - 默认关闭；memory migration v6 新增 `recall_vectors` / `recall_vector_terms`；`POST /api/debug/recall/rebuild` 会同时重建向量表并返回 `vectors` 统计；
 - 未启用/未重建时向量路径降级（不影响 R2 关键词/图谱）。
 
@@ -171,7 +171,7 @@
 
 ### 1.26 M36：容器化
 
-- [`deploy/CONTAINER.md`](../deploy/CONTAINER.md) + `deploy/docker-build.ps1`；Dockerfile/compose；宿主默认 `18787`（`AGENTD_PORT` 可覆盖），容器内 `/data` 与 `0.0.0.0:8787`；本机无 Docker，容器仍未实测。
+- [`deploy/CONTAINER.md`](../deploy/CONTAINER.md) + `deploy/docker-build.ps1`；Dockerfile/compose；宿主默认 `18787`（`SIMO_PORT` 可覆盖），容器内 `/data` 与 `0.0.0.0:8787`；本机无 Docker，容器仍未实测。
 
 ### 1.27 M37：顶部选项卡
 
@@ -198,7 +198,7 @@
 - 交互 `POST /api/cards/{id}/actions/{actionId}`：`route=agent` 写用户动作消息并触发新一轮 turn；`route=action` 走动作层（R3+ 审批，R4 `DENIED_R4` 拒绝）；幂等 receipts（同 card+action+payload 只执行一次）。
 - 状态机：`active→submitted/disabled/expired`，提交中防重复、失败回可重试；版本+409；重启后卡片/版本/提交/幂等 receipt 持久；`fallbackText` 兜底；首次卡片有引导说明两种路由。
 - 回归：M41 卡 7 条活跃 PASS + `card-persist.ps1` 6/6；M1–M41 mock 131/131 可执行 PASS + 13 PENDING（12 脚本全绿）；real-smoke 中位 41,524 达标。
-- **最终便携包**：`deploy/dist/simo-M41-win-x64.zip`；**SHA256 `6b62bf3c2a52baf97fd51017dc0e07e212ca5b5d2219ce26b66af45c421b9753`（≈11.61 MB；包内 exe `4905F6C7C932021EF5EC548C0D14093795617E3BEF6ADE4373412EB8C2D89421`）**；最终构建 `agentd/simo.exe` 2026-11-09 00:20:56（22,002,688 B），前端 app.js 675,939 B。
+- **最终便携包**：`deploy/dist/simo-M41-win-x64.zip`；**SHA256 `6b62bf3c2a52baf97fd51017dc0e07e212ca5b5d2219ce26b66af45c421b9753`（≈11.61 MB；包内 exe `4905F6C7C932021EF5EC548C0D14093795617E3BEF6ADE4373412EB8C2D89421`）**；最终构建 `backend/simo.exe` 2026-11-09 00:20:56（22,002,688 B），前端 app.js 675,939 B。
 
 ---
 
@@ -254,10 +254,10 @@
 
 ## 3. 默认模型与运行要求
 
-- **默认 `real`**：DeepSeek `deepseek-flash`；启动需要 API Key（`DEEPSEEK_API_KEY`/`AGENTD_API_KEY` 或配置 `apiKey`），否则启动失败；
+- **默认 `real`**：DeepSeek `deepseek-flash`；启动需要 API Key（`DEEPSEEK_API_KEY`/`SIMO_API_KEY` 或配置 `apiKey`），否则启动失败；
 - **离线体验**：`.\simo.exe serve -model mock`（无需 Key、不联网、确定性）；
-- **外部依赖（用到时）**：PDF 需要 Chrome/Edge；Word/Excel/PPT/图片与 `run_python` 需要 Python 3（Office 库另装）；可配 `AGENTD_PYTHON`/`tools.python`；
-- **数据**：默认 `%USERPROFILE%\.agentd`；备份/迁移前停服务。
+- **外部依赖（用到时）**：PDF 需要 Chrome/Edge；Word/Excel/PPT/图片与 `run_python` 需要 Python 3（Office 库另装）；可配 `SIMO_PYTHON`/`tools.python`；
+- **数据**：默认 `%USERPROFILE%\.simo`；备份/迁移前停服务。
 
 ---
 
@@ -304,7 +304,7 @@
 
 ### 5.4 Python 执行
 
-- 依赖 `AGENTD_PYTHON`/`tools.python` 或 PATH 中的 Python 3；缺失返回 `python_missing`；
+- 依赖 `SIMO_PYTHON`/`tools.python` 或 PATH 中的 Python 3；缺失返回 `python_missing`；
 - 只接受 `code` 或 workspace 内 `path`；`args`/`timeout_ms` 可选；超时 ≤120s；
 - 执行类审批（R2）；`read-only` 直接拒绝、`never` 直接拒绝；审批无人应答 fail-closed；
 - 输出 >64KB 落盘；环境不继承 Key；但**未做网络/文件系统级子沙箱**。
@@ -346,8 +346,8 @@
 
 ### 5.10 M21–M41 已知限制
 
-- **记忆**：记忆页只读；冲突不自动裁决；写/忘记仍通过对话；`AGENTD_MEMORY_V3=0` 可回退旧读路径；
-- **召回**：M22/M27 召回主要是内部能力/`-debug` 本机入口，普通 UI 不直接展示 recall trace；R2 默认开、**向量默认关**（M32 本地字符 n-gram TF-IDF，需 `AGENTD_RECALL_VECTOR=1` 且重建索引）；召回质量与实体/关系覆盖相关；
+- **记忆**：记忆页只读；冲突不自动裁决；写/忘记仍通过对话；`SIMO_MEMORY_V3=0` 可回退旧读路径；
+- **召回**：M22/M27 召回主要是内部能力/`-debug` 本机入口，普通 UI 不直接展示 recall trace；R2 默认开、**向量默认关**（M32 本地字符 n-gram TF-IDF，需 `SIMO_RECALL_VECTOR=1` 且重建索引）；召回质量与实体/关系覆盖相关；
 - **M32 向量**：本地 TF-IDF 不是神经网络嵌入；索引表 `recall_vectors`/`recall_vector_terms` 只随 rebuild/增量维护；未启用/未重建时向量路径降级；
 - **M33 交互**：表格排序/分页是展示状态，不写库；看板移动失败保留原列、不乐观改状态；编辑器块搜索/删除确认/未保存提示仅前端安全护栏，最终仍以后端校验/审批为准；团队筛选/搜索只作用于只读列表；
 - **M34 复杂交互**：多步向导/多列排序/行内编辑/批量/图表/看板 WIP 泳道为受控实现；失败保留原状态，但仍受 schema/动作权限约束；`chart` 为纯 SVG 最小图表，不是通用 BI；
@@ -358,7 +358,7 @@
 - **M41 卡片**：卡片复用视图块/动作目录，但只支持本会话、消息内；R3+ 审批、R4 从卡片直接拒绝；重启时未知副作用不自动重试；fallbackText 必需；卡片不是通用页面编辑器；
 - **团队**：团队页只读；V0 无团队记录（V1/V2 有）；M31 起 team.* 进用户 WS，但只投影状态/摘要、不显示内部消息正文；创建/暂停/换负责人通过对话；
 - **视图**：只支持会话级、Agent 生成；M28 编辑器仅结构化白名单字段，不支持任意 schema/HTML/JS；13 类块中复杂交互（form/kanban 等）为最小实现，未知/失败降级表格；动作仍受审批；
-- **自动巩固（M30）**：默认开（阈值 8/300s），可通过 `AGENTD_MEMORY_CONSOLIDATE*` 关闭/调整；巩固不改原文，冲突保留；后台任务可能带来额外模型/计算开销；
+- **自动巩固（M30）**：默认开（阈值 8/300s），可通过 `SIMO_MEMORY_CONSOLIDATE*` 关闭/调整；巩固不改原文，冲突保留；后台任务可能带来额外模型/计算开销；
 - **已知缺陷已修复（2026-11-08 13:26 构建）**：`debug recall` 命中“带实体绑定的记忆”时曾等待约 30s 返回空 `items`（`recall.go` 游标内嵌套查询，单连接 SQLite 自锁）；最终构建由 `recall-entity-binding` 回归覆盖（seed `entityRefs` → recall **3ms、items 非空**）；历史记录见 `evals/incident/known-issue-2026-11-08-recall-deadlock.md`；
 - **真实模型 token**：最终构建 real-smoke **官方 3 次中位 45,681 > 45,000（超 681）**，6 次合并中位 **44,224 ≤ 45,000**，range 38,693–46,980；`real-category-demand` 真实模型分类 flake 3/6，建议保持 normal；
 - **便携包（M29）**：`deploy/package.ps1`/`install.ps1`/`upgrade.ps1`/`backup.ps1`/`restore.ps1` 已提供；`install.ps1` 首次安装、`upgrade.ps1` 自动回滚与 Docker 构建仍**未完整实测**，详见 [`deploy/INSTALL.md`](../deploy/INSTALL.md)；
@@ -389,7 +389,7 @@
 | 文档 | 内容 |
 |---|---|
 | [`user-guide.md`](user-guide.md) | 使用手册：三栏、连续对话、任务/工作流、工作台、生成文件、Python 执行、联网、定时任务、权限审批、UI-1/UI-2、记忆/团队/视图 |
-| [`admin-guide.md`](admin-guide.md) | 管理员指南：配置、Key、低 token、Chrome/Python、`AGENTD_PYTHON`/`AGENTD_MEMORY_V3`/并发、`AGENTD_HOME`、stats/agents/owner、M18–M30 迁移、debug/runtime、备份、排障、容器说明 |
+| [`admin-guide.md`](admin-guide.md) | 管理员指南：配置、Key、低 token、Chrome/Python、`SIMO_PYTHON`/`SIMO_MEMORY_V3`/并发、`SIMO_HOME`、stats/agents/owner、M18–M30 迁移、debug/runtime、备份、排障、容器说明 |
 | [`release-notes-v1.md`](release-notes-v1.md) | 本文：能力、M1–M41 + UI-1/UI-2、测试证据、默认模型、限制、P1 |
 | [`team-contract.md`](team-contract.md) | 团队 V0/V1/V2 实现契约（后续） |
 | [`m21-memory-contract.md`](m21-memory-contract.md) / [`m22-recall-contract.md`](m22-recall-contract.md) | 记忆 v0.3 / 召回层契约 |
@@ -399,6 +399,6 @@
 | [`m9-contract.md`](m9-contract.md) ~ [`m20-contract.md`](m20-contract.md) | M9–M20 实现契约（开发参考） |
 | [`m41-card-contract.md`](m41-card-contract.md) | M41 交互卡片契约（开发参考） |
 | [`tech-stack.md`](tech-stack.md) | 技术栈与运行拓扑（开发参考） |
-| [`agentd/README.md`](../agentd/README.md) | 后端实现与接口（开发参考） |
-| [`web/README.md`](../web/README.md) | 前端结构与交互（开发参考） |
+| [`backend/README.md`](../backend/README.md) | 后端实现与接口（开发参考） |
+| [`frontend/README.md`](../frontend/README.md) | 前端结构与交互（开发参考） |
 | [`deploy/README.md`](../deploy/README.md) | 容器交付物（**未实测**） |

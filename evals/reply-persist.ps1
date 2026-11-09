@@ -4,7 +4,7 @@
 # a backend restart: the snapshot is resolved from the referenced message at read time, so a
 # restart must not lose the link (migration v11 `reply_to_id`).
 #
-# Owns its own port + temp AGENTD_HOME and only stops the PIDs it started (never touches 8787).
+# Owns its own port + temp SIMO_HOME and only stops the PIDs it started (never touches 8787).
 #
 # Usage:
 #   powershell -NoProfile -ExecutionPolicy Bypass -File evals/reply-persist.ps1
@@ -29,10 +29,10 @@ function Add-Check([string]$name, [bool]$ok, [string]$note) {
 }
 
 $repo = Split-Path -Parent $PSScriptRoot
-if (-not $Exe) { $Exe = Join-Path $repo 'toolchain\tmp\release\agentd.exe' }
-if (-not (Test-Path $Exe)) { Write-Host "FAIL: agentd exe not found: $Exe"; exit 2 }
+if (-not $Exe) { $Exe = Join-Path $repo 'toolchain\tmp\release\simo.exe' }
+if (-not (Test-Path $Exe)) { Write-Host "FAIL: simo exe not found: $Exe"; exit 2 }
 
-$work = Join-Path ([System.IO.Path]::GetTempPath()) ("agentd-replypersist-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
+$work = Join-Path ([System.IO.Path]::GetTempPath()) ("simo-replypersist-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
 $homeDir = Join-Path $work 'home'
 New-Item -ItemType Directory -Force -Path $homeDir | Out-Null
 $base = "http://127.0.0.1:$Port"
@@ -42,9 +42,9 @@ Write-Host "exe: $Exe"
 Write-Host "port: $Port"
 Write-Host ''
 
-$env:AGENTD_HOME = $homeDir
-$env:AGENTD_LLM = 'mock'
-$env:AGENTD_DEBUG = '1'
+$env:SIMO_HOME = $homeDir
+$env:SIMO_LLM = 'mock'
+$env:SIMO_DEBUG = '1'
 
 function Start-Backend([string]$label) {
   $l = Join-Path $work ($label + '.log')
@@ -122,7 +122,7 @@ Stop-Backend $s1
 
 # ---------------------------------------------------------------- 2) restart on same home
 $s2 = Start-Backend 'after'
-Add-Check 'Backend restarts on same AGENTD_HOME' $s2.Ready $(if ($s2.Ready) { $base } else { 'no /api/health in 20s' })
+Add-Check 'Backend restarts on same SIMO_HOME' $s2.Ready $(if ($s2.Ready) { $base } else { 'no /api/health in 20s' })
 if (-not $s2.Ready) { Stop-Backend $s2; exit 1 }
 
 # ---------------------------------------------------------------- 3) assertions after restart

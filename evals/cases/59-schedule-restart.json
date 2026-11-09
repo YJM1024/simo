@@ -2,7 +2,7 @@
   "id": "schedule-restart",
   "name": "重启恢复（schedule 不丢、next_run 重算；停机错过只补最近一次）",
   "tier": "critical",
-  "pending": "需要重启被测服务进程，单次 run.mjs 做不到 → 由 evals/schedule-restart.ps1 真实执行（建 interval+once → 杀进程 → 重启 → 断言仍存在/nextRun 重算/once 补跑一次）。脚本自建独立端口+临时 AGENTD_HOME，不碰 8787。",
+  "pending": "需要重启被测服务进程，单次 run.mjs 做不到 → 由 evals/schedule-restart.ps1 真实执行（建 interval+once → 杀进程 → 重启 → 断言仍存在/nextRun 重算/once 补跑一次）。脚本自建独立端口+临时 SIMO_HOME，不碰 8787。",
   "vars": {
     "probe": "evals-restart-{{runId}}"
   },

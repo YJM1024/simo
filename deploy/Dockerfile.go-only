@@ -1,15 +1,15 @@
-# agentd 容器镜像（备选：跳过前端构建，仅编译 Go）
+# simo 容器镜像（备选：跳过前端构建，仅编译 Go）
 #
 # 使用场景：容器内 npm registry 不可达 / 想复用本机构建好的前端产物。
-# 前置：先在仓库根执行前端构建，确认 agentd/internal/webui/dist 存在：
-#   cd web && node build.mjs
-#   ls ../agentd/internal/webui/dist  # 期望 index.html / app.js / app.css
+# 前置：先在仓库根执行前端构建，把前端产物复制到 backend/internal/webui/dist：
+#   cd frontend && node build.mjs
+#   cp -r dist ../backend/internal/webui/dist
 #
 # 构建（上下文仍为仓库根）：
-#   docker build -f deploy/Dockerfile.go-only -t agentd:local .
+#   docker build -f deploy/Dockerfile.go-only -t simo:local .
 #
 # 与 deploy/Dockerfile 的差异只有一点：没有 node 阶段，dist 从构建上下文拷入；
-# 因此其忽略清单 **不能** 排除 agentd/internal/webui/dist
+# 因此其忽略清单 **不能** 排除 backend/internal/webui/dist
 # （见 deploy/Dockerfile.go-only.dockerignore）。
 #
 # 诚实声明：本机无 Docker/WSL/Podman，本文件**未经过实际构建验证**。
@@ -26,33 +26,33 @@ WORKDIR /src
 ARG GOPROXY=https://goproxy.cn,direct
 ENV GOPROXY=${GOPROXY} GOSUMDB=off GOTOOLCHAIN=local CGO_ENABLED=0
 
-COPY agentd/go.mod agentd/go.sum ./agentd/
-RUN cd agentd && go mod download
+COPY backend/go.mod backend/go.sum ./backend/
+RUN cd backend && go mod download
 
-COPY agentd/ ./agentd/
+COPY backend/ ./backend/
 # 构建期断言：dist 必须已存在，否则 //go:embed dist 会失败（给出明确错误）
-RUN test -f agentd/internal/webui/dist/index.html \
- && test -f agentd/internal/webui/dist/app.js \
- && test -f agentd/internal/webui/dist/app.css \
+RUN test -f backend/internal/webui/dist/index.html \
+ && test -f backend/internal/webui/dist/app.js \
+ && test -f backend/internal/webui/dist/app.css \
  && mkdir -p /out \
- && cd agentd \
- && go build -trimpath -buildvcs=false -ldflags="-s -w" -o /out/simo ./cmd/agentd \
+ && cd backend \
+ && go build -trimpath -buildvcs=false -ldflags="-s -w" -o /out/simo ./cmd/simo \
  && mkdir -p /out/data
 
 FROM ${RUNTIME_IMAGE} AS runtime
 ARG TZ
 
-RUN addgroup -g 10001 -S agentd \
- && adduser -u 10001 -S -G agentd -h /app -s /sbin/nologin agentd \
+RUN addgroup -g 10001 -S simo \
+ && adduser -u 10001 -S -G simo -h /app -s /sbin/nologin simo \
  && apk add --no-cache ca-certificates tzdata
 
 WORKDIR /app
 COPY --from=build /out/simo /simo
 RUN mkdir -p /data && chown -R 10001:10001 /data
 
-ENV AGENTD_HOME=/data \
-    AGENTD_ADDR=0.0.0.0:8787 \
-    AGENTD_MODEL=mock \
+ENV SIMO_HOME=/data \
+    SIMO_ADDR=0.0.0.0:8787 \
+    SIMO_MODEL=mock \
     TZ=${TZ}
 
 EXPOSE 8787

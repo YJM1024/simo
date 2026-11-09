@@ -29,16 +29,16 @@
 
 ## 2. 产品名统一为「私默」
 
-- 所有**用户可见**文案：`秘书` / `本地秘书` / `司墨` / `agentd`（显示用途）→ **私默**；
+- 所有**用户可见**文案：`秘书` / `本地秘书` / `司墨` / `simo`（显示用途）→ **私默**；
 - 覆盖：界面（顶栏品牌、状态文案、提示语、错误提示）、用户文档、README、发布说明、部署文档；
-- 保留内部标识不变：Go module `agentd`、`AGENTD_HOME`、可执行文件 `simo.exe`、API 路径；
+- 保留内部标识不变：Go module `simo`、`SIMO_HOME`、可执行文件 `simo.exe`、API 路径；
 - 说明：内部名不变是为了兼容数据与脚本，用户无需感知。
 
 ## 3. 品牌图标
 
 - 设计：**圆角方形徽标 + 墨滴/对话气泡**融合（体现"记忆/静默/对话"），主色取主题 accent 渐变；
 - 资产：
-  - `web/public/icon.svg`（矢量，favicon 与顶栏共用）；
+  - `frontend/public/icon.svg`（矢量，favicon 与顶栏共用）；
   - `icon-256.png`（Chrome headless 截图生成，备用/分享）；
 - 接入：
   - `index.html` `<link rel="icon" type="image/svg+xml" href="/icon.svg">`；

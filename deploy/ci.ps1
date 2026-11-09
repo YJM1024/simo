@@ -2,8 +2,8 @@
 #
 # Stages (each timed; any failure -> non-zero exit):
 #   1) preflight   : tools / repo checks
-#   2) go          : go vet + go test ./...  (agentd)
-#   3) web         : node web/build.mjs (tsc + tailwind + esbuild)  [skip with -SkipWeb]
+#   2) go          : go vet + go test ./...  (simo)
+#   3) web         : node frontend/build.mjs (tsc + tailwind + esbuild)  [skip with -SkipWeb]
 #   4) build       : build simo.exe into .tmp\ci-<GUID>\simo.exe
 #   5) evals       : mock evals in 4 blocks, fresh server + fresh GUID home per block
 #   6) package     : deploy/package.ps1 -SkipBuild -> deploy\dist\simo-<ver>-win-x64.zip
@@ -76,7 +76,7 @@ function Run-Stage([string]$name, [scriptblock]$body) {
 }
 function Write-Log([string]$path, [string]$text) { Set-Content -Path $path -Value $text -Encoding UTF8 }
 function Invoke-Go([string[]]$goArgs, [string]$logFile) {
-  Push-Location (Join-Path $repo 'agentd')
+  Push-Location (Join-Path $repo 'backend')
   try {
     if (Test-Path $goPs1) { $out = & $goPs1 @goArgs 2>&1 | Out-String } elseif (Test-Path $goBin) { $out = & $goBin @goArgs 2>&1 | Out-String } else { $out = & go @goArgs 2>&1 | Out-String }
     $code = $LASTEXITCODE
@@ -92,7 +92,7 @@ Write-Host ("[ci] version: " + $Version)
 
 # ---------------------------------------------------------------- 1) preflight
 $pre = Run-Stage 'preflight' {
-  if (-not (Test-Path (Join-Path $repo 'agentd\go.mod'))) { throw 'agentd/go.mod not found' }
+  if (-not (Test-Path (Join-Path $repo 'backend\go.mod'))) { throw 'backend/go.mod not found' }
   if (-not (Test-Path (Join-Path $repo 'evals\run.mjs'))) { throw 'evals/run.mjs not found' }
   if (-not $node) { throw 'node not found (set PATH or use the bundled node)' }
   if (-not (Test-Path $goPs1) -and -not (Test-Path $goBin) -and -not (Get-Command go -ErrorAction SilentlyContinue)) { throw 'Go toolchain not found' }
@@ -116,15 +116,20 @@ if ($SkipGo) {
 
 # ---------------------------------------------------------------- 3) web (optional)
 if ($SkipWeb) {
-  Add-Stage 'web' 'SKIP' 0 '-SkipWeb (pnpm/esbuild native toolchain unavailable)'
+  Add-Stage 'frontend' 'SKIP' 0 '-SkipWeb (pnpm/esbuild native toolchain unavailable)'
 } else {
-  $null = Run-Stage 'web' {
-    $buildScript = Join-Path $repo 'web\build.mjs'
-    if (-not (Test-Path $buildScript)) { throw 'web/build.mjs not found' }
-    Push-Location (Join-Path $repo 'web')
+  $null = Run-Stage 'frontend' {
+    $buildScript = Join-Path $repo 'frontend\build.mjs'
+    if (-not (Test-Path $buildScript)) { throw 'frontend/build.mjs not found' }
+    Push-Location (Join-Path $repo 'frontend')
     try { $out = & $node 'build.mjs' 2>&1 | Out-String; $code = $LASTEXITCODE } finally { Pop-Location }
     Write-Log (Join-Path $logs 'web-build.log') $out
     if ($code -ne 0) { Write-Host $out; throw "web build failed (exit $code)" }
+    $frontendDist = Join-Path $repo 'frontend\dist'
+    $embedDist = Join-Path $repo 'backend\internal\webui\dist'
+    if (-not (Test-Path (Join-Path $frontendDist 'index.html'))) { throw 'frontend/dist/index.html not produced' }
+    New-Item -ItemType Directory -Force -Path $embedDist | Out-Null
+    Copy-Item -Path (Join-Path $frontendDist '*') -Destination $embedDist -Recurse -Force
     $true
   }
 }
@@ -132,7 +137,7 @@ if ($SkipWeb) {
 # ---------------------------------------------------------------- 4) build simo.exe
 $exePath = Join-Path $runDir 'simo.exe'
 $buildOk = Run-Stage 'build' {
-  $null = Invoke-Go @('build', '-trimpath', '-buildvcs=false', '-ldflags', '-s -w', '-o', $exePath, './cmd/agentd') (Join-Path $logs 'go-build.log')
+  $null = Invoke-Go @('build', '-trimpath', '-buildvcs=false', '-ldflags', '-s -w', '-o', $exePath, './cmd/simo') (Join-Path $logs 'go-build.log')
   if (-not (Test-Path $exePath)) { throw 'simo.exe not produced' }
   Write-Host ("       exe: " + $exePath + " (" + [math]::Round((Get-Item $exePath).Length / 1MB, 2) + " MB)")
   $true
@@ -171,8 +176,8 @@ if ($SkipEvals -or -not $buildOk) {
     New-Item -ItemType Directory -Force -Path $blockHome | Out-Null
     $name = 'evals/' + $block.Name
     $ok = Run-Stage $name {
-      $env:AGENTD_HOME = $blockHome; $env:AGENTD_LLM = 'mock'; $env:AGENTD_DEBUG = '1'
-      $env:AGENTD_MODEL = 'mock'
+      $env:SIMO_HOME = $blockHome; $env:SIMO_LLM = 'mock'; $env:SIMO_DEBUG = '1'
+      $env:SIMO_MODEL = 'mock'
       $srvOut = Join-Path $logs ('server-b' + $blockIndex + '.out.log')
       $srvErr = Join-Path $logs ('server-b' + $blockIndex + '.err.log')
       $proc = Start-Process -FilePath $exePath -ArgumentList @('serve', '-addr', ("127.0.0.1:" + $port), '-model', 'mock') `
@@ -186,7 +191,7 @@ if ($SkipEvals -or -not $buildOk) {
           Start-Sleep -Milliseconds 300
         }
         if (-not $ready) { throw ("server not ready on port " + $port) }
-        $env:AGENTD_HOME = $blockHome
+        $env:SIMO_HOME = $blockHome
         $out = & $node (Join-Path $repo 'evals\run.mjs') --base-url ('http://127.0.0.1:' + $port) --cli $exePath --only ($ids -join ',') 2>&1 | Out-String
         Write-Log $log $out
         if ($LASTEXITCODE -ne 0) { Write-Host ($out -split "`n" | Select-Object -Last 15 | Out-String); throw ("evals failed: " + $block.Name + " (see " + $log + ")") }

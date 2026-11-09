@@ -1,8 +1,8 @@
-# team-executor.ps1 -- M23 task executor config (default agent:task-npc -> AGENTD_TASK_EXECUTOR=agent:simo)
+# team-executor.ps1 -- M23 task executor config (default agent:task-npc -> SIMO_TASK_EXECUTOR=agent:simo)
 #
 # Phase 1: start with default env; /api/team members must report agentId=agent:task-npc.
-# Phase 2: restart with AGENTD_TASK_EXECUTOR=agent:simo; members must report agentId=agent:simo.
-# Owns its own port + temp AGENTD_HOME; never touches 8787.
+# Phase 2: restart with SIMO_TASK_EXECUTOR=agent:simo; members must report agentId=agent:simo.
+# Owns its own port + temp SIMO_HOME; never touches 8787.
 #
 # Usage: powershell -NoProfile -ExecutionPolicy Bypass -File evals/team-executor.ps1 [-Exe path] [-Port 18915]
 # NOTE: keep this file ASCII-only (Windows PowerShell 5.1 misreads UTF-8 without BOM).
@@ -24,10 +24,10 @@ function Add-Check([string]$name, [bool]$ok, [string]$note) {
 }
 
 $repo = Split-Path -Parent $PSScriptRoot
-if (-not $Exe) { $Exe = Join-Path $repo 'agentd\simo.exe' }
+if (-not $Exe) { $Exe = Join-Path $repo 'backend\simo.exe' }
 if (-not (Test-Path $Exe)) { Write-Host "FAIL: exe not found: $Exe"; exit 2 }
 
-$work = Join-Path ([System.IO.Path]::GetTempPath()) ("agentd-teamexec-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
+$work = Join-Path ([System.IO.Path]::GetTempPath()) ("simo-teamexec-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
 $homeDir = Join-Path $work 'home'
 New-Item -ItemType Directory -Force -Path $homeDir | Out-Null
 $base = "http://127.0.0.1:$Port"
@@ -37,13 +37,13 @@ Write-Host "exe: $Exe"
 Write-Host "port: $Port"
 Write-Host ''
 
-$env:AGENTD_HOME = $homeDir
-$env:AGENTD_LLM = 'mock'
-$env:AGENTD_DEBUG = '1'
+$env:SIMO_HOME = $homeDir
+$env:SIMO_LLM = 'mock'
+$env:SIMO_DEBUG = '1'
 
 function Start-Backend([string]$label, [hashtable]$extraEnv) {
   foreach ($k in $extraEnv.Keys) { Set-Item -Path ("env:" + $k) -Value ([string]$extraEnv[$k]) }
-  if (-not $extraEnv.ContainsKey('AGENTD_TASK_EXECUTOR')) { Remove-Item -Path 'env:AGENTD_TASK_EXECUTOR' -ErrorAction SilentlyContinue }
+  if (-not $extraEnv.ContainsKey('SIMO_TASK_EXECUTOR')) { Remove-Item -Path 'env:SIMO_TASK_EXECUTOR' -ErrorAction SilentlyContinue }
   $log = Join-Path $work ($label + '.log')
   $p = Start-Process -FilePath $Exe -ArgumentList 'serve', '-addr', ("127.0.0.1:" + $Port), '-debug' `
     -RedirectStandardOutput $log -RedirectStandardError ($log + '.err') -WindowStyle Hidden -PassThru
@@ -94,9 +94,9 @@ $agentIds1 = @($members | ForEach-Object { [string]$_.agentId } | Select-Object 
 Add-Check 'Default executor is agent:task-npc' (($agentIds1.Count -ge 1) -and ($agentIds1 -contains 'agent:task-npc')) ("agentIds=" + ($agentIds1 -join ','))
 Stop-Backend $s1
 
-# ---------------------------------------------------------------- phase 2: AGENTD_TASK_EXECUTOR=agent:simo
-$s2 = Start-Backend 'simo' @{ AGENTD_TASK_EXECUTOR = 'agent:simo' }
-Add-Check 'Backend restarts with AGENTD_TASK_EXECUTOR=agent:simo' $s2.Ready $(if ($s2.Ready) { $base } else { 'no /api/health' })
+# ---------------------------------------------------------------- phase 2: SIMO_TASK_EXECUTOR=agent:simo
+$s2 = Start-Backend 'simo' @{ SIMO_TASK_EXECUTOR = 'agent:simo' }
+Add-Check 'Backend restarts with SIMO_TASK_EXECUTOR=agent:simo' $s2.Ready $(if ($s2.Ready) { $base } else { 'no /api/health' })
 if (-not $s2.Ready) { Stop-Backend $s2; exit 1 }
 $tag2 = [guid]::NewGuid().ToString('N').Substring(0, 8)
 $sess2 = Post-Json '/api/sessions' @{ title = "teamexec2-$tag2" }

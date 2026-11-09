@@ -12,10 +12,10 @@
 #   powershell -NoProfile -ExecutionPolicy Bypass -File evals/real-smoke.ps1 -Exe <path> -Port 18903
 #   powershell -NoProfile -ExecutionPolicy Bypass -File evals/real-smoke.ps1 -PriceIn 2 -PriceOut 8
 #
-# Token controls: AGENTD_MAX_OUTPUT_TOKENS (default 256) + AGENTD_REASONING_DEFAULT (default low).
+# Token controls: SIMO_MAX_OUTPUT_TOKENS (default 256) + SIMO_REASONING_DEFAULT (default low).
 # Cost estimate: pass -PriceIn/-PriceOut in CNY per 1M tokens; omit to only report tokens.
 #
-# SAFETY: temp AGENTD_HOME + own port + only stops the PID it started. Never touches 8787.
+# SAFETY: temp SIMO_HOME + own port + only stops the PID it started. Never touches 8787.
 # NOTE: keep this file ASCII-only (Windows PowerShell 5.1 misreads UTF-8 without BOM).
 
 param(
@@ -36,17 +36,17 @@ if (-not $Node) {
   $Node = 'E:\dsh_home\dsh-runtimes\dsh-primary-runtime\dependencies\node\bin\node.exe'
   if (-not (Test-Path $Node)) { $Node = (Get-Command node).Source }
 }
-if (-not $Exe) { $Exe = Join-Path $repo 'toolchain\tmp\release\agentd.exe' }
-if (-not (Test-Path $Exe)) { Write-Host "FAIL: agentd exe not found: $Exe"; exit 2 }
+if (-not $Exe) { $Exe = Join-Path $repo 'toolchain\tmp\release\simo.exe' }
+if (-not (Test-Path $Exe)) { Write-Host "FAIL: simo exe not found: $Exe"; exit 2 }
 
-$config = Join-Path $repo 'agentd\config.local.json'
+$config = Join-Path $repo 'backend\config.local.json'
 if (-not (Test-Path $config)) {
   Write-Host "FAIL: real model config not found: $config"
-  Write-Host "      create agentd/config.local.json with provider/baseURL/model/apiKey (see docs/tech-stack.md)."
+  Write-Host "      create backend/config.local.json with provider/baseURL/model/apiKey (see docs/tech-stack.md)."
   exit 2
 }
 
-$work = Join-Path ([System.IO.Path]::GetTempPath()) ("agentd-realsmoke-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
+$work = Join-Path ([System.IO.Path]::GetTempPath()) ("simo-realsmoke-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
 $homeDir = Join-Path $work 'home'
 New-Item -ItemType Directory -Force -Path $homeDir | Out-Null
 $base = "http://127.0.0.1:$Port"
@@ -57,13 +57,13 @@ Write-Host "exe: $Exe"
 Write-Host "port: $Port   maxOutputTokens=$MaxTokens   reasoning=$Reasoning"
 Write-Host ""
 
-$env:AGENTD_HOME = $homeDir
-$env:AGENTD_CONFIG = $config
-$env:AGENTD_MODEL = 'real'
-$env:AGENTD_LLM = 'deepseek'
-$env:AGENTD_MAX_OUTPUT_TOKENS = [string]$MaxTokens
-$env:AGENTD_REASONING_DEFAULT = $Reasoning
-$env:AGENTD_DEBUG = '1'   # needed by real-read-tool (debug request snapshot)
+$env:SIMO_HOME = $homeDir
+$env:SIMO_CONFIG = $config
+$env:SIMO_MODEL = 'real'
+$env:SIMO_LLM = 'deepseek'
+$env:SIMO_MAX_OUTPUT_TOKENS = [string]$MaxTokens
+$env:SIMO_REASONING_DEFAULT = $Reasoning
+$env:SIMO_DEBUG = '1'   # needed by real-read-tool (debug request snapshot)
 
 $proc = Start-Process -FilePath $Exe -ArgumentList 'serve', '-addr', ("127.0.0.1:" + $Port) `
   -RedirectStandardOutput $log -RedirectStandardError ($log + '.err') -WindowStyle Hidden -PassThru
