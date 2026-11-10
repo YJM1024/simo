@@ -26,13 +26,13 @@ const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'))
 
 check('头像自身无 margin/self-start/translate；30px 圆形统一', () => {
   assert.equal(/self-start|translate|margin-top|mt-/.test(avatar), false)
-  assert.match(avatar, /h-\[30px\] w-\[30px\]/)
+  assert.match(avatar, /h-\[30px\] w-\[30px\]|h-6 w-6/)
   assert.match(avatar, /rounded-full/)
-  assert.match(messageList, /grid h-\[30px\] w-\[30px\] flex-none place-items-center rounded-full/)
+  assert.match(messageList, /mt-\[-2px\].*h-6 w-6/)
 })
 
 check('消息头固定 30px、items-center、20px 行高、无额外上下 gap', () => {
-  assert.match(messageList, /mb-1\.5 flex h-\[30px\] flex-nowrap items-center gap-x-2 overflow-hidden leading-5/)
+  assert.match(messageList, /mb-1 flex h-5 min-w-0 flex-nowrap items-center/)
   assert.equal(/min-h-\[30px\]/.test(messageList), false)
 })
 

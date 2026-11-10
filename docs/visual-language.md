@@ -1,6 +1,7 @@
-# 司墨视觉语言（M39 / task-143）
+# 司墨视觉语言（M62 浅色科技风 / task-143 基线）
 
 > **定位**：这是司墨 UI 的视觉与组件规范，不是实现代码；用于把“能用的 MVP/Demo 感”收敛为“专业、稳定、可预期”的产品观感。
+> **视觉基准**：M62 浅色科技风（refract）实际值：`#F7F8FA` 画布 / `#FFFFFF` 表面 / `#E4E7EC` 线 / 黑底白字主按钮 / 蓝→紫渐变导航下划线 / 顶部三色淡径向渐变。
 > **适用范围**：三栏工作台、会话中心、任务/团队/记忆/视图页、设置/命令面板/通知中心/弹窗。
 > **硬约束**：组件只使用语义 token，不写死 hex/rgb；不新增第三套间距/圆角/阴影；状态必须齐 hover/active/focus-visible/disabled/loading。
 > **与主题关系**：本文描述 `light-tech` 的基准值；其他主题只允许在 token 值层覆盖，不允许改组件结构/尺寸规则。
@@ -13,40 +14,42 @@
 
 | Token | 用途 | 基准值（light-tech） |
 |---|---|---|
-| `canvas` | 页面底 | `#f5f8fc` |
-| `surface` | 卡片/面板 | `#ffffff`（半透明玻璃只用于顶栏/浮层，不用于普通卡片） |
-| `surface-sunken` | 次级底/表头/zebra | `#eef2f9` |
-| `ink` | 主文字 | `#121a26` |
-| `ink-secondary` | 次级文字 | `#52606f` |
-| `ink-muted` | 辅助/占位 | `#93a1b7` |
-| `ink-inverse` | 深色底文字 | `#fbfcfe` |
-| `border` | 默认边框 | `rgba(18,26,38,0.10)` |
-| `border-subtle` | 分隔/弱边框 | `rgba(18,26,38,0.06)` |
-| `accent` / `accent-hover` | 主操作/选中 | `#2563eb` / `#1d4ed8` |
-| `accent-soft` / `accent-border` | 选中底/描边 | 8% / 18% 透明 |
-| `ok` / `warn` / `danger` | 状态 | `#10b981` / `#f59e0b` / `#ef4444` |
-| `focus-ring` | 键盘焦点 | `rgba(37,99,235,0.45)` |
-| `scrim` / `scrim-strong` | 轻遮罩/弹窗遮罩 | 4% / 36% 深色 |
+| `canvas` | 页面底 | `#F7F8FA` |
+| `surface` | 卡片/面板 | `#FFFFFF`（玻璃只用于顶栏/浮层，不用于普通卡片） |
+| `surface-sunken` | 次级底/表头/zebra | `#F1F3F6` |
+| `ink` | 主文字 | `#0A0C10` |
+| `ink-secondary` | 次级文字 | `#313A48` |
+| `ink-muted` | 辅助/占位 | `#5C6675` |
+| `ink-faint` / `ink-inverse` | 极弱文字 / 深色底文字 | `#74808F` / `#FFFFFF` |
+| `border` | 默认边框 | `#E4E7EC` |
+| `border-subtle` | 分隔/弱边框 | `#EEF0F4` |
+| `accent` / `accent-hover` | 链接/选中/焦点 | `#2F5BFF` / `#254BE0` |
+| `accent-2` / `accent-3` | 品牌渐变紫/青 | `#6E4BFF` / `#00B8D9` |
+| `accent-gradient` | 导航下划线/品牌 | `linear-gradient(110deg,#2F5BFF,#6E4BFF 52%,#00B8D9)` |
+| `accent-soft` / `accent-border` | 选中底/描边 | `#EEF1FF` / `rgba(47,91,255,.22)` |
+| `ok` / `warn` / `danger` | 状态 | `#0F9D6E` / `#D97706` / `#DC3B45` |
+| `focus-ring` | 键盘焦点 | `rgba(47,91,255,.35)` |
+| `scrim` / `scrim-strong` | 轻遮罩/弹窗遮罩 | `rgba(10,12,16,.04)` / `rgba(10,12,16,.36)` |
 
 规则：
-1. **一屏最多一个主色行动**（primary 按钮/选中态）；其他操作用 secondary/ghost。
+1. 中性底 + 品牌三色（蓝/紫/青）点缀；主操作固定用黑色 primary，不再用蓝色大按钮。
 2. 状态色只表达状态，不做装饰；不用大面积状态色底。
 3. 禁止在组件写 `#...`/`rgb()`；新增颜色先加语义 token。
 4. 边框永远用 token，不用纯黑/纯白硬编码。
-5. 渐变/glow 仅允许品牌图标/启动空态；常规控件不用发光。
+5. 渐变只允许：品牌标识、导航 active 下划线、顶部三色氛围、强调文字；普通卡片/按钮/表格不使用渐变。
 
 ### 1.2 字号与行高
 
 | 级别 | 字号 | 行高 | 用途 |
 |---|---|---|---|
-| caption | 12px | 16px | 辅助说明、表格表头、时间/元信息 |
+| caption | 12px | 16px | 表格表头、极短元信息（仅非正文） |
 | body-sm | 13px | 20px | 次级正文、按钮/输入、列表 |
-| body | 15px | 24px | 主正文、对话、表单正文 |
-| title | 18px | 28px | 面板/区块标题 |
-| page-title | 22px | 32px | 页面/弹窗一级标题 |
+| body | 14px | 22px | 主正文、对话、表单正文 |
+| title | 16px | 24px | 面板/区块标题 |
+| page-title | 20px | 28px | 页面/弹窗一级标题 |
 
 规则：
-- **字号只用 12/13/15/18/22**；废弃 10/11/16/24 的散点字号（见 §7）。
+- **字号只用 12/13/14/16/18/20**；可见正文与操作文本不低于 **13px**，12 仅用于表格表头/极短元信息。
 - 正文最大宽度约 70–80 个汉字；长文不铺满超宽屏。
 - 禁止用全大写+宽字距的 mono 小标签冒充专业感（中文尤其不要这样）。
 - 数字、ID、时间、token/计数用 `font-variant-numeric: tabular-nums`；对齐比较场景必须等宽数字。
@@ -75,32 +78,42 @@
 
 | Token | 值 | 用途 |
 |---|---|---|
-| `radius-control` | 6px | 按钮、输入、Tab、分页、徽标 |
-| `radius-card` | 10px | 卡片、面板、弹窗、Toast |
-| `radius-pill` | 999px | 状态点/头像/胶囊标签（仅此用途） |
+| `radius-sm` | 8px | 按钮、输入、Tab、分页、徽标 |
+| `radius-md` | 12px | 卡片、面板、Toast、用户气泡 |
+| `radius-lg` | 16px | 弹窗、抽屉、大浮层 |
 
-规则：不再使用 8/12/16px 的中间圆角；同一组件内圆角不嵌套多层（卡片 10 + 内部小卡片 6，禁止 10+10+10 套娃）。
+规则：只用 **8/12/16** 三档；控件 8、卡片/面板 12、浮层 16；不再使用 4/6/10 等中间圆角；同一组件内圆角不嵌套多层（卡片 12 + 内部控件 8，禁止 12+12+12 套娃）。
 
 ### 1.5 阴影
 
-只保留两档：
+只保留一套**双层轻阴影**：
 
 | Token | 值 | 用途 |
 |---|---|---|
-| `shadow-raise` | `0 1px 2px rgba(18,26,38,.05)` | 输入/次级控件轻微抬起（可选） |
-| `shadow-overlay` | `0 8px 24px rgba(18,26,38,.10)` | 弹窗/下拉/Toast/Tooltip/悬浮层 |
+| `shadow-sm` | `0 1px 2px rgba(10,12,16,.05), 0 4px 14px -6px rgba(10,12,16,.10)` | 卡片/输入/次级控件轻抬起 |
+| `shadow-overlay` | `0 1px 2px rgba(10,12,16,.05), 0 4px 14px -6px rgba(10,12,16,.10)` | 弹窗/下拉/Toast/Tooltip/悬浮层（配合遮罩） |
 
 规则：
-- **普通卡片/面板不加阴影**，用 1px 边框 + 表面色区分层级；
-- 一屏最多一个 overlay 阴影层；禁止卡片阴影+边框+渐变三件套；
-- 禁止“每个区块都浮起来”的 Demo 感（见 §7）。
+- 所有阴影都用这套双层：1px 贴边 + 大范围低透明扩散；**禁止重阴影/发光/多层叠加**；
+- 同一容器不同时用深边框+重阴影+渐变强调；选中用 `accent-border + accent-soft`，不用加粗边框；
+- 层级靠表面色/边框/遮罩，不靠“每个区块都浮起来”。
 
 ### 1.6 边框
 
-- 默认 `1px`；只用 `border` / `border-subtle` 两个语义；
-- **1.5px 只用于线性图标描边**（见 §5）；
+- 默认 `1px`；只用 `border #E4E7EC` / `border-subtle #EEF0F4` 两个语义；
+- **1.5px 只用于线性图标描边**（见 §4）；
 - 同一容器不同时用深边框+阴影+圆角强调；选中用 `accent-border + accent-soft`，不用加粗边框；
 - 分隔线优先 `border-subtle`；列表项之间可用分隔线，但不要每行都加卡片边框。
+
+### 1.7 品牌氛围与导航
+
+- **顶部背景**：在 `canvas #F7F8FA` 上叠加三色**极淡径向渐变**：
+  - 蓝 `rgba(47,91,255,.06)`，偏左；
+  - 紫 `rgba(110,75,255,.05)`，偏右；
+  - 青 `rgba(0,184,217,.04)`，顶部中央；
+  - 只作用于页面顶部氛围，不进入卡片/表格/正文背景。
+- **导航 active**：2px 蓝→紫渐变下划线（`linear-gradient(110deg,#2F5BFF,#6E4BFF 52%,#00B8D9)`），文字 `--accent`；未选中 secondary 灰。
+- **主按钮**：黑底白字（`--ink` + `--ink-inverse`），hover `--ink-secondary`；蓝色只做链接/选中/焦点，不做大按钮底色。
 
 ---
 
@@ -109,11 +122,11 @@
 ### 2.1 字体栈
 
 ```text
--apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
-"Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif
+"Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system,
+"Helvetica Neue", Arial, sans-serif
 ```
 
-- 代码/ID/命令行：`ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace`；
+- 代码/ID/命令行：`Consolas, "Cascadia Mono", ui-monospace, "SFMono-Regular", monospace`；
 - 中文正文不要用纯 mono；mono 只用于代码、ID、数字、路径；
 - 数字统一 `tabular-nums`；表格、用量、token、时间、计数必须。
 
@@ -136,16 +149,17 @@
 
 ### 3.1 按钮
 
-尺寸：`sm` 高度 28px，`md` 高度 32px；水平内边距 10/12；圆角 6；图标 16；文字 12/13。
+尺寸：`sm` 高度 28px，`md` 高度 32px；水平内边距 10/12；圆角 8；图标 16；文字 13/14。
 
 | 类型 | 默认 | hover | active | focus-visible | disabled | loading |
 |---|---|---|---|---|---|---|
-| primary | accent 底 + 白字 | accent-hover 底 | 压暗 6% | focus ring 2px + 2px 偏移 | 50% 透明、cursor not-allowed | 保留宽度，左侧 14px spinner，文案“处理中…” |
-| secondary | surface + border | surface-sunken 底 | 再压暗 | focus ring | 50% | spinner + 文案 |
+| primary | **`ink` 黑底 + 白字** | `ink-secondary` 底 | 压暗 5% | focus ring 2px + 2px 偏移 | 50% 透明、cursor not-allowed | 保留宽度，左侧 14px spinner，文案“处理中…” |
+| secondary | surface + border + 双层轻阴影 | surface-sunken 底 | 再压暗 | focus ring | 50% | spinner + 文案 |
 | ghost | 透明 | surface-sunken 底 | 再压暗 | focus ring | 50% | spinner |
 | danger | danger 底 + 白字（仅破坏性） | danger 加深 | 压暗 | danger focus ring | 50% | spinner + “删除中…” |
 
 规则：
+- **primary 固定黑底白字**；蓝色只做链接/选中/焦点，不铺大按钮；
 - 主操作每屏最多 1 个；同级次操作统一 secondary/ghost；
 - 图标按钮必须有 `aria-label`/tooltip；纯图标按钮 sm 至少 28×28；
 - loading 时禁止重复提交、保留原宽度防抖动；
@@ -154,17 +168,17 @@
 
 ### 3.2 输入 / 选择器
 
-- 高度 32/36；圆角 6；边框 1px；内边距 10–12；
+- 高度 32/36；圆角 8；边框 1px；内边距 10–12；
 - 默认 border；hover border 加深；focus-visible 2px focus ring + accent-border；disabled surface-sunken + muted；
 - 必须有 label（或 `aria-label`）；placeholder 只做示例，不替代 label；
-- 错误：danger-border + 12px 错误文案，定位在字段下方；不得只靠颜色；
+- 错误：danger-border + 13px 错误文案，定位在字段下方；不得只靠颜色；
 - 选择器：右侧 16px chevron 线性图标；不要原生 select 的默认外观混搭；分组/搜索用统一菜单；
 - 文本域：最小 3 行，垂直可 resize；超过高度滚动，不撑破弹窗。
 
 ### 3.3 Tab
 
 - 高度 32；水平内边距 10–12；文字 13；
-- 未选中 `ink-secondary`；hover `ink`；选中 `ink` + 2px accent 下划线（或 accent-soft 胶囊，二选一，全站统一）；
+- 未选中 `ink-secondary`；hover `ink`；**选中 `accent` 文字 + 2px 蓝→紫渐变下划线**（全站统一）；
 - 键盘左右切换；`aria-selected`；focus-visible 必须有环；
 - 不用 emoji/色块代替选中态；Tab 数量 >6 时横向滚动，不换行挤压。
 
@@ -179,39 +193,39 @@
 
 ### 3.5 卡片
 
-- 表面 `surface`；1px `border-subtle`；圆角 10；内边距 12/16；
-- **不加阴影**；不做卡片套卡片；需要分组时用标题+分隔线，而不是再加一层边框；
+- 表面 `surface`；1px `border-subtle`；圆角 12；内边距 12/16；
+- 使用**双层轻阴影**（`shadow-sm`），不叠加第二层重阴影；不做卡片套卡片；需要分组时用标题+分隔线；
 - 卡片 hover 只用于可点击卡片：border 加深/表面 sunken；不可点击卡片不 hover；
-- 卡片标题 15/18；正文 13/15；元信息 12；
+- 卡片标题 14/16；正文 13/14；元信息 12；
 - 一屏卡片数量多时优先列表/表格，不堆“信息卡片墙”。
 
 ### 3.6 徽标 / 状态点
 
-- 徽标高度 20/24；圆角 6 或 pill（状态点）；文字 12；
+- 徽标高度 20/24；圆角 8；文字 12；
 - 状态点直径 6px，与文字间距 6；颜色只用 ok/warn/danger/accent/muted；
 - 状态文案必须可读（“执行中/待审批/失败”），不能只用颜色/点；
-- 数字徽标（未读）用 pill + tabular-nums，超过 99 显示 `99+`。
+- 数字徽标（未读）用圆角 8 + tabular-nums，超过 99 显示 `99+`。
 
 ### 3.7 Toast / Tooltip / 弹窗
 
 **Toast**
-- 宽 320–360；圆角 10；1px border；`shadow-overlay`；右上浮层；最多同时 3 条；
-- 标题 13/15 + 正文 12；成功/警告/错误用左侧 2px 状态条（不要整块染色）；
+- 宽 320–360；圆角 12；1px border；`shadow-overlay`；右上浮层；最多同时 3 条；
+- 标题 13/14 + 正文 12–13；成功/警告/错误用左侧 2px 状态条（不要整块染色）；
 - 4s 自动消失（错误可 8s/手动关闭）；不阻塞操作；重复消息合并。
 
 **Tooltip**
-- 深色 `ink` 底 + 反白字；12px；圆角 6；最大宽 240；延迟 300ms；
+- 深色 `ink` 底 + 反白字；12–13px；圆角 8；最大宽 240；延迟 300ms；
 - 只做补充说明，不承载关键操作；键盘 focus 也能触发；移动端改为点击/长按。
 
 **弹窗**
-- `scrim-strong` 遮罩；面板 `surface` + 1px border + 圆角 10 + `shadow-overlay`；
-- 最大宽 480/640；标题 18；正文 13/15；底部按钮右对齐（次要左、主操作右）；
+- `scrim-strong` 遮罩；面板 `surface` + 1px border + 圆角 16 + `shadow-overlay`；
+- 最大宽 480/640；标题 16；正文 13/14；底部按钮右对齐（次要左、主操作右）；
 - 打开时焦点进入第一个可操作控件；Esc 关闭；关闭前有未保存修改必须确认；
 - 不使用多个嵌套弹窗；复杂内容用抽屉/全屏页。
 
 ### 3.8 分页
 
-- 28–32px 按钮；圆角 6；当前页 accent-soft + accent 文字；
+- 28–32px 按钮；圆角 8；当前页 accent-soft + accent 文字；
 - 省略号不是按钮；上一页/下一页带 16px chevron；
 - 与表格同宽右对齐；总条数 12px muted；页码 `tabular-nums`。
 
@@ -232,11 +246,11 @@
 
 | 区域 | 基准 |
 |---|---|
-| 左栏 | 260–280px；行高 32–36；缩进 12/级（最多 8 级） |
-| 中栏 | 最小 560px；对话正文最大宽 760；输入区上下 12/16 |
-| 右栏 | 300–320px；卡片内边距 12；任务行 36–40 |
-| 顶栏 | 48–52px；只放全局操作/状态，不放大段文案 |
-| 面板标题 | 36–40px；标题 15/18；不用 10px 全大写标签 |
+| 左栏 | 264px（紧凑 232）；行高 32–36；缩进 12/级（最多 8 级） |
+| 中栏 | 最小 640px；对话正文最大宽 800；输入区上下 12/16 |
+| 右栏 | 328px；卡片内边距 12；任务行 36–40；收起 48px |
+| 顶栏 | 52px；导航行 40；只放全局操作/状态，不放大段文案 |
+| 面板标题 | 36–40px；标题 14/16；不用 10px 全大写标签 |
 | 分隔 | 只使用 1px `border-subtle`；三栏边界 1px `border`；不叠加阴影分隔 |
 | 区块间距 | 16–24；同一面板内不嵌套多层“卡片+边框+阴影” |
 
@@ -244,8 +258,8 @@
 1. 表面色（canvas/surface/sunken）；
 2. 1px 边框；
 3. 文字层级；
-4. 仅浮层用 shadow-overlay。
-**禁止**用阴影表达普通层级，**禁止**每个区块都有边框+圆角+阴影。
+4. 浮层使用双层阴影 + 遮罩。
+**禁止**用重阴影表达普通层级，**禁止**每个区块都有深边框+重阴影+渐变。
 
 ---
 
@@ -263,42 +277,42 @@
 
 | # | 当前反模式 | 为什么像 Demo | 替换规则 |
 |---|---|---|---|
-| 1 | 字号 10/11/12/13/15/16/20/24 混用 | 没有 type scale，像随手调的 | 只用 12/13/15/18/22；辅助文案 ≥12 |
+| 1 | 字号 10/11/12/13/15/16/20/24 混用 | 没有 type scale，像随手调的 | 只用 12/13/14/16/18/20；正文/操作 ≥13 |
 | 2 | 大量 10/11px 全大写宽字距 mono 小标签 | “设计系统模板”感、中文难读 | 用 12px 二级字色中文标签，不用全大写/宽字距 |
-| 3 | 圆角 6/8/10/12/16 混用 | 控件不成套 | 6 控件 / 10 卡片 / pill 胶囊；删除 8/12/16 |
-| 4 | 每个卡片/区块都有阴影 | 全屏“浮起来”，层级噪音 | 普通卡片无阴影；只有弹窗/下拉/Toast 用 shadow-overlay |
+| 3 | 圆角 4/6/10 混用 | 控件不成套 | 控件 8 / 卡片 12 / 浮层 16；只用 8/12/16 |
+| 4 | 每个卡片/区块都有重阴影 | 全屏“浮起来”，层级噪音 | 统一双层轻阴影；普通卡片用同一套，不额外加重 |
 | 5 | 卡片套卡片、边框套边框 | 像原型堆 div | 分组用标题+分隔线；最多两层表面 |
 | 6 | 每行/每项都有独立边框+圆角 | 列表变成“卡片墙” | 列表用分隔线/zebra；卡片只用于独立对象 |
 | 7 | emoji 当图标（⭐/✓/✕/▶/⚠） | 平台相关、不可控、廉价 | 统一 1.5px 线性 SVG 16/20；仅头像 fallback 用字 |
 | 8 | 按钮图标+文字大小随意、sm 只有 20px 高 | 点击区域小、像临时按钮 | 按钮 sm 28 / md 32；图标 16；最小点击 28×28 |
-| 9 | 主按钮到处都是（每个卡片一个 primary） | 没有主次，视觉噪音 | 每屏最多 1 个 primary；其余 secondary/ghost |
+| 9 | 主按钮到处都是（每个卡片一个 primary） | 没有主次，视觉噪音 | 每屏最多 1 个 primary（黑底白字）；其余 secondary/ghost |
 | 10 | hover 只变颜色，无 focus-visible | 键盘用户无反馈，像网页 demo | 所有可交互控件必须有 2px focus ring + 2px offset |
 | 11 | disabled 只用 opacity，仍可点/无说明 | 状态不可信 | disabled + cursor + aria-disabled；必要时给原因 tooltip |
 | 12 | loading 只是文案“加载中…”，按钮可重复点 | 状态不完整、易重复提交 | 按钮内 spinner + 禁用；列表 skeleton；保留布局 |
 | 13 | 表格无 zebra、数字左对齐、无表头层级 | 数据不可扫读 | 表头 12 二级色；偶数行 sunken；数字右对齐 + tabular-nums |
 | 14 | 状态只用颜色点，不给文字 | 色弱不可用、语义不明 | 点 + 文本（执行中/待审批/失败）；徽标 12px |
-| 15 | Tab 用不同形状/颜色混搭 | 同一控件不一致 | 全站统一 2px 下划线或 accent-soft 胶囊，二选一 |
+| 15 | Tab 用不同形状/颜色混搭 | 同一控件不一致 | 全站统一 2px 蓝→紫渐变下划线 |
 | 16 | 空态用大插画/emoji/网络梗 | 像 demo | 16/20 线性图标 + 一句说明 + 一个主操作；不放装饰大图 |
-| 17 | 输入框无 label、placeholder 当 label | 可用性差 | 始终 label；错误 12px 定位字段下；focus ring 统一 |
-| 18 | 弹窗/抽屉圆角/阴影/遮罩不一致 | 组件不像一套 | 统一 scrim-strong + radius 10 + shadow-overlay；Esc/焦点陷阱 |
-| 19 | 三栏每栏都有不同间距/标题高度 | 密度失衡 | 左 260–280 / 右 300–320 / 顶 48–52；标题 36–40；gutter 12/16 |
-| 20 | 彩色渐变/glow 用在普通按钮/卡片 | 视觉廉价、抢内容 | 仅品牌空态/图标；控件用纯色 token |
+| 17 | 输入框无 label、placeholder 当 label | 可用性差 | 始终 label；错误 13px 定位字段下；focus ring 统一 |
+| 18 | 弹窗/抽屉圆角/阴影/遮罩不一致 | 组件不像一套 | 统一 scrim-strong + radius 16 + 双层阴影；Esc/焦点陷阱 |
+| 19 | 三栏每栏都有不同间距/标题高度 | 密度失衡 | 左 264 / 右 328 / 顶 52；标题 36–40；gutter 12/16 |
+| 20 | 彩色渐变/glow 用在普通按钮/卡片 | 视觉廉价、抢内容 | 只用于品牌/导航下划线/顶部氛围；按钮用黑底白字 |
 | 21 | 同一操作在不同地方文案不同（“提交/保存/确定”） | 产品不成熟 | 动词一致：保存/取消/重试/删除；危险动作用“删除” |
 | 22 | 图标混用线面/不同线宽/不同尺寸 | 像从不同库拼的 | 1.5px 线性，16/20 两档，currentColor |
-| 23 | 表格/分页用浏览器默认控件外观 | 与产品脱节 | 统一 28–32 按钮、圆角 6、accent-soft 当前页 |
-| 24 | 错误只 toast，不留字段级错误 | 用户不知道改哪里 | 字段下 12px 错误 + 顶部汇总（可选）；toast 只做通知 |
+| 23 | 表格/分页用浏览器默认控件外观 | 与产品脱节 | 统一 28–32 按钮、圆角 8、accent-soft 当前页 |
+| 24 | 错误只 toast，不留字段级错误 | 用户不知道改哪里 | 字段下 13px 错误 + 顶部汇总（可选）；toast 只做通知 |
 
 ---
 
-## 8. 视觉走查验收清单（M39）
+## 8. 视觉走查验收清单（M62）
 
 ### 8.1 Token 与排版
 - [ ] 组件无硬编码 hex/rgb；颜色均来自语义 token；
-- [ ] 字号只出现 12/13/15/18/22；辅助文字 ≥12；
+- [ ] 字号只出现 12/13/14/16/18/20；正文/操作文字 ≥13；
 - [ ] 数字/时间/token/计数使用 tabular-nums；
 - [ ] 间距均为 4 的倍数；无 3/5/7/9/10/14/18；
-- [ ] 圆角只用 6/10/pill；无 8/12/16；
-- [ ] 普通卡片无阴影；overlay 只有 shadow-overlay；
+- [ ] 圆角只用 8/12/16；
+- [ ] 阴影只用双层轻阴影；无重阴影/发光；
 - [ ] 边框只用 border/border-subtle；无加粗边框强调。
 
 ### 8.2 组件与状态
@@ -333,7 +347,7 @@
 
 ---
 
-## 9. 参考模式与页面骨架（M39 补充）
+## 9. 参考模式与页面骨架（M62 参考）
 
 > 参考 DSH / 主流 agent 产品的成熟模式，但只借“信息架构与操作位置”，不复制其视觉样式；落位仍使用本文 §1–§6 的 token/组件规则。
 
@@ -343,21 +357,21 @@
 2. **顶部面包屑 + 操作区**：左侧当前路径（最多 3 级，超出省略中间）；右侧只放页面级操作（刷新/新建/更多）；不把“保存/取消”放页面顶栏（表单内就地操作）。
 3. **中栏对话**：消息按“用户/助手/工具/系统”分组；日期/阶段分隔用 12px 次级；工具调用默认折叠卡片，输出用等宽 `pre`；长输出内部滚动，不撑破中栏；状态/审批在消息内就地呈现。
 4. **输入区**：模型/推理/权限用 pill 选择器（28px 高）；发送按钮 32px primary；流式中显示“停止”secondary；上传/命令/计划为 ghost 图标按钮；输入区固定底部，不随消息滚动。
-5. **设置页**：左侧二级导航（240px，选中 accent-soft + 左 2px 指示）+ 右侧内容（最大 720px）；每节标题 18；字段行 label 左/控件右或上下堆叠，错误就地。
-6. **右栏可折叠**：默认 320px；折叠后 0 或 40px 图标 rail；折叠状态持久化；折叠按钮在面板标题右侧，16px 线性图标；右栏不挤压中栏最小宽 640。
+5. **设置页**：左侧二级导航（240px，选中 accent-soft + 左 2px 指示）+ 右侧内容（最大 720px）；每节标题 16；字段行 label 左/控件右或上下堆叠，错误就地。
+6. **右栏可折叠**：默认 328px；折叠后 48px 图标 rail；折叠状态持久化；折叠按钮在面板标题右侧，16px 线性图标；右栏不挤压中栏最小宽 640。
 
 ### 9.2 页面骨架（ASCII）与尺寸
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ TopBar 48                                                                    │
+│ TopBar 52                                                                    │
 │ [品牌] [面包屑：主会话 › 需求 › 当前]                  [权限 pill] [通知] [设置] │
 ├───────────────┬──────────────────────────────────────────────┬───────────────┤
-│ Left 264      │ Center（flex，最小 640）                       │ Right 320     │
+│ Left 264      │ Center（flex，最小 640）                       │ Right 328     │
 │               │                                              │ （可折叠）     │
 │ ┌───────────┐ │ ┌──────────────────────────────────────────┐ │ ┌───────────┐ │
 │ │ Search 32 │ │ │ PageHeader 40                            │ │ │ PanelHead │ │
-│ └───────────┘ │ │ [标题 18]                    [操作区 32]   │ │ │ 36        │ │
+│ └───────────┘ │ │ [标题 16]                    [操作区 32]   │ │ │ 36        │ │
 │               │ ├──────────────────────────────────────────┤ │ ├───────────┤ │
 │ 工作区 12     │ │ Chat scroll                              │ │ │ 任务/团队 │ │
 │  · 会话行 32  │ │  · 消息组（用户/助手）                    │ │ │ 行 36     │ │
@@ -377,10 +391,10 @@
 - 控件高度：**28（sm）/ 32（md）**；输入 32、按钮 28/32、Tab 32、分页 28–32、行 32/36；
 - 间距：**8px** 为组件间基准（4 用于图标/文字，12/16 用于分区）；
 - 分区标题：**12px 大写次级**（英文标签 `text-transform: uppercase; letter-spacing: .06em`；中文用 12px 次级加粗，不做伪大写）；
-- 顶部 TopBar 48；PageHeader 40；面板标题 36；Composer 96；StatusBar 28；
-- 三栏：Left 264、Right 320、Center 最小 640；gutter 12/16；折叠 rail 40；
+- 顶部 TopBar 52 + 导航行 40；PageHeader 40；面板标题 36；Composer 96；StatusBar 28；
+- 三栏：Left 264、Right 328、Center 最小 640（对话列最大 800）；gutter 12/16；折叠 rail 48；
 - 表格行 36；卡片内边距 12/16；弹窗最大宽 480/640；
-- 所有高度/间距落到 4 的倍数，不出现 27/30/33 等“看着差不多”的值。
+- 所有高度/间距落到 4 的倍数，不出现 27/30/33 等“看着差不多”的值；顶部背景叠加三色淡径向渐变。
 
 ### 9.3 组件落位表
 
@@ -391,18 +405,18 @@
 | 左栏搜索 | Input 32 + Search 16 图标 + 清除 ghost | 无 label、无清除 |
 | 左栏分区 | SectionLabel 12 大写次级、ListRow 32、StatusDot 6 | 每行卡片、每行边框 |
 | 左栏会话/成员行 | ListRow(32)、Avatar 20、Badge(未读)、IconButton(hover) | emoji 状态、双行大卡片 |
-| PageHeader | Heading 18、Breadcrumb、Button(secondary/ghost)、IconButton | 每页多个 primary |
+| PageHeader | Heading 16、Breadcrumb、Button(secondary/ghost)、IconButton | 每页多个 primary |
 | 中栏消息 | MessageGroup、Bubble、Avatar 20、Badge、Markdown、CodeBlock | 气泡内多层卡片 |
-| 工具卡 | Card(radius 10，无阴影)、CodeBlock(等宽)、Collapse、StatusBadge、Button(ghost 28) | 工具输出用正文比例、彩色块 |
+| 工具卡 | Card(radius 12，双层轻阴影)、CodeBlock(等宽)、Collapse、StatusBadge、Button(ghost 28) | 工具输出用正文比例、彩色块 |
 | 审批/计划卡 | Card、Badge、Button(primary/secondary 28/32)、Alert | 用 toast 代替就地审批 |
 | Composer | Textarea/Input、Pill 28(模型/权限)、IconButton 28(上传/计划)、Button(primary 32) | 输入无 label、发送态不区分 |
 | 右栏面板 | PanelHeader 36、ListRow 36、Tabs 32、Table(36)、EmptyState、IconButton | 右栏再套全屏卡片 |
-| 设置页 | SideNav 240（ListRow 32）、Section Title 18、FormRow、Input/Select 32、Button 28/32 | 全部用卡片墙、无左导航 |
+| 设置页 | SideNav 240（ListRow 32）、Section Title 16、FormRow、Input/Select 32、Button 28/32 | 全部用卡片墙、无左导航 |
 | 团队页 | Tabs 32、Table/ListRow、StatusBadge、Avatar、Button(ghost 28) | 成员卡片化+阴影 |
 | 记忆页 | Tabs 32、Search 32、Table/List、EntityChip、StatusDot | 每条记忆一张大卡 |
 | 视图页 | ViewRenderer 13 块、Button、Table 36、Card、Toolbar | 自定义块绕过组件规范 |
 | 通知中心 | Panel/Sheet、ListRow 36、Badge、Button(ghost 28)、EmptyState | 每条通知一张彩色卡 |
-| 弹窗/抽屉 | Modal/Sheet(radius 10，shadow-overlay)、Button、FormRow、Alert | 嵌套弹窗 |
+| 弹窗/抽屉 | Modal/Sheet(radius 16，shadow-overlay)、Button、FormRow、Alert | 嵌套弹窗 |
 
 ### 9.4 视觉走查清单（扩充）
 
@@ -445,12 +459,12 @@
 | 对象 | 反例（Demo 感） | 正例（专业） |
 |---|---|---|
 | 按钮 | 每个卡片一个蓝色 primary；`确定`/`提交`混用；sm 只有 20px 高；emoji 图标 | 一屏一个 primary；动词统一（保存/取消/重试）；sm 28/md 32；1.5px 线性 16 图标；loading 保留宽度 |
-| 卡片 | 卡片+阴影+渐变+边框；卡片套卡片；每行一张卡 | 无阴影，1px subtle 边框，radius 10；分组用标题+分隔线；列表不用卡片墙 |
+| 卡片 | 卡片+重阴影+渐变+边框；卡片套卡片；每行一张卡 | 双层轻阴影，1px subtle 边框，radius 12；分组用标题+分隔线；列表不用卡片墙 |
 | 表格 | 无表头层级、数字左对齐、无 zebra、浏览器默认分页 | 表头 12 次级、偶数行 sunken、数字右对齐+tabular-nums、hover、统一分页 28–32 |
-| 标签/徽标 | 10px 全大写 mono；彩色底堆叠；只有颜色点无文字 | 12px 次级；6/10 圆角；状态点 6 + 文本；未读 99+；颜色只表达状态 |
+| 标签/徽标 | 10px 全大写 mono；彩色底堆叠；只有颜色点无文字 | 12px 次级；8 圆角；状态点 6 + 文本；未读 99+；颜色只表达状态 |
 | 图标 | emoji ⭐/✓/✕；线面混用；尺寸 12/14/18 随意 | 1.5px 线性、16/20 两档、currentColor；图标按钮有 aria-label |
 | 设置页 | 无左导航，所有卡片从上排到下；每项都是大卡片 | 左导航 240 + 右内容最大 720；Section 18；FormRow 对齐、错误就地、按钮 28/32 |
 | 输入区 | 模型/权限散落成文字链接；发送按钮随内容高度变化 | 模型/权限 pill 28；发送 32 primary；流式切换停止；底部固定 96 |
-| 弹窗 | 圆角/阴影/遮罩随心；无焦点管理；未保存直接关 | scrim-strong + radius 10 + shadow-overlay；焦点陷阱；未保存确认；Esc 关闭 |
+| 弹窗 | 圆角/阴影/遮罩随心；无焦点管理；未保存直接关 | scrim-strong + radius 16 + shadow-overlay；焦点陷阱；未保存确认；Esc 关闭 |
 
 > **判定口径**：如果截图里出现 >2 种按钮高度、>2 种圆角、>1 个 primary、每行都有边框/阴影、emoji 图标、10/11px 微标签中的任意两项，即判定未通过视觉走查。

@@ -27,91 +27,93 @@
   color-scheme: light;
 
   /* ---- 底色与表面 ---- */
-  --canvas: #F7F8FA;
+  --canvas: #FBFAF7;
   --surface: #FFFFFF;
   --surface-solid: #FFFFFF;
-  --surface-sunken: #F1F3F6;
-  --scrim: rgba(10, 12, 16, 0.04);
+  --surface-sunken: #F6F5F1;
+  --scrim: rgba(23, 24, 28, 0.04);
   /* 全屏抽屉/弹层的遮罩（比 scrim 重） */
-  --scrim-strong: rgba(10, 12, 16, 0.36);
-  --glass: rgba(255, 255, 255, 0.82);
-  --glass-border: rgba(228, 231, 236, 0.9);
-  --glass-blur: 16px;
+  --scrim-strong: rgba(23, 24, 28, 0.42);
+  --glass: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(232, 231, 225, 0.9);
+  --glass-blur: 14px;
 
   /* ---- 文字 ---- */
-  --ink: #0A0C10;
-  --ink-secondary: #313A48;
-  --ink-muted: #5C6675;
-  --ink-faint: #74808F;
+  --ink: #17181C;
+  --ink-secondary: #3B3D44;
+  --ink-muted: #6F727A;
+  --ink-faint: #9B9DA5;
   --ink-inverse: #FFFFFF;
-  --section-title: #313A48;
+  --section-title: #3B3D44;
 
   /* ---- 边框 / 分隔 ---- */
-  --border: #E4E7EC;
-  --border-subtle: #EEF0F4;
+  --border: #E8E7E1;
+  --border-subtle: #F0EFEA;
 
-  /* ---- 强调色（iris / blue / cyan）---- */
-  --accent: #2F5BFF;
-  --accent-hover: #254BE0;
+  /* ---- 强调色（靛蓝 + 青，仅用于状态与焦点）---- */
+  --accent: #4A4AF0;
+  --accent-hover: #3B3BDD;
   --accent-ink: #FFFFFF;
-  --accent-soft: #EEF1FF;
-  --accent-border: rgba(47, 91, 255, 0.22);
-  --accent-2: #6E4BFF;
-  --accent-3: #00B8D9;
-  --accent-gradient: linear-gradient(110deg, #2F5BFF, #6E4BFF 52%, #00B8D9);
+  --accent-soft: #EFEFFF;
+  --accent-border: #D5D5FF;
+  --accent-2: #6E6CF7;
+  --accent-3: #10A99A;
+  --accent-gradient: linear-gradient(90deg, #4A4AF0, #10A99A);
   --accent-glow: 0 0 0 transparent;
 
-  /* ---- 画布氛围（极淡径向渐变）---- */
-  --glow-primary: rgba(47, 91, 255, 0.06);
-  --glow-secondary: rgba(110, 75, 255, 0.05);
-  --glow-tertiary: rgba(0, 184, 217, 0.04);
-  --grid-line: rgba(10, 12, 16, 0.03);
+  /* ---- 画布氛围（原型为暖白纸感，不使用彩色背景）---- */
+  --glow-primary: rgba(74, 74, 240, 0.04);
+  --glow-secondary: rgba(16, 169, 154, 0.03);
+  --glow-tertiary: transparent;
+  --grid-line: rgba(23, 24, 28, 0.03);
 
   /* ---- 消息气泡（语义上区分归属）---- */
   --message: #FFFFFF;
-  --message-border: #EEF0F4;
-  --message-user: #f4f4f5;
-  --message-user-border: #e4e7ec;
-  --avatar-bg: #f3f4f6;
-  --avatar-ink: #313a48;
-  --avatar-border: #e4e7ec;
-  --avatar-agent-bg: #0a0c10;
-  --avatar-agent-ink: #ffffff;
-  --timeline-bar: #d1d5db;
-  --timeline-user: #3b82f6;
-  --timeline-user-active: #2f5bff;
-  --timeline-agent: #64748b;
-  --timeline-track: #e5e7eb;
-  --message-system: rgba(220, 59, 69, 0.06);
-  --message-system-border: rgba(220, 59, 69, 0.2);
+  --message-border: #E8E7E1;
+  --message-user: #FFFFFF;
+  --message-user-border: #E8E7E1;
+  --avatar-bg: #F6F5F1;
+  --avatar-ink: #3B3D44;
+  --avatar-border: #E8E7E1;
+  --avatar-agent-bg: #17181C;
+  --avatar-agent-ink: #FFFFFF;
+  --timeline-bar: #CFCEC7;
+  --timeline-user: #6E6CF7;
+  --timeline-user-active: #4A4AF0;
+  --timeline-agent: #8C8E96;
+  --timeline-track: #E8E7E1;
+  --message-system: rgba(198, 60, 72, 0.06);
+  --message-system-border: rgba(198, 60, 72, 0.2);
 
   /* ---- 状态 ---- */
-  --ok: #0F9D6E;
-  --ok-ink: #0F7D58;
-  --ok-soft: rgba(15, 157, 110, 0.08);
-  --ok-border: rgba(15, 157, 110, 0.2);
-  --warn: #D97706;
-  --warn-ink: #B45309;
-  --warn-soft: rgba(217, 119, 6, 0.08);
-  --warn-border: rgba(217, 119, 6, 0.22);
-  --danger: #DC3B45;
-  --danger-ink: #B4232C;
-  --danger-soft: rgba(220, 59, 69, 0.07);
-  --danger-border: rgba(220, 59, 69, 0.2);
+  --ok: #0C8A6E;
+  --ok-ink: #0C8A6E;
+  --ok-soft: #E4F5F0;
+  --ok-border: rgba(12, 138, 110, 0.2);
+  --warn: #A86500;
+  --warn-ink: #A86500;
+  --warn-soft: #FBF1DF;
+  --warn-border: rgba(168, 101, 0, 0.2);
+  --danger: #C63C48;
+  --danger-ink: #C63C48;
+  --danger-soft: #FBEDEF;
+  --danger-border: rgba(198, 60, 72, 0.2);
 
   /* ---- 交互细节 ---- */
-  --focus-ring: rgba(47, 91, 255, 0.35);
-  --skeleton: #E9ECF1;
-  --skeleton-sheen: #F7F8FA;
-  --scroll-thumb: rgba(10, 12, 16, 0.16);
+  --focus-ring: rgba(74, 74, 240, 0.14);
+  --skeleton: #F0EFEA;
+  --skeleton-sheen: #FBFAF7;
+  --scroll-thumb: #D9D8D1;
 
   /* ---- 字体 ---- */
-  --ff-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --ff-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, "Microsoft YaHei", sans-serif;
+  --ff-display: "Segoe UI Variable Display", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --ff-serif: Georgia, "Source Serif 4", "Noto Serif SC", "Songti SC", serif;
   --ff-mono: Consolas, "Cascadia Mono", ui-monospace, "SFMono-Regular", monospace;
-  --fs-2xs: 12px;
-  --fs-xs: 13px;
-  --fs-sm: 14px;
-  --fs-md: 14px;
+  --fs-2xs: 10px;
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-md: 12px;
   --fs-base: 14px;
   --fs-lg: 16px;
   --fs-xl: 18px;
@@ -120,19 +122,19 @@
   /* ---- 间距（Tailwind spacing 基准 = 4px）---- */
   --sp-base: 4px;
 
-  /* ---- 圆角 ---- */
-  --r-xs: 8px;
-  --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 12px;
-  --r-xl: 16px;
-  --r-pill: 6px;
-  --r-bubble: 12px;
+  /* ---- 圆角（原型：控件 5/7、卡片 10、弹层 12/14）---- */
+  --r-xs: 5px;
+  --r-sm: 7px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 12px;
+  --r-pill: 4px;
+  --r-bubble: 9px;
 
-  /* ---- 阴影（柔和，无重阴影）---- */
-  --sh-sm: 0 1px 2px rgba(10, 12, 16, 0.05), 0 4px 14px -6px rgba(10, 12, 16, 0.10);
-  --sh-md: 0 1px 2px rgba(10, 12, 16, 0.05), 0 4px 14px -6px rgba(10, 12, 16, 0.10);
-  --sh-lg: 0 1px 2px rgba(10, 12, 16, 0.05), 0 4px 14px -6px rgba(10, 12, 16, 0.10);
+  /* ---- 阴影（原型：轻纸感，无重阴影）---- */
+  --sh-sm: 0 1px 0 rgba(23, 24, 28, 0.03), 0 1px 2px rgba(23, 24, 28, 0.04);
+  --sh-md: 0 2px 4px rgba(23, 24, 28, 0.03), 0 14px 34px -16px rgba(23, 24, 28, 0.18);
+  --sh-lg: 0 1px 2px rgba(23, 24, 28, 0.05), 0 24px 56px -24px rgba(23, 24, 28, 0.28);
   --sh-focus: 0 0 0 3px var(--focus-ring);
   --sh-accent: none;
 
@@ -275,10 +277,7 @@
     overflow: hidden;
     color: var(--ink);
     background-color: var(--canvas);
-    background-image:
-      radial-gradient(900px 520px at 8% -12%, var(--glow-primary), transparent 62%),
-      radial-gradient(820px 480px at 88% -18%, var(--glow-secondary), transparent 60%),
-      radial-gradient(720px 420px at 52% -16%, var(--glow-tertiary), transparent 58%);
+    background-image: none;
     background-repeat: no-repeat;
     font-family: var(--ff-sans);
     font-size: var(--fs-base);
@@ -449,13 +448,13 @@
 
 
 /* M48: 浮层统一不透明白底 / 1px 边框 / 8px 圆角 / 高阴影 / z-index */
-/* M62: 浮层实底 + 浅色科技风（16px 圆角 + 柔和阴影） */
+/* M63: 浮层实底 + 原型纸感（12px 圆角 + pop 阴影） */
 .popover-surface {
   background-color: #ffffff !important;
   background-image: none !important;
   border: 1px solid var(--border) !important;
-  border-radius: 16px !important;
-  box-shadow: 0 1px 2px rgba(10, 12, 16, 0.05), 0 4px 14px -6px rgba(10, 12, 16, 0.1) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 1px 2px rgba(23, 24, 28, 0.05), 0 24px 56px -24px rgba(23, 24, 28, 0.28) !important;
   opacity: 1 !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -463,8 +462,7 @@
   z-index: 60;
 }
 
-
-/* M62: active tab underline uses blue→purple gradient */
+/* M63: 原型导航 active 使用 2px 靛蓝下划线 */
 .tab-underline {
   position: relative;
 }
@@ -476,6 +474,6 @@
   bottom: -1px;
   height: 2px;
   border-radius: 2px;
-  background: var(--accent-gradient);
+  background: var(--accent);
 }
 

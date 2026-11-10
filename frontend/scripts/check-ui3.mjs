@@ -2,7 +2,7 @@
 // scripts/check-ui3.mjs —— UI 收口：响应式 / 键盘可达 / 空错态 / reduced-motion / 文案统一
 //
 // 纯源码约束自测：
-//   - 窄屏：三栏折叠（≤820/1180）、命令面板、用量表横向滚动、轨迹筛选/列表、会话树/消息自适应；
+//   - 窄屏：三栏折叠（≤820/1240）、命令面板、用量表横向滚动、轨迹筛选/列表、会话树/消息自适应；
 //   - 键盘：全局 focus-visible、通知中心 focus trap/Esc、命令面板 Esc、筛选/计划/模型 aria；
 //   - 空/错误态：共享 FeedbackPane 被新页面复用；
 //   - reduced-motion：CSS 压制动画/过渡/平滑滚动；
@@ -56,15 +56,15 @@ const feedback = read(resolve(src, 'platform/FeedbackPane.tsx'))
 const packageJson = JSON.parse(read(resolve(root, 'package.json')))
 
 check('窄屏：三栏折叠 + 命令面板/轨迹/用量表响应式', () => {
-  assert.match(app, /max-\[1180px\]:hidden/)
+  assert.match(app, /max-\[1240px\]:grid-cols-/)
   assert.match(app, /max-\[820px\]:hidden/)
   assert.match(chatCenter, /max-\[820px\]:block/)
   assert.match(palette, /p-2 pt-\[8vh\].*sm:p-4 sm:pt-\[12vh\]/)
   assert.match(usage, /overflow-auto/)
   assert.match(usage, /min-w-\[40rem\]/)
   assert.match(trajectory, /overflow-x-auto/)
-  assert.match(messageList, /py-6 pl-\[52px\] pr-3 sm:py-8 sm:pr-5/)
-  assert.match(composer, /pt-2\.5 pb-3\.5/)
+  assert.match(messageList, /py-2 pl-\[46px\] pr-4/)
+  assert.match(composer, /px-\[18px\] pt-1\.5 pb-2/)
 })
 
 check('键盘可达：focus-visible + 通知中心/命令面板 Esc + aria', () => {

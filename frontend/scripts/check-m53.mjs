@@ -35,8 +35,8 @@ check('设置模型：只读 V4.1 Flash，无下拉/调试文案', () => {
 check('设置权限/分区：中性选中、自动文案、14px 标题/24 间距/1px 分隔', () => {
   assert.match(settingsPage, /border-border bg-avatar-bg text-ink/)
   assert.match(settingsPage, /按风险自动批准\/拒绝/)
-  assert.match(settingsPage, /text-\[14px\] font-semibold text-section-title/)
-  assert.match(settingsPage, /mb-6 border-b border-avatar-border pb-4/)
+  assert.match(settingsPage, /text-\[10\.5px\] font-semibold/)
+  assert.match(settingsPage, /border-b border-border-subtle py-3\.5/)
 })
 
 check('快捷键 3 列：kbd 20px、动作 13、作用域 12、行高 32', () => {

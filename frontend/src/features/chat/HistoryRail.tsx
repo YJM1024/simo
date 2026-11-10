@@ -124,7 +124,7 @@ export default function HistoryRail({ messages, activeMessageId, highlightId, on
   const tickClassName = (id: string): string => {
     const selected = pinnedId === id
     const highlighted = highlightId === id
-    return `group flex h-[7px] w-8 flex-none cursor-pointer items-center justify-center rounded-xs transition-colors duration-fast focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+    return `group flex h-3.5 w-9 flex-none cursor-pointer items-center justify-center rounded-xs transition-colors duration-fast focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
       selected ? 'bg-accent-soft' : 'hover:bg-surface-sunken'
     } ${highlighted ? 'bg-accent-soft' : ''}`
   }
@@ -134,13 +134,15 @@ export default function HistoryRail({ messages, activeMessageId, highlightId, on
     const color = tick.role === 'user'
       ? emphasized ? 'bg-timeline-user-active' : 'bg-timeline-user'
       : 'bg-timeline-agent'
-    return `block rounded-[2px] transition-[width,height,opacity] duration-fast ${emphasized ? 'h-1.5 w-7 opacity-100' : 'h-[5px] w-[22px] opacity-65 group-hover:w-7 group-hover:opacity-100'} ${color}`
+    return `block rounded-[3px] transition-[width,height,opacity] duration-fast ${
+      emphasized ? 'h-2 w-[26px] opacity-100' : 'h-1.5 w-5 opacity-65 group-hover:w-[26px] group-hover:opacity-100'
+    } ${color}`
   }
 
   return (
     <div
       ref={railRef}
-      className="relative flex w-8 flex-none flex-col items-center gap-0.5 border-r border-border-subtle bg-surface-sunken/40 py-2"
+      className="relative flex w-9 flex-none flex-col items-center gap-0.5 border-r border-border-subtle bg-surface-sunken/30 py-2"
       role="navigation"
       aria-label="消息时间轴"
     >
@@ -160,7 +162,7 @@ export default function HistoryRail({ messages, activeMessageId, highlightId, on
           onScroll={updateScrollState}
           className="relative z-10 flex min-h-0 w-full flex-1 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          <div className="my-auto flex w-full flex-none flex-col items-center py-1">
+          <div className="my-auto flex w-full flex-none flex-col items-center gap-0.5 py-1">
             {ticks.map((tick, index) => (
               <button
                 key={tick.id}
@@ -182,7 +184,7 @@ export default function HistoryRail({ messages, activeMessageId, highlightId, on
                     jumpAndPin(tick.id)
                   }
                 }}
-                className={`${tickClassName(tick.id)} ${index > 0 && ticks[index - 1]?.role !== tick.role ? 'mt-0.5' : ''}`}
+                className={tickClassName(tick.id)}
                 aria-label={`第 ${index + 1} 条${ROLE_LABEL[tick.role]}消息${tickToneLabel(tick) ? `（${tickToneLabel(tick)}）` : ''}：${tick.preview}`}
                 aria-expanded={targetId === tick.id}
               >

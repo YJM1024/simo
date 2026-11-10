@@ -129,8 +129,7 @@ check('发送链路：sendChat/postChat 带 replyToMessageId；发送后清空',
   assert.match(runtime, /setReplyToState\(null\)/)
 })
 
-check('品牌：顶栏内联 SVG 徽标 + 文案仅「司墨」', () => {
-  assert.match(topBar, /BrandMark/)
+check('品牌：侧栏品牌「司墨」+ 图标资产', () => {
   assert.match(topBar, /司墨/)
   assert.equal(/本地/.test(topBar), false)
   assert.match(brandMark, /<svg/)

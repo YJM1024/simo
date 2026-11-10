@@ -15,7 +15,6 @@ import InlineCards from './InlineCard.tsx'
 import { CategoryBadge, SessionPathBadge } from './MessageBadges.tsx'
 import TaskReportCard, { isTaskReportMessage } from './TaskReportCard.tsx'
 import { formatDuration, toolStatusLabel, toolStatusTone, type ToolCallInfo } from './toolcalls.ts'
-import AgentAvatar from '../../platform/AgentAvatar.tsx'
 import { bus, EVENTS } from '../../platform/events.ts'
 import { findAgent, useAgentCatalog, type AgentInfo } from '../../platform/agents.ts'
 
@@ -109,52 +108,54 @@ function MessageBubble({
   return (
     <article
       data-message-id={message.id}
-      className={`group flex items-start gap-3 rounded-md animate-msg-in transition-shadow duration-base ${
+      className={`group flex items-start gap-2.5 rounded-md py-[13px] animate-msg-in transition-shadow duration-base ${
         highlightId === message.id ? 'shadow-focus ring-2 ring-accent ring-offset-2 ring-offset-canvas' : ''
       }`}
       style={depth > 0 ? ({ marginLeft: `${Math.min(depth, 4) * 14}px` } as React.CSSProperties) : undefined}
     >
       {role === 'agent' ? (
-        <AgentAvatar agent={handler ?? findAgent([], message.agentId)} size="sm" />
-      ) : (
-        <div
+        <span
           aria-hidden="true"
-          className={`grid h-[30px] w-[30px] flex-none place-items-center rounded-full border text-xs ${
-            role === 'user'
-              ? 'border-avatar-border bg-avatar-bg text-avatar-ink'
-              : 'border-avatar-border bg-avatar-bg text-ink-muted'
-          }`}
+          title={handler ? `${handler.name} · ${handler.role}` : undefined}
+          className="mt-[-2px] grid h-6 w-6 flex-none place-items-center rounded-[6px] border border-avatar-agent-bg bg-avatar-agent-bg text-[10px] font-semibold text-avatar-agent-ink"
         >
-          {'你'}
-        </div>
+          {(handler ?? findAgent([], message.agentId)).icon}
+        </span>
+      ) : (
+        <span
+          aria-hidden="true"
+          className="mt-[-2px] grid h-6 w-6 flex-none place-items-center rounded-[6px] border border-avatar-border bg-avatar-bg text-[10px] font-semibold text-avatar-ink"
+        >
+          你
+        </span>
       )}
-      <div className="min-w-0 max-w-[min(72ch,84%)]">
-        <div className="mb-1.5 flex h-[30px] flex-nowrap items-center gap-x-2 overflow-hidden leading-5">
+      <div className={`min-w-0 flex-1 ${role === 'user' ? 'flex flex-col items-end' : ''}`}>
+        <div className="mb-1 flex h-5 min-w-0 flex-nowrap items-center gap-x-1.5 overflow-hidden leading-5">
           {role !== 'user' && (
-            <span className="flex-none text-[13px] font-medium leading-5 text-ink">
+            <span className="flex-none text-[11.5px] font-semibold leading-5 text-ink-secondary">
               {role === 'agent' && handler ? handler.name : ROLE_LABEL[role] ?? '司墨'}
             </span>
           )}
           <CategoryBadge message={message} />
           <SessionPathBadge message={message} meta={meta} onJumpSession={onJumpSession} />
-          <time dateTime={new Date(message.at).toISOString()} className="flex-none text-[13px] leading-5 tabular-nums text-ink-muted">
+          <time dateTime={new Date(message.at).toISOString()} className="flex-none text-[10.5px] leading-5 tabular-nums text-ink-faint">
             {formatClockTime(message.at)}
           </time>
-          {role === 'user' && !failed && <span className="flex-none text-[13px] leading-5 text-ink-muted">已发送</span>}
-          {streaming && <span className="flex-none text-[13px] leading-5 text-accent">正在输入…</span>}
+          {role === 'user' && !failed && <span className="flex-none text-[10.5px] leading-5 text-ink-faint">已发送</span>}
+          {streaming && <span className="flex-none text-[10.5px] leading-5 text-accent">正在输入…</span>}
           {streaming && (
             <button
               type="button"
               onClick={() => onRetract(message.id)}
-              className="cursor-pointer rounded-xs border border-border-subtle bg-transparent px-1.5 py-0.5 text-xs text-muted transition-colors duration-fast hover:border-danger-border hover:text-danger-ink"
+              className="cursor-pointer rounded-xs border border-border-subtle bg-transparent px-1.5 py-0.5 text-2xs text-ink-muted transition-colors duration-fast hover:border-danger-border hover:text-danger-ink"
               title="撤回这条未完成的回复（显式停止，不影响后台任务）"
             >
               撤回
             </button>
           )}
-          {failed && <span className="flex-none text-[13px] leading-5 text-danger-ink">{role === 'agent' ? '回复中断' : '发送失败'}</span>}
-          {neutralized && <span className="text-[13px] leading-5 text-warn-ink" aria-label="子代理输出已被中和">已中和</span>}
-          {retracted && <span className="text-[13px] leading-5 text-ink-muted">已撤回</span>}
+          {failed && <span className="flex-none text-[10.5px] leading-5 text-danger-ink">{role === 'agent' ? '回复中断' : '发送失败'}</span>}
+          {neutralized && <span className="text-[10.5px] leading-5 text-warn-ink" aria-label="子代理输出已被中和">已中和</span>}
+          {retracted && <span className="text-[10.5px] leading-5 text-ink-faint">已撤回</span>}
           {!retracted && (
             <span className="flex items-center gap-1 opacity-0 transition-opacity duration-fast focus-within:opacity-100 group-hover:opacity-100">
               <button
@@ -162,7 +163,7 @@ function MessageBubble({
                 onClick={() => onCopy(message)}
                 aria-label="复制消息"
                 title="复制消息文本"
-                className="cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-1.5 text-2xs text-muted hover:border-accent-border hover:text-accent-hover"
+                className="cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-1.5 text-2xs text-ink-muted hover:border-accent-border hover:text-accent"
               >
                 复制
               </button>
@@ -171,7 +172,7 @@ function MessageBubble({
                 onClick={() => onReply(message)}
                 aria-label={`回复这条消息：${message.text.slice(0, 40)}`}
                 title="引用这条消息"
-                className="cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-1.5 text-2xs text-muted hover:border-accent-border hover:text-accent-hover"
+                className="cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-1.5 text-2xs text-ink-muted hover:border-accent-border hover:text-accent"
               >
                 引用
               </button>
@@ -181,7 +182,7 @@ function MessageBubble({
                   onClick={() => onJumpToMessage(message.replyTo?.id ?? '')}
                   aria-label="跳到被引用的原始消息"
                   title="跳到原文"
-                  className="cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-1.5 text-2xs text-muted hover:border-accent-border hover:text-accent-hover"
+                  className="cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-1.5 text-2xs text-ink-muted hover:border-accent-border hover:text-accent"
                 >
                   跳到原文
                 </button>
@@ -216,9 +217,9 @@ function MessageBubble({
           </div>
         ) : displayText || streaming || !isReport ? (
           <div
-            className={`break-words text-[15px] leading-[1.65] text-ink ${
+            className={`break-words text-[14px] leading-[1.72] text-ink ${
               role === 'user'
-                ? 'rounded-bubble border border-message-user-border bg-message-user px-3 py-2.5'
+                ? 'inline-block max-w-[76%] rounded-bubble border border-message-user-border bg-message-user px-3 py-2 shadow-sm'
                 : 'px-0 py-0'
             } ${streaming ? "after:ml-px after:animate-cursor-blink after:text-accent after:content-['▍']" : ''} ${
               failed ? 'border-danger-border' : ''
@@ -279,18 +280,21 @@ const EMPTY_SUGGESTIONS = [
 
 function EmptyState() {
   return (
-    <div className="mx-auto flex w-full max-w-[640px] flex-col items-start px-1 py-10">
-      <AgentAvatar size="sm" className="mb-3" />
-      <h2 className="m-0 text-lg font-semibold text-ink">开始和司墨对话</h2>
-      <p className="m-0 mt-1 text-sm text-ink-secondary">说需求、记信息、派任务；过程和结果都会回流到这里。</p>
-      <div className="mt-5 grid w-full gap-2">
+    <div className="mx-auto flex min-h-[58vh] w-full max-w-[440px] flex-col items-center justify-center px-4 py-10 text-center">
+      <span className="relative mb-4 grid h-[34px] w-[34px] place-items-center overflow-hidden rounded-[9px] bg-ink" aria-hidden="true">
+        <span className="h-[2px] w-[14px] -rotate-[24deg] rounded-pill bg-linear-to-r from-accent to-accent-3" />
+      </span>
+      <h2 className="m-0 font-serif text-[24px] font-medium tracking-[-0.01em] text-ink">开始和司墨对话</h2>
+      <p className="m-0 mt-1.5 text-[12.5px] text-ink-muted">说需求、记信息、派任务；过程和结果都会回流到这里。</p>
+      <div className="mt-5 flex w-full flex-col gap-1.5">
         {EMPTY_SUGGESTIONS.map((text) => (
           <button
             key={text}
             type="button"
             onClick={() => bus.emit(EVENTS.COMPOSER_INSERT, { text })}
-            className="w-full cursor-pointer rounded-md border border-border bg-surface-solid px-3 py-2 text-left text-sm text-ink-secondary transition-colors duration-fast hover:border-accent-border hover:text-ink"
+            className="flex h-10 w-full cursor-pointer items-center gap-3 rounded-sm border border-border bg-surface px-3 text-left text-[12px] text-ink-secondary transition-colors duration-fast hover:border-border-subtle hover:shadow-sm"
           >
+            <span className="font-mono text-[10px] text-ink-faint">＋</span>
             {text}
           </button>
         ))}
@@ -365,7 +369,7 @@ export default function MessageList({
       aria-live="polite"
       aria-relevant="additions text"
       aria-busy={agentStatus === 'thinking' || loading}
-      className="flex w-full min-w-0 flex-1 flex-col gap-4 overflow-y-auto py-6 pl-[52px] pr-3 sm:py-8 sm:pr-5"
+      className="flex w-full min-w-0 flex-1 flex-col gap-0 overflow-y-auto py-2 pl-[46px] pr-4"
     >
       {/* 流式/等待的读屏播报（视觉上是隐藏的，避免重复打扰） */}
       <span className="sr-only" role="status" aria-live="polite">

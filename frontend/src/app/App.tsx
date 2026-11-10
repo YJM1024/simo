@@ -8,7 +8,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, ComponentType, PointerEvent as ReactPointerEvent } from 'react'
 import NotificationHost from './NotificationHost.tsx'
 import TopBar from './TopBar.tsx'
-import TopTabs from './TopTabs.tsx'
 import { useConnection } from './useConnection.ts'
 import { usePermissions } from './usePermissions.ts'
 import { useWorkspaceStatus } from './useWorkspaceStatus.ts'
@@ -22,10 +21,10 @@ import { getInitialTheme, setTheme, themeLabel } from '../platform/theme/theme.t
 const LEFT_DEFAULT = 264
 const LEFT_MIN = 220
 const LEFT_MAX = 320
-const RIGHT_DEFAULT = 340
-const RIGHT_MIN = 340
-const RIGHT_MAX = 420
-const RIGHT_RAIL = 48
+const RIGHT_DEFAULT = 364
+const RIGHT_MIN = 300
+const RIGHT_MAX = 460
+const RIGHT_RAIL = 40
 const LEFT_KEY = 'simo.layout.leftWidth'
 const RIGHT_KEY = 'simo.layout.rightWidth'
 
@@ -49,7 +48,7 @@ function saveWidth(key: string, value: number): void {
 
 function Slot({ slot, entries, className = '' }: { slot: SlotName; entries: SlotEntry[]; className?: string }) {
   return (
-    <div className={`flex min-h-0 min-w-0 flex-col ${className}`} data-slot={slot}>
+    <div className={`flex min-h-0 min-w-0 flex-1 flex-col ${className}`} data-slot={slot}>
       {entries.length > 0 ? (
         entries.map(({ featureId, Component }: { featureId: string; Component: ComponentType }) => (
           <Component key={featureId} />
@@ -74,7 +73,7 @@ export default function App() {
   useConnection()
   const [leftWidth, setLeftWidth] = useState(() => (typeof window === 'undefined' ? LEFT_DEFAULT : loadWidth(LEFT_KEY, LEFT_DEFAULT, LEFT_MIN, LEFT_MAX)))
   const [rightWidth, setRightWidth] = useState(() => (typeof window === 'undefined' ? RIGHT_DEFAULT : loadWidth(RIGHT_KEY, RIGHT_DEFAULT, RIGHT_MIN, RIGHT_MAX)))
-  const [rightCollapsed, setRightCollapsed] = useState(true)
+  const [rightCollapsed, setRightCollapsed] = useState(false)
   const [activeView, setActiveView] = useState<MainViewId>('chat')
   const mainViewEntry = useMemo(() => slots.mainView?.find((entry) => entry.featureId === activeView) ?? null, [slots.mainView, activeView])
   const showChat = activeView === 'chat'
@@ -179,12 +178,8 @@ export default function App() {
         permissions={permissions}
       />
 
-      <div className="flex h-10 flex-none items-center border-b border-border-subtle bg-surface px-4">
-        <TopTabs />
-      </div>
-
       <div
-        className="relative grid min-h-0 flex-1 grid-cols-[var(--layout-left)_minmax(0,1fr)_var(--layout-right)] max-[1180px]:grid-cols-[var(--layout-left-compact)_minmax(0,1fr)_0px] max-[820px]:grid-cols-1"
+        className="relative grid min-h-0 flex-1 grid-cols-[var(--layout-left)_minmax(0,1fr)_var(--layout-right)] max-[1240px]:grid-cols-[var(--layout-left)_minmax(0,1fr)_40px] max-[820px]:grid-cols-1"
         style={layoutStyle}
       >
         <Slot slot="leftTree" entries={slots.leftTree} className="max-[820px]:hidden" />
@@ -198,7 +193,7 @@ export default function App() {
             </div>
           )}
         </div>
-        <Slot slot="rightPanel" entries={slots.rightPanel} className="max-[1180px]:contents" />
+        <Slot slot="rightPanel" entries={slots.rightPanel} className="max-[1240px]:contents" />
 
         <div
           role="separator"
@@ -211,7 +206,7 @@ export default function App() {
             if (event.key === 'ArrowLeft') { event.preventDefault(); nudgeWidth('left', -16) }
             else if (event.key === 'ArrowRight') { event.preventDefault(); nudgeWidth('left', 16) }
           }}
-          className="absolute inset-y-0 z-20 hidden w-1.5 -translate-x-1/2 cursor-col-resize bg-transparent transition-colors hover:bg-accent-border md:block max-[1180px]:hidden"
+          className="absolute inset-y-0 z-20 hidden w-1.5 -translate-x-1/2 cursor-col-resize bg-transparent transition-colors hover:bg-accent-border md:block max-[1100px]:hidden"
           style={{ left: `${leftWidth}px` }}
         />
         <div
@@ -225,7 +220,7 @@ export default function App() {
             if (event.key === 'ArrowLeft') { event.preventDefault(); nudgeWidth('right', 16) }
             else if (event.key === 'ArrowRight') { event.preventDefault(); nudgeWidth('right', -16) }
           }}
-          className="absolute inset-y-0 z-20 hidden w-1.5 translate-x-1/2 cursor-col-resize bg-transparent transition-colors hover:bg-accent-border md:block max-[1180px]:hidden"
+          className="absolute inset-y-0 z-20 hidden w-1.5 translate-x-1/2 cursor-col-resize bg-transparent transition-colors hover:bg-accent-border md:block max-[1100px]:hidden"
           style={{ right: `${rightCollapsed ? RIGHT_RAIL : rightWidth}px` }}
         />
       </div>

@@ -1,15 +1,11 @@
-// app/TopBar.tsx —— 壳层顶栏（M40：48px 密度、面包屑、统一 Badge/Button）
-//
-// 只使用语义 token；全局状态/权限/连接在右，不放大段文案。
-
+// app/TopBar.tsx —— M63 单行顶栏：面包屑 + 页面导航 + 权限/连接/搜索/通知/设置/用户
 import type { AgentState, ConnectionState } from '../platform/types.ts'
 import PermissionMenu from './PermissionMenu.tsx'
-import BrandMark from './BrandMark.tsx'
+import TopTabs from './TopTabs.tsx'
 import NotificationCenter from '../features/chat/NotificationCenter.tsx'
 import { bus, EVENTS } from '../platform/events.ts'
 import type { PermissionsApi } from './usePermissions.ts'
-import { Badge } from '../platform/ui/Badge.tsx'
-import { Button } from '../platform/ui/Button.tsx'
+import { Icon } from '../platform/ui/icons.tsx'
 
 const CONNECTION_LABEL: Record<ConnectionState, string> = {
   connecting: '连接中',
@@ -28,37 +24,50 @@ interface TopBarProps {
   permissions: Pick<PermissionsApi, 'permission' | 'loading' | 'saving' | 'error' | 'needsConfirm' | 'save'>
 }
 
-export default function TopBar({
-  connection,
-  agentStatus,
-  sessionTitle,
-  permissions,
-}: TopBarProps) {
+export default function TopBar({ connection, sessionTitle, permissions }: TopBarProps) {
   const connected = connection === 'open'
   const title = sessionTitle || '主会话'
 
   return (
-    <header className="relative z-10 flex h-[52px] flex-none items-center justify-between gap-4 border-b border-border bg-surface px-4">
-      <div className="flex min-w-0 items-center gap-2">
-        <BrandMark className="h-6 w-6" />
-        <nav aria-label="面包屑" className="flex min-w-0 items-center gap-1.5 text-sm">
-          <span className="flex-none font-semibold tracking-normal text-ink">司墨</span>
-          <span className="flex-none text-muted" aria-hidden="true">/</span>
-          <span className="min-w-0 truncate text-ink-secondary" title={title}>{title}</span>
-        </nav>
+    <header className="relative z-10 flex h-[54px] flex-none items-center gap-3.5 border-b border-border bg-surface px-[18px]">
+      <div className="flex min-w-0 flex-none items-center gap-1.5 text-[11px] text-ink-muted">
+        <span className="flex-none">司墨</span>
+        <span className="flex-none text-border" aria-hidden="true">/</span>
+        <b className="max-w-[18rem] truncate text-[12px] font-semibold text-ink" title={title}>{title}</b>
       </div>
 
-      <div className="flex flex-none flex-nowrap items-center justify-end gap-1.5 whitespace-nowrap">
+      <div className="ml-[22px] flex min-w-0 flex-1 items-center">
+        <TopTabs />
+      </div>
+
+      <div className="flex flex-none items-center gap-2 whitespace-nowrap">
         <PermissionMenu {...permissions} />
-        <Badge tone={connected ? 'ok' : 'warn'} dot title="WebSocket 连接状态">{CONNECTION_LABEL[connection]}</Badge>
-        <span className="text-[13px] text-ink-muted" title="对话回路状态（输入框始终可用）">
-          {agentStatus === 'thinking' ? '思考中' : '就绪'}
+        <span className="inline-flex items-center gap-1.5 text-[10.5px] text-ink-muted" title="WebSocket 连接状态">
+          <span className={`h-1 w-1 rounded-pill ${connected ? 'bg-ok' : 'bg-warn'}`} aria-hidden="true" />
+          <span className="max-[1240px]:hidden">{CONNECTION_LABEL[connection]}</span>
         </span>
-        <div className="hidden flex-none max-[1180px]:flex">
-          <Button size="sm" variant="ghost" icon="task" onClick={() => bus.emit(EVENTS.RIGHT_RAIL_OPEN, {})} title="任务与概览（浮层）">任务</Button>
-        </div>
+        <button
+          type="button"
+          onClick={() => bus.emit(EVENTS.WORKBENCH_OPEN, { target: 'palette' })}
+          aria-label="搜索"
+          title="命令面板"
+          className="grid h-7 w-7 cursor-pointer place-items-center rounded-sm text-ink-muted hover:bg-surface-sunken hover:text-ink"
+        >
+          <Icon name="search" size={16} />
+        </button>
         <NotificationCenter />
-        <Button size="sm" variant="ghost" icon="settings" className="flex-none" onClick={() => bus.emit(EVENTS.WORKBENCH_OPEN, { target: 'settings' })} title="打开设置">设置</Button>
+        <button
+          type="button"
+          onClick={() => bus.emit(EVENTS.WORKBENCH_OPEN, { target: 'settings' })}
+          aria-label="设置"
+          title="打开设置"
+          className="grid h-7 w-7 cursor-pointer place-items-center rounded-sm text-ink-muted hover:bg-surface-sunken hover:text-ink"
+        >
+          <Icon name="settings" size={16} />
+        </button>
+        <span className="grid h-[26px] w-[26px] flex-none place-items-center rounded-full bg-ink text-[10px] font-semibold text-ink-inverse" aria-label="当前用户">
+          Y
+        </span>
       </div>
     </header>
   )

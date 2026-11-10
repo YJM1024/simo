@@ -648,13 +648,18 @@ export default function TaskPanel() {
   const activeDetailWorkflow = activeDetail?.workflowId
     ? workflows.find((workflow) => workflow.id === activeDetail.workflowId) ?? null
     : null
+  const doneTasks = tasks.filter((task) => ['done', 'completed', 'success'].includes(String(task.status))).length
+  const progress = tasks.length > 0 ? doneTasks / tasks.length : 0
 
   return (
-    <aside className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-l border-border-subtle bg-surface backdrop-blur-glass">
-      <div className="flex min-w-0 items-center justify-between gap-2 border-b border-border-subtle px-3.5 pt-2.5 pb-2">
-        <h2 className="m-0 min-w-0 truncate text-md font-semibold">任务</h2>
+    <aside className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-surface">
+      <div className="flex min-w-0 items-center justify-between gap-2 border-b border-border px-3 py-2">
+        <div className="flex min-w-0 items-center gap-3 text-[11px]">
+          <button type="button" onClick={() => bus.emit(EVENTS.RIGHT_RAIL_TAB, { tab: 'tasks' })} className="cursor-pointer border-b-2 border-accent pb-0.5 font-medium text-ink">任务</button>
+          <button type="button" onClick={() => bus.emit(EVENTS.RIGHT_RAIL_TAB, { tab: 'overview' })} className="cursor-pointer border-b-2 border-transparent pb-0.5 text-ink-faint hover:text-ink">概览</button>
+        </div>
         <div className="flex flex-none items-center gap-2">
-          <span className="font-mono text-2xs tracking-normal text-muted">
+          <span className="font-mono text-[10px] text-ink-faint">
             {workflows.length > 0 ? `${tasks.length} 个 · ${workflows.length} 工作流` : `${tasks.length} 个`}
           </span>
           <IconButton
@@ -670,6 +675,19 @@ export default function TaskPanel() {
           />
         </div>
       </div>
+
+      {tasks.length > 0 && (
+        <div className="flex flex-none items-center gap-2.5 px-3 pb-2 pt-2.5">
+          <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true">
+            <circle cx="23" cy="23" r="19" fill="none" stroke="var(--border)" strokeWidth="3" />
+            <circle cx="23" cy="23" r="19" fill="none" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round" strokeDasharray="119.4" strokeDashoffset={119.4 * (1 - progress)} transform="rotate(-90 23 23)" />
+          </svg>
+          <div className="flex min-w-0 flex-col leading-[1.35]">
+            <b className="text-[12px] font-semibold text-ink">本周重点</b>
+            <span className="text-[10px] text-ink-faint">{doneTasks} 项完成 · {tasks.length - doneTasks} 项待开始</span>
+          </div>
+        </div>
+      )}
 
       {notice && (
         <div role="status" className="mx-2 mt-2 rounded-md border border-border-subtle bg-surface-solid px-2 py-1 text-2xs text-ink-secondary">

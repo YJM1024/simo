@@ -121,6 +121,7 @@ export type BusPayloads = {
   'ws:frame': WsFramePayload
   'chat:status': ChatStatusPayload
   'tasks:state': TasksStatePayload
+  'right:rail:tab': { tab: 'tasks' | 'overview' }
 }
 
 export const EVENTS = {
@@ -154,6 +155,8 @@ export const EVENTS = {
   LAYOUT_RIGHT: 'layout:right',
   /** M45：窄屏顶部按钮打开右栏浮层 */
   RIGHT_RAIL_OPEN: 'right:rail:open',
+  /** M63：右栏任务/概览切换 */
+  RIGHT_RAIL_TAB: 'right:rail:tab',
   /** M40：工作台内嵌页的二级入口（用量/设置/命令面板/视图） */
   WORKBENCH_OPEN: 'workbench:open',
   /** WebSocket 连接状态（壳层顶栏） */

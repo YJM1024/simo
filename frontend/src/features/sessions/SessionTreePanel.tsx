@@ -17,9 +17,7 @@ import {
 } from '../../platform/http.ts'
 import { bus, EVENTS } from '../../platform/events.ts'
 import { readSessionId, writeSessionId } from '../../platform/router.ts'
-import AgentAvatar from '../../platform/AgentAvatar.tsx'
 import { Icon } from '../../platform/ui/icons.tsx'
-import { fallbackOwnerForSession, findAgent, useAgentCatalog } from '../../platform/agents.ts'
 import {
   loadPinnedSessions,
   loadReadCounts,
@@ -38,7 +36,6 @@ import {
   normalizeSessionTree,
   statusLabel,
   statusTone,
-  summaryLine,
 } from './model.ts'
 
 const FALLBACK_NODE: SessionNode = Object.freeze({
@@ -97,7 +94,6 @@ function TreeSkeleton() {
 }
 
 export default function SessionTreePanel() {
-  const agentCatalog = useAgentCatalog()
   const [roots, setRoots] = useState<SessionNode[]>([])
   const counts = countTree(roots)
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -353,17 +349,16 @@ export default function SessionTreePanel() {
       const hasChildren = node.children.length > 0
       const editing = editingId === node.id
       const indent = 6 + Math.min(depth, 8) * 12
-      const owner = findAgent(agentCatalog.agents, node.agentId ?? fallbackOwnerForSession(node.id))
       const unread = Math.max(0, (node.messageCount ?? 0) - (readCounts[node.id] ?? 0))
       const isPinned = pinned.includes(node.id)
 
       return (
         <li key={node.id} role="treeitem" aria-selected={isActive} aria-expanded={hasChildren ? !isCollapsed : undefined}>
           <div
-            className={`group flex items-start gap-1 rounded-md border py-1.5 pr-1.5 transition-colors duration-fast ${
+            className={`group flex items-start gap-1 rounded-sm border-0 border-l-2 py-1.5 pr-1.5 transition-colors duration-fast ${
               isActive
-                ? 'border-accent-border bg-accent-soft'
-                : 'border-transparent hover:bg-surface-sunken'
+                ? 'border-l-accent bg-accent-soft'
+                : 'border-l-transparent hover:bg-surface-sunken'
             }`}
             style={{ paddingLeft: `${indent}px` }}
           >
@@ -379,13 +374,8 @@ export default function SessionTreePanel() {
 
             <button type="button" onClick={() => selectNode(node.id)} className="min-w-0 flex-1 cursor-pointer text-left">
               <span className="flex items-center gap-1.5">
-                <span
-                  className={`h-1.5 w-1.5 flex-none rounded-xs ${statusTone(node.status)}`}
-                  title={statusLabel(node.status)}
-                  aria-label={statusLabel(node.status)}
-                />
-                <AgentAvatar agent={owner} size="xs" className="ml-0.5" />
-                <span className={`truncate text-md ${isActive ? 'text-accent' : 'text-ink-secondary'}`}>{node.title}</span>
+                <span className={`h-1 w-1 flex-none rounded-full ${statusTone(node.status)}`} title={statusLabel(node.status)} aria-label={statusLabel(node.status)} />
+                <span className={`min-w-0 flex-1 truncate text-[12px] font-medium ${isActive ? 'text-ink' : 'text-ink-secondary'}`}>{node.title}</span>
                 {unread > 0 && (
                   <span className="flex-none text-xs tabular-nums text-accent" title={`${unread} 条未读消息`}>
                     {unread}
@@ -402,7 +392,6 @@ export default function SessionTreePanel() {
                   </span>
                 )}
               </span>
-              <span className="mt-0.5 block truncate text-2xs text-muted">{summaryLine(node)}</span>
             </button>
 
             {!editing && (
@@ -485,24 +474,42 @@ export default function SessionTreePanel() {
   const total = countNodes(roots)
 
   return (
-    <aside className="flex min-h-0 flex-1 flex-col border-r border-border-subtle bg-surface backdrop-blur-glass">
-      <div className="flex flex-none items-center justify-between gap-2 border-b border-border-subtle px-3.5 pt-2.5 pb-2">
-        <div className="flex items-center gap-2">
-          <h2 className="m-0 text-md font-semibold">会话</h2>
-          <span className="font-mono text-2xs tracking-normal text-muted">{total > 0 ? `${total} 个` : '—'}</span>
-        </div>
+    <aside className="flex min-h-0 flex-1 flex-col border-r border-border bg-surface">
+      <div className="flex flex-none items-center gap-2.5 px-1 pb-3.5 pt-3.5">
+        <span className="relative grid h-[26px] w-[26px] flex-none place-items-center overflow-hidden rounded-[7px] bg-ink" aria-hidden="true">
+          <span className="h-[2px] w-4 -rotate-[24deg] rounded-pill bg-linear-to-r from-accent to-accent-3" />
+        </span>
+        <span className="font-semibold tracking-[-0.02em] text-[15px]">司墨</span>
+        <span className="ml-auto font-mono text-[10px] text-ink-faint">v4.1</span>
+      </div>
+
+      <div className="mb-2.5 flex flex-none items-center gap-1.5">
+        <button
+          type="button"
+          className="flex min-w-0 flex-1 items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5 text-left transition-colors duration-fast hover:border-border-subtle"
+          title="工作区"
+        >
+          <span className="grid h-[22px] w-[22px] flex-none place-items-center rounded-[6px] bg-ink text-[10px] font-semibold text-ink-inverse">S</span>
+          <span className="flex min-w-0 flex-1 flex-col leading-[1.35]">
+            <span className="truncate text-[11.5px] font-semibold text-ink">主工作区</span>
+            <span className="truncate text-[10px] text-ink-faint">本地环境</span>
+          </span>
+          <Icon name="chevron-down" size={16} className="text-ink-faint" />
+        </button>
         <button
           type="button"
           onClick={() => void createChild()}
           disabled={busy || !activeId || activeArchived}
           title={activeArchived ? '已归档会话只读：恢复后才能新建子会话' : '在当前会话下新建子会话'}
-          className="cursor-pointer rounded-sm border border-accent-border bg-accent-soft px-2 py-1 text-xs text-accent-hover transition-colors duration-fast hover:border-accent disabled:cursor-not-allowed disabled:opacity-50"
+          aria-label="新建子会话"
+          className="grid h-[34px] w-[34px] flex-none cursor-pointer place-items-center rounded-sm border border-border bg-surface text-ink-muted transition-colors duration-fast hover:border-border-subtle hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
         >
-          + 子会话
+          <span className="text-[18px] leading-none">＋</span>
         </button>
       </div>
 
-      <div className="flex flex-none items-center gap-1.5 border-b border-border-subtle px-2 py-1.5">
+      <div className="mb-2 flex flex-none items-center gap-1.5 rounded-sm border border-border bg-surface px-2 text-ink-faint focus-within:border-accent focus-within:shadow-focus">
+        <Icon name="search" size={16} className="flex-none" />
         <label htmlFor="session-search" className="sr-only">
           搜索会话
         </label>
@@ -510,19 +517,21 @@ export default function SessionTreePanel() {
           id="session-search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="搜索会话 / 摘要…"
+          placeholder="搜索会话、消息…"
           aria-label="搜索会话"
-          className="min-w-0 flex-1 rounded-md border border-border-subtle bg-surface-solid px-2 py-1 text-2xs text-ink outline-none placeholder:text-muted focus:border-accent-border"
+          className="h-[29px] min-w-0 flex-1 border-0 bg-transparent text-[11.5px] text-ink outline-none placeholder:text-ink-faint"
         />
-        {query && (
+        {query ? (
           <button
             type="button"
             onClick={() => setQuery('')}
             aria-label="清空会话搜索"
-            className="cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-1 text-2xs text-muted"
+            className="cursor-pointer px-0.5 text-2xs text-ink-faint hover:text-ink"
           >
             ×
           </button>
+        ) : (
+          <kbd className="flex-none rounded-[4px] border border-border px-1 font-mono text-[9px] text-ink-faint">⌘K</kbd>
         )}
       </div>
 
@@ -532,7 +541,12 @@ export default function SessionTreePanel() {
         </div>
       )}
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-2 pt-3 pb-3.5">
+      <div className="min-h-0 flex-1 overflow-y-auto px-1 pt-2 pb-3">
+        <div className="flex items-center justify-between px-1 pb-1 pt-2 text-[9.5px] uppercase tracking-[0.07em] text-ink-faint">
+          <span>会话</span>
+          <span>{total}</span>
+        </div>
+
         {loading && <TreeSkeleton />}
 
         {!loading && error && (
@@ -568,11 +582,27 @@ export default function SessionTreePanel() {
         )}
       </div>
 
-      <div className="flex flex-none items-center justify-between gap-2 overflow-hidden whitespace-nowrap border-t border-border-subtle px-3.5 py-2 text-xs text-ink-muted">
-        <span className="flex-none whitespace-nowrap">
-          {runningTasks > 0 ? `进行中 ${counts.active} · ${runningTasks} 个任务` : `进行中 ${counts.active} · 已归档 ${counts.archived}`}
-        </span>
-        <span className="flex-none whitespace-nowrap text-ink-muted max-[1180px]:hidden" title="归档后只读，可随时恢复">归档 / 恢复</span>
+      <div className="flex-none border-t border-border-subtle pt-2">
+        <div className="rounded-sm border border-border bg-surface-sunken px-2.5 py-2">
+          <div className="flex items-center justify-between text-[10.5px] text-ink-muted">
+            <span>会话状态</span>
+            <b className="font-semibold text-ink-secondary">{counts.active} 个会话</b>
+          </div>
+          <div className="my-1.5 h-1 overflow-hidden rounded-pill bg-surface-solid">
+            <i className="block h-full rounded-pill bg-linear-to-r from-accent to-accent-3" style={{ width: `${Math.min(100, counts.active * 12)}%` }} />
+          </div>
+          <div className="truncate text-[9.5px] text-ink-faint">
+            {runningTasks > 0 ? `${runningTasks} 个任务进行中` : `已归档 ${counts.archived} 个 · 本地工作区`}
+          </div>
+        </div>
+        <div className="mt-1.5 flex items-center gap-2 border-t border-border-subtle px-1 pt-2">
+          <span className="grid h-[26px] w-[26px] flex-none place-items-center rounded-full bg-ink text-[10px] font-semibold text-ink-inverse">Y</span>
+          <span className="flex min-w-0 flex-1 flex-col leading-[1.3]">
+            <b className="text-[11px] font-semibold text-ink">本地用户</b>
+            <span className="text-[9.5px] text-ink-faint">主工作区 · Owner</span>
+          </span>
+          <Icon name="chevron-down" size={16} className="text-ink-faint" />
+        </div>
       </div>
     </aside>
   )

@@ -33,9 +33,9 @@ check('消息头不重复角色名：user 只保留头像「你」，agent 只�
 })
 
 check('消息列/输入区共用 832px 列与 52px 左内边距；时间轴绝对挂列左', () => {
-  assert.match(chatCenter, /relative flex min-h-0 w-full max-w-\[832px\]/)
+  assert.match(chatCenter, /relative flex min-h-0 w-full max-w-\[780px\]/)
   assert.match(chatCenter, /absolute inset-y-0 left-0 z-10/)
-  assert.match(messageList, /pl-\[52px\]/)
+  assert.match(messageList, /pl-\[46px\]/)
   assert.match(composer, /max-w-\[832px\] pl-\[52px\]/)
   assert.equal(/mx-auto flex min-h-0 w-full max-w-\[800px\]/.test(messageList), false)
 })
@@ -50,12 +50,12 @@ check('回到底部：28×28 小方角图标按钮，仅离底出现', () => {
 })
 
 check('正文 15px/1.65；时间轴按发送方着色、hover 加宽', () => {
-  assert.match(messageList, /text-\[15px\] leading-\[1\.65\]/)
-  assert.match(styles, /--timeline-user: #3b82f6/)
-  assert.match(styles, /--timeline-agent: #64748b/)
+  assert.match(messageList, /text-\[14px\] leading-\[1\.72\]/)
+  assert.match(styles, /--timeline-user: #6E6CF7/i)
+  assert.match(styles, /--timeline-agent: #8C8E96/i)
   assert.equal(/--timeline-system/.test(styles), false)
-  assert.match(historyRail, /h-\[5px\] w-\[22px\]/)
-  assert.match(historyRail, /group-hover:w-7/)
+  assert.match(historyRail, /h-1\.5 w-5/)
+  assert.match(historyRail, /group-hover:w-\[26px\]/)
   assert.match(historyRail, /w-px -translate-x-1\/2 bg-timeline-track/)
 })
 

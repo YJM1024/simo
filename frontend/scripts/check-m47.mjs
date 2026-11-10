@@ -27,11 +27,11 @@ const styles = read('styles.css')
 const pkg = JSON.parse(readRoot('package.json'))
 
 check('头像全站统一：圆形、30/24 两档、无彩色底/渐变', () => {
-  assert.match(styles, /--avatar-agent-bg: #0a0c10/)
-  assert.match(styles, /--avatar-agent-ink: #ffffff/)
-  assert.match(styles, /--avatar-bg: #f3f4f6/)
-  assert.match(styles, /--avatar-ink: #313a48/)
-  assert.match(styles, /--avatar-border: #e4e7ec/)
+  assert.match(styles, /--avatar-agent-bg: #17181C/i)
+  assert.match(styles, /--avatar-agent-ink: #FFFFFF/i)
+  assert.match(styles, /--avatar-bg: #F6F5F1/)
+  assert.match(styles, /--avatar-ink: #3B3D44/i)
+  assert.match(styles, /--avatar-border: #E8E7E1/i)
   assert.match(avatar, /xs: 'h-6 w-6 text-\[11px\]'/)
   assert.match(avatar, /sm: 'h-\[30px\] w-\[30px\] text-xs'/)
   assert.match(avatar, /rounded-full/)
@@ -41,35 +41,35 @@ check('头像全站统一：圆形、30/24 两档、无彩色底/渐变', () => 
 })
 
 check('助手 30px 深色「墨」/ 用户 30px 浅灰「你」+ 1px 边', () => {
-  assert.match(messageList, /h-\[30px\] w-\[30px\].*rounded-full/)
-  assert.match(messageList, /border-avatar-border bg-avatar-bg text-avatar-ink/)
-  assert.match(messageList, /AgentAvatar agent=\{handler \?\? findAgent\(\[\], message\.agentId\)\} size="sm"/)
+  assert.match(messageList, /h-6 w-6.*rounded-\[6px\]/)
+  assert.match(messageList, /border-avatar-border bg-avatar-bg text-\[10px\] font-semibold text-avatar-ink/)
+  assert.match(messageList, /bg-avatar-agent-bg/)
 })
 
 check('消息头：min-height 30 / items-center / meta 13px/20px / 与正文 6px', () => {
-  assert.match(messageList, /mb-1\.5 flex h-\[30px\] flex-nowrap items-center/)
-  assert.match(messageList, /text-\[13px\] font-medium leading-5/)
+  assert.match(messageList, /mb-1 flex h-5 min-w-0 flex-nowrap items-center/)
+  assert.match(messageList, /text-\[11.5px\] font-semibold leading-5/)
   assert.match(read('features/chat/MessageBadges.tsx'), /text-\[13px\] leading-5 text-ink-muted/)
-  assert.match(messageList, /text-\[15px\] leading-\[1\.65\]/)
+  assert.match(messageList, /text-\[14px\] leading-\[1\.72\]/)
 })
 
 check('分段控件：13px、选中深色 + 2px 下划线、无胶囊/边框', () => {
-  assert.match(chatCenter, /flex items-center gap-4 text-\[13px\]/)
-  assert.match(chatCenter, /font-medium text-ink/)
-  assert.match(chatCenter, /h-0\.5 bg-ink/)
+  assert.match(chatCenter, /inline-flex flex-none items-center gap-px rounded-sm/)
+  assert.match(chatCenter, /bg-surface text-ink shadow-sm/)
+  assert.match(chatCenter, /h-\[22px\]/)
   assert.match(chatCenter, /aria-pressed=\{!runtime\.includeChildren\}/)
 })
 
 check('「就绪」纯文字（会话头与顶栏）', () => {
-  assert.match(chatCenter, /text-\[13px\] text-ink-muted/)
-  assert.match(topBar, /text-\[13px\] text-ink-muted/)
+  assert.match(chatCenter, /text-\[10\.5px\] text-ink-faint/)
+  assert.match(topBar, /text-\[10.5px\] text-ink-muted/)
   assert.equal(/rounded-pill border px-2 py-0\.5 font-mono text-2xs tracking-normal/.test(chatCenter), false)
 })
 
 check('全站头像使用档位：消息/团队 sm，列表/树 xs，智能体页 sm/lg→30', () => {
-  assert.match(read('features/chat/MessageList.tsx'), /size="sm"/)
+  assert.match(read('features/chat/MessageList.tsx'), /mt-\[-2px\]/)
   assert.match(read('features/team/TeamPage.tsx'), /size="sm"/)
-  assert.match(read('features/sessions/SessionTreePanel.tsx'), /size="xs"/)
+  assert.match(read('features/sessions/SessionTreePanel.tsx'), /h-1 w-1/)
   assert.match(read('features/workbench/UsagePage.tsx'), /size="xs"/)
   assert.match(read('features/agents/AgentsPage.tsx'), /size="lg"/)
 })

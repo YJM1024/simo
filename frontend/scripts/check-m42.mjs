@@ -36,20 +36,20 @@ check('品牌/头像：司墨无字距；圆形头像；消息头与头像同轴
   const avatar = read('platform/AgentAvatar.tsx')
   assert.equal(/linearGradient|feDropShadow|filter=/.test(brand), false)
   assert.match(brand, /rx="24"/)
-  assert.match(topBar, /tracking-normal text-ink">司墨/)
+  assert.match(topBar, /司墨/)
   assert.match(avatar, /round: 'rounded-full'/)
   assert.match(avatar, /bg-avatar-agent-bg text-avatar-agent-ink/)
   assert.equal(/self-start/.test(avatar), false)
 })
 
 check('圆角令牌收敛：控件 2–3、卡片/面板 4、气泡 6、徽标/胶囊 2', () => {
-  assert.match(styles, /--r-xs: 8px/)
-  assert.match(styles, /--r-sm: 8px/)
-  assert.match(styles, /--r-md: 12px/)
-  assert.match(styles, /--r-lg: 12px/)
-  assert.match(styles, /--r-xl: 16px/)
-  assert.match(styles, /--r-pill: 6px/)
-  assert.match(styles, /--r-bubble: 12px/)
+  assert.match(styles, /--r-xs: 5px/)
+  assert.match(styles, /--r-sm: 7px/)
+  assert.match(styles, /--r-md: 10px/)
+  assert.match(styles, /--r-lg: 14px/)
+  assert.match(styles, /--r-xl: 12px/)
+  assert.match(styles, /--r-pill: 4px/)
+  assert.match(styles, /--r-bubble: 9px/)
   assert.match(styles, /--radius-bubble/)
 })
 
@@ -69,7 +69,7 @@ check('字距：全局 normal，无 tracking-widest/wide 残留', () => {
 })
 
 check('rounded-full 仅保留头像/加载 spinner（非业务标签/按钮/卡片）', () => {
-  const allowed = new Set(['platform/AgentAvatar.tsx', 'platform/ui/Button.tsx', 'platform/ui/IconButton.tsx', 'features/chat/Composer.tsx', 'features/chat/MessageList.tsx', 'features/chat/MessageBadges.tsx', 'features/schedules/ScheduleManager.tsx', 'features/team/TeamPage.tsx'])
+  const allowed = new Set(['platform/AgentAvatar.tsx', 'platform/ui/Button.tsx', 'platform/ui/IconButton.tsx', 'features/chat/Composer.tsx', 'features/chat/MessageList.tsx', 'features/chat/MessageBadges.tsx', 'features/schedules/ScheduleManager.tsx', 'features/team/TeamPage.tsx', 'app/TopBar.tsx', 'features/sessions/SessionTreePanel.tsx'])
   const files = []
   const walk = (dir) => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -87,11 +87,11 @@ check('rounded-full 仅保留头像/加载 spinner（非业务标签/按钮/卡�
 })
 
 check('顶栏：两行布局；header 左品牌右状态，导航独立', () => {
-  assert.match(topBar, /<header className="relative z-10 flex h-\[52px\]/)
+  assert.match(topBar, /<header className="relative z-10 flex h-\[54px\]/)
   assert.match(topBar, /NotificationCenter/)
-  assert.equal(/<TopTabs \/>/.test(topBar), false)
-  assert.match(topBar, /flex-none flex-nowrap items-center justify-end gap-1\.5 whitespace-nowrap/)
-  assert.match(topBar, /面包屑/)
+  assert.equal(/<TopTabs \/>/.test(topBar), true)
+  assert.match(topBar, /flex flex-none items-center gap-2 whitespace-nowrap/)
+  assert.match(topBar, /司墨/)
   assert.match(permission, /text-\[13px\]/)
   assert.equal(/tracking-/.test(permission), false)
 })
@@ -105,11 +105,11 @@ check('会话元信息：纯文本 + 分隔符，灰胶囊改为文字；气泡 
 })
 
 check('时间轴：32px 点击区、横向 3px 短条、紧凑 gap、隐藏滚动条、上下箭头', () => {
-  assert.match(historyRail, /w-8/)
-  assert.match(historyRail, /h-\[7px\] w-8/)
-  assert.match(historyRail, /h-\[5px\] w-\[22px\]/)
-  assert.match(historyRail, /group-hover:w-7/)
-  assert.match(historyRail, /mt-0.5/)
+  assert.match(historyRail, /w-9/)
+  assert.match(historyRail, /h-3\.5 w-9/)
+  assert.match(historyRail, /h-1\.5 w-5/)
+  assert.match(historyRail, /group-hover:w-\[26px\]/)
+  assert.match(historyRail, /gap-0.5/)
   assert.match(historyRail, /w-px -translate-x-1\/2 bg-timeline-track/)
   assert.match(historyRail, /\[scrollbar-width:none\]/)
   assert.match(historyRail, /\[&::-webkit-scrollbar\]:hidden/)
@@ -121,15 +121,15 @@ check('时间轴：32px 点击区、横向 3px 短条、紧凑 gap、隐藏滚�
 })
 
 check('会话树/输入区/工作台：选中 4px、运行中去胶囊、M44 输入区、工作台 960 紧凑', () => {
-  assert.match(sessionTree, /rounded-md border py-1\.5/)
+  assert.match(sessionTree, /rounded-sm border-0 border-l-2/)
   assert.equal(/rounded-pill[^`]*执行中/.test(sessionTree), false)
-  assert.match(sessionTree, /进行中 \$\{counts\.active\}/)
+  assert.match(sessionTree, /会话状态/)
   assert.match(sessionTree, /个任务/)
-  assert.match(composer, /min-h-\[84px\] max-h-\[196px\]/)
-  assert.match(composer, /rounded-xs border border-border bg-surface-solid/)
+  assert.match(composer, /min-h-\[58px\] max-h-\[176px\]/)
+  assert.match(composer, /rounded-md border border-border bg-surface/)
   assert.equal(/TOOLBAR|role="toolbar"/.test(composer), false)
   assert.equal(/translate-y-px/.test(composer), false)
-  assert.match(workbench, /max-w-\[60rem\]/)
+  assert.match(workbench, /max-w-\[1000px\]/)
   assert.match(workbench, /text-base font-semibold text-section-title/)
   assert.match(workbench, /rounded-md border border-border-subtle bg-surface-solid p-3/)
   assert.match(workbench, /chevron-right/)

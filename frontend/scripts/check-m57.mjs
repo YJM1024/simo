@@ -26,7 +26,7 @@ const pkg = JSON.parse(readRoot('package.json'))
 check('消息滚动容器不再含 scroll-smooth（scroll-behavior:auto）', () => {
   assert.equal(/scroll-smooth/.test(messageList), false)
   assert.match(messageList, /overflow-y-auto/)
-  assert.match(messageList, /flex w-full min-w-0 flex-1 flex-col gap-4 overflow-y-auto/)
+  assert.match(messageList, /flex w-full min-w-0 flex-1 flex-col gap-0 overflow-y-auto/)
 })
 
 check('切换会话/首次加载：直接 scrollTop = scrollHeight（瞬时）', () => {

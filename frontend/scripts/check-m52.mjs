@@ -33,7 +33,7 @@ const topBar = read('app/TopBar.tsx')
 const pkg = JSON.parse(readRoot('package.json'))
 
 check('P0 右栏任务：340 宽、40px 行、单行省略+状态徽标、无调试文案/换行', () => {
-  assert.match(app, /const RIGHT_DEFAULT = 340/)
+  assert.match(app, /const RIGHT_DEFAULT = 364/)
   assert.match(taskPanel, /flex min-h-10 w-full min-w-0.*border-b/)
   assert.match(taskPanel, /min-w-0 flex-1 truncate text-sm/)
   assert.match(taskPanel, /rounded-xs border px-1\.5 py-0\.5 text-\[11px\]/)
@@ -75,9 +75,9 @@ check('P1 定时任务：已结束/无下次运行、本地时间、标准开关
 })
 
 check('P2 侧栏：选中 accent 淡底、状态合并且无重复执行中标签', () => {
-  assert.match(sessionTree, /border-accent-border bg-accent-soft/)
-  assert.match(sessionTree, /text-accent/)
-  assert.match(sessionTree, /进行中 \$\{counts\.active\} · \$\{runningTasks\} 个任务/)
+  assert.match(sessionTree, /border-l-accent bg-accent-soft/)
+  assert.match(sessionTree, /text-\[12px\] font-medium/)
+  assert.match(sessionTree, /会话状态/)
   assert.equal(/执行中\s*<\/span>/.test(sessionTree), false)
 })
 

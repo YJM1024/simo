@@ -20,9 +20,10 @@ const PIN_KEY = 'simo.rightRail.pinned'
 
 function readPinned(): boolean {
   try {
-    return window.localStorage.getItem(PIN_KEY) === '1'
+    const value = window.localStorage.getItem(PIN_KEY)
+    return value === null ? true : value === '1'
   } catch {
-    return false
+    return true
   }
 }
 
@@ -35,12 +36,19 @@ function writePinned(value: boolean): void {
 }
 
 export default function RightRail() {
-  const [active, setActive] = useState<RailTab | null>(null)
+  const [active, setActive] = useState<RailTab | null>(() => (typeof window === 'undefined' || window.innerWidth > 1240 ? 'tasks' : null))
   const [pinned, setPinned] = useState(() => (typeof window === 'undefined' ? false : readPinned()))
   const [running, setRunning] = useState(0)
   const [overviewDot, setOverviewDot] = useState(false)
 
   const collapsed = active === null
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 1240px)')
+    const onChange = (): void => setActive((current) => (media.matches ? null : current ?? 'tasks'))
+    media.addEventListener('change', onChange)
+    return () => media.removeEventListener('change', onChange)
+  }, [])
 
   useEffect(() => {
     bus.emit(EVENTS.LAYOUT_RIGHT, { collapsed })
@@ -54,6 +62,11 @@ export default function RightRail() {
       bus.on(EVENTS.RIGHT_RAIL_OPEN, () => {
         setActive((current) => (current === null ? 'tasks' : null))
       }),
+    [],
+  )
+
+  useEffect(
+    () => bus.on(EVENTS.RIGHT_RAIL_TAB, ({ tab }) => setActive(tab)),
     [],
   )
 
@@ -97,14 +110,14 @@ export default function RightRail() {
 
   return (
     <aside
-      className={`flex h-full min-h-0 min-w-0 bg-surface max-[1180px]:fixed max-[1180px]:right-0 max-[1180px]:top-24 max-[1180px]:bottom-0 max-[1180px]:z-30 ${
+      className={`flex h-full min-h-0 min-w-0 bg-surface ${
         collapsed
-          ? 'w-12 flex-none border-l border-border-subtle max-[1180px]:hidden'
-          : 'w-full flex-row border-l border-border-subtle max-[1180px]:w-[min(90vw,360px)] max-[1180px]:shadow-lg'
+          ? 'w-10 flex-none border-l border-border-subtle'
+          : 'w-full flex-row border-l border-border-subtle max-[1240px]:fixed max-[1240px]:right-0 max-[1240px]:top-[96px] max-[1240px]:bottom-0 max-[1240px]:z-30 max-[1240px]:w-[min(90vw,360px)] max-[1240px]:shadow-lg'
       }`}
       aria-label="右侧面板"
     >
-      <div className="order-2 flex w-12 flex-none flex-col items-center gap-1 border-l border-border-subtle bg-surface-sunken/40 py-2" role="tablist" aria-orientation="vertical" aria-label="右侧面板标签">
+      <div className="order-1 flex w-10 flex-none flex-col items-center gap-1 border-r border-border-subtle bg-surface-sunken/30 py-2" role="tablist" aria-orientation="vertical" aria-label="右侧面板标签">
         <button
           type="button"
           role="tab"
@@ -112,8 +125,8 @@ export default function RightRail() {
           aria-controls="right-rail-tasks"
           onClick={() => toggleTab('tasks')}
           title="任务与计划（点击展开/收起）"
-          className={`flex w-9 cursor-pointer flex-col items-center gap-1 rounded-md border px-0.5 py-2 text-2xs transition-colors duration-fast ${
-            active === 'tasks' ? 'border-accent-border bg-accent-soft text-accent-hover' : 'border-border-subtle bg-surface-solid text-ink-secondary hover:border-accent-border'
+          className={`flex w-8 cursor-pointer flex-col items-center gap-1 rounded-sm border border-transparent px-0.5 py-1.5 text-2xs transition-colors duration-fast ${
+            active === 'tasks' ? 'bg-accent-soft text-accent' : 'text-ink-faint hover:bg-surface hover:text-ink'
           }`}
         >
           <Icon name="task" size={16} />
@@ -126,8 +139,8 @@ export default function RightRail() {
           aria-controls="right-rail-overview"
           onClick={() => toggleTab('overview')}
           title="概览（点击展开/收起）"
-          className={`relative flex w-9 cursor-pointer flex-col items-center gap-1 rounded-md border px-0.5 py-2 text-xs transition-colors duration-fast ${
-            active === 'overview' ? 'border-accent-border bg-accent-soft text-accent-hover' : 'border-border-subtle bg-surface-solid text-ink-secondary hover:border-accent-border'
+          className={`relative flex w-8 cursor-pointer flex-col items-center gap-1 rounded-sm border border-transparent px-0.5 py-1.5 text-xs transition-colors duration-fast ${
+            active === 'overview' ? 'bg-accent-soft text-accent' : 'text-ink-faint hover:bg-surface hover:text-ink'
           }`}
         >
           <Icon name="overview" size={16} />
@@ -148,7 +161,7 @@ export default function RightRail() {
         </Tooltip>
       </div>
 
-      <div className={`order-1 min-h-0 min-w-0 flex-1 flex-col ${collapsed ? 'hidden' : 'flex'}`}>
+      <div className={`order-2 min-h-0 min-w-0 flex-1 flex-col ${collapsed ? 'hidden' : 'flex'}`}>
         <div id="right-rail-tasks" role="tabpanel" aria-label="任务" className={`min-h-0 min-w-0 flex-1 ${active === 'tasks' ? 'flex flex-col' : 'hidden'}`}>
           <TaskPanel />
         </div>

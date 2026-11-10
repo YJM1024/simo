@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>司墨 · 原型</title>
+<link rel="stylesheet" href="theme.css">
+</head>
+<body data-state="normal">
+<div class="s-app">
+  <!-- ================= sidebar ================= -->
+  <aside class="s-side">
+    <div class="s-brand">
+      <span class="s-brand__mark"></span>
+      <span class="s-brand__word">司墨</span>
+      <span class="s-brand__env mono">v4.1</span>
+    </div>
+
+    <button class="s-ws" type="button">
+      <span class="s-ws__tile">Y</span>
+      <span class="s-ws__body"><span class="s-ws__name">YJM</span><span class="s-ws__env">主工作区</span></span>
+      <span class="s-ws__chev"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="m3 4.6 3 3 3-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span>
+    </button>
+
+    <label class="s-search">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.3" stroke="currentColor" stroke-width="1.4"/><path d="m10.3 10.3 3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      <input placeholder="搜索会话、消息…" />
+      <kbd>⌘K</kbd>
+    </label>
+
+    <div class="s-group">今天 <span>4</span></div>
+    <nav class="s-list">
+      <a class="s-session is-active" href="#"><span class="s-session__dot"></span><span class="s-session__body"><span class="s-session__title">主会话</span><span class="s-session__meta">3 条未读 · 进行中</span></span><span class="s-session__badge">3</span></a>
+      <a class="s-session" href="#"><span class="s-session__dot"></span><span class="s-session__body"><span class="s-session__title">前端排查</span><span class="s-session__meta">进行中</span></span></a>
+      <a class="s-session" href="#"><span class="s-session__dot"></span><span class="s-session__body"><span class="s-session__title">数据分析</span><span class="s-session__meta">进行中</span></span></a>
+      <a class="s-session" href="#"><span class="s-session__dot"></span><span class="s-session__body"><span class="s-session__title">竞品分析报告</span><span class="s-session__meta">进行中</span></span></a>
+    </nav>
+
+    <div class="s-group">更早 <span>2</span></div>
+    <nav class="s-list s-list--dim">
+      <a class="s-session" href="#"><span class="s-session__dot"></span><span class="s-session__body"><span class="s-session__title">周报整理</span><span class="s-session__meta">昨天</span></span></a>
+      <a class="s-session" href="#"><span class="s-session__dot"></span><span class="s-session__body"><span class="s-session__title">发布检查清单</span><span class="s-session__meta">11 月 7 日</span></span></a>
+    </nav>
+
+    <div class="s-side__spacer"></div>
+    <div class="s-quota">
+      <div class="s-quota__row"><span>本月用量</span><b>42.6%</b></div>
+      <div class="s-quota__bar"><i style="width:42.6%"></i></div>
+      <div class="s-quota__foot">128k / 300k tokens · 6 天重置</div>
+    </div>
+    <div class="s-user">
+      <span class="s-avatar">Y</span>
+      <span class="s-user__body"><b>YJM</b><span>主工作区 · Owner</span></span>
+      <span class="s-user__more"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="m3 4.6 3 3 3-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span>
+    </div>
+  </aside>
+
+  <!-- ================= main ================= -->
+  <div class="s-main">
+    <header class="s-top">
+      <div class="s-crumb"><span>司墨</span><span class="s-crumb__sep">/</span><b>主会话</b></div>
+      <nav class="s-nav">
+        <a class="is-active" href="#">对话</a>
+        <a href="#">工作台</a>
+        <a href="#">任务</a>
+        <a href="#">智能体</a>
+        <a href="#">团队</a>
+        <a href="#">记忆</a>
+      </nav>
+      <div class="s-top__right">
+        <button class="s-perm" data-popover="permission"><span class="s-perm__dot"></span>工作区可写<span class="s-perm__sub">自动通过只读</span><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="m3 4.6 3 3 3-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>
+        <span class="s-live"><i></i>已连接</span>
+        <button class="s-iconbtn" aria-label="搜索"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.3" stroke="currentColor" stroke-width="1.4"/><path d="m10.3 10.3 3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+        <button class="s-iconbtn" aria-label="通知"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 2.4a3.7 3.7 0 0 1 3.7 3.7v2.1l.9 1.9H3.4l.9-1.9V6.1A3.7 3.7 0 0 1 8 2.4Z" stroke="currentColor" stroke-width="1.3"/><path d="M6.5 12.1a1.6 1.6 0 0 0 3 0" stroke="currentColor" stroke-width="1.3"/></svg><i class="s-dotbadge"></i></button>
+        <button class="s-iconbtn" data-modal="settings" aria-label="设置"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.3"/><path d="M8 2.6v1.1M8 12.3v1.1M2.6 8h1.1M12.3 8h1.1M4.2 4.2l.8.8M11 11l.8.8M11.8 4.2l-.8.8M5 11l-.8.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></button>
+        <span class="s-avatar s-avatar--sm">Y</span>
+      </div>
+    </header>
+
+    <div class="s-context">
+      <div class="s-context__left">
+        <span class="s-context__title">主会话</span>
+        <span class="s-context__sub">主窗口 · 聚合视图</span>
+        <div class="s-seg"><button class="is-active">仅本会话</button><button>含子会话</button></div>
+      </div>
+      <span class="s-status-pill"><i></i>1 个任务进行中</span>
+    </div>
+
+    <div class="s-chat">
+      <div class="s-rail">
+        <button class="s-rail__arrow" aria-label="向上"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="m2.5 7.5 3.5-3.5 3.5 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+        <div class="s-rail__track" id="rail"></div>
+        <button class="s-rail__arrow" aria-label="向下"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="m2.5 4.5 3.5 3.5 3.5-3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+      </div>
+
+      <main class="s-scroll" id="scroll"><div class="s-col" id="messages"></div></main>
+
+      <aside class="s-inspector">
+        <div class="s-inspector__rail">
+          <button class="s-inspbtn is-active" data-pane="tasks" aria-label="任务"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 4.2h10M3 8h10M3 11.8h6.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+          <button class="s-inspbtn" data-pane="overview" aria-label="概览"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2.4" y="2.4" width="4.6" height="4.6" rx="1.2" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="2.4" width="4.6" height="4.6" rx="1.2" stroke="currentColor" stroke-width="1.3"/><rect x="2.4" y="9" width="4.6" height="4.6" rx="1.2" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="9" width="4.6" height="4.6" rx="1.2" stroke="currentColor" stroke-width="1.3"/></svg></button>
+          <div class="s-inspacer"></div>
+          <button class="s-inspbtn" aria-label="固定"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M9.4 2.4 13.6 6.6l-1.8.5-2.2 2.2-.4 2.6-3.5-3.5 2.6-.4L10.5 5l.5-1.8-1.6-1.6Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M6.8 9.2 3.2 12.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></button>
+        </div>
+        <div class="s-panel">
+          <div class="s-panel__head">
+            <div class="s-panel__tabs"><button class="is-active" data-pane="tasks">任务</button><button data-pane="overview">概览</button></div>
+            <button class="s-iconbtn" data-close-panel aria-label="收起"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="m4 4 8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+          </div>
+
+          <div class="s-panel__body" data-body="tasks">
+            <div class="s-meta"><span>11 个任务</span><span class="mono">10 / 11</span></div>
+            <div class="s-progress">
+              <svg width="46" height="46" viewBox="0 0 46 46"><circle cx="23" cy="23" r="19" fill="none" stroke="var(--s-line)" stroke-width="3"/><circle cx="23" cy="23" r="19" fill="none" stroke="var(--s-indigo)" stroke-width="3" stroke-linecap="round" stroke-dasharray="119.4" stroke-dashoffset="10.85" transform="rotate(-90 23 23)"/></svg>
+              <div class="s-progress__txt"><b>本周重点</b><span>10 项完成 · 1 项待开始</span></div>
+            </div>
+            <div class="s-label">任务</div>
+            <ul class="s-tasks">
+              <li><span class="s-cb done"></span><span class="t">整理需求与验收标准</span><span class="s-badge done">已完成</span></li>
+              <li><span class="s-cb done"></span><span class="t">前端原型与视觉规范</span><span class="s-badge done">已完成</span></li>
+              <li><span class="s-cb done"></span><span class="t">后端接口与数据迁移</span><span class="s-badge done">已完成</span></li>
+              <li><span class="s-cb done"></span><span class="t">截图验收（1600 / 1060）</span><span class="s-badge done">已完成</span></li>
+              <li><span class="s-cb done"></span><span class="t">浅色科技风视觉升级</span><span class="s-badge done">已完成</span></li>
+            </ul>
+            <div class="s-label">进行中</div>
+            <p class="s-emptyline">暂无进行中的任务</p>
+            <div class="s-label">交付物</div>
+            <ul class="s-files"><li><span class="f">原型说明.md</span><span class="s mono">2.4 KB</span></li><li><span class="f">theme-tokens.json</span><span class="s mono">1.1 KB</span></li><li><span class="f">review-notes.md</span><span class="s mono">3.8 KB</span></li></ul>
+            <a class="s-link" href="#">查看全部 (10)</a>
+          </div>
+
+          <div class="s-panel__body" data-body="overview" hidden>
+            <div class="s-meta"><span>概览</span><span class="mono">只读摘要</span></div>
+            <div class="s-label">已完成</div>
+            <ul class="s-checks"><li><span class="s-ck">✓</span>设计 tokens 与组件</li><li><span class="s-ck">✓</span>原型 1600 / 1060 截图</li><li><span class="s-ck">✓</span>设置与权限弹层</li></ul>
+            <div class="s-label">待完成</div>
+            <ul class="s-checks"><li><span class="s-ck todo"></span>真实 React 落地</li><li><span class="s-ck todo"></span>逐页截图验收</li></ul>
+            <div class="s-label">时间线</div>
+            <ul class="s-tl"><li><i></i><div><b>完成原型</b><span>10:28</span></div></li><li><i></i><div><b>确认视觉方向</b><span>10:26</span></div></li><li><i></i><div><b>生成本周重点表</b><span>10:24</span></div></li></ul>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="s-composer-wrap">
+      <div class="s-composer">
+        <textarea id="input" rows="3" placeholder="给司墨发消息…"></textarea>
+        <div class="s-composer__foot"><span>支持 Markdown 格式</span><div><span class="s-hint-keys">Enter 发送 · Shift+Enter 换行</span><button class="s-send" id="send">发送</button></div></div>
+      </div>
+    </div>
+    <footer class="s-statusbar"><span>进行中 3 · 1 个任务</span><span>归档 / 恢复</span></footer>
+  </div>
+</div>
+
+<!-- permission -->
+<div class="s-popover" id="popover-permission" hidden>
+  <div class="s-popover__head"><b>权限模式</b><span class="mono">切换立即生效</span></div>
+  <div class="s-label">沙盒模式</div>
+  <button class="s-opt"><b>只读</b><span>只能读取 workspace 与只读路径；禁止执行与网络。</span></button>
+  <button class="s-opt is-active"><b>工作区可写</b><span>读写限 workspace/；pwd 仅限 workspace；网络单独授权。</span><em>当前</em></button>
+  <button class="s-opt"><b class="danger">完全访问</b><span>任意路径读写、任意命令、允许网络。风险最高，需二次确认。</span></button>
+  <div class="s-label">审批策略</div>
+  <button class="s-opt"><b>每次询问</b><span>写/执行/网络每次都要你确认。</span></button>
+  <button class="s-opt is-active"><b>自动通过只读</b><span>只读自动通过；写/执行/网络需要确认。</span><em>当前</em></button>
+  <button class="s-opt"><b>不询问（拒绝高风险）</b><span>需审批的动作直接拒绝（fail-closed）。</span></button>
+  <div class="s-popover__foot"><span class="mono">只读自动通过 · 写/执行/网络按策略</span><button class="s-btnsm">关闭</button></div>
+</div>
+
+<!-- settings -->
+<div class="s-overlay" id="overlay" hidden>
+  <div class="s-dialog">
+    <div class="s-dialog__head"><div><h2>设置</h2><p class="mono">模型、权限、主题、目录与快捷键</p></div><button class="s-iconbtn" data-close><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="m4 4 8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button></div>
+    <div class="s-dialog__body">
+      <section class="s-field"><div class="s-field__label">模型</div><div class="s-readonly">V4.1 Flash（固定，在智能体页配置）</div></section>
+      <section class="s-field"><div class="s-field__label">权限</div><div class="s-grid2"><div class="s-opt is-active"><b>工作区可写</b><span>默认；写入需审批（按策略）</span><em>当前</em></div><div class="s-opt is-active"><b>按风险自动批准 / 拒绝</b><span>低风险自动通过，高风险拒绝</span><em>当前</em></div></div></section>
+      <section class="s-field"><div class="s-field__label">主题</div><div class="s-chips"><span class="s-chip is-active">浅色科技</span><span class="s-chip">深色</span><span class="s-chip">跟随系统</span></div></section>
+      <section class="s-field"><div class="s-field__label">快捷键</div><table class="s-kbdtable"><tr><td><kbd>⌘K</kbd></td><td>命令面板</td><td>全局</td></tr><tr><td><kbd>Enter</kbd></td><td>发送消息</td><td>输入框</td></tr><tr><td><kbd>Shift</kbd> <kbd>Enter</kbd></td><td>换行</td><td>输入框</td></tr></table></section>
+    </div>
+    <div class="s-dialog__foot"><span class="mono">设置只读展示；权限/主题即时生效</span><button class="s-send" data-close>完成</button></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

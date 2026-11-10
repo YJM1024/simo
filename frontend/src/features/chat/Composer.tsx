@@ -228,9 +228,7 @@ export default function Composer({ disabled, disabledReason, sessionId, replyTo,
 
   return (
     <footer
-      className={`border-t bg-surface pt-2.5 pb-3.5 backdrop-blur-glass ${
-        dragging ? 'border-accent bg-accent-soft/40' : 'border-border-subtle'
-      }`}
+      className={`flex-none px-[18px] pt-1.5 pb-2 ${dragging ? 'bg-accent-soft/40' : 'bg-transparent'}`}
       onDragOver={(event) => {
         event.preventDefault()
         setDragging(true)
@@ -314,7 +312,7 @@ export default function Composer({ disabled, disabledReason, sessionId, replyTo,
         </ul>
       )}
 
-      <div className="relative">
+      <div className="relative mx-auto w-full max-w-[780px]">
         <textarea
           ref={textareaRef}
           id="composer"
@@ -328,13 +326,13 @@ export default function Composer({ disabled, disabledReason, sessionId, replyTo,
           onChange={(event) => handleDraftChange(event.target.value, event.target.selectionStart ?? event.target.value.length)}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          className="min-h-[84px] max-h-[196px] w-full resize-none overflow-y-auto rounded-xs border border-border bg-surface-solid px-3 pb-11 pt-3 text-sm leading-relaxed text-ink outline-none transition-colors duration-fast placeholder:text-muted focus:border-accent disabled:opacity-55"
+          className="min-h-[58px] max-h-[176px] w-full resize-none overflow-y-auto rounded-md border border-border bg-surface px-3 pb-10 pt-2.5 text-[13.5px] leading-[1.65] text-ink shadow-md outline-none transition-colors duration-fast placeholder:text-ink-faint focus:border-accent focus:shadow-focus disabled:opacity-55"
         />
         <div className="absolute inset-x-0 bottom-0 flex min-w-0 items-center justify-between gap-2 px-2 pb-1.5">
-          <span className="pointer-events-none shrink-0 text-xs text-muted">支持 Markdown 格式</span>
+          <span className="pointer-events-none shrink-0 text-[10.5px] text-ink-faint">支持 Markdown 格式</span>
           <div className="flex min-w-0 items-center justify-end gap-2">
-            {uploading && <span role="status" aria-live="polite" className="text-xs text-muted">上传中…</span>}
-            <span id="composer-hint" className="hidden whitespace-nowrap text-xs text-muted sm:inline">
+            {uploading && <span role="status" aria-live="polite" className="text-[10.5px] text-ink-faint">上传中…</span>}
+            <span id="composer-hint" className="hidden whitespace-nowrap text-[10.5px] text-ink-faint sm:inline">
               {disabledReason ? `只读：${disabledReason}` : 'Enter 发送 · Shift+Enter 换行'}
             </span>
             <button
@@ -342,7 +340,7 @@ export default function Composer({ disabled, disabledReason, sessionId, replyTo,
               onClick={() => void submit()}
               disabled={!canSend}
               title={canSend ? '发送（Enter）' : '输入内容后可发送'}
-              className="inline-flex h-8 min-w-9 flex-none items-center justify-center gap-1.5 rounded-xs border border-ink bg-ink px-2.5 text-xs font-medium text-ink-inverse shadow-sm transition-colors duration-fast hover:bg-ink-secondary disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex h-[30px] min-w-[56px] flex-none items-center justify-center gap-1.5 rounded-xs border border-ink bg-ink px-2.5 text-[11.5px] font-medium text-ink-inverse transition-colors duration-fast hover:bg-ink-secondary disabled:cursor-not-allowed disabled:opacity-40"
             >
               {sending && <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />}
               {sending ? '发送中…' : '发送'}

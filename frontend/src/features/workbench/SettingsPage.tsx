@@ -167,35 +167,36 @@ export default function SettingsPage({
         if (event.target === event.currentTarget) onClose()
       }}
     >
-      <div ref={panelRef} className="popover-surface flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden">
-        <header className="flex flex-none items-start justify-between gap-2 border-b border-border-subtle px-4 py-3">
+      <div ref={panelRef} className="popover-surface flex max-h-[90vh] w-full max-w-[700px] flex-col overflow-hidden">
+        <header className="flex flex-none items-start justify-between gap-3 border-b border-border px-[18px] py-4">
           <div>
-            <h2 className="m-0 text-lg font-semibold tracking-tight">设置</h2>
-            <p className="m-0 mt-0.5 text-sm text-ink-secondary">模型、权限、主题、数据目录与快捷键；修改通过对话或后端配置完成。</p>
+            <h2 className="m-0 font-serif text-[18px] font-medium text-ink">设置</h2>
+            <p className="m-0 mt-1 font-mono text-[10.5px] text-ink-muted">模型、权限、主题、目录与快捷键</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="cursor-pointer rounded-md border border-border-subtle bg-surface-solid px-2.5 py-1.5 text-sm text-muted hover:text-ink"
+            aria-label="关闭设置"
+            className="grid h-6 w-6 cursor-pointer place-items-center rounded-sm text-ink-muted hover:bg-surface-sunken hover:text-ink"
           >
-            关闭 ×
+            ×
           </button>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 pb-6">
+        <div className="min-h-0 flex-1 overflow-y-auto px-[18px] py-1 pb-6">
           {notice && (
             <p role="status" className="m-0 mb-2 rounded-md border border-ok-border bg-ok-soft px-2 py-1 text-2xs text-ok-ink">
               {notice}
             </p>
           )}
 
-          <section id="settings-model" className="mb-6 border-b border-avatar-border pb-4 last:mb-0 last:border-0 last:pb-0">
-            <h3 className="m-0 mb-2 text-[14px] font-semibold text-section-title">模型</h3>
-            <p className="m-0 text-sm text-ink-secondary">模型：V4.1 Flash（固定，在智能体页配置）</p>
+          <section id="settings-model" className="border-b border-border-subtle py-3.5 last:border-0">
+            <h3 className="m-0 mb-2 text-[10.5px] font-semibold tracking-[0.02em] text-ink-secondary">模型</h3>
+            <p className="m-0 rounded-sm border border-border-subtle bg-surface-sunken px-2.5 py-2 text-[12px] text-ink-secondary">模型：V4.1 Flash（固定，在智能体页配置）</p>
           </section>
 
-          <section id="settings-permissions" className="mb-6 border-b border-avatar-border pb-4 last:mb-0 last:border-0 last:pb-0">
-            <h3 className="m-0 mb-2 text-[14px] font-semibold text-section-title">权限</h3>
+          <section id="settings-permissions" className="border-b border-border-subtle py-3.5 last:border-0">
+            <h3 className="m-0 mb-2 text-[10.5px] font-semibold tracking-[0.02em] text-ink-secondary">权限</h3>
             {permError && <p className="m-0 mb-1 text-2xs text-warn-ink">{permError}</p>}
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <div>
@@ -245,8 +246,8 @@ export default function SettingsPage({
             </div>
           </section>
 
-          <section id="settings-executor" className="mb-6 border-b border-avatar-border pb-4 last:mb-0 last:border-0 last:pb-0">
-            <h3 className="m-0 mb-2 text-[14px] font-semibold text-section-title">子任务执行者</h3>
+          <section id="settings-executor" className="border-b border-border-subtle py-3.5 last:border-0">
+            <h3 className="m-0 mb-2 text-[10.5px] font-semibold tracking-[0.02em] text-ink-secondary">子任务执行者</h3>
             <p className="m-0 mb-2 text-xs text-muted">
               决定新子任务由任务智能体（NPC）执行，还是由司墨本人直接执行。
             </p>
@@ -276,8 +277,8 @@ export default function SettingsPage({
             </div>
           </section>
 
-          <section id="settings-theme" className="mb-6 border-b border-avatar-border pb-4 last:mb-0 last:border-0 last:pb-0">
-            <h3 className="m-0 mb-2 text-[14px] font-semibold text-section-title">主题</h3>
+          <section id="settings-theme" className="border-b border-border-subtle py-3.5 last:border-0">
+            <h3 className="m-0 mb-2 text-[10.5px] font-semibold tracking-[0.02em] text-ink-secondary">主题</h3>
             <div className="flex flex-wrap gap-1.5">
               {listThemes().map((name) => (
                 <button
@@ -295,8 +296,8 @@ export default function SettingsPage({
             </div>
           </section>
 
-          <section id="settings-view" className="mb-6 border-b border-avatar-border pb-4 last:mb-0 last:border-0 last:pb-0">
-            <h3 className="m-0 mb-2 text-[14px] font-semibold text-section-title">自定义视图</h3>
+          <section id="settings-view" className="border-b border-border-subtle py-3.5 last:border-0">
+            <h3 className="m-0 mb-2 text-[10.5px] font-semibold tracking-[0.02em] text-ink-secondary">自定义视图</h3>
             <p className="m-0 mb-2 text-xs text-muted">
               打开当前会话的自定义视图（只读 schema 渲染，13 类块）；生成/修改/回滚通过对话。
             </p>
@@ -312,15 +313,15 @@ export default function SettingsPage({
             </button>
           </section>
 
-          <section id="settings-data" className="mb-6 border-b border-avatar-border pb-4 last:mb-0 last:border-0 last:pb-0">
-            <h3 className="m-0 mb-2 text-[14px] font-semibold text-section-title">数据目录</h3>
+          <section id="settings-data" className="border-b border-border-subtle py-3.5 last:border-0">
+            <h3 className="m-0 mb-2 text-[10.5px] font-semibold tracking-[0.02em] text-ink-secondary">数据目录</h3>
             <p className="m-0 rounded-xs border border-border-subtle bg-surface-sunken px-2 py-1.5 font-mono text-xs text-ink-secondary">
               {dataDirectoryHint()}
             </p>
           </section>
 
           <section id="settings-shortcuts" className="mb-0">
-            <h3 className="m-0 mb-2 text-[14px] font-semibold text-section-title">快捷键</h3>
+            <h3 className="m-0 mb-2 text-[10.5px] font-semibold tracking-[0.02em] text-ink-secondary">快捷键</h3>
             <div className="grid grid-cols-[6rem_minmax(0,1fr)_5rem] items-center gap-x-3">
               {SHORTCUTS.map((shortcut) => (
                 <div key={shortcut.keys} className="contents">

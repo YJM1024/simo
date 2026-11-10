@@ -137,8 +137,9 @@ export default function PermissionMenu({ permission, loading, saving, error, nee
         className={`inline-flex max-w-[18rem] cursor-pointer items-center gap-1.5 whitespace-nowrap text-[13px] transition-colors duration-fast ${tone}`}
       >
         <span className="h-1.5 w-1.5 flex-none rounded-xs bg-current opacity-70" aria-hidden="true" />
-        <span className="max-[1180px]:hidden">权限 · </span>
-        <span className="truncate">{permission ? permissionSummary(permission) : loading ? '加载中…' : '未知'}</span>
+        <span className="max-[1240px]:hidden">权限 · </span>
+        <span className="truncate max-[1240px]:hidden">{permission ? permissionSummary(permission) : loading ? '加载中…' : '未知'}</span>
+        <span className="hidden max-[1240px]:inline">{permission ? sandboxLabel(permission.sandbox) : loading ? '加载中…' : '未知'}</span>
       </button>
 
       {open &&

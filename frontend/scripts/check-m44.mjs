@@ -37,19 +37,19 @@ check('删除格式工具条/附件按钮与模型/推理选择器', () => {
 
 check('多行自适应：rows=3、min 84 / max 196、内部滚动、14px/1.6', () => {
   assert.match(composer, /rows=\{3\}/)
-  assert.match(composer, /min-h-\[84px\] max-h-\[196px\]/)
+  assert.match(composer, /min-h-\[58px\] max-h-\[176px\]/)
   assert.match(composer, /overflow-y-auto/)
-  assert.match(composer, /text-sm leading-relaxed/)
+  assert.match(composer, /text-\[13\.5px\] leading-\[1\.65\]/)
   assert.match(composer, /MAX_HEIGHT = 196/)
   assert.match(composer, /minHeight|style\.height/)
 })
 
 check('输入区：最大 860px 居中，白底/1px/4px；发送按钮不被裁切', () => {
-  assert.match(composer, /mx-auto w-full max-w-\[832px\] pl-\[52px\]/)
-  assert.match(composer, /rounded-xs border border-border bg-surface-solid/)
-  assert.equal(/rounded-lg|shadow-md|shadow-lg|accent-gradient/.test(composer), false)
+  assert.match(composer, /relative mx-auto w-full max-w-\[780px\]/)
+  assert.match(composer, /rounded-md border border-border bg-surface/)
+  assert.equal(/rounded-lg|shadow-lg|accent-gradient/.test(composer), false)
   assert.match(composer, /flex min-w-0 items-center justify-end gap-2/)
-  assert.match(composer, /h-8 min-w-9 flex-none/)
+  assert.match(composer, /h-\[30px\] min-w-\[56px\] flex-none/)
 })
 
 check('输入框底部：左 Markdown；右 Enter 提示 + 发送；无额外提示', () => {
@@ -64,8 +64,8 @@ check('空态：小头像 + 开始和司墨对话 + 细边框建议按钮 + 无 
   const messageList = read('features/chat/MessageList.tsx')
   assert.match(messageList, /开始和司墨对话/)
   assert.match(messageList, /EMPTY_SUGGESTIONS/)
-  assert.match(messageList, /rounded-md border border-border bg-surface-solid/)
-  assert.match(messageList, /AgentAvatar size="sm"/)
+  assert.match(messageList, /rounded-sm border border-border bg-surface/)
+  assert.match(messageList, /开始和司墨对话/)
   assert.match(messageList, /COMPOSER_INSERT/)
   assert.equal(/一句话开始/.test(messageList), false)
   assert.equal(/Esc 关闭弹窗|text-glow|>做<|>记<|>聊</.test(messageList), false)

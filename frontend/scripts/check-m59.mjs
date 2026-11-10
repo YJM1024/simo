@@ -38,8 +38,8 @@ check('用户切换后写 localStorage；下次加载沿用', () => {
 })
 
 check('会话头按当前范围显示，不再固定「聚合视图」', () => {
-  assert.match(center, /runtime\.includeChildren \? '主窗口 · 含子会话' : '主窗口 · 仅本会话'/)
-  assert.match(center, /默认仅显示当前会话/)
+  assert.match(center, /isRoot \? '主窗口'/)
+  assert.match(center, /默认仅本会话/)
 })
 
 check('门禁链包含 check-m59；无 Spec 内部字段', () => {

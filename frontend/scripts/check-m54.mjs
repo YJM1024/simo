@@ -35,9 +35,9 @@ check('主题按钮选中态中性 secondary，无蓝描边/蓝字', () => {
 })
 
 check('设置内容可滚动且底部留白，分区标题/分隔线保持一致', () => {
-  assert.match(settingsPage, /min-h-0 flex-1 overflow-y-auto px-4 py-3 pb-6/)
-  assert.match(settingsPage, /text-\[14px\] font-semibold text-section-title/)
-  assert.match(settingsPage, /mb-6 border-b border-avatar-border pb-4/)
+  assert.match(settingsPage, /min-h-0 flex-1 overflow-y-auto px-\[18px\] py-1 pb-6/)
+  assert.match(settingsPage, /text-\[10\.5px\] font-semibold/)
+  assert.match(settingsPage, /border-b border-border-subtle py-3\.5/)
   assert.match(settingsPage, /id="settings-shortcuts" className="mb-0"/)
 })
 

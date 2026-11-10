@@ -6,7 +6,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { archiveSession, renameSession } from '../../platform/http.ts'
 import { bus, EVENTS } from '../../platform/events.ts'
-import { Tabs } from '../../platform/ui/Tabs.tsx'
 import { Icon } from '../../platform/ui/icons.tsx'
 import { saveModelPreference } from '../../platform/preferences.ts'
 import { sendChat } from '../../platform/ws-hub.ts'
@@ -229,79 +228,71 @@ export default function ChatCenter() {
 
   return (
     <main
-      className="relative flex h-full min-h-0 flex-col bg-transparent pt-3"
+      className="relative flex h-full min-h-0 flex-col bg-transparent"
       aria-label={`会话工作台：${runtime.sessionTitle}`}
     >
-      <Tabs
-        items={TABS}
-        active={tab}
-        onChange={(id) => setTab(id as CenterTab)}
-        ariaLabel="会话标签"
-        size="sm"
-        className="flex-none border-b border-border-subtle bg-surface px-2 sm:px-4"
-      />
-
-      <div className="flex items-center gap-3 border-b border-border-subtle px-3 pt-2.5 pb-2 sm:px-5">
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
-        <h2 className="m-0 text-lg font-semibold tracking-tight">{runtime.sessionTitle}</h2>
-        <span className="font-mono text-2xs tracking-normal text-muted">
-          {isRoot ? (runtime.includeChildren ? '主窗口 · 含子会话' : '主窗口 · 仅本会话') : `子会话 · 深度 ${runtime.sessionDepth}`}
-        </span>
-
-        {/* M4：仅本会话 / 含子会话 */}
-        <div
-          className="flex items-center gap-4 text-[13px]"
-          role="group"
-          aria-label="消息范围"
-          title="默认仅显示当前会话；切换到「含子会话」时按时间聚合递归子会话消息"
-        >
-          <button
-            type="button"
-            onClick={() => runtime.setIncludeChildren(false)}
-            aria-pressed={!runtime.includeChildren}
-            className={`relative cursor-pointer pb-1 transition-colors duration-fast ${
-              !runtime.includeChildren ? 'font-medium text-ink' : 'text-muted hover:text-ink-secondary'
-            }`}
-          >
-            仅本会话
-            {!runtime.includeChildren && <span className="absolute inset-x-0 bottom-0 h-0.5 bg-ink" aria-hidden="true" />}
-          </button>
-          <button
-            type="button"
-            onClick={() => runtime.setIncludeChildren(true)}
-            aria-pressed={runtime.includeChildren}
-            className={`relative cursor-pointer pb-1 transition-colors duration-fast ${
-              runtime.includeChildren ? 'font-medium text-ink' : 'text-muted hover:text-ink-secondary'
-            }`}
-          >
-            含子会话
-            {runtime.includeChildren && <span className="absolute inset-x-0 bottom-0 h-0.5 bg-ink" aria-hidden="true" />}
-          </button>
-        </div>
-
-        {runtime.workflowRunning && !runtime.sessionArchived && (
-          <button
-            type="button"
-            onClick={() => void runtime.send('停')}
-            aria-label="暂停当前工作流"
-            title="停：不再启动新任务，运行中任务跑完即停；输入框仍可用"
-            className="cursor-pointer rounded-xs border border-warn-border bg-warn-soft px-2 py-0.5 font-mono text-2xs text-warn-ink transition-colors duration-fast hover:border-warn"
-          >
-            停
-          </button>
-        )}
-        {runtime.workflowPaused && (
-          <span className="rounded-pill border border-warn-border bg-warn-soft px-1.5 font-mono text-2xs text-warn-ink" title="工作流已暂停；右栏任务卡片可恢复">
-            已暂停
+      <div className="flex h-[42px] flex-none items-center justify-between gap-4 border-b border-border bg-surface px-[18px]">
+        <div className="flex min-w-0 items-center gap-3.5">
+          <h2 className="m-0 min-w-0 truncate text-[13px] font-semibold tracking-[-0.01em] text-ink">{runtime.sessionTitle}</h2>
+          <span className="flex-none text-[11px] text-ink-faint">
+            {isRoot ? '主窗口' : `子会话 · 深度 ${runtime.sessionDepth}`}
           </span>
-        )}
+          <div className="inline-flex flex-none items-center gap-px rounded-sm border border-border bg-surface-sunken p-0.5" role="group" aria-label="消息范围" title="默认仅本会话；切换到「含子会话」时按时间聚合递归子会话消息">
+            <button
+              type="button"
+              onClick={() => runtime.setIncludeChildren(false)}
+              aria-pressed={!runtime.includeChildren}
+              className={`h-[22px] cursor-pointer rounded-xs px-2.5 text-[10.5px] font-medium transition-colors duration-fast ${!runtime.includeChildren ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink'}`}
+            >
+              仅本会话
+            </button>
+            <button
+              type="button"
+              onClick={() => runtime.setIncludeChildren(true)}
+              aria-pressed={runtime.includeChildren}
+              className={`h-[22px] cursor-pointer rounded-xs px-2.5 text-[10.5px] font-medium transition-colors duration-fast ${runtime.includeChildren ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink'}`}
+            >
+              含子会话
+            </button>
+          </div>
+          {runtime.workflowRunning && !runtime.sessionArchived && (
+            <button
+              type="button"
+              onClick={() => void runtime.send('停')}
+              aria-label="暂停当前工作流"
+              title="停：不再启动新任务，运行中任务跑完即停；输入框仍可用"
+              className="cursor-pointer rounded-xs border border-warn-border bg-warn-soft px-2 py-0.5 font-mono text-2xs text-warn-ink transition-colors duration-fast hover:border-warn"
+            >
+              停
+            </button>
+          )}
+          {runtime.workflowPaused && (
+            <span className="rounded-xs border border-warn-border bg-warn-soft px-1.5 py-0.5 font-mono text-2xs text-warn-ink" title="工作流已暂停；右栏任务卡片可恢复">
+              已暂停
+            </span>
+          )}
+        </div>
+      </div>
 
+      <div className="flex h-8 flex-none items-center justify-between gap-3 border-b border-border bg-surface px-[18px]">
+        <div className="flex items-center gap-3 text-[10.5px] text-ink-faint" role="tablist" aria-label="会话视图">
+          {TABS.map((entry) => (
+            <button
+              key={entry.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === entry.id}
+              onClick={() => setTab(entry.id)}
+              className={`cursor-pointer border-b border-transparent pb-0.5 transition-colors duration-fast ${tab === entry.id ? 'border-accent text-ink' : 'hover:text-ink'}`}
+            >
+              {entry.label}
+            </button>
+          ))}
         </div>
-        <div className="flex flex-none items-center gap-2 whitespace-nowrap">
-        <span className="text-[13px] text-ink-muted" title="对话回路与执行回路相互独立：输入框始终保持可用">
-          {statusLabel}
+        <span className="inline-flex flex-none items-center gap-1.5 rounded-xs border border-border-subtle bg-surface-sunken px-2 py-1 text-[10.5px] text-ink-muted">
+          <span className="h-1 w-1 rounded-pill bg-accent" aria-hidden="true" />
+          {runtime.runningTasks > 0 ? `${runtime.runningTasks} 个任务进行中` : statusLabel}
         </span>
-        </div>
       </div>
 
       <p className="hidden border-b border-border-subtle bg-surface-sunken px-2 py-1 font-mono text-2xs text-muted max-[820px]:block">
@@ -376,7 +367,7 @@ export default function ChatCenter() {
           aria-label="对话"
           className="flex min-h-0 flex-1 justify-center"
         >
-          <div className="relative flex min-h-0 w-full max-w-[832px]">
+          <div className="relative flex min-h-0 w-full max-w-[780px]">
             {visibleMessages.length > 0 && (
               <div className="absolute inset-y-0 left-0 z-10">
                 <HistoryRail
@@ -456,6 +447,11 @@ export default function ChatCenter() {
           onSend={runtime.send}
         />
       )}
+
+      <footer className="flex h-[26px] flex-none items-center justify-between border-t border-border bg-surface px-[18px] text-[10px] text-ink-faint">
+        <span>{runtime.agentStatus === 'thinking' ? '思考中' : '就绪'}{runtime.runningTasks > 0 ? ` · ${runtime.runningTasks} 个任务进行中` : ''}</span>
+        <span>归档 / 恢复</span>
+      </footer>
     </main>
   )
 }

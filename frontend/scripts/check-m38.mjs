@@ -55,8 +55,8 @@ check('主区域移除 plan/todo/交付物/概览，保留文件 tab', () => {
   assert.match(chatCenter, /SessionFilesView/)
 })
 
-check('右栏默认收起：细竖条任务/概览 + 运行角标/概览圆点', () => {
-  assert.match(rightRail, /useState<RailTab \| null>\(null\)/)
+check('右栏默认展开任务面板：细竖条任务/概览 + 运行角标/概览圆点', () => {
+  assert.match(rightRail, /window\.innerWidth > 1240/)
   assert.match(rightRail, /Icon name="task"/)
   assert.match(rightRail, /Icon name="overview"/)
   assert.match(rightRail, /任务/)
@@ -96,9 +96,9 @@ check('任务 tab：计划摘要 + 任务列表 + 当前会话交付物', () => 
 })
 
 check('右栏布局：竖条面板/窄屏浮层/min-w-0/truncate/break-words/垂直滚动', () => {
-  assert.match(rightRail, /max-\[1180px\]:fixed/)
-  assert.match(rightRail, /max-\[1180px\]:top-24/)
-  assert.match(rightRail, /max-\[1180px\]:w-\[min\(90vw,360px\)\]/)
+  assert.match(rightRail, /max-\[1240px\]:fixed/)
+  assert.match(rightRail, /max-\[1240px\]:top-\[96px\]/)
+  assert.match(rightRail, /max-\[1240px\]:w-\[min\(90vw,360px\)\]/)
   assert.match(taskPanel, /min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto/)
   assert.match(taskPanel, /truncate/)
   assert.match(overviewPanel, /min-w-0/)
@@ -114,8 +114,8 @@ check('三栏拖拽：左/右分隔条、双击复位、localStorage、窄屏隐
   assert.match(app, /onDoubleClick=\{\(\) => resetWidth\('left'\)\}/)
   assert.match(app, /simo\.layout\.leftWidth/)
   assert.match(app, /simo\.layout\.rightWidth/)
-  assert.match(app, /max-\[1180px\]:hidden/)
-  assert.match(app, /max-\[1180px\]:contents/)
+  assert.match(app, /max-\[1240px\]:grid-cols-/)
+  assert.match(app, /max-\[1240px\]:contents/)
   assert.match(app, /max-\[820px\]:grid-cols-1/)
 })
 

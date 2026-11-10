@@ -25,17 +25,17 @@ const styles = read('styles.css')
 const pkg = JSON.parse(readRoot('package.json'))
 
 check('时间轴尺寸：22×5 / 当前 28×6 / hover 28×5，圆角 2px', () => {
-  assert.match(historyRail, /h-\[5px\] w-\[22px\]/)
-  assert.match(historyRail, /h-1\.5 w-7 opacity-100/)
-  assert.match(historyRail, /group-hover:w-7/)
-  assert.match(historyRail, /rounded-\[2px\]/)
+  assert.match(historyRail, /h-1.5 w-5/)
+  assert.match(historyRail, /h-2 w-\[26px\] opacity-100/)
+  assert.match(historyRail, /group-hover:w-\[26px\]/)
+  assert.match(historyRail, /rounded-\[3px\]/)
   assert.match(historyRail, /opacity-65/)
 })
 
 check('时间轴颜色：user #3B82F6 / agent #64748B，默认 0.65', () => {
-  assert.match(styles, /--timeline-user: #3b82f6/)
-  assert.match(styles, /--timeline-user-active: #2f5bff/)
-  assert.match(styles, /--timeline-agent: #64748b/)
+  assert.match(styles, /--timeline-user: #6E6CF7/)
+  assert.match(styles, /--timeline-user-active: #4A4AF0/)
+  assert.match(styles, /--timeline-agent: #8C8E96/)
   assert.equal(/--timeline-system/.test(styles), false)
   assert.match(historyRail, /bg-timeline-user-active/)
   assert.match(historyRail, /bg-timeline-user/)
@@ -44,8 +44,8 @@ check('时间轴颜色：user #3B82F6 / agent #64748B，默认 0.65', () => {
 })
 
 check('时间轴间距：同发送方 2px、不同发送方 4px；一条消息一根，不聚合', () => {
-  assert.match(historyRail, /h-\[7px\] w-8/)
-  assert.match(historyRail, /mt-0.5/)
+  assert.match(historyRail, /h-3.5 w-9/)
+  assert.match(historyRail, /gap-0.5/)
   assert.match(historyRail, /const ticks = buildTimeline\(messages\)/)
   assert.equal(/buildTimelineRounds|compactTimelineRounds|TimelineRound/.test(historyRail), false)
   assert.match(historyRail, /my-auto/)
@@ -56,7 +56,7 @@ check('权限面板：选中行 #F3F4F6 浅灰、当前 12px 灰字、无蓝色�
   assert.match(permission, /className="ml-auto flex-none text-xs text-muted">当前/)
   assert.equal(/border-accent-border bg-accent-soft/.test(permission), false)
   assert.match(permission, /popover-surface fixed/)
-  assert.match(styles, /--avatar-bg: #f3f4f6/)
+  assert.match(styles, /--avatar-bg: #F6F5F1/)
 })
 
 check('门禁链包含 check-m49；无 Spec 内部字段', () => {

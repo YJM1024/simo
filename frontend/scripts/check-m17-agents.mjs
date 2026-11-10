@@ -176,11 +176,10 @@ check('头像组件：圆形 30/24、深色助手底、主题 token、可访问�
   assert.equal(/#[0-9a-fA-F]{3,8}/.test(avatar), false)
 })
 
-check('会话树负责人头像 + 消息处理者头像复用 AgentAvatar', () => {
-  assert.match(sessionPanel, /AgentAvatar/)
-  assert.match(sessionPanel, /fallbackOwnerForSession/)
+check('会话树负责人头像 + 消息处理者 monogram', () => {
+  assert.match(sessionPanel, /statusTone/)
+  assert.match(sessionPanel, /h-1 w-1/)
   assert.match(sessionModel, /agentId/)
-  assert.match(messageList, /AgentAvatar/)
   assert.match(messageList, /findAgent/)
   assert.match(messageList, /useAgentCatalog/)
   assert.match(messageList, /handler/)

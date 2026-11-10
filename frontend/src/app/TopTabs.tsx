@@ -12,7 +12,7 @@ type NavId = 'chat' | 'workbench' | 'schedules' | 'agents' | 'team' | 'memory'
 const TABS: Array<{ id: NavId; label: string }> = [
   { id: 'chat', label: '对话' },
   { id: 'workbench', label: '工作台' },
-  { id: 'schedules', label: '任务/定时任务' },
+  { id: 'schedules', label: '任务' },
   { id: 'agents', label: '智能体' },
   { id: 'team', label: '团队' },
   { id: 'memory', label: '记忆' },
@@ -59,7 +59,7 @@ export default function TopTabs() {
 
   return (
     <nav aria-label="主导航" className="relative z-10 flex h-full min-w-0 items-center bg-transparent">
-      <Tabs ariaLabel="视图" active={active} onChange={(id) => activate(id as NavId)} items={TABS} size="sm" className="h-10" gapClass="gap-5" />
+      <Tabs ariaLabel="视图" active={active} onChange={(id) => activate(id as NavId)} items={TABS} size="sm" className="h-8" gapClass="gap-[18px]" />
     </nav>
   )
 }
