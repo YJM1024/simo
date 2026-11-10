@@ -31,14 +31,14 @@ const pkg = JSON.parse(readRoot('package.json'))
 
 check('范围分段只出现一次；上下文条仅标题/副标题/分段', () => {
   assert.equal((chat.match(/aria-pressed=\{!runtime\.includeChildren\}/g) ?? []).length, 1)
-  assert.match(chat, /isRoot \? '主窗口'/)
+  assert.match(chat, /isRoot \? '主窗口 · 聚合视图'/)
   assert.match(chat, /h-\[42px\] flex-none items-center justify-between/)
   assert.equal(/对话 \/ 轨迹/.test(chat), false)
 })
 
-check('对话/轨迹/文件与任务状态移到内容区独立一行', () => {
-  assert.match(chat, /<div className="flex h-8 flex-none items-center justify-between gap-3 border-b border-border bg-surface px-\[18px\]">/)
+check('任务 pill 留在上下文条右侧；不再有横跨整页的 tab 行', () => {
   assert.match(chat, /个任务进行中/)
+  assert.equal(/flex h-8 flex-none items-center justify-between gap-3/.test(chat), false)
 })
 
 check('侧栏工作区：名称+环境；新建子会话独立图标按钮；会话小圆点无头像', () => {
@@ -51,7 +51,7 @@ check('侧栏工作区：名称+环境；新建子会话独立图标按钮；会
 })
 
 check('≤1240 Inspector 自动收起为 40px 轨道；展开为覆盖层；聊天列 ≥700', () => {
-  assert.match(app, /max-\[1240px\]:grid-cols-\[var\(--layout-left\)_minmax\(0,1fr\)_40px\]/)
+  assert.match(app, /max-\[1240px\]:grid-cols-\[minmax\(0,1fr\)_40px\]/)
   assert.match(rightRail, /window\.innerWidth > 1240/)
   assert.match(rightRail, /w-10 flex-none border-l/)
   assert.match(rightRail, /max-\[1240px\]:fixed/)

@@ -160,7 +160,10 @@ export default function App() {
   } as CSSProperties
 
   return (
-    <div className="flex h-full flex-col">
+    <div
+      className="relative grid h-full grid-cols-[var(--layout-left)_minmax(0,1fr)] max-[820px]:grid-cols-1"
+      style={layoutStyle}
+    >
       <a
         href="#composer"
         className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-16 focus:z-40 focus:rounded-md focus:border focus:border-accent focus:bg-surface-solid focus:px-3 focus:py-1.5 focus:text-sm focus:text-ink"
@@ -168,62 +171,64 @@ export default function App() {
         跳到输入框
       </a>
 
-      <TopBar
-        connection={status.connection}
-        agentStatus={status.agentStatus}
-        runningTasks={status.runningTasks}
-        totalTasks={status.totalTasks}
-        sessionTitle={status.sessionTitle}
-        themeLabel={themeLabel(theme)}
-        permissions={permissions}
-      />
+      <Slot slot="leftTree" entries={slots.leftTree} className="max-[820px]:hidden" />
+
+      <div className="flex min-h-0 min-w-0 flex-col">
+        <TopBar
+          connection={status.connection}
+          agentStatus={status.agentStatus}
+          runningTasks={status.runningTasks}
+          totalTasks={status.totalTasks}
+          sessionTitle={status.sessionTitle}
+          themeLabel={themeLabel(theme)}
+          permissions={permissions}
+        />
+
+        <div className={`relative grid min-h-0 flex-1 ${showChat ? 'grid-cols-[minmax(0,1fr)_var(--layout-right)] max-[1240px]:grid-cols-[minmax(0,1fr)_40px]' : 'grid-cols-1'}`}>
+          <div className="flex min-h-0 min-w-0 flex-col">
+            <div className={`min-h-0 min-w-0 flex-1 flex-col ${showChat ? 'flex' : 'hidden'}`}>
+              <Slot slot="center" entries={slots.center} />
+            </div>
+            {mainViewEntry && (
+              <div className={`min-h-0 min-w-0 flex-1 flex-col ${showChat ? 'hidden' : 'flex'}`}>
+                <mainViewEntry.Component />
+              </div>
+            )}
+          </div>
+          {showChat && <Slot slot="rightPanel" entries={slots.rightPanel} className="max-[1240px]:contents" />}
+        </div>
+      </div>
 
       <div
-        className="relative grid min-h-0 flex-1 grid-cols-[var(--layout-left)_minmax(0,1fr)_var(--layout-right)] max-[1240px]:grid-cols-[var(--layout-left)_minmax(0,1fr)_40px] max-[820px]:grid-cols-1"
-        style={layoutStyle}
-      >
-        <Slot slot="leftTree" entries={slots.leftTree} className="max-[820px]:hidden" />
-        <div className="flex min-h-0 min-w-0 flex-col">
-          <div className={`min-h-0 min-w-0 flex-1 flex-col ${showChat ? 'flex' : 'hidden'}`}>
-            <Slot slot="center" entries={slots.center} />
-          </div>
-          {mainViewEntry && (
-            <div className={`min-h-0 min-w-0 flex-1 flex-col ${showChat ? 'hidden' : 'flex'}`}>
-              <mainViewEntry.Component />
-            </div>
-          )}
-        </div>
-        <Slot slot="rightPanel" entries={slots.rightPanel} className="max-[1240px]:contents" />
-
-        <div
-          role="separator"
-          aria-orientation="vertical"
-          aria-label="调整左栏宽度（双击复位，←/→ 微调）"
-          tabIndex={0}
-          onPointerDown={startDrag('left')}
-          onDoubleClick={() => resetWidth('left')}
-          onKeyDown={(event) => {
-            if (event.key === 'ArrowLeft') { event.preventDefault(); nudgeWidth('left', -16) }
-            else if (event.key === 'ArrowRight') { event.preventDefault(); nudgeWidth('left', 16) }
-          }}
-          className="absolute inset-y-0 z-20 hidden w-1.5 -translate-x-1/2 cursor-col-resize bg-transparent transition-colors hover:bg-accent-border md:block max-[1100px]:hidden"
-          style={{ left: `${leftWidth}px` }}
-        />
-        <div
-          role="separator"
-          aria-orientation="vertical"
-          aria-label="调整右栏宽度（双击复位，←/→ 微调）"
-          tabIndex={0}
-          onPointerDown={startDrag('right')}
-          onDoubleClick={() => resetWidth('right')}
-          onKeyDown={(event) => {
-            if (event.key === 'ArrowLeft') { event.preventDefault(); nudgeWidth('right', 16) }
-            else if (event.key === 'ArrowRight') { event.preventDefault(); nudgeWidth('right', -16) }
-          }}
-          className="absolute inset-y-0 z-20 hidden w-1.5 translate-x-1/2 cursor-col-resize bg-transparent transition-colors hover:bg-accent-border md:block max-[1100px]:hidden"
-          style={{ right: `${rightCollapsed ? RIGHT_RAIL : rightWidth}px` }}
-        />
-      </div>
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="调整左栏宽度（双击复位，←/→ 微调）"
+        tabIndex={0}
+        onPointerDown={startDrag('left')}
+        onDoubleClick={() => resetWidth('left')}
+        onKeyDown={(event) => {
+          if (event.key === 'ArrowLeft') { event.preventDefault(); nudgeWidth('left', -16) }
+          else if (event.key === 'ArrowRight') { event.preventDefault(); nudgeWidth('left', 16) }
+        }}
+        className="absolute inset-y-0 z-20 hidden w-1.5 -translate-x-1/2 cursor-col-resize bg-transparent transition-colors hover:bg-accent-border md:block max-[1240px]:hidden"
+        style={{ left: `${leftWidth}px` }}
+      />
+      {showChat && (
+      <div
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="调整右栏宽度（双击复位，←/→ 微调）"
+        tabIndex={0}
+        onPointerDown={startDrag('right')}
+        onDoubleClick={() => resetWidth('right')}
+        onKeyDown={(event) => {
+          if (event.key === 'ArrowLeft') { event.preventDefault(); nudgeWidth('right', 16) }
+          else if (event.key === 'ArrowRight') { event.preventDefault(); nudgeWidth('right', -16) }
+        }}
+        className="absolute inset-y-0 z-20 hidden w-1.5 translate-x-1/2 cursor-col-resize bg-transparent transition-colors hover:bg-accent-border md:block max-[1240px]:hidden"
+        style={{ right: `${rightCollapsed ? RIGHT_RAIL : rightWidth}px` }}
+      />
+      )}
 
       <NotificationHost />
     </div>

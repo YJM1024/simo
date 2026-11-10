@@ -35,7 +35,7 @@ const pkg = JSON.parse(readRoot('package.json'))
 
 check('1060 底部状态栏：单行 nowrap、flex-none、紧凑计数', () => {
   assert.match(sessionTree, /border-t border-border-subtle/)
-  assert.match(sessionTree, /会话状态/)
+  assert.match(sessionTree, /本月用量/)
   assert.match(sessionTree, /counts\.active|个任务/)
 })
 
@@ -43,7 +43,7 @@ check('1060 右栏：收起时隐藏，顶部按钮打开浮层；标签不再�
   assert.match(rightRail, /max-\[1240px\]:fixed/)
   assert.match(topBar, /RIGHT_RAIL_OPEN|workspace|Icon/)
   assert.match(topBar, /NotificationCenter/)
-  assert.match(app, /max-\[1240px\]:grid-cols-\[var\(--layout-left\)_minmax\(0,1fr\)_40px\]/)
+  assert.match(app, /max-\[1240px\]:grid-cols-\[minmax\(0,1fr\)_40px\]/)
 })
 
 check('输入区：min-w-0、发送固定、与消息列共用 832 列、底部不换行', () => {

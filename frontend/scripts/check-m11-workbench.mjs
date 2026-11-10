@@ -243,7 +243,6 @@ check('M38/M40 会话标签：对话/轨迹/文件（M63 顶栏上下文条）',
   assert.match(chatCenter, /label: '轨迹'/)
   assert.match(chatCenter, /label: '文件'/)
   assert.equal(/label: '概览'/.test(chatCenter), false)
-  assert.match(chatCenter, /role="tablist"/)
 })
 
 check('文件页：列表/预览/下载，无上传或编辑控件', () => {

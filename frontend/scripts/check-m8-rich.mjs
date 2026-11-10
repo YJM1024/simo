@@ -233,10 +233,10 @@ check('渲染安全：无 dangerouslySetInnerHTML，链接带 noopener', () => {
   assert.match(markdownMessage, /target="_blank"/)
 })
 
-check('附件可访问性：M44 无附件按钮/文件选择；拖拽粘贴 + chip 删除保留', () => {
+check('附件可访问性：回形针/文件选择 + 拖拽粘贴 + chip 删除保留', () => {
   assert.equal(/role="toolbar"/.test(composer), false)
-  assert.equal(/aria-label="添加附件"/.test(composer), false)
-  assert.equal(/type="file"/.test(composer), false)
+  assert.equal(/aria-label="添加附件"/.test(composer), true)
+  assert.equal(/type="file"/.test(composer), true)
   assert.match(composer, /aria-label=\{`移除附件 \$\{attachment\.name\}`\}/)
   assert.match(composer, /onPaste=/)
   assert.match(composer, /onDrop=/)

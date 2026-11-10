@@ -23,11 +23,11 @@ const composer = read('features/chat/Composer.tsx')
 const agents = read('features/agents/AgentsPage.tsx')
 const pkg = JSON.parse(readRoot('package.json'))
 
-check('删除格式工具条/附件按钮与模型/推理选择器', () => {
+check('删除格式工具条与模型/推理选择器；保留附件入口', () => {
   assert.equal(/TOOLBAR/.test(composer), false)
   assert.equal(/role="toolbar"/.test(composer), false)
-  assert.equal(/aria-label="添加附件"/.test(composer), false)
-  assert.equal(/type="file"/.test(composer), false)
+  assert.equal(/aria-label="添加附件"/.test(composer), true)
+  assert.equal(/type="file"/.test(composer), true)
   assert.equal(/aria-label="模型"/.test(composer), false)
   assert.equal(/aria-label="推理强度"/.test(composer), false)
   assert.equal(/MODEL_OPTIONS|REASONING_OPTIONS/.test(composer), false)

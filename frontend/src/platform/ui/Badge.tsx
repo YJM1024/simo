@@ -36,7 +36,7 @@ export function Badge({ children, tone = 'neutral', dot = false, count, size = '
   return (
     <span
       title={title}
-      className={`inline-flex flex-none items-center gap-1.5 rounded-xs border font-medium tabular-nums ${size === 'md' ? 'h-6 px-2 text-xs' : 'h-5 px-1.5 text-xs'} ${TONE[tone]} ${className}`}
+      className={`inline-flex flex-none items-center gap-1.5 rounded-[3px] border font-medium tabular-nums ${size === 'md' ? 'h-5 px-2 text-[10px]' : 'h-[17px] px-1.5 text-[9px]'} ${TONE[tone]} ${className}`}
     >
       {dot && <span className={`h-1.5 w-1.5 flex-none rounded-pill ${DOT[tone]}`} aria-hidden="true" />}
       {content}

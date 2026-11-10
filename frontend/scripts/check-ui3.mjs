@@ -64,7 +64,7 @@ check('窄屏：三栏折叠 + 命令面板/轨迹/用量表响应式', () => {
   assert.match(usage, /min-w-\[40rem\]/)
   assert.match(trajectory, /overflow-x-auto/)
   assert.match(messageList, /py-2 pl-\[46px\] pr-4/)
-  assert.match(composer, /px-\[18px\] pt-1\.5 pb-2/)
+  assert.match(composer, /px-\[18px\] pt-1\.5 pb-3/)
 })
 
 check('键盘可达：focus-visible + 通知中心/命令面板 Esc + aria', () => {

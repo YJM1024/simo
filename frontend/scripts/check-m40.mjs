@@ -68,7 +68,7 @@ check('组件层 13 类齐全 + variants/size/loading/disabled/focus', () => {
   assert.match(uiSources.Select, /appearance-none/)
   assert.match(uiSources.Table, /nth-child\(even\)/)
   assert.match(uiSources.Table, /tabular-nums/)
-  assert.match(uiSources.Badge, /rounded-xs/)
+  assert.match(uiSources.Badge, /rounded-\[3px\]/)
   assert.match(uiSources.Tooltip, /role="tooltip"/)
   assert.match(uiSources.Dialog, /aria-modal="true"/)
   assert.match(uiSources.Toast, /role=/)

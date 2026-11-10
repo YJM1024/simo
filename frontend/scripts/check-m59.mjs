@@ -38,7 +38,7 @@ check('用户切换后写 localStorage；下次加载沿用', () => {
 })
 
 check('会话头按当前范围显示，不再固定「聚合视图」', () => {
-  assert.match(center, /isRoot \? '主窗口'/)
+  assert.match(center, /isRoot \? '主窗口 · 聚合视图'/)
   assert.match(center, /默认仅本会话/)
 })
 

@@ -124,7 +124,7 @@ export default function HistoryRail({ messages, activeMessageId, highlightId, on
   const tickClassName = (id: string): string => {
     const selected = pinnedId === id
     const highlighted = highlightId === id
-    return `group flex h-3.5 w-9 flex-none cursor-pointer items-center justify-center rounded-xs transition-colors duration-fast focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+    return `group -my-[3px] flex h-3.5 w-9 flex-none cursor-pointer items-center justify-center rounded-xs transition-colors duration-fast focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
       selected ? 'bg-accent-soft' : 'hover:bg-surface-sunken'
     } ${highlighted ? 'bg-accent-soft' : ''}`
   }
@@ -162,7 +162,7 @@ export default function HistoryRail({ messages, activeMessageId, highlightId, on
           onScroll={updateScrollState}
           className="relative z-10 flex min-h-0 w-full flex-1 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          <div className="my-auto flex w-full flex-none flex-col items-center gap-0.5 py-1">
+          <div className="my-auto flex w-full flex-none flex-col items-center gap-0 py-1">
             {ticks.map((tick, index) => (
               <button
                 key={tick.id}

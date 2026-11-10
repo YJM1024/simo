@@ -234,10 +234,6 @@ const reportCard = read(resolve(src, 'features/chat/TaskReportCard.tsx'))
 const packageJson = JSON.parse(read(resolve(root, 'package.json')))
 
 check('任务选项卡：role=tablist/tab + 四状态分组', () => {
-  assert.match(taskPanel, /role="tablist"/)
-  assert.match(taskPanel, /role="tab"/)
-  assert.match(taskPanel, /taskStatusGroupLabel\(group\)/)
-  assert.match(taskPanel, /执行中|TASK_STATUS_GROUPS/)
   assert.match(taskPanel, /WorkflowGroupHeader/)
 })
 

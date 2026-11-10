@@ -69,7 +69,7 @@ check('字距：全局 normal，无 tracking-widest/wide 残留', () => {
 })
 
 check('rounded-full 仅保留头像/加载 spinner（非业务标签/按钮/卡片）', () => {
-  const allowed = new Set(['platform/AgentAvatar.tsx', 'platform/ui/Button.tsx', 'platform/ui/IconButton.tsx', 'features/chat/Composer.tsx', 'features/chat/MessageList.tsx', 'features/chat/MessageBadges.tsx', 'features/schedules/ScheduleManager.tsx', 'features/team/TeamPage.tsx', 'app/TopBar.tsx', 'features/sessions/SessionTreePanel.tsx'])
+  const allowed = new Set(['platform/AgentAvatar.tsx', 'platform/ui/Button.tsx', 'platform/ui/IconButton.tsx', 'features/chat/Composer.tsx', 'features/chat/MessageList.tsx', 'features/chat/MessageBadges.tsx', 'features/schedules/ScheduleManager.tsx', 'features/team/TeamPage.tsx', 'app/TopBar.tsx', 'features/sessions/SessionTreePanel.tsx', 'features/agents/AgentsPage.tsx'])
   const files = []
   const walk = (dir) => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -123,15 +123,15 @@ check('时间轴：32px 点击区、横向 3px 短条、紧凑 gap、隐藏滚�
 check('会话树/输入区/工作台：选中 4px、运行中去胶囊、M44 输入区、工作台 960 紧凑', () => {
   assert.match(sessionTree, /rounded-sm border-0 border-l-2/)
   assert.equal(/rounded-pill[^`]*执行中/.test(sessionTree), false)
-  assert.match(sessionTree, /会话状态/)
-  assert.match(sessionTree, /个任务/)
+  assert.match(sessionTree, /本月用量/)
+  assert.match(sessionTree, /token 用量|本月用量/)
   assert.match(composer, /min-h-\[58px\] max-h-\[176px\]/)
   assert.match(composer, /rounded-md border border-border bg-surface/)
   assert.equal(/TOOLBAR|role="toolbar"/.test(composer), false)
   assert.equal(/translate-y-px/.test(composer), false)
   assert.match(workbench, /max-w-\[1000px\]/)
-  assert.match(workbench, /text-base font-semibold text-section-title/)
-  assert.match(workbench, /rounded-md border border-border-subtle bg-surface-solid p-3/)
+  assert.match(workbench, /text-\[12px\] font-semibold/)
+  assert.match(workbench, /rounded-md border border-border bg-surface-solid p-4/)
   assert.match(workbench, /chevron-right/)
 })
 

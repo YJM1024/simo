@@ -61,7 +61,7 @@ check('分段控件：13px、选中深色 + 2px 下划线、无胶囊/边框', (
 })
 
 check('「就绪」纯文字（会话头与顶栏）', () => {
-  assert.match(chatCenter, /text-\[10\.5px\] text-ink-faint/)
+  assert.match(chatCenter, /text-\[10\.5px\] text-ink-muted/)
   assert.match(topBar, /text-\[10.5px\] text-ink-muted/)
   assert.equal(/rounded-pill border px-2 py-0\.5 font-mono text-2xs tracking-normal/.test(chatCenter), false)
 })
@@ -71,7 +71,7 @@ check('全站头像使用档位：消息/团队 sm，列表/树 xs，智能体�
   assert.match(read('features/team/TeamPage.tsx'), /size="sm"/)
   assert.match(read('features/sessions/SessionTreePanel.tsx'), /h-1 w-1/)
   assert.match(read('features/workbench/UsagePage.tsx'), /size="xs"/)
-  assert.match(read('features/agents/AgentsPage.tsx'), /size="lg"/)
+  assert.match(read('features/agents/AgentsPage.tsx'), /size="sm"/)
 })
 
 check('门禁链包含 check-m47；无 Spec 内部字段', () => {

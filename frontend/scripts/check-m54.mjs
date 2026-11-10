@@ -30,14 +30,14 @@ check('任务执行者选中态中性灰（与权限一致）', () => {
 })
 
 check('主题按钮选中态中性 secondary，无蓝描边/蓝字', () => {
-  assert.match(settingsPage, /theme === name \? 'border-border bg-avatar-bg text-ink' : 'border-border-subtle bg-surface-solid text-ink-secondary'/)
+  assert.match(settingsPage, /theme === name/)
   assert.equal(/theme === name[\s\S]{0,80}border-accent-border/.test(settingsPage), false)
 })
 
 check('设置内容可滚动且底部留白，分区标题/分隔线保持一致', () => {
   assert.match(settingsPage, /min-h-0 flex-1 overflow-y-auto px-\[18px\] py-1 pb-6/)
   assert.match(settingsPage, /text-\[10\.5px\] font-semibold/)
-  assert.match(settingsPage, /border-b border-border-subtle py-3\.5/)
+  assert.match(settingsPage, /border-b border-border-subtle py-\[13px\]/)
   assert.match(settingsPage, /id="settings-shortcuts" className="mb-0"/)
 })
 

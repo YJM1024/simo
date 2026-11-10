@@ -58,7 +58,7 @@ check('左栏：品牌/工作区/搜索/会话分组/状态/用户', () => {
   assert.match(session, /司墨/)
   assert.match(session, /主工作区/)
   assert.match(session, /搜索会话、消息/)
-  assert.match(session, /会话状态/)
+  assert.match(session, /本月用量/)
   assert.match(session, /本地用户/)
   assert.match(session, /border-l-accent bg-accent-soft/)
 })
@@ -96,7 +96,7 @@ check('设置：原型弹窗标题/字段；M59 默认仅本会话、无系统�
   assert.match(settings, /font-serif text-\[18px\]/)
   assert.match(settings, /text-\[10\.5px\] font-semibold/)
   assert.match(messageList, /displayedMessages = messages\.filter/)
-  assert.match(chat, /isRoot \? '主窗口'/)
+  assert.match(chat, /isRoot \? '主窗口 · 聚合视图'/)
 })
 
 check('门禁链包含 check-m63；无 Spec 内部字段', () => {

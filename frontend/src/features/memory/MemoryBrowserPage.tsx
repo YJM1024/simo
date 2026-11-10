@@ -56,6 +56,11 @@ const TYPE_FILTERS: Array<{ id: MemoryType | 'all'; label: string }> = [
   ...MEMORY_TYPES.map((type) => ({ id: type.id, label: type.label })),
 ]
 
+const BADGE_CLASS =
+  'inline-flex h-[17px] flex-none items-center rounded-[3px] border border-border bg-surface-sunken px-1.5 text-[10px] text-ink-muted'
+const META_CLASS = 'font-mono text-[10px] text-ink-faint'
+const SECTION_TITLE_CLASS = 'm-0 mb-1.5 font-mono text-[10px] tracking-[0.06em] text-ink-faint'
+
 function isUnavailable(error: unknown): boolean {
   const status = (error as { status?: number }).status
   return status === 404 || status === 405
@@ -68,48 +73,44 @@ function errorText(error: unknown): string {
 
 function MemoryItemCard({ item, onEntity }: { item: BrowserMemoryItem; onEntity: (id: string, name: string) => void }) {
   return (
-    <li className="rounded-md border border-border-subtle bg-surface-solid p-2">
+    <li className="rounded-md border border-border bg-surface p-3">
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="rounded-xs border border-border-subtle bg-surface-sunken px-1.5 text-xs text-muted">
-          {memoryTypeLabel(item.type)}
-        </span>
-        {item.subType && <span className="font-mono text-xs text-muted">{item.subType}</span>}
-        <span className="rounded-xs border border-border-subtle bg-surface-sunken px-1.5 text-xs text-muted">
-          {statusLabel(item.status)}
-        </span>
-        <span className="font-mono text-xs text-muted">
+        <span className={BADGE_CLASS}>{memoryTypeLabel(item.type)}</span>
+        {item.subType && <span className={META_CLASS}>{item.subType}</span>}
+        <span className={BADGE_CLASS}>{statusLabel(item.status)}</span>
+        <span className={META_CLASS}>
           层 {item.layer} · {sourceLabel(item.source)} · {authorityLabel(item.authority)} · 置信 {formatConfidence(item.confidence)}
         </span>
-        {item.validUntil !== null && <span className="font-mono text-xs text-muted">已失效</span>}
+        {item.validUntil !== null && <span className={META_CLASS}>已失效</span>}
       </div>
-      <p className="m-0 mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink">{item.text}</p>
+      <p className="m-0 mt-2 whitespace-pre-wrap break-words text-[12px] leading-[1.7] text-ink">{item.text}</p>
       {item.refs.length > 0 && (
-        <div className="mt-1 flex flex-wrap items-center gap-1" aria-label="记忆来源">
-          <span className="font-mono text-2xs text-muted">来源：</span>
+        <div className="mt-2 flex flex-wrap items-center gap-1" aria-label="记忆来源">
+          <span className={META_CLASS}>来源：</span>
           {item.refs.map((ref) => (
-            <span key={ref} className="rounded-xs border border-border-subtle bg-surface-sunken px-1 py-0.5 font-mono text-2xs text-ink-secondary">
+            <span key={ref} className="inline-flex h-[18px] items-center rounded-[3px] border border-border-subtle bg-surface-sunken px-1 font-mono text-[10px] text-ink-secondary">
               {ref}
             </span>
           ))}
         </div>
       )}
       {(item.entityRefs.length > 0 || item.attributedTo) && (
-        <div className="mt-1 flex flex-wrap items-center gap-1">
+        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
           {item.entityRefs.map((ref) => (
             <button
               key={ref.id}
               type="button"
               onClick={() => onEntity(ref.id, ref.name)}
-              className="cursor-pointer rounded-xs border border-border-subtle bg-surface-sunken px-1.5 py-0.5 font-mono text-xs text-muted hover:text-ink"
+              className="inline-flex h-[18px] cursor-pointer items-center rounded-[3px] border border-border bg-surface-sunken px-1.5 font-mono text-[10px] text-ink-secondary transition-colors duration-fast hover:border-border-subtle hover:text-ink"
               title={`打开实体：${ref.name}`}
             >
               {ref.name}
             </button>
           ))}
-          {item.attributedTo && <span className="font-mono text-2xs text-muted">归属：{item.attributedTo}</span>}
-          {item.ownerAgent && <span className="font-mono text-2xs text-muted">写域：{item.ownerAgent}</span>}
+          {item.attributedTo && <span className={META_CLASS}>归属：{item.attributedTo}</span>}
+          {item.ownerAgent && <span className={META_CLASS}>写域：{item.ownerAgent}</span>}
           {formatTimestamp(item.updatedAt ?? item.createdAt) && (
-            <span className="ml-auto font-mono text-2xs text-muted">{formatTimestamp(item.updatedAt ?? item.createdAt)}</span>
+            <span className={`ml-auto ${META_CLASS}`}>{formatTimestamp(item.updatedAt ?? item.createdAt)}</span>
           )}
         </div>
       )}
@@ -206,133 +207,139 @@ function BrowseView() {
   }, [items, selectedId, detail])
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2 sm:px-4 sm:py-3">
-      <div className="mb-2 flex flex-wrap items-center gap-1.5">
-        <label htmlFor="memory-browser-search" className="sr-only">
-          搜索记忆
-        </label>
-        <input
-          id="memory-browser-search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="搜索记忆 / 实体…"
-          className="min-w-0 flex-1 rounded-md border border-border-subtle bg-surface-solid px-2 py-1 text-sm text-ink outline-none placeholder:text-muted focus:border-accent"
-        />
-        {TYPE_FILTERS.map((filter) => (
-          <button
-            key={filter.id}
-            type="button"
-            aria-pressed={type === filter.id}
-            onClick={() => setType(filter.id)}
-            className={`cursor-pointer rounded-xs border px-2 py-0.5 font-mono text-2xs ${
-              type === filter.id ? 'border-accent-border bg-accent-soft text-accent-hover' : 'border-border-subtle bg-surface-solid text-muted'
-            }`}
-          >
-            {filter.label}
-          </button>
-        ))}
-      </div>
-
-      {note && (
-        <p role="status" className="m-0 mb-2 rounded-md border border-warn-border bg-warn-soft px-2 py-1 text-2xs text-warn-ink">
-          {note}
-        </p>
-      )}
-
-      {loading && entities.length === 0 && items.length === 0 ? (
-        <LoadingPane label="加载记忆…" rows={4} />
-      ) : unavailable ? (
-        <div>
-          <ErrorPane message={error ?? '记忆接口未就绪'} />
-          <p className="m-0 mt-2 text-center text-2xs text-muted">
-            期望只读端点：/api/memory/entities、/api/memory/items、/api/memory/entities/{'{id}'}。当前不展示示例数据。
-          </p>
+    <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="mx-auto w-full max-w-[1000px] px-5 py-4">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <label htmlFor="memory-browser-search" className="sr-only">
+            搜索记忆
+          </label>
+          <input
+            id="memory-browser-search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="搜索记忆 / 实体…"
+            className="h-8 min-w-[200px] flex-1 rounded-sm border border-border bg-surface px-2.5 text-[12px] text-ink outline-none placeholder:text-ink-faint focus:border-accent focus:shadow-focus"
+          />
+          <div className="flex flex-wrap items-center gap-0.5 rounded-sm border border-border bg-surface p-0.5">
+            {TYPE_FILTERS.map((filter) => (
+              <button
+                key={filter.id}
+                type="button"
+                aria-pressed={type === filter.id}
+                onClick={() => setType(filter.id)}
+                className={`h-6 cursor-pointer rounded-[5px] px-2 font-mono text-[10.5px] transition-colors duration-fast ${
+                  type === filter.id ? 'bg-surface-sunken font-medium text-ink' : 'text-ink-muted hover:text-ink'
+                }`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-2 lg:grid-cols-[16rem_1fr]">
-          <div className="min-w-0">
-            <h3 className="m-0 mb-1 font-mono text-2xs tracking-normal text-muted">实体（{entities.length}）</h3>
-            {entities.length === 0 ? (
-              <EmptyPane compact title="暂无实体" description="记忆接口未返回实体；可按类型/关键词搜索记忆条目。" />
-            ) : (
-              <ul className="m-0 flex list-none flex-col gap-1 overflow-y-auto p-0">
-                {entities.map((entity) => (
-                  <li key={entity.id}>
+
+        {note && (
+          <p role="status" className="m-0 mb-3 rounded-sm border border-warn-border bg-warn-soft px-3 py-2 text-[11px] text-warn-ink">
+            {note}
+          </p>
+        )}
+
+        {loading && entities.length === 0 && items.length === 0 ? (
+          <LoadingPane label="加载记忆…" rows={4} />
+        ) : unavailable ? (
+          <div>
+            <ErrorPane message={error ?? '记忆接口未就绪'} />
+            <p className="m-0 mt-2 text-center text-[10.5px] text-ink-muted">
+              期望只读端点：/api/memory/entities、/api/memory/items、/api/memory/entities/{'{id}'}。当前不展示示例数据。
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 items-start gap-3 lg:grid-cols-[16rem_minmax(0,1fr)]">
+            <div className="min-w-0">
+              <h3 className={SECTION_TITLE_CLASS}>实体（{entities.length}）</h3>
+              {entities.length === 0 ? (
+                <EmptyPane compact title="暂无实体" description="记忆接口未返回实体；可按类型/关键词搜索记忆条目。" />
+              ) : (
+                <ul className="m-0 flex list-none flex-col gap-1 p-0">
+                  {entities.map((entity) => (
+                    <li key={entity.id}>
+                      <button
+                        type="button"
+                        onClick={() => void selectEntity(entity)}
+                        aria-pressed={selectedId === entity.id}
+                        className={`w-full cursor-pointer rounded-sm border px-2.5 py-2 text-left transition-colors duration-fast ${
+                          selectedId === entity.id ? 'border-border bg-surface-sunken' : 'border-border-subtle bg-surface hover:border-border'
+                        }`}
+                      >
+                        <span className="block truncate text-[12px] text-ink">{entity.name}</span>
+                        <span className={`mt-0.5 block truncate ${META_CLASS}`}>
+                          {entityKindLabel(entity.kind)}
+                          {entity.ownerAgent ? ` · ${entity.ownerAgent}` : ''}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="min-w-0">
+              {selectedId && detail ? (
+                <div className="mb-3 rounded-md border border-border bg-surface p-3">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <h3 className="m-0 text-[13px] font-semibold tracking-[-0.01em] text-ink">{detail.entity.name}</h3>
+                    <span className={BADGE_CLASS}>{entityKindLabel(detail.entity.kind)}</span>
+                    <span className={META_CLASS}>{detail.entity.status}</span>
+                    {detail.entity.ownerAgent && <span className={META_CLASS}>负责人 {detail.entity.ownerAgent}</span>}
+                    {detail.entity.aliases.length > 0 && <span className={META_CLASS}>别名：{detail.entity.aliases.join('、')}</span>}
                     <button
                       type="button"
-                      onClick={() => void selectEntity(entity)}
-                      aria-pressed={selectedId === entity.id}
-                      className={`w-full cursor-pointer rounded-md border px-2 py-1 text-left ${
-                        selectedId === entity.id ? 'border-accent-border bg-accent-soft' : 'border-border-subtle bg-surface-solid hover:border-accent-border'
-                      }`}
+                      onClick={() => { setSelectedId(null); setDetail(null) }}
+                      className="ml-auto inline-flex h-6 cursor-pointer items-center justify-center rounded-[5px] border border-border bg-surface px-2 text-[10.5px] text-ink-secondary transition-colors duration-fast hover:bg-surface-sunken hover:text-ink"
                     >
-                      <span className="block truncate text-sm text-ink">{entity.name}</span>
-                      <span className="block font-mono text-2xs text-muted">
-                        {entityKindLabel(entity.kind)}
-                        {entity.ownerAgent ? ` · ${entity.ownerAgent}` : ''}
-                      </span>
+                      查看全部
                     </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <div className="min-w-0">
-            {selectedId && detail ? (
-              <div className="mb-2 rounded-md border border-border-subtle bg-surface-sunken p-2">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <h3 className="m-0 text-md font-semibold text-ink">{detail.entity.name}</h3>
-                  <span className="rounded-pill border border-border-subtle bg-surface-solid px-1.5 font-mono text-2xs text-muted">
-                    {entityKindLabel(detail.entity.kind)}
-                  </span>
-                  <span className="font-mono text-2xs text-muted">{detail.entity.status}</span>
-                  {detail.entity.ownerAgent && <span className="font-mono text-2xs text-muted">负责人 {detail.entity.ownerAgent}</span>}
-                  {detail.entity.aliases.length > 0 && <span className="font-mono text-2xs text-muted">别名：{detail.entity.aliases.join('、')}</span>}
-                  <button type="button" onClick={() => { setSelectedId(null); setDetail(null) }} className="ml-auto cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-1.5 py-0.5 text-2xs text-muted">
-                    查看全部
-                  </button>
-                </div>
-                <p className="m-0 mt-1 font-mono text-2xs text-muted">
-                  记忆：{Object.entries(detail.memoryCounts).map(([key, value]) => `${memoryTypeLabel(key)} ${value}`).join(' · ') || '—'}
-                </p>
-                {detail.relations.length > 0 && (
-                  <div className="mt-1.5">
-                    <h4 className="m-0 mb-1 font-mono text-2xs tracking-normal text-muted">关系</h4>
-                    <ul className="m-0 flex list-none flex-wrap gap-1 p-0">
-                      {detail.relations.map((relation: MemoryRelation) => (
-                        <li key={relation.id}>
-                          <button
-                            type="button"
-                            onClick={() => openEntity(relation.toEntity, relation.toName ?? relation.toEntity)}
-                            className="cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-1.5 py-0.5 font-mono text-2xs text-accent-hover"
-                            title={`${relationLabel(relation.relType)} → ${relation.toName ?? relation.toEntity}（点击跳转）`}
-                          >
-                            {relationLabel(relation.relType)} → {relation.toName ?? relation.toEntity}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
                   </div>
-                )}
-              </div>
-            ) : null}
+                  <p className="m-0 mt-1.5 font-mono text-[10.5px] text-ink-muted">
+                    记忆：{Object.entries(detail.memoryCounts).map(([key, value]) => `${memoryTypeLabel(key)} ${value}`).join(' · ') || '—'}
+                  </p>
+                  {detail.relations.length > 0 && (
+                    <div className="mt-2">
+                      <h4 className="m-0 mb-1 font-mono text-[10px] tracking-[0.06em] text-ink-faint">关系</h4>
+                      <ul className="m-0 flex list-none flex-wrap gap-1 p-0">
+                        {detail.relations.map((relation: MemoryRelation) => (
+                          <li key={relation.id}>
+                            <button
+                              type="button"
+                              onClick={() => openEntity(relation.toEntity, relation.toName ?? relation.toEntity)}
+                              className="inline-flex h-[18px] cursor-pointer items-center rounded-[3px] border border-border bg-surface-sunken px-1.5 font-mono text-[10px] text-ink-secondary transition-colors duration-fast hover:border-border-subtle hover:text-ink"
+                              title={`${relationLabel(relation.relType)} → ${relation.toName ?? relation.toEntity}（点击跳转）`}
+                            >
+                              {relationLabel(relation.relType)} → {relation.toName ?? relation.toEntity}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ) : null}
 
-            <h3 className="m-0 mb-1 font-mono text-2xs tracking-normal text-muted">
-              记忆条目（{visibleItems.length}）· 只读
-            </h3>
-            {visibleItems.length === 0 ? (
-              <EmptyPane compact title="没有匹配的记忆" description="可换关键词或类型过滤；后端未就绪时不会展示示例数据。" />
-            ) : (
-              <ul className="m-0 flex list-none flex-col gap-1.5 p-0" aria-label="记忆条目列表">
-                {visibleItems.map((item) => (
-                  <MemoryItemCard key={item.id} item={item} onEntity={openEntity} />
-                ))}
-              </ul>
-            )}
+              <h3 className={SECTION_TITLE_CLASS}>
+                记忆条目（{visibleItems.length}）· 只读
+              </h3>
+              {visibleItems.length === 0 ? (
+                <EmptyPane compact title="没有匹配的记忆" description="可换关键词或类型过滤；后端未就绪时不会展示示例数据。" />
+              ) : (
+                <ul className="m-0 flex list-none flex-col gap-2 p-0" aria-label="记忆条目列表">
+                  {visibleItems.map((item) => (
+                    <MemoryItemCard key={item.id} item={item} onEntity={openEntity} />
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
@@ -361,45 +368,47 @@ function ConflictsView() {
   }, [])
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-2 py-3 sm:px-4">
-      <p className="m-0 mb-2 text-2xs text-muted">冲突一律保留为 disputed，不自动裁决；本页只读，标注「需裁决」。</p>
-      {note && (
-        <p role="status" className="m-0 mb-2 rounded-md border border-warn-border bg-warn-soft px-2 py-1 text-2xs text-warn-ink">
-          {note}
-        </p>
-      )}
-      {loading ? (
-        <LoadingPane label="加载冲突…" />
-      ) : conflicts.length === 0 ? (
-        <EmptyPane title="暂无冲突" description="没有待裁决的 disputed 记忆；后端未就绪时也会显示为空态。" />
-      ) : (
-        <ul className="m-0 flex list-none flex-col gap-2 p-0" aria-label="冲突列表">
-          {conflicts.map((conflict) => (
-            <li key={conflict.id} className="rounded-lg border border-warn-border bg-warn-soft/30 p-2">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="rounded-pill border border-danger-border bg-danger-soft px-1.5 font-mono text-2xs text-danger-ink">需裁决</span>
-                <span className="rounded-pill border border-warn-border bg-warn-soft px-1.5 font-mono text-2xs text-warn-ink">{conflict.status}</span>
-                <span className="font-mono text-2xs text-muted">{conflict.askPolicy}</span>
-                <span className="min-w-0 truncate font-mono text-2xs text-muted">{conflict.id}</span>
-              </div>
-              {conflict.reason && <p className="m-0 mt-1 text-2xs text-warn-ink">原因：{conflict.reason}</p>}
-              <div className="mt-1.5 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                {conflict.items.map((item, index) => (
-                  <div key={`${conflict.id}:${item.id}`} className="rounded-md border border-border-subtle bg-surface-solid p-1.5">
-                    <div className="flex flex-wrap items-center gap-1">
-                      <span className="font-mono text-2xs text-muted">一方 {index + 1}</span>
-                      <span className="font-mono text-2xs text-muted">{sourceLabel(item.source)} · {authorityLabel(item.authority)}</span>
-                      <span className="font-mono text-2xs text-muted">{formatTimestamp(item.updatedAt ?? item.createdAt) || '—'}</span>
-                      <span className="rounded-pill border border-border-subtle bg-surface-sunken px-1 font-mono text-2xs text-muted">{statusLabel(item.status)}</span>
+    <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="mx-auto w-full max-w-[1000px] px-5 py-4">
+        <p className="m-0 mb-3 text-[10.5px] text-ink-muted">冲突一律保留为 disputed，不自动裁决；本页只读，标注「需裁决」。</p>
+        {note && (
+          <p role="status" className="m-0 mb-3 rounded-sm border border-warn-border bg-warn-soft px-3 py-2 text-[11px] text-warn-ink">
+            {note}
+          </p>
+        )}
+        {loading ? (
+          <LoadingPane label="加载冲突…" />
+        ) : conflicts.length === 0 ? (
+          <EmptyPane title="暂无冲突" description="没有待裁决的 disputed 记忆；后端未就绪时也会显示为空态。" />
+        ) : (
+          <ul className="m-0 flex list-none flex-col gap-2 p-0" aria-label="冲突列表">
+            {conflicts.map((conflict) => (
+              <li key={conflict.id} className="rounded-md border border-border bg-surface p-3">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="inline-flex h-[17px] flex-none items-center rounded-[3px] border border-danger-border bg-danger-soft px-1.5 font-mono text-[10px] text-danger-ink">需裁决</span>
+                  <span className={BADGE_CLASS}>{conflict.status}</span>
+                  <span className={META_CLASS}>{conflict.askPolicy}</span>
+                  <span className={`min-w-0 truncate ${META_CLASS}`}>{conflict.id}</span>
+                </div>
+                {conflict.reason && <p className="m-0 mt-1.5 text-[11px] text-warn-ink">原因：{conflict.reason}</p>}
+                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {conflict.items.map((item, index) => (
+                    <div key={`${conflict.id}:${item.id}`} className="rounded-sm border border-border-subtle bg-surface-sunken/50 p-2.5">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className={META_CLASS}>一方 {index + 1}</span>
+                        <span className={META_CLASS}>{sourceLabel(item.source)} · {authorityLabel(item.authority)}</span>
+                        <span className={META_CLASS}>{formatTimestamp(item.updatedAt ?? item.createdAt) || '—'}</span>
+                        <span className={BADGE_CLASS}>{statusLabel(item.status)}</span>
+                      </div>
+                      <p className="m-0 mt-1.5 whitespace-pre-wrap break-words text-[12px] leading-[1.7] text-ink">{item.text}</p>
                     </div>
-                    <p className="m-0 mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink">{item.text}</p>
-                  </div>
-                ))}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+                  ))}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   )
 }
@@ -447,48 +456,52 @@ function AgentsView() {
   }, [selected])
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-2 py-3 sm:px-4">
-      <p className="m-0 mb-2 text-2xs text-muted">智能体通用记忆：只读（跨智能体只读）；每条标注来源会话，不复制人格。</p>
-      {note && (
-        <p role="status" className="m-0 mb-2 rounded-md border border-warn-border bg-warn-soft px-2 py-1 text-2xs text-warn-ink">
-          {note}
-        </p>
-      )}
-      {loading && agents.length === 0 ? (
-        <LoadingPane label="加载智能体记忆…" />
-      ) : agents.length === 0 ? (
-        <EmptyPane title="暂无智能体记忆" description="后端 /api/memory/agents 未就绪或尚未提炼；不展示示例数据。" />
-      ) : (
-        <>
-          <div className="mb-2 flex flex-wrap items-center gap-1.5">
-            {agents.map((agent) => (
-              <button
-                key={agent.id}
-                type="button"
-                aria-pressed={selected === agent.id}
-                onClick={() => setSelected(agent.id)}
-                className={`cursor-pointer rounded-pill border px-2 py-0.5 text-2xs ${
-                  selected === agent.id ? 'border-accent-border bg-accent-soft text-accent-hover' : 'border-border-subtle bg-surface-solid text-muted'
-                }`}
-                title={agent.personaVersion ? `人格版本 ${agent.personaVersion}` : undefined}
-              >
-                {agent.name} · {agent.memoryCount}
-              </button>
-            ))}
-          </div>
-          {loading ? (
-            <LoadingPane label="加载智能体记忆…" />
-          ) : items.length === 0 ? (
-            <EmptyPane title="该智能体暂无通用记忆" description="记忆提炼后会出现；来源会话见条目引用，只读。" />
-          ) : (
-            <ul className="m-0 flex list-none flex-col gap-1.5 p-0" aria-label="智能体通用记忆">
-              {items.map((item) => (
-                <MemoryItemCard key={item.id} item={item} onEntity={() => {}} />
+    <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="mx-auto w-full max-w-[1000px] px-5 py-4">
+        <p className="m-0 mb-3 text-[10.5px] text-ink-muted">智能体通用记忆：只读（跨智能体只读）；每条标注来源会话，不复制人格。</p>
+        {note && (
+          <p role="status" className="m-0 mb-3 rounded-sm border border-warn-border bg-warn-soft px-3 py-2 text-[11px] text-warn-ink">
+            {note}
+          </p>
+        )}
+        {loading && agents.length === 0 ? (
+          <LoadingPane label="加载智能体记忆…" />
+        ) : agents.length === 0 ? (
+          <EmptyPane title="暂无智能体记忆" description="后端 /api/memory/agents 未就绪或尚未提炼；不展示示例数据。" />
+        ) : (
+          <>
+            <div className="mb-3 flex flex-wrap items-center gap-1.5">
+              {agents.map((agent) => (
+                <button
+                  key={agent.id}
+                  type="button"
+                  aria-pressed={selected === agent.id}
+                  onClick={() => setSelected(agent.id)}
+                  className={`inline-flex h-[26px] cursor-pointer items-center rounded-[5px] border px-2 text-[10.5px] transition-colors duration-fast ${
+                    selected === agent.id
+                      ? 'border-border bg-surface-sunken font-medium text-ink'
+                      : 'border-border-subtle bg-surface text-ink-muted hover:text-ink'
+                  }`}
+                  title={agent.personaVersion ? `人格版本 ${agent.personaVersion}` : undefined}
+                >
+                  {agent.name} · {agent.memoryCount}
+                </button>
               ))}
-            </ul>
-          )}
-        </>
-      )}
+            </div>
+            {loading ? (
+              <LoadingPane label="加载智能体记忆…" />
+            ) : items.length === 0 ? (
+              <EmptyPane title="该智能体暂无通用记忆" description="记忆提炼后会出现；来源会话见条目引用，只读。" />
+            ) : (
+              <ul className="m-0 flex list-none flex-col gap-2 p-0" aria-label="智能体通用记忆">
+                {items.map((item) => (
+                  <MemoryItemCard key={item.id} item={item} onEntity={() => {}} />
+                ))}
+              </ul>
+            )}
+          </>
+        )}
+      </div>
     </div>
   )
 }
@@ -538,85 +551,87 @@ function PyramidView() {
   }
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-2 py-3 sm:px-4">
-      <div className="mb-2 flex flex-wrap items-center gap-1.5">
-        <label htmlFor="memory-pyramid-entity" className="sr-only">实体</label>
-        <select
-          id="memory-pyramid-entity"
-          value={entityId}
-          onChange={(event) => setEntityId(event.target.value)}
-          className="rounded-md border border-border-subtle bg-surface-solid px-2 py-1 text-sm text-ink"
-        >
-          <option value="">全部实体</option>
-          {entities.map((entity) => (
-            <option key={entity.id} value={entity.id}>{entity.name}</option>
-          ))}
-        </select>
-        <label htmlFor="memory-pyramid-view" className="sr-only">视角</label>
-        <select
-          id="memory-pyramid-view"
-          value={view}
-          onChange={(event) => setView(event.target.value)}
-          className="rounded-md border border-border-subtle bg-surface-solid px-2 py-1 text-sm text-ink"
-        >
-          {PYRAMID_VIEWS.map((entry) => (
-            <option key={entry.id} value={entry.id}>{entry.label}</option>
-          ))}
-        </select>
-        <span className="font-mono text-2xs text-muted">L0–L4 可折叠；只读投影，不直接编辑</span>
-      </div>
-      {note && (
-        <p role="status" className="m-0 mb-2 rounded-md border border-warn-border bg-warn-soft px-2 py-1 text-2xs text-warn-ink">
-          {note}
-        </p>
-      )}
-      {loading ? (
-        <LoadingPane label="加载金字塔…" />
-      ) : (
-        <div className="flex flex-col gap-1.5">
-          {LAYER_META.map((layer) => {
-            const levelNodes = nodes.filter((node) => node.level === layer.level)
-            const isCollapsed = collapsed.has(layer.level)
-            return (
-              <section key={layer.level} className="rounded-md border border-border-subtle bg-surface-solid">
-                <button
-                  type="button"
-                  onClick={() => toggle(layer.level)}
-                  aria-expanded={!isCollapsed}
-                  className="flex w-full cursor-pointer items-center gap-2 px-2 py-1.5 text-left"
-                >
-                  <span className="font-mono text-2xs text-muted">{isCollapsed ? '▸' : '▾'}</span>
-                  <span className="rounded-pill border border-border-subtle bg-surface-sunken px-1.5 font-mono text-2xs text-muted">{layer.label}</span>
-                  <span className="min-w-0 truncate text-2xs text-ink-secondary">{layer.hint}</span>
-                  <span className="ml-auto font-mono text-2xs text-muted">{levelNodes.length} 节点</span>
-                </button>
-                {!isCollapsed && (
-                  <div className="border-t border-border-subtle px-2 py-1.5">
-                    {levelNodes.length === 0 ? (
-                      <p className="m-0 text-2xs text-muted">该层暂无节点（金字塔未构建或源不足 coverage 阈值）。</p>
-                    ) : (
-                      <ul className="m-0 flex list-none flex-col gap-1 p-0">
-                        {levelNodes.map((node) => (
-                          <li key={node.id} className="rounded border border-border-subtle bg-surface-sunken px-1.5 py-1">
-                            <div className="flex flex-wrap items-center gap-1">
-                              <span className="font-mono text-2xs text-muted">{node.kind}</span>
-                              <span className="rounded-pill border border-border-subtle bg-surface-solid px-1 font-mono text-2xs text-muted">{node.status}</span>
-                              {node.coverage !== null && <span className="font-mono text-2xs text-muted">覆盖 {Math.round(node.coverage * 100)}%</span>}
-                              {node.sourceCount !== null && <span className="font-mono text-2xs text-muted">{node.sourceCount} 源</span>}
-                              {formatTimestamp(node.builtAt) && <span className="ml-auto font-mono text-2xs text-muted">{formatTimestamp(node.builtAt)}</span>}
-                            </div>
-                            <p className="m-0 mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink">{node.text}</p>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                )}
-              </section>
-            )
-          })}
+    <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="mx-auto w-full max-w-[1000px] px-5 py-4">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <label htmlFor="memory-pyramid-entity" className="sr-only">实体</label>
+          <select
+            id="memory-pyramid-entity"
+            value={entityId}
+            onChange={(event) => setEntityId(event.target.value)}
+            className="h-8 rounded-sm border border-border bg-surface px-2 text-[11.5px] text-ink outline-none focus:border-accent focus:shadow-focus"
+          >
+            <option value="">全部实体</option>
+            {entities.map((entity) => (
+              <option key={entity.id} value={entity.id}>{entity.name}</option>
+            ))}
+          </select>
+          <label htmlFor="memory-pyramid-view" className="sr-only">视角</label>
+          <select
+            id="memory-pyramid-view"
+            value={view}
+            onChange={(event) => setView(event.target.value)}
+            className="h-8 rounded-sm border border-border bg-surface px-2 text-[11.5px] text-ink outline-none focus:border-accent focus:shadow-focus"
+          >
+            {PYRAMID_VIEWS.map((entry) => (
+              <option key={entry.id} value={entry.id}>{entry.label}</option>
+            ))}
+          </select>
+          <span className="font-mono text-[10px] text-ink-muted">L0–L4 可折叠；只读投影，不直接编辑</span>
         </div>
-      )}
+        {note && (
+          <p role="status" className="m-0 mb-3 rounded-sm border border-warn-border bg-warn-soft px-3 py-2 text-[11px] text-warn-ink">
+            {note}
+          </p>
+        )}
+        {loading ? (
+          <LoadingPane label="加载金字塔…" />
+        ) : (
+          <div className="flex flex-col gap-2">
+            {LAYER_META.map((layer) => {
+              const levelNodes = nodes.filter((node) => node.level === layer.level)
+              const isCollapsed = collapsed.has(layer.level)
+              return (
+                <section key={layer.level} className="rounded-md border border-border bg-surface">
+                  <button
+                    type="button"
+                    onClick={() => toggle(layer.level)}
+                    aria-expanded={!isCollapsed}
+                    className="flex w-full cursor-pointer items-center gap-2 px-3 py-2.5 text-left"
+                  >
+                    <span className="font-mono text-[10px] text-ink-muted">{isCollapsed ? '▸' : '▾'}</span>
+                    <span className={BADGE_CLASS}>{layer.label}</span>
+                    <span className="min-w-0 truncate text-[10.5px] text-ink-secondary">{layer.hint}</span>
+                    <span className="ml-auto font-mono text-[10px] text-ink-faint">{levelNodes.length} 节点</span>
+                  </button>
+                  {!isCollapsed && (
+                    <div className="border-t border-border-subtle px-3 py-2.5">
+                      {levelNodes.length === 0 ? (
+                        <p className="m-0 text-[10.5px] text-ink-muted">该层暂无节点（金字塔未构建或源不足 coverage 阈值）。</p>
+                      ) : (
+                        <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+                          {levelNodes.map((node) => (
+                            <li key={node.id} className="rounded-sm border border-border-subtle bg-surface-sunken/50 px-2.5 py-2">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <span className={META_CLASS}>{node.kind}</span>
+                                <span className={BADGE_CLASS}>{node.status}</span>
+                                {node.coverage !== null && <span className={META_CLASS}>覆盖 {Math.round(node.coverage * 100)}%</span>}
+                                {node.sourceCount !== null && <span className={META_CLASS}>{node.sourceCount} 源</span>}
+                                {formatTimestamp(node.builtAt) && <span className={`ml-auto ${META_CLASS}`}>{formatTimestamp(node.builtAt)}</span>}
+                              </div>
+                              <p className="m-0 mt-1 whitespace-pre-wrap break-words text-[12px] leading-[1.7] text-ink">{node.text}</p>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </section>
+              )
+            })}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -628,7 +643,7 @@ export default function MemoryBrowserPage({ onClose, embedded = false }: { onClo
 
   return (
     <div
-      className={embedded ? 'flex h-full min-h-0 min-w-0 flex-1 flex-col bg-surface' : 'fixed inset-0 z-40 flex items-center justify-center bg-scrim-strong p-2 backdrop-blur-sm sm:p-4'}
+      className={embedded ? 'flex h-full min-h-0 min-w-0 flex-1 flex-col bg-canvas' : 'fixed inset-0 z-40 flex items-center justify-center bg-scrim-strong p-2 backdrop-blur-sm sm:p-4'}
       role={embedded ? undefined : 'dialog'}
       aria-modal={embedded ? undefined : true}
       aria-label="记忆浏览器"
@@ -636,37 +651,47 @@ export default function MemoryBrowserPage({ onClose, embedded = false }: { onClo
         if (!embedded && event.target === event.currentTarget) onClose()
       }}
     >
-      <div ref={panelRef} className={embedded ? 'flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-surface' : 'popover-surface flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden'}>
-        <header className="flex flex-none flex-wrap items-start justify-between gap-2 border-b border-border-subtle px-3 py-2.5 sm:px-4">
-          <div className="min-w-0">
-            <h2 className="m-0 text-lg font-semibold tracking-tight">记忆</h2>
-            <p className="m-0 mt-0.5 text-sm text-ink-secondary">
-              实体 / 类型 / 冲突 / 智能体 / 金字塔 · 只读；修改请通过对话。
-            </p>
-          </div>
-          <div className="flex flex-none items-center gap-2">
-            <span className="rounded-pill border border-border-subtle bg-surface-solid px-2 py-0.5 font-mono text-2xs tracking-normal text-muted">v0.3</span>
-            <button type="button" onClick={onClose} className="cursor-pointer rounded-md border border-border-subtle bg-surface-solid px-2.5 py-1.5 text-sm text-muted hover:text-ink">
-              关闭 ×
-            </button>
+      <div ref={panelRef} className={embedded ? 'flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-canvas' : 'popover-surface flex max-h-[92vh] w-full max-w-[1000px] flex-col overflow-hidden'}>
+        <header className="flex-none border-b border-border bg-surface">
+          <div className="mx-auto flex w-full max-w-[1000px] flex-wrap items-start justify-between gap-3 px-5 py-4">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="m-0 font-serif text-[18px] font-medium tracking-[-0.01em] text-ink">记忆</h2>
+                <span className={BADGE_CLASS}>v0.3</span>
+              </div>
+              <p className="m-0 mt-1 text-[10.5px] text-ink-muted">
+                实体 / 类型 / 冲突 / 智能体 / 金字塔 · 只读；修改请通过对话。
+              </p>
+            </div>
+            <div className="flex flex-none items-center gap-1.5">
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex h-7 cursor-pointer items-center justify-center rounded-sm border border-border bg-surface px-2.5 text-[11.5px] text-ink-secondary transition-colors duration-fast hover:bg-surface-sunken hover:text-ink"
+              >
+                关闭 ×
+              </button>
+            </div>
           </div>
         </header>
 
-        <div role="tablist" aria-label="记忆视图" className="flex flex-none items-center gap-1 overflow-x-auto border-b border-border-subtle px-2 pt-1.5 pb-0 sm:px-4">
-          {TABS.map((entry) => (
-            <button
-              key={entry.id}
-              type="button"
-              role="tab"
-              aria-selected={tab === entry.id}
-              onClick={() => setTab(entry.id)}
-              className={`-mb-px cursor-pointer border-b-2 px-2.5 pb-1.5 font-mono text-2xs tracking-normal ${
-                tab === entry.id ? 'border-accent text-accent-hover' : 'border-transparent text-muted hover:text-ink-secondary'
-              }`}
-            >
-              {entry.label}
-            </button>
-          ))}
+        <div className="flex-none border-b border-border bg-surface">
+          <div role="tablist" aria-label="记忆视图" className="mx-auto flex w-full max-w-[1000px] items-center gap-5 overflow-x-auto px-5">
+            {TABS.map((entry) => (
+              <button
+                key={entry.id}
+                type="button"
+                role="tab"
+                aria-selected={tab === entry.id}
+                onClick={() => setTab(entry.id)}
+                className={`h-9 flex-none cursor-pointer border-b-2 text-[11.5px] font-medium transition-colors duration-fast ${
+                  tab === entry.id ? 'border-ink text-ink' : 'border-transparent text-ink-muted hover:text-ink-secondary'
+                }`}
+              >
+                {entry.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {tab === 'browse' && <BrowseView />}
@@ -674,8 +699,10 @@ export default function MemoryBrowserPage({ onClose, embedded = false }: { onClo
         {tab === 'agents' && <AgentsView />}
         {tab === 'pyramid' && <PyramidView />}
 
-        <footer className="flex-none border-t border-border-subtle px-3 py-1.5 font-mono text-2xs text-muted sm:px-4">
-          只读记忆视图：冲突不自动裁决；智能体跨域只读；不出现内部字段/原文压缩内容。
+        <footer className="flex-none border-t border-border bg-surface">
+          <div className="mx-auto w-full max-w-[1000px] px-5 py-2 text-[10.5px] text-ink-faint">
+            只读记忆视图：冲突不自动裁决；智能体跨域只读；不出现内部字段/原文压缩内容。
+          </div>
         </footer>
       </div>
     </div>

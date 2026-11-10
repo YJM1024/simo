@@ -11,7 +11,7 @@ export function Card({ padding = 'md', interactive = false, className = '', chil
   const pad = padding === 'none' ? '' : padding === 'sm' ? 'p-3' : 'p-4'
   return (
     <div
-      className={`min-w-0 rounded-md border border-border-subtle bg-surface-solid shadow-sm ${pad} ${interactive ? 'cursor-pointer transition-colors duration-fast hover:border-border hover:bg-surface-sunken/40' : ''} ${className}`}
+      className={`min-w-0 rounded-md border border-border-subtle bg-surface-solid ${pad} ${interactive ? 'cursor-pointer transition-colors duration-fast hover:border-border hover:bg-surface-sunken/40' : ''} ${className}`}
       {...rest}
     >
       {children}

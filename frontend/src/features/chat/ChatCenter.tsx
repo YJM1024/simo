@@ -235,7 +235,7 @@ export default function ChatCenter() {
         <div className="flex min-w-0 items-center gap-3.5">
           <h2 className="m-0 min-w-0 truncate text-[13px] font-semibold tracking-[-0.01em] text-ink">{runtime.sessionTitle}</h2>
           <span className="flex-none text-[11px] text-ink-faint">
-            {isRoot ? '主窗口' : `子会话 · 深度 ${runtime.sessionDepth}`}
+            {isRoot ? '主窗口 · 聚合视图' : `子会话 · 深度 ${runtime.sessionDepth}`}
           </span>
           <div className="inline-flex flex-none items-center gap-px rounded-sm border border-border bg-surface-sunken p-0.5" role="group" aria-label="消息范围" title="默认仅本会话；切换到「含子会话」时按时间聚合递归子会话消息">
             <button
@@ -271,23 +271,6 @@ export default function ChatCenter() {
               已暂停
             </span>
           )}
-        </div>
-      </div>
-
-      <div className="flex h-8 flex-none items-center justify-between gap-3 border-b border-border bg-surface px-[18px]">
-        <div className="flex items-center gap-3 text-[10.5px] text-ink-faint" role="tablist" aria-label="会话视图">
-          {TABS.map((entry) => (
-            <button
-              key={entry.id}
-              type="button"
-              role="tab"
-              aria-selected={tab === entry.id}
-              onClick={() => setTab(entry.id)}
-              className={`cursor-pointer border-b border-transparent pb-0.5 transition-colors duration-fast ${tab === entry.id ? 'border-accent text-ink' : 'hover:text-ink'}`}
-            >
-              {entry.label}
-            </button>
-          ))}
         </div>
         <span className="inline-flex flex-none items-center gap-1.5 rounded-xs border border-border-subtle bg-surface-sunken px-2 py-1 text-[10.5px] text-ink-muted">
           <span className="h-1 w-1 rounded-pill bg-accent" aria-hidden="true" />
@@ -359,6 +342,14 @@ export default function ChatCenter() {
           {actionNotice}
         </p>
       )}
+
+      <div className="mx-auto flex h-7 w-full max-w-[780px] flex-none items-center gap-3 border-b border-border-subtle pl-[46px] pr-4 text-[10.5px] text-ink-faint" role="tablist" aria-label="会话视图">
+        {TABS.map((entry) => (
+          <button key={entry.id} type="button" role="tab" aria-selected={tab === entry.id} onClick={() => setTab(entry.id)} className={`cursor-pointer border-b border-transparent pb-0.5 transition-colors duration-fast ${tab === entry.id ? 'border-accent text-ink' : 'hover:text-ink'}`}>
+            {entry.label}
+          </button>
+        ))}
+      </div>
 
       {tab === 'chat' && (
         <div

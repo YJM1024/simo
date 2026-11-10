@@ -45,14 +45,10 @@ import {
   type TaskRecord,
 } from './model.ts'
 import {
-  TASK_STATUS_GROUPS,
-  groupTasksByStatus,
   groupTasksByWorkflow,
   normalizeWorkflowList,
-  taskStatusGroupLabel,
   workflowActions,
   workflowCounts,
-  type TaskStatusGroup,
   type WorkflowRecord,
 } from './workflows.ts'
 import {
@@ -167,7 +163,6 @@ export default function TaskPanel() {
   const [workflowLoading, setWorkflowLoading] = useState(false)
   const [workflowError, setWorkflowError] = useState<string | null>(null)
   const [workflowBusyId, setWorkflowBusyId] = useState<string | null>(null)
-  const [statusGroup, setStatusGroup] = useState<TaskStatusGroup>('running')
   // M6：跨会话产物（父会话/聚合视图查看子会话产物，只读、不复制）
   const [sessionArtifacts, setSessionArtifacts] = useState<TaskArtifact[]>([])
   const [artifactsLoading, setArtifactsLoading] = useState(false)
@@ -253,8 +248,7 @@ export default function TaskPanel() {
         setSessionMeta(payload.sessionMeta)
         setTasks([])
         setWorkflows([])
-        setStatusGroup('running')
-        setFrameApprovals([])
+                setFrameApprovals([])
         setSessionArtifacts([])
         setDetailId(null)
         setDetail(null)
@@ -631,8 +625,7 @@ export default function TaskPanel() {
     [reloadList, reloadWorkflows],
   )
 
-  const statusGroups = useMemo(() => groupTasksByStatus(tasks), [tasks])
-  const selectedTasks = statusGroups[statusGroup]
+  const selectedTasks = tasks
   const workflowGroups = useMemo(
     () => groupTasksByWorkflow(selectedTasks, workflows),
     [selectedTasks, workflows],
@@ -697,30 +690,6 @@ export default function TaskPanel() {
 
       <ApprovalBar approvals={pending} busyId={busyId} onDecide={(id, decision) => void handleDecideApproval(id, decision)} />
 
-      <div
-        role="tablist"
-        aria-label="任务状态"
-        className="flex min-w-0 flex-none gap-1 overflow-x-auto border-b border-border-subtle px-2 pt-2 pb-1.5"
-      >
-        {TASK_STATUS_GROUPS.map((group) => {
-          const active = statusGroup === group
-          return (
-            <button
-              key={group}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => setStatusGroup(group)}
-              className={`flex-none cursor-pointer whitespace-nowrap rounded-xs px-1.5 py-0.5 font-mono text-2xs tracking-normal transition-colors duration-fast ${
-                active ? 'bg-accent-soft text-accent-hover' : 'text-muted hover:text-ink-secondary'
-              }`}
-            >
-              {taskStatusGroupLabel(group)} {statusGroups[group].length}
-            </button>
-          )
-        })}
-      </div>
-
       <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 pt-3 pb-3.5">
         <PlanSummary sessionId={sessionId} tasks={tasks as unknown as TaskInfo[]} />
         {listLoading && tasks.length === 0 && <TaskListSkeleton />}
@@ -762,11 +731,6 @@ export default function TaskPanel() {
           </div>
         )}
 
-        {!listLoading && tasks.length > 0 && selectedTasks.length === 0 && (
-          <p className="m-0 px-1 py-2 text-xs text-muted">
-            {taskStatusGroupLabel(statusGroup)}分组暂无任务
-          </p>
-        )}
 
         {workflowGroups.map((group) => (
           <section

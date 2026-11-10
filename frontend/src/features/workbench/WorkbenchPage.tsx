@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { apiGet } from '../../platform/http.ts'
 import { useFocusTrap } from '../../platform/useFocusTrap.ts'
-import { Icon } from '../../platform/ui/icons.tsx'
+import { Icon, type IconName } from '../../platform/ui/icons.tsx'
 
 interface RecentItem {
   id: string
@@ -51,6 +51,13 @@ interface WorkbenchPageProps {
   onOpenView: () => void
 }
 
+interface Entry {
+  label: string
+  detail: string
+  icon: IconName
+  onClick: () => void
+}
+
 export default function WorkbenchPage({ onClose, onOpenUsage, onOpenSettings, onOpenPalette, onOpenView, embedded = false }: WorkbenchPageProps & { embedded?: boolean }) {
   const panelRef = useRef<HTMLDivElement | null>(null)
   useFocusTrap(panelRef, !embedded, onClose)
@@ -79,16 +86,16 @@ export default function WorkbenchPage({ onClose, onOpenUsage, onOpenSettings, on
     return () => { cancelled = true }
   }, [])
 
-  const entries = [
-    { label: '用量统计', detail: '会话树 × 消息/token 时间序列', onClick: onOpenUsage },
-    { label: '设置', detail: '模型 / 权限 / 主题 / 数据目录 / 自定义视图', onClick: onOpenSettings },
-    { label: '命令面板', detail: 'Ctrl/⌘+K：会话与全部视图', onClick: onOpenPalette },
-    { label: '自定义视图', detail: '当前会话的 schema 预览', onClick: onOpenView },
+  const entries: Entry[] = [
+    { icon: 'overview', label: '用量统计', detail: '会话树 × 消息/token 时间序列', onClick: onOpenUsage },
+    { icon: 'settings', label: '设置', detail: '模型 / 权限 / 主题 / 数据目录 / 自定义视图', onClick: onOpenSettings },
+    { icon: 'search', label: '命令面板', detail: 'Ctrl/⌘+K：会话与全部视图', onClick: onOpenPalette },
+    { icon: 'panel', label: '自定义视图', detail: '当前会话的 schema 预览', onClick: onOpenView },
   ]
 
   return (
     <div
-      className={embedded ? 'flex h-full min-h-0 min-w-0 flex-1 flex-col bg-surface' : 'fixed inset-0 z-40 flex items-center justify-center bg-scrim-strong p-2 backdrop-blur-sm sm:p-4'}
+      className={embedded ? 'flex h-full min-h-0 min-w-0 flex-1 flex-col bg-canvas' : 'fixed inset-0 z-40 flex items-center justify-center bg-scrim-strong p-2 sm:p-4'}
       role={embedded ? undefined : 'dialog'}
       aria-modal={embedded ? undefined : true}
       aria-label="工作台"
@@ -96,47 +103,87 @@ export default function WorkbenchPage({ onClose, onOpenUsage, onOpenSettings, on
         if (!embedded && event.target === event.currentTarget) onClose()
       }}
     >
-      <div ref={panelRef} className={embedded ? 'flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-surface' : 'popover-surface flex max-h-[92vh] w-full max-w-[60rem] flex-col overflow-hidden'}>
-        <header className="flex flex-none items-start justify-between gap-2 border-b border-border-subtle px-4 py-3">
-          <div className="min-w-0">
-            <h2 className="m-0 text-base font-semibold text-ink">工作台</h2>
-            <p className="m-0 mt-0.5 text-sm text-ink-secondary">用量、设置与工具入口；不阻塞对话。</p>
-          </div>
-          <button type="button" onClick={onClose} className="flex-none cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-2.5 py-1 text-sm text-muted hover:text-ink">
-            关闭
-          </button>
-        </header>
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-          <div className="w-full max-w-[1000px]">
-            <div className="mb-3 border-b border-border-subtle pb-2">
-              <h3 className="m-0 text-base font-semibold text-section-title">工具与设置</h3>
-              <p className="m-0 mt-0.5 text-sm text-ink-secondary">按需进入；所有写操作仍通过对话/动作层与审批。</p>
+      <div
+        ref={panelRef}
+        className={embedded ? 'flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-canvas' : 'flex max-h-[92vh] w-full max-w-[1000px] flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-lg'}
+      >
+        <header className="flex-none border-b border-border bg-surface">
+          <div className="mx-auto flex w-full max-w-[1000px] items-center justify-between gap-3 px-[18px] py-[13px]">
+            <div className="flex min-w-0 items-center gap-2.5">
+              {embedded && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label="返回对话"
+                  className="grid h-7 w-7 flex-none cursor-pointer place-items-center rounded-sm text-muted transition-colors duration-fast hover:bg-surface-sunken hover:text-ink"
+                >
+                  <Icon name="chevron-left" size={16} />
+                </button>
+              )}
+              <div className="min-w-0">
+                <h2 className="m-0 font-serif text-[20px] font-medium leading-[1.3] tracking-[-0.01em] text-ink">工作台</h2>
+                <p className="m-0 mt-[2px] truncate text-[11px] text-muted">用量、设置与工具入口；不阻塞对话。</p>
+              </div>
             </div>
-            <ul className="m-0 grid list-none grid-cols-1 items-stretch gap-4 p-0 sm:grid-cols-2">
+            {!embedded && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex h-[29px] flex-none cursor-pointer items-center gap-1.5 rounded-sm border border-border bg-surface-solid px-2.5 text-[11.5px] text-ink-secondary transition-colors duration-fast hover:bg-surface-sunken"
+              >
+                <Icon name="close" size={16} />
+                关闭
+              </button>
+            )}
+          </div>
+        </header>
+
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="mx-auto w-full max-w-[1000px] px-[18px] py-5">
+            <div className="mb-3">
+              <h3 className="m-0 text-[12px] font-semibold tracking-[-0.005em] text-ink-secondary">工具与设置</h3>
+              <p className="m-0 mt-[3px] text-[11px] leading-[1.5] text-muted">按需进入；所有写操作仍通过对话/动作层与审批。</p>
+            </div>
+
+            <ul className="m-0 grid list-none grid-cols-1 items-stretch gap-3 p-0 sm:grid-cols-2">
               {entries.map((entry) => (
                 <li key={entry.label} className="flex">
-                  <button type="button" onClick={entry.onClick} className="flex h-full min-h-[96px] w-full cursor-pointer items-start justify-between gap-3 rounded-md border border-border-subtle bg-surface-solid p-3 text-left hover:border-accent-border">
-                    <span className="min-w-0">
-                      <span className="block text-sm font-medium text-ink">{entry.label}</span>
-                      <span className="mt-1 block break-words text-xs leading-relaxed text-ink-secondary">{entry.detail}</span>
+                  <button
+                    type="button"
+                    onClick={entry.onClick}
+                    className="group flex h-full min-h-[96px] w-full cursor-pointer items-start justify-between gap-3 rounded-md border border-border bg-surface-solid p-4 text-left shadow-none transition-all duration-fast hover:-translate-y-px hover:shadow-sm"
+                  >
+                    <span className="flex min-w-0 items-start gap-3">
+                      <span className="grid h-7 w-7 flex-none place-items-center rounded-sm border border-border-subtle bg-surface-sunken text-muted transition-colors duration-fast group-hover:border-border group-hover:text-ink-secondary">
+                        <Icon name={entry.icon} size={16} />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-[13px] font-medium leading-[1.4] text-ink">{entry.label}</span>
+                        <span className="mt-[3px] block break-words text-[11px] leading-[1.5] text-muted">{entry.detail}</span>
+                      </span>
                     </span>
-                    <Icon name="chevron-right" size={16} className="mt-0.5 flex-none text-muted" />
+                    <span className="mt-0.5 grid h-6 w-6 flex-none place-items-center rounded-sm text-muted transition-colors duration-fast group-hover:bg-surface-sunken group-hover:text-ink">
+                      <Icon name="chevron-right" size={16} />
+                    </span>
                   </button>
                 </li>
               ))}
             </ul>
 
             <section className="mt-6" aria-label="最近活动">
-              <h3 className="m-0 mb-2 text-xs font-medium text-muted">最近活动</h3>
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <h3 className="m-0 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">最近活动</h3>
+                <span className="flex-none font-mono text-[10px] text-muted">{recent.length} 条</span>
+              </div>
               {recent.length === 0 ? (
-                <p className="m-0 text-xs text-muted">暂无最近活动。</p>
+                <p className="m-0 text-[11px] text-muted">暂无最近活动。</p>
               ) : (
                 <ul className="m-0 list-none border-t border-border-subtle p-0">
                   {recent.map((item) => (
-                    <li key={item.id} className="flex h-9 min-w-0 items-center gap-3 border-b border-border-subtle">
-                      <span className="flex-none text-[11px] text-muted">{item.kind}</span>
-                      <span className="min-w-0 flex-1 truncate text-[13px] text-ink" title={item.label}>{item.label}</span>
-                      <time className="flex-none text-xs text-muted" dateTime={item.at ? new Date(item.at).toISOString() : undefined}>{recentTime(item.at)}</time>
+                    <li key={item.id} className="flex h-8 min-w-0 items-center gap-3 border-b border-border-subtle">
+                      <span className="w-[38px] flex-none text-[10.5px] text-muted">{item.kind}</span>
+                      <span className="min-w-0 flex-1 truncate text-[11.5px] text-ink-secondary" title={item.label}>{item.label}</span>
+                      <time className="flex-none font-mono text-xs text-muted" dateTime={item.at ? new Date(item.at).toISOString() : undefined}>{recentTime(item.at)}</time>
                     </li>
                   ))}
                 </ul>
@@ -144,8 +191,10 @@ export default function WorkbenchPage({ onClose, onOpenUsage, onOpenSettings, on
             </section>
           </div>
         </div>
-        <footer className="flex-none border-t border-border-subtle px-4 py-1.5 text-xs text-muted">
-          工作台入口只读；所有修改仍通过对话/动作层。
+
+        <footer className="flex flex-none items-center justify-between gap-3 border-t border-border bg-surface px-[18px] py-2 font-mono text-[10px] text-muted">
+          <span className="min-w-0 truncate">工作台入口只读；所有修改仍通过对话/动作层。</span>
+          <span className="flex-none">只读</span>
         </footer>
       </div>
     </div>

@@ -60,7 +60,7 @@ check('P1 团队空态：单个居中空态 + 创建按钮，模板空态不再�
 check('P1 工作台：内容与标题同左缘、max 1000、2 列 16px、卡片等高', () => {
   assert.match(workbench, /w-full max-w-\[1000px\]/)
   assert.equal(/mx-auto w-full max-w-\[60rem\]/.test(workbench), false)
-  assert.match(workbench, /items-stretch gap-4/)
+  assert.match(workbench, /items-stretch gap-3/)
   assert.match(workbench, /h-full min-h-\[96px\]/)
 })
 
@@ -77,15 +77,15 @@ check('P1 定时任务：已结束/无下次运行、本地时间、标准开关
 check('P2 侧栏：选中 accent 淡底、状态合并且无重复执行中标签', () => {
   assert.match(sessionTree, /border-l-accent bg-accent-soft/)
   assert.match(sessionTree, /text-\[12px\] font-medium/)
-  assert.match(sessionTree, /会话状态/)
+  assert.match(sessionTree, /本月用量/)
   assert.equal(/执行中\s*<\/span>/.test(sessionTree), false)
 })
 
 check('P2 智能体/记忆：模型固定 V4.1 Flash、能力中性；记忆徽标中性', () => {
   assert.match(agents, /V4\.1 Flash/)
   assert.equal(/agent\.model/.test(agents), false)
-  assert.match(agents, /rounded-xs border border-border-subtle bg-surface-sunken/)
-  assert.match(memory, /rounded-xs border border-border-subtle bg-surface-sunken px-1\.5 text-xs text-muted/)
+  assert.match(agents, /rounded-\[3px\] border border-border bg-surface-sunken/)
+  assert.match(memory, /rounded-\[3px\] border border-border bg-surface-sunken/)
   assert.equal(/rounded-pill border border-accent-border bg-accent-soft/.test(memory), false)
 })
 

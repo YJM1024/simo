@@ -107,7 +107,6 @@ export default function SessionTreePanel() {
   const [query, setQuery] = useState('')
   const [pinned, setPinned] = useState<string[]>(() => loadPinnedSessions())
   const [readCounts, setReadCounts] = useState<Record<string, number>>(() => loadReadCounts())
-  const [runningTasks, setRunningTasks] = useState(0)
 
   const rootsRef = useRef<SessionNode[]>([])
   rootsRef.current = roots
@@ -315,8 +314,6 @@ export default function SessionTreePanel() {
   const activeNode = findNode(roots, activeId)
   const activeArchived = activeNode?.archived === true
 
-  useEffect(() => bus.on(EVENTS.TASKS_STATE, (payload) => setRunningTasks(payload.running)), [])
-
   const searchMatches = useCallback(
     (node: SessionNode): boolean => {
       if (!query.trim()) return true
@@ -519,7 +516,7 @@ export default function SessionTreePanel() {
           onChange={(event) => setQuery(event.target.value)}
           placeholder="搜索会话、消息…"
           aria-label="搜索会话"
-          className="h-[29px] min-w-0 flex-1 border-0 bg-transparent text-[11.5px] text-ink outline-none placeholder:text-ink-faint"
+          className=""
         />
         {query ? (
           <button
@@ -544,7 +541,12 @@ export default function SessionTreePanel() {
       <div className="min-h-0 flex-1 overflow-y-auto px-1 pt-2 pb-3">
         <div className="flex items-center justify-between px-1 pb-1 pt-2 text-[9.5px] uppercase tracking-[0.07em] text-ink-faint">
           <span>会话</span>
-          <span>{total}</span>
+          <span className="flex items-center gap-1">
+            {total}
+            <button type="button" onClick={() => void load({ silent: true })} aria-label="刷新会话树" title="刷新会话树" className="grid h-4 w-4 cursor-pointer place-items-center rounded-xs hover:bg-surface-sunken hover:text-ink">
+              <Icon name="refresh" size={16} />
+            </button>
+          </span>
         </div>
 
         {loading && <TreeSkeleton />}
@@ -570,29 +572,19 @@ export default function SessionTreePanel() {
           </ul>
         )}
 
-        {!loading && (
-          <button
-            type="button"
-            onClick={() => void load({ silent: true })}
-            className="mt-2 w-full cursor-pointer rounded-md border border-dashed border-border px-2 py-1.5 text-left text-2xs text-muted hover:border-accent-border hover:text-accent-hover"
-            title="重新拉取会话树"
-          >
-            刷新会话树
-          </button>
-        )}
       </div>
 
       <div className="flex-none border-t border-border-subtle pt-2">
         <div className="rounded-sm border border-border bg-surface-sunken px-2.5 py-2">
           <div className="flex items-center justify-between text-[10.5px] text-ink-muted">
-            <span>会话状态</span>
-            <b className="font-semibold text-ink-secondary">{counts.active} 个会话</b>
+            <span>本月用量</span>
+            <b className="font-semibold text-ink-secondary">—%</b>
           </div>
           <div className="my-1.5 h-1 overflow-hidden rounded-pill bg-surface-solid">
-            <i className="block h-full rounded-pill bg-linear-to-r from-accent to-accent-3" style={{ width: `${Math.min(100, counts.active * 12)}%` }} />
+            <i className="block h-full rounded-pill bg-linear-to-r from-accent to-accent-3" style={{ width: '0%' }} />
           </div>
           <div className="truncate text-[9.5px] text-ink-faint">
-            {runningTasks > 0 ? `${runningTasks} 个任务进行中` : `已归档 ${counts.archived} 个 · 本地工作区`}
+            token 用量暂不可用 · {counts.active} 个会话
           </div>
         </div>
         <div className="mt-1.5 flex items-center gap-2 border-t border-border-subtle px-1 pt-2">

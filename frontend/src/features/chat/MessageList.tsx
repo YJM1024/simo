@@ -129,7 +129,7 @@ function MessageBubble({
           你
         </span>
       )}
-      <div className={`min-w-0 flex-1 ${role === 'user' ? 'flex flex-col items-end' : ''}`}>
+      <div className="min-w-0 flex-1">
         <div className="mb-1 flex h-5 min-w-0 flex-nowrap items-center gap-x-1.5 overflow-hidden leading-5">
           {role !== 'user' && (
             <span className="flex-none text-[11.5px] font-semibold leading-5 text-ink-secondary">

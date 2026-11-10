@@ -7,6 +7,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { apiGet, getSessions } from '../../platform/http.ts'
 import { bus, EVENTS } from '../../platform/events.ts'
+import { Icon } from '../../platform/ui/icons.tsx'
 import type { ChatAttachment, ChatMessage } from '../../platform/types.ts'
 import {
   detectMentionTrigger,
@@ -54,6 +55,7 @@ export default function Composer({ disabled, disabledReason, sessionId, replyTo,
   const [mentionLoading, setMentionLoading] = useState(false)
   const mentionSourcesRef = useRef<string>('')
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const canSend = !disabled && !uploading && !sending && (draft.trim().length > 0 || attachments.length > 0)
   const mentionItems = mentionTrigger ? filterMentions(mentionPool, mentionTrigger.query) : []
   const slashHints = slashSuggestions(draft)
@@ -228,7 +230,7 @@ export default function Composer({ disabled, disabledReason, sessionId, replyTo,
 
   return (
     <footer
-      className={`flex-none px-[18px] pt-1.5 pb-2 ${dragging ? 'bg-accent-soft/40' : 'bg-transparent'}`}
+      className={`flex-none px-[18px] pt-1.5 pb-3 ${dragging ? 'bg-accent-soft/40' : 'bg-transparent'}`}
       onDragOver={(event) => {
         event.preventDefault()
         setDragging(true)
@@ -328,8 +330,14 @@ export default function Composer({ disabled, disabledReason, sessionId, replyTo,
           onPaste={handlePaste}
           className="min-h-[58px] max-h-[176px] w-full resize-none overflow-y-auto rounded-md border border-border bg-surface px-3 pb-10 pt-2.5 text-[13.5px] leading-[1.65] text-ink shadow-md outline-none transition-colors duration-fast placeholder:text-ink-faint focus:border-accent focus:shadow-focus disabled:opacity-55"
         />
-        <div className="absolute inset-x-0 bottom-0 flex min-w-0 items-center justify-between gap-2 px-2 pb-1.5">
-          <span className="pointer-events-none shrink-0 text-[10.5px] text-ink-faint">支持 Markdown 格式</span>
+        <div className="absolute inset-x-0 bottom-0 flex min-w-0 items-center justify-between gap-2 px-2 pb-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <button type="button" onClick={() => fileInputRef.current?.click()} disabled={disabled || uploading} aria-label="添加附件" title="添加附件" className="grid h-6 w-6 cursor-pointer place-items-center rounded-xs text-ink-muted hover:bg-surface-sunken hover:text-ink disabled:opacity-40">
+              <Icon name="file" size={16} />
+            </button>
+            <span className="pointer-events-none shrink-0 text-[10.5px] text-ink-faint">支持 Markdown 格式</span>
+          </div>
+          <input ref={fileInputRef} type="file" multiple className="hidden" onChange={(event) => { void addFiles(Array.from(event.target.files ?? [])); event.target.value = '' }} />
           <div className="flex min-w-0 items-center justify-end gap-2">
             {uploading && <span role="status" aria-live="polite" className="text-[10.5px] text-ink-faint">上传中…</span>}
             <span id="composer-hint" className="hidden whitespace-nowrap text-[10.5px] text-ink-faint sm:inline">

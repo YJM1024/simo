@@ -5,7 +5,7 @@ import { Tooltip } from './Tooltip.tsx'
 import type { ButtonVariant } from './Button.tsx'
 
 const BASE = 'inline-flex items-center justify-center rounded-xs border transition-colors duration-fast focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50'
-const SIZE = { sm: 'h-7 w-7', md: 'h-8 w-8' } as const
+const SIZE = { sm: 'h-7 w-7', md: 'h-7 w-7' } as const
 const TONE: Record<'ghost' | 'secondary' | 'primary' | 'danger', string> = {
   ghost: 'border-transparent bg-transparent text-ink-secondary hover:bg-surface-sunken hover:text-ink',
   secondary: 'border-border bg-surface-solid text-ink-secondary hover:bg-surface-sunken hover:text-ink',

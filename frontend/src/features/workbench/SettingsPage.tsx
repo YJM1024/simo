@@ -16,6 +16,7 @@ import {
 } from '../../platform/preferences.ts'
 import { readSessionId } from '../../platform/router.ts'
 import { useFocusTrap } from '../../platform/useFocusTrap.ts'
+import { Icon } from '../../platform/ui/icons.tsx'
 import {
   SHORTCUTS,
   dataDirectoryHint,
@@ -159,7 +160,7 @@ export default function SettingsPage({
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-scrim-strong p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-40 flex items-center justify-center bg-scrim-strong p-3 sm:p-[18px]"
       role="dialog"
       aria-modal="true"
       aria-label="设置"
@@ -168,40 +169,40 @@ export default function SettingsPage({
       }}
     >
       <div ref={panelRef} className="popover-surface flex max-h-[90vh] w-full max-w-[700px] flex-col overflow-hidden">
-        <header className="flex flex-none items-start justify-between gap-3 border-b border-border px-[18px] py-4">
-          <div>
+        <header className="flex flex-none items-start justify-between gap-3.5 border-b border-border px-[18px] pb-[11px] pt-4">
+          <div className="min-w-0">
             <h2 className="m-0 font-serif text-[18px] font-medium text-ink">设置</h2>
-            <p className="m-0 mt-1 font-mono text-[10.5px] text-ink-muted">模型、权限、主题、目录与快捷键</p>
+            <p className="m-0 mt-[3px] truncate font-mono text-[10.5px] text-muted">模型、权限、主题、目录与快捷键</p>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="关闭设置"
-            className="grid h-6 w-6 cursor-pointer place-items-center rounded-sm text-ink-muted hover:bg-surface-sunken hover:text-ink"
+            className="grid h-7 w-7 flex-none cursor-pointer place-items-center rounded-sm text-muted transition-colors duration-fast hover:bg-surface-sunken hover:text-ink"
           >
-            ×
+            <Icon name="close" size={16} />
           </button>
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-[18px] py-1 pb-6">
           {notice && (
-            <p role="status" className="m-0 mb-2 rounded-md border border-ok-border bg-ok-soft px-2 py-1 text-2xs text-ok-ink">
+            <p role="status" className="m-0 mb-2 rounded-sm border border-ok-border bg-ok-soft px-2.5 py-1.5 text-[10.5px] text-ok-ink">
               {notice}
             </p>
           )}
 
-          <section id="settings-model" className="border-b border-border-subtle py-3.5 last:border-0">
-            <h3 className="m-0 mb-2 text-[10.5px] font-semibold tracking-[0.02em] text-ink-secondary">模型</h3>
+          <section id="settings-model" className="border-b border-border-subtle py-[13px] last:border-0">
+            <h3 className="m-0 mb-[7px] text-[10.5px] font-semibold tracking-[0.02em] text-ink-secondary">模型</h3>
             <p className="m-0 rounded-sm border border-border-subtle bg-surface-sunken px-2.5 py-2 text-[12px] text-ink-secondary">模型：V4.1 Flash（固定，在智能体页配置）</p>
           </section>
 
-          <section id="settings-permissions" className="border-b border-border-subtle py-3.5 last:border-0">
-            <h3 className="m-0 mb-2 text-[10.5px] font-semibold tracking-[0.02em] text-ink-secondary">权限</h3>
-            {permError && <p className="m-0 mb-1 text-2xs text-warn-ink">{permError}</p>}
+          <section id="settings-permissions" className="border-b border-border-subtle py-[13px] last:border-0">
+            <h3 className="m-0 mb-[7px] text-[10.5px] font-semibold tracking-[0.02em] text-ink-secondary">权限</h3>
+            {permError && <p className="m-0 mb-2 text-[10.5px] text-warn-ink">{permError}</p>}
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <div>
-                <p className="m-0 mb-1 font-mono text-2xs text-muted">沙盒</p>
-                <div className="flex flex-col gap-1">
+                <p className="m-0 mb-1.5 font-mono text-[9.5px] uppercase tracking-[0.06em] text-muted">沙盒</p>
+                <div className="flex flex-col gap-[5px]">
                   {SANDBOX_OPTIONS.map((option) => (
                     <button
                       key={option.id}
@@ -209,21 +210,24 @@ export default function SettingsPage({
                       disabled={permLoading || permSaving}
                       aria-pressed={permissions.sandbox === option.id}
                       onClick={() => void applyPermissions({ ...permissions, sandbox: option.id })}
-                      className={`cursor-pointer rounded-md border px-2 py-1 text-left text-sm disabled:opacity-50 ${
+                      className={`cursor-pointer rounded-sm border px-2.5 py-2 text-left transition-colors duration-fast disabled:opacity-50 ${
                         permissions.sandbox === option.id
                           ? 'border-border bg-avatar-bg text-ink'
-                          : 'border-border-subtle bg-surface-solid text-ink-secondary'
+                          : 'border-border-subtle bg-surface-solid text-ink-secondary hover:bg-surface-sunken'
                       }`}
                     >
-                      {option.label}
-                      <span className="block text-2xs text-muted">{option.hint}</span>
+                      <span className="flex items-center justify-between gap-2">
+                        <span className="text-[11.5px] font-medium leading-[1.4]">{option.label}</span>
+                        {permissions.sandbox === option.id && <em className="flex-none text-[9.5px] not-italic text-muted">当前</em>}
+                      </span>
+                      <span className="mt-[2px] block text-[10.5px] leading-[1.5] text-muted">{option.hint}</span>
                     </button>
                   ))}
                 </div>
               </div>
               <div>
-                <p className="m-0 mb-1 font-mono text-2xs text-muted">审批策略</p>
-                <div className="flex flex-col gap-1">
+                <p className="m-0 mb-1.5 font-mono text-[9.5px] uppercase tracking-[0.06em] text-muted">审批策略</p>
+                <div className="flex flex-col gap-[5px]">
                   {APPROVAL_OPTIONS.map((option) => (
                     <button
                       key={option.id}
@@ -231,14 +235,17 @@ export default function SettingsPage({
                       disabled={permLoading || permSaving}
                       aria-pressed={permissions.approval === option.id}
                       onClick={() => void applyPermissions({ ...permissions, approval: option.id })}
-                      className={`cursor-pointer rounded-md border px-2 py-1 text-left text-sm disabled:opacity-50 ${
+                      className={`cursor-pointer rounded-sm border px-2.5 py-2 text-left transition-colors duration-fast disabled:opacity-50 ${
                         permissions.approval === option.id
                           ? 'border-border bg-avatar-bg text-ink'
-                          : 'border-border-subtle bg-surface-solid text-ink-secondary'
+                          : 'border-border-subtle bg-surface-solid text-ink-secondary hover:bg-surface-sunken'
                       }`}
                     >
-                      {option.label}
-                      <span className="block text-2xs text-muted">{option.hint}</span>
+                      <span className="flex items-center justify-between gap-2">
+                        <span className="text-[11.5px] font-medium leading-[1.4]">{option.label}</span>
+                        {permissions.approval === option.id && <em className="flex-none text-[9.5px] not-italic text-muted">当前</em>}
+                      </span>
+                      <span className="mt-[2px] block text-[10.5px] leading-[1.5] text-muted">{option.hint}</span>
                     </button>
                   ))}
                 </div>
@@ -246,12 +253,12 @@ export default function SettingsPage({
             </div>
           </section>
 
-          <section id="settings-executor" className="border-b border-border-subtle py-3.5 last:border-0">
-            <h3 className="m-0 mb-2 text-[10.5px] font-semibold tracking-[0.02em] text-ink-secondary">子任务执行者</h3>
-            <p className="m-0 mb-2 text-xs text-muted">
+          <section id="settings-executor" className="border-b border-border-subtle py-[13px] last:border-0">
+            <h3 className="m-0 mb-[7px] text-[10.5px] font-semibold tracking-[0.02em] text-ink-secondary">子任务执行者</h3>
+            <p className="m-0 mb-2 text-[11px] leading-[1.5] text-muted">
               决定新子任务由任务智能体（NPC）执行，还是由司墨本人直接执行。
             </p>
-            <div className="flex flex-col gap-1 sm:flex-row">
+            <div className="flex flex-col gap-[5px] sm:flex-row">
               {(
                 [
                   { id: 'npc', label: '任务智能体 NPC', hint: '按任务拆分给 NPC 执行，结果按汇报回流' },
@@ -264,30 +271,35 @@ export default function SettingsPage({
                   disabled={executorBusy}
                   aria-pressed={executor === option.id}
                   onClick={() => void chooseExecutor(option.id)}
-                  className={`flex-1 cursor-pointer rounded-md border px-2 py-1 text-left text-sm disabled:opacity-50 ${
+                  className={`relative flex-1 cursor-pointer rounded-sm border px-2.5 py-2 text-left transition-colors duration-fast disabled:opacity-50 ${
                     executor === option.id
                       ? 'border-border bg-avatar-bg text-ink'
-                      : 'border-border-subtle bg-surface-solid text-ink-secondary'
+                      : 'border-border-subtle bg-surface-solid text-ink-secondary hover:bg-surface-sunken'
                   }`}
                 >
-                  {option.label}
-                  <span className="block text-2xs text-muted">{option.hint}</span>
+                  <span className="flex items-center justify-between gap-2">
+                    <span className="text-[11.5px] font-medium leading-[1.4]">{option.label}</span>
+                    {executor === option.id && <em className="flex-none text-[9.5px] not-italic text-muted">当前</em>}
+                  </span>
+                  <span className="mt-[2px] block text-[10.5px] leading-[1.5] text-muted">{option.hint}</span>
                 </button>
               ))}
             </div>
           </section>
 
-          <section id="settings-theme" className="border-b border-border-subtle py-3.5 last:border-0">
-            <h3 className="m-0 mb-2 text-[10.5px] font-semibold tracking-[0.02em] text-ink-secondary">主题</h3>
-            <div className="flex flex-wrap gap-1.5">
+          <section id="settings-theme" className="border-b border-border-subtle py-[13px] last:border-0">
+            <h3 className="m-0 mb-[7px] text-[10.5px] font-semibold tracking-[0.02em] text-ink-secondary">主题</h3>
+            <div className="flex flex-wrap gap-[7px]">
               {listThemes().map((name) => (
                 <button
                   key={name}
                   type="button"
                   aria-pressed={theme === name}
                   onClick={() => applyTheme(name)}
-                  className={`cursor-pointer rounded-md border px-2 py-1 text-sm ${
-                    theme === name ? 'border-border bg-avatar-bg text-ink' : 'border-border-subtle bg-surface-solid text-ink-secondary'
+                  className={`cursor-pointer rounded-[6px] border px-[9px] py-[5px] text-[11.5px] transition-colors duration-fast ${
+                    theme === name
+                      ? 'border-border bg-avatar-bg text-ink'
+                      : 'border-border bg-surface-solid text-ink-secondary hover:bg-surface-sunken'
                   }`}
                 >
                   {themeLabel(name)}
@@ -296,9 +308,9 @@ export default function SettingsPage({
             </div>
           </section>
 
-          <section id="settings-view" className="border-b border-border-subtle py-3.5 last:border-0">
-            <h3 className="m-0 mb-2 text-[10.5px] font-semibold tracking-[0.02em] text-ink-secondary">自定义视图</h3>
-            <p className="m-0 mb-2 text-xs text-muted">
+          <section id="settings-view" className="border-b border-border-subtle py-[13px] last:border-0">
+            <h3 className="m-0 mb-[7px] text-[10.5px] font-semibold tracking-[0.02em] text-ink-secondary">自定义视图</h3>
+            <p className="m-0 mb-2 text-[11px] leading-[1.5] text-muted">
               打开当前会话的自定义视图（只读 schema 渲染，13 类块）；生成/修改/回滚通过对话。
             </p>
             <button
@@ -307,37 +319,55 @@ export default function SettingsPage({
                 bus.emit(EVENTS.VIEW_OPEN, {})
                 onClose()
               }}
-              className="cursor-pointer rounded-xs border border-border-subtle bg-surface-solid px-2.5 py-1 text-sm text-ink-secondary hover:border-accent-border hover:text-ink"
+              className="cursor-pointer rounded-sm border border-border-subtle bg-surface-solid px-2.5 py-1 text-sm text-ink-secondary hover:bg-surface-sunken hover:text-ink"
             >
               打开自定义视图预览
             </button>
           </section>
 
-          <section id="settings-data" className="border-b border-border-subtle py-3.5 last:border-0">
-            <h3 className="m-0 mb-2 text-[10.5px] font-semibold tracking-[0.02em] text-ink-secondary">数据目录</h3>
-            <p className="m-0 rounded-xs border border-border-subtle bg-surface-sunken px-2 py-1.5 font-mono text-xs text-ink-secondary">
+          <section id="settings-data" className="border-b border-border-subtle py-[13px] last:border-0">
+            <h3 className="m-0 mb-[7px] text-[10.5px] font-semibold tracking-[0.02em] text-ink-secondary">数据目录</h3>
+            <p className="m-0 rounded-sm border border-border-subtle bg-surface-sunken px-2.5 py-2 font-mono text-[11px] leading-[1.5] text-ink-secondary">
               {dataDirectoryHint()}
             </p>
           </section>
 
           <section id="settings-shortcuts" className="mb-0">
-            <h3 className="m-0 mb-2 text-[10.5px] font-semibold tracking-[0.02em] text-ink-secondary">快捷键</h3>
-            <div className="grid grid-cols-[6rem_minmax(0,1fr)_5rem] items-center gap-x-3">
-              {SHORTCUTS.map((shortcut) => (
-                <div key={shortcut.keys} className="contents">
-                  <div className="flex h-8 items-center">
-                    <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded-xs border border-avatar-border bg-surface-sunken px-1 font-mono text-[11px] text-ink-secondary">{shortcut.keys}</kbd>
-                  </div>
-                  <div className="h-8 truncate text-[13px] leading-8 text-ink">{shortcut.label}</div>
-                  <div className="h-8 text-xs leading-8 text-muted">{shortcut.scope}</div>
-                </div>
-              ))}
-            </div>
+            <h3 className="m-0 mb-[7px] text-[10.5px] font-semibold tracking-[0.02em] text-ink-secondary">快捷键</h3>
+            <table className="w-full border-collapse text-[11px]">
+              <tbody>
+                {SHORTCUTS.map((shortcut) => (
+                  <tr key={shortcut.keys}>
+                    <td className="w-[130px] whitespace-nowrap border-b border-border-subtle py-[6px] pr-2 align-middle">
+                      <span className="inline-flex items-center gap-1">
+                        {shortcut.keys.split(' ').map((key, index) => (
+                          <kbd
+                            key={`${shortcut.keys}-${index}`}
+                            className="inline-flex h-5 min-w-5 items-center justify-center rounded-xs border border-border border-b-2 bg-surface-solid px-[5px] font-mono text-[10px] font-medium leading-none text-muted"
+                          >
+                            {key}
+                          </kbd>
+                        ))}
+                      </span>
+                    </td>
+                    <td className="border-b border-border-subtle py-[6px] text-[11px] text-ink-secondary">{shortcut.label}</td>
+                    <td className="w-[70px] border-b border-border-subtle py-[6px] text-right text-[10.5px] text-muted">{shortcut.scope}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </section>
         </div>
 
-        <footer className="flex-none border-t border-border-subtle px-4 py-2 font-mono text-2xs text-muted">
-          设置只读展示 + 本地偏好；权限/主题即时生效，其余由后端与对话控制。
+        <footer className="flex flex-none items-center justify-between gap-2.5 border-t border-border px-[18px] py-[11px] text-[10px] text-muted">
+          <span className="min-w-0 flex-1 truncate font-mono">设置只读展示 + 本地偏好；权限/主题即时生效，其余由后端与对话控制。</span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-[30px] min-w-[56px] flex-none cursor-pointer rounded-[6px] bg-ink px-3 text-[11.5px] font-medium text-ink-inverse transition-opacity duration-fast hover:opacity-90"
+          >
+            完成
+          </button>
         </footer>
       </div>
     </div>

@@ -36,14 +36,14 @@ check('设置权限/分区：中性选中、自动文案、14px 标题/24 间距
   assert.match(settingsPage, /border-border bg-avatar-bg text-ink/)
   assert.match(settingsPage, /按风险自动批准\/拒绝/)
   assert.match(settingsPage, /text-\[10\.5px\] font-semibold/)
-  assert.match(settingsPage, /border-b border-border-subtle py-3\.5/)
+  assert.match(settingsPage, /border-b border-border-subtle py-\[13px\]/)
 })
 
 check('快捷键 3 列：kbd 20px、动作 13、作用域 12、行高 32', () => {
-  assert.match(settingsPage, /grid grid-cols-\[6rem_minmax\(0,1fr\)_5rem\]/)
-  assert.match(settingsPage, /h-5 min-w-5.*<kbd|<kbd/)
-  assert.match(settingsPage, /h-8 truncate text-\[13px\] leading-8/)
-  assert.match(settingsPage, /h-8 text-xs leading-8 text-muted/)
+  assert.match(settingsPage, /w-\[130px\] whitespace-nowrap border-b/)
+  assert.match(settingsPage, /<kbd/)
+  assert.match(settingsPage, /text-\[11px\] text-ink-secondary/)
+  assert.match(settingsPage, /text-\[10\.5px\] text-muted/)
   assert.match(settings, /scope: '全局'/)
   assert.equal(/Ctrl \/ ⌘ \+ K/.test(settings), false)
   assert.match(settingsPage, /border-border-subtle bg-surface-solid px-2\.5 py-1 text-sm text-ink-secondary/)
@@ -59,8 +59,6 @@ check('交付物：前 3 条单行 + hover 图标 + 查看全部文字链接', (
 })
 
 check('空分组单行灰字；计划最多 5 条 + 展开/收起', () => {
-  assert.match(taskPanel, /text-xs text-muted">\s*\{taskStatusGroupLabel\(statusGroup\)\}/)
-  assert.equal(/分组暂无任务[\s\S]*border-dashed/.test(taskPanel), false)
   assert.match(planSummary, /COLLAPSED_TODO_LIMIT = 5/)
   assert.match(planSummary, /expanded \? '收起' : '展开'/)
 })
@@ -68,8 +66,8 @@ check('空分组单行灰字；计划最多 5 条 + 展开/收起', () => {
 check('工作台：最近活动 5 条、单行、时间 12px 灰、max 1000', () => {
   assert.match(workbench, /最近活动/)
   assert.match(workbench, /slice\(0, 5\)/)
-  assert.match(workbench, /flex h-9 min-w-0 items-center gap-3/)
-  assert.match(workbench, /text-xs text-muted/)
+  assert.match(workbench, /flex h-8 min-w-0 items-center gap-3/)
+  assert.match(workbench, /text-\[10\.5px\] text-muted/)
   assert.match(workbench, /max-w-\[1000px\]/)
   assert.match(workbench, /apiGet\('\/api\/sessions\?limit=5'\)/)
 })
