@@ -74,11 +74,11 @@ check('P1 定时任务：已结束/无下次运行、本地时间、标准开关
   assert.equal(/formatScheduleTime\(schedule\.nextRunAt, schedule\.timezone\)/.test(schedules), false)
 })
 
-check('P2 侧栏：选中中性灰、状态合并且无重复执行中标签', () => {
-  assert.match(sessionTree, /border-border-subtle bg-avatar-bg/)
+check('P2 侧栏：选中 accent 淡底、状态合并且无重复执行中标签', () => {
+  assert.match(sessionTree, /border-accent-border bg-accent-soft/)
+  assert.match(sessionTree, /text-accent/)
   assert.match(sessionTree, /进行中 \$\{counts\.active\} · \$\{runningTasks\} 个任务/)
   assert.equal(/执行中\s*<\/span>/.test(sessionTree), false)
-  assert.equal(/bg-accent-soft'/.test(sessionTree), false)
 })
 
 check('P2 智能体/记忆：模型固定 V4.1 Flash、能力中性；记忆徽标中性', () => {

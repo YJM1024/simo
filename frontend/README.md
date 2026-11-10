@@ -26,7 +26,7 @@ cd frontend
 pnpm install                 # 安装依赖（Node 20+，pnpm 10）
 pnpm build                   # 类型检查 + 构建，产物 frontend/dist，并复制 embed
 pnpm typecheck               # 仅 tsc --noEmit
-pnpm check                   # 全部门禁（模块度 + M2–M58 + tsc）
+pnpm check                   # 全部门禁（模块度 + M2–M62 + tsc）
 node scripts/check-m52.mjs   # 单跑某个门禁
 ```
 
@@ -44,6 +44,14 @@ node scripts/check-m52.mjs   # 单跑某个门禁
 - 共享 UI：`src/platform/ui/*`
 - 视觉规范：仓库 `docs/design-system.md`
 - 模块边界：`scripts/check-modularity.mjs`（禁止跨 feature import）
+
+## 视觉风格（M62 浅色科技风）
+
+- 画布 `#F7F8FA` + 顶部极淡蓝/紫/青径向渐变；白色卡片 + 1px `#E4E7EC` 边框 + 柔和双层阴影。
+- 字体 Segoe UI Variable / Consolas；正文 14px、字距 -0.004em。
+- 圆角：控件 8 / 卡片 12 / 弹层 16；主按钮黑底白字，次按钮白底 1px 边框。
+- accent `#2F5BFF`（蓝）→ `#6E4BFF`（紫）→ `#00B8D9`（青）；导航 active 使用蓝紫渐变下划线，侧栏 active 用 `#EEF1FF` 淡蓝底。
+- 细节规范见仓库 `docs/design-system.md`。
 
 ## 约定
 

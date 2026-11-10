@@ -9,7 +9,7 @@ const SIZE = { sm: 'h-7 w-7', md: 'h-8 w-8' } as const
 const TONE: Record<'ghost' | 'secondary' | 'primary' | 'danger', string> = {
   ghost: 'border-transparent bg-transparent text-ink-secondary hover:bg-surface-sunken hover:text-ink',
   secondary: 'border-border bg-surface-solid text-ink-secondary hover:bg-surface-sunken hover:text-ink',
-  primary: 'border-accent bg-accent text-accent-ink hover:bg-accent-hover',
+  primary: 'border-ink bg-ink text-ink-inverse shadow-sm hover:bg-ink-secondary',
   danger: 'border-danger-border bg-danger-soft text-danger-ink hover:border-danger',
 }
 

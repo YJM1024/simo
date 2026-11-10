@@ -342,7 +342,7 @@ export default function Composer({ disabled, disabledReason, sessionId, replyTo,
               onClick={() => void submit()}
               disabled={!canSend}
               title={canSend ? '发送（Enter）' : '输入内容后可发送'}
-              className="inline-flex h-8 min-w-9 flex-none items-center justify-center gap-1.5 rounded-xs border border-accent bg-accent px-2.5 text-xs font-medium text-accent-ink transition-colors duration-fast hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex h-8 min-w-9 flex-none items-center justify-center gap-1.5 rounded-xs border border-ink bg-ink px-2.5 text-xs font-medium text-ink-inverse shadow-sm transition-colors duration-fast hover:bg-ink-secondary disabled:cursor-not-allowed disabled:opacity-40"
             >
               {sending && <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />}
               {sending ? '发送中…' : '发送'}

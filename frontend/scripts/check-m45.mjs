@@ -99,7 +99,7 @@ check('时间轴：32px 热区、按发送方着色、横向短条、轨道、�
 check('消息：用户浅灰气泡、助手纯文本、中性头像、低调元信息、正文 15px', () => {
   assert.match(styles, /--message-user: #f4f4f5/)
   assert.match(styles, /--avatar-bg: #f3f4f6/)
-  assert.match(styles, /--avatar-ink: #374151/)
+  assert.match(styles, /--avatar-ink: #313a48/)
   assert.match(messageList, /role === 'user'[\s\S]*rounded-bubble border border-message-user-border bg-message-user/)
   assert.match(messageList, /: 'px-0 py-0'/)
   assert.match(messageList, /h-\[30px\] w-\[30px\].*rounded-full/)

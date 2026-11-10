@@ -13,10 +13,10 @@ const SIZE: Record<ButtonSize, string> = {
 }
 
 const VARIANT: Record<ButtonVariant, string> = {
-  primary: 'border-accent bg-accent text-accent-ink hover:bg-accent-hover active:brightness-95',
-  secondary: 'border-border bg-surface-solid text-ink-secondary hover:bg-surface-sunken hover:text-ink active:bg-surface-sunken',
+  primary: 'border-ink bg-ink text-ink-inverse shadow-sm hover:bg-ink-secondary active:brightness-95',
+  secondary: 'border-border bg-surface-solid text-ink-secondary shadow-sm hover:border-border hover:bg-surface-sunken hover:text-ink active:bg-surface-sunken',
   ghost: 'border-transparent bg-transparent text-ink-secondary hover:bg-surface-sunken hover:text-ink active:bg-surface-sunken',
-  danger: 'border-danger bg-danger text-ink-inverse hover:brightness-95 active:brightness-90',
+  danger: 'border-danger bg-danger text-ink-inverse shadow-sm hover:brightness-95 active:brightness-90',
 }
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

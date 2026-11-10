@@ -4,11 +4,11 @@ import type { ReactNode } from 'react'
 export type BadgeTone = 'neutral' | 'accent' | 'ok' | 'warn' | 'danger' | 'muted'
 
 const TONE: Record<BadgeTone, string> = {
-  neutral: 'border-border-subtle bg-transparent text-ink-secondary',
-  accent: 'border-accent-border bg-transparent text-accent',
-  ok: 'border-ok-border bg-transparent text-ok-ink',
-  warn: 'border-warn-border bg-transparent text-warn-ink',
-  danger: 'border-danger-border bg-transparent text-danger-ink',
+  neutral: 'border-border-subtle bg-surface-sunken text-ink-secondary',
+  accent: 'border-accent-border bg-accent-soft text-accent',
+  ok: 'border-ok-border bg-ok-soft text-ok-ink',
+  warn: 'border-warn-border bg-warn-soft text-warn-ink',
+  danger: 'border-danger-border bg-danger-soft text-danger-ink',
   muted: 'border-transparent bg-transparent text-muted',
 }
 

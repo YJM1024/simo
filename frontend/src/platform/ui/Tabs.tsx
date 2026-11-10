@@ -43,7 +43,7 @@ export function Tabs({ items, active, onChange, ariaLabel, className = '', gapCl
               else if (event.key === 'Home') { event.preventDefault(); move(0) }
               else if (event.key === 'End') { event.preventDefault(); move(items.length - 1) }
             }}
-            className={`flex h-8 flex-none items-center gap-1.5 border-b-2 px-2.5 text-sm transition-colors duration-fast focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${size === 'sm' ? 'text-xs' : ''} ${selected ? 'border-accent font-medium text-ink' : 'border-transparent text-ink-secondary hover:text-ink'}`}
+            className={`flex h-8 flex-none items-center gap-1.5 border-b-2 px-2.5 text-sm transition-colors duration-fast focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${size === 'sm' ? 'text-xs' : ''} ${selected ? 'tab-underline border-transparent font-medium text-accent' : 'border-transparent text-ink-secondary hover:text-ink'}`}
           >
             {item.label}
             {typeof item.count === 'number' && <span className="rounded-pill bg-surface-sunken px-1.5 font-mono text-xs tabular-nums text-muted">{item.count > 99 ? '99+' : item.count}</span>}

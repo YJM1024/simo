@@ -362,7 +362,7 @@ export default function SessionTreePanel() {
           <div
             className={`group flex items-start gap-1 rounded-md border py-1.5 pr-1.5 transition-colors duration-fast ${
               isActive
-                ? 'border-border-subtle bg-avatar-bg'
+                ? 'border-accent-border bg-accent-soft'
                 : 'border-transparent hover:bg-surface-sunken'
             }`}
             style={{ paddingLeft: `${indent}px` }}
@@ -385,7 +385,7 @@ export default function SessionTreePanel() {
                   aria-label={statusLabel(node.status)}
                 />
                 <AgentAvatar agent={owner} size="xs" className="ml-0.5" />
-                <span className={`truncate text-md ${isActive ? 'text-ink' : 'text-ink-secondary'}`}>{node.title}</span>
+                <span className={`truncate text-md ${isActive ? 'text-accent' : 'text-ink-secondary'}`}>{node.title}</span>
                 {unread > 0 && (
                   <span className="flex-none text-xs tabular-nums text-accent" title={`${unread} 条未读消息`}>
                     {unread}

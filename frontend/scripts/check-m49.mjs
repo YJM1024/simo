@@ -34,7 +34,7 @@ check('时间轴尺寸：22×5 / 当前 28×6 / hover 28×5，圆角 2px', () =>
 
 check('时间轴颜色：user #3B82F6 / agent #64748B，默认 0.65', () => {
   assert.match(styles, /--timeline-user: #3b82f6/)
-  assert.match(styles, /--timeline-user-active: #2563eb/)
+  assert.match(styles, /--timeline-user-active: #2f5bff/)
   assert.match(styles, /--timeline-agent: #64748b/)
   assert.equal(/--timeline-system/.test(styles), false)
   assert.match(historyRail, /bg-timeline-user-active/)

@@ -43,13 +43,13 @@ check('品牌/头像：司墨无字距；圆形头像；消息头与头像同轴
 })
 
 check('圆角令牌收敛：控件 2–3、卡片/面板 4、气泡 6、徽标/胶囊 2', () => {
-  assert.match(styles, /--r-xs: 2px/)
-  assert.match(styles, /--r-sm: 3px/)
-  assert.match(styles, /--r-md: 4px/)
-  assert.match(styles, /--r-lg: 4px/)
-  assert.match(styles, /--r-xl: 4px/)
-  assert.match(styles, /--r-pill: 2px/)
-  assert.match(styles, /--r-bubble: 6px/)
+  assert.match(styles, /--r-xs: 8px/)
+  assert.match(styles, /--r-sm: 8px/)
+  assert.match(styles, /--r-md: 12px/)
+  assert.match(styles, /--r-lg: 12px/)
+  assert.match(styles, /--r-xl: 16px/)
+  assert.match(styles, /--r-pill: 6px/)
+  assert.match(styles, /--r-bubble: 12px/)
   assert.match(styles, /--radius-bubble/)
 })
 
