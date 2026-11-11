@@ -301,8 +301,10 @@ export function useChatRuntime(): ChatRuntime {
           }
           return
         }
-        case 'message.delta':
-        case 'reply.delta': {
+        case 'reply.delta':
+          // 后端为兼容旧客户端同时发 reply.delta 与 message.delta；只消费一份，避免正文重复。
+          return
+        case 'message.delta': {
           const payload = parseDelta(frame.data)
           if (!payload) return
           clearFeedback()
