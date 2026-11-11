@@ -9,11 +9,11 @@
 //   - 发送永不锁：允许连发；只有显式「撤回」才发 correct 帧。
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { HttpError, getMessages, postChat, toMessages } from '../../platform/http.ts'
+import { HttpError, createSession, getMessages, postChat, toMessages } from '../../platform/http.ts'
 import { bus, EVENTS } from '../../platform/events.ts'
-import { readSessionId } from '../../platform/router.ts'
+import { readSessionId, writeSessionId } from '../../platform/router.ts'
 import { loadIncludeChildrenPreference, saveIncludeChildrenPreference } from '../../platform/preferences.ts'
-import { sendChat, sendCorrect } from '../../platform/ws-hub.ts'
+import { connectWs, sendChat, sendCorrect } from '../../platform/ws-hub.ts'
 import type {
   AgentState,
   ChatAttachment,
@@ -35,6 +35,20 @@ import {
 import { clearFeedbackTimers, type FeedbackPhase } from './feedback.ts'
 import { HISTORY_PAGE_SIZE, mergeOlderMessages } from './history.ts'
 import { normalizeToolCall, upsertToolCall, type ToolCallInfo } from './toolcalls.ts'
+
+const DRAFT_SESSION_PREFIX = 'draft:'
+
+function isDraftSessionId(value: string | null | undefined): boolean {
+  return Boolean(value && value.startsWith(DRAFT_SESSION_PREFIX))
+}
+
+function extractCreatedSessionId(payload: unknown): string | null {
+  if (!isRecord(payload)) return null
+  const direct = readString(payload, 'id') ?? readString(payload, 'sessionId')
+  if (direct) return direct
+  const nested = payload['session']
+  return isRecord(nested) ? readString(nested, 'id') ?? readString(nested, 'sessionId') ?? null : null
+}
 
 const TOOL_FRAME_TYPES = new Set([
   'tool.call',
@@ -176,6 +190,12 @@ export function useChatRuntime(): ChatRuntime {
   const loadMessages = useCallback(
     async (sessionId: string, includeChildren: boolean, options: { silent?: boolean } = {}) => {
       const silent = options.silent === true
+      if (isDraftSessionId(sessionId)) {
+        setMessages([])
+        setMessagesError(null)
+        setMessagesLoading(false)
+        return
+      }
       if (!silent) {
         setMessagesLoading(true)
         setMessagesError(null)
@@ -485,13 +505,40 @@ export function useChatRuntime(): ChatRuntime {
   // ---- 发送（永不锁：不因流式/任务而禁用；归档会话除外，只读）----
   const send = useCallback(async (rawText: string, attachmentMetas: ChatAttachment[] = []): Promise<boolean> => {
     const text = rawText.trim()
-    const sessionId = sessionIdRef.current
+    let sessionId = sessionIdRef.current
     const attachmentIds = attachmentMetas.map((attachment) => attachment.id)
     const replyToMessageId = replyToRef.current?.id
     if ((!text && attachmentIds.length === 0) || !sessionId) return false
     if (sessionArchivedRef.current) {
       setNotice({ kind: 'info', text: '已归档会话只读：恢复后才能继续发消息' })
       return false
+    }
+
+    // M70：草稿会话在发送首条消息时才落库；失败保留草稿
+    if (isDraftSessionId(sessionId)) {
+      const draftId = sessionId
+      try {
+        const created = await createSession(null, '新会话')
+        const realId = extractCreatedSessionId(created)
+        if (!realId) throw new Error('后端未返回会话 id')
+        sessionId = realId
+        sessionIdRef.current = realId
+        writeSessionId(realId)
+        setSession((prev) => ({
+          id: realId,
+          title: '新会话',
+          depth: 0,
+          archived: false,
+          meta: prev?.meta ?? new Map(),
+        }))
+        setMessages([])
+        messageIdsRef.current = new Set()
+        connectWs(realId)
+        bus.emit(EVENTS.SESSION_DRAFT_ACCEPT, { draftId, sessionId: realId, title: '新会话' })
+      } catch (err) {
+        setNotice({ kind: 'error', text: `新建会话失败：${err instanceof Error ? err.message : '未知错误'}` })
+        return false
+      }
     }
 
     // 优先 WS（普通 chat 帧，默认不打断后台工作）；M8 帧里带附件 id 列表；M15 带回复目标

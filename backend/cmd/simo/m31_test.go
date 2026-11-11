@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"simo/internal/platform/config"
 	"github.com/coder/websocket"
+	"simo/internal/platform/config"
 )
 
 func jsonDataMap(body []byte) map[string]any {

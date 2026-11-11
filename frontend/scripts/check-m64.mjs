@@ -44,7 +44,7 @@ check('任务 pill 留在上下文条右侧；不再有横跨整页的 tab 行',
 check('侧栏工作区：名称+环境；新建子会话独立图标按钮；会话小圆点无头像', () => {
   assert.match(session, /主工作区/)
   assert.match(session, /本地环境/)
-  assert.match(session, /aria-label="新建子会话"/)
+  assert.match(session, /aria-label="新建会话"/)
   assert.match(session, /h-1 w-1 flex-none rounded-full/)
   assert.equal(/AgentAvatar/.test(session), false)
   assert.equal(/新建子会话 · 当前会话下/.test(session), false)

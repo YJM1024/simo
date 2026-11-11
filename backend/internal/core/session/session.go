@@ -25,3 +25,10 @@ type Service interface {
 	// DescendantIDs 返回 id 及全部后代的 id；必须防环并限制深度。
 	DescendantIDs(ctx context.Context, id string, maxDepth int) ([]string, error)
 }
+
+// DraftService 是可选的懒创建能力；sessions 实现，chat 在首条写入前物化。
+type DraftService interface {
+	CreateDraft(ctx context.Context, parentID, title string) (Session, error)
+	MaterializeDraft(ctx context.Context, id string) (Session, bool, error)
+	IsDraft(ctx context.Context, id string) bool
+}

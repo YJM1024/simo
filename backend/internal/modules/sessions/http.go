@@ -156,6 +156,7 @@ func (m *Module) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		ParentID string `json:"parentId"`
 		Title    string `json:"title"`
+		Draft    *bool  `json:"draft"`
 	}
 	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 16<<10)).Decode(&req); err != nil {
 		if httpserver.IsBodyTooLarge(err) {
@@ -165,12 +166,21 @@ func (m *Module) handleCreate(w http.ResponseWriter, r *http.Request) {
 		httpserver.WriteError(w, http.StatusBadRequest, "请求体不是合法 JSON")
 		return
 	}
-	session, err := m.Create(r.Context(), req.ParentID, req.Title)
+	var session Session
+	var err error
+	if req.Draft != nil && !*req.Draft {
+		// 显式 draft:false 是内部/测试兼容的立即创建路径；默认仍是懒创建。
+		session, err = m.Create(r.Context(), req.ParentID, req.Title)
+	} else {
+		session, err = m.CreateDraft(r.Context(), req.ParentID, req.Title)
+	}
 	if err != nil {
 		m.writeSessionError(w, err)
 		return
 	}
-	httpserver.WriteJSON(w, http.StatusCreated, map[string]any{"ok": true, "session": session})
+	httpserver.WriteJSON(w, http.StatusCreated, map[string]any{
+		"ok": true, "session": session, "draft": req.Draft == nil || *req.Draft,
+	})
 }
 
 func (m *Module) handleRename(w http.ResponseWriter, r *http.Request) {

@@ -122,6 +122,7 @@ export type BusPayloads = {
   'chat:status': ChatStatusPayload
   'tasks:state': TasksStatePayload
   'right:rail:tab': { tab: 'tasks' | 'overview' }
+  'session:draft:accept': { draftId: string; sessionId: string; title: string }
 }
 
 export const EVENTS = {
@@ -157,6 +158,8 @@ export const EVENTS = {
   RIGHT_RAIL_OPEN: 'right:rail:open',
   /** M63：右栏任务/概览切换 */
   RIGHT_RAIL_TAB: 'right:rail:tab',
+  /** M70：本地草稿会话已落库，树替换草稿 */
+  SESSION_DRAFT_ACCEPT: 'session:draft:accept',
   /** M40：工作台内嵌页的二级入口（用量/设置/命令面板/视图） */
   WORKBENCH_OPEN: 'workbench:open',
   /** WebSocket 连接状态（壳层顶栏） */

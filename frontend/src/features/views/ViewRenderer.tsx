@@ -927,7 +927,7 @@ function BlockRenderer({ block, page, catalog, linkedRow, onLinkRow, onRunAction
       setFormSubmitError(null)
       setWizardStep((index) => Math.min(steps.length - 1, index + 1))
     }
-    const inputClass = 'rounded-md border bg-surface-solid px-2 py-1 text-sm text-ink outline-none focus:border-accent'
+    const inputClass = 'h-8 w-full rounded-[7px] border bg-surface-solid px-2.5 text-[12px] text-ink outline-none transition-colors duration-fast placeholder:text-ink-faint focus:border-accent focus:shadow-focus'
     const updateValue = (name: string, nextValue: unknown): void => {
       setFormValues((prev) => ({ ...prev, [name]: nextValue }))
       setFormErrors((prev) => { const next = { ...prev }; delete next[name]; return next })
@@ -959,8 +959,8 @@ function BlockRenderer({ block, page, catalog, linkedRow, onLinkRow, onRunAction
           const describedBy = error ? `form-${block.id}-${field.name}-error` : undefined
           const fieldClass = `${inputClass} ${error ? 'border-danger-border' : 'border-border-subtle'}`
           return (
-            <label key={field.name} className="flex flex-col gap-0.5 text-2xs text-ink-secondary">
-              <span>
+            <label key={field.name} className="flex flex-col gap-1 text-[11px] text-ink-secondary">
+              <span className="font-medium">
                 {field.label}
                 {field.required && <span className="ml-0.5 text-danger-ink" aria-hidden="true">*</span>}
               </span>
@@ -971,7 +971,7 @@ function BlockRenderer({ block, page, catalog, linkedRow, onLinkRow, onRunAction
                   placeholder={field.placeholder}
                   aria-invalid={Boolean(error)}
                   aria-describedby={describedBy}
-                  className={fieldClass}
+                  className={`min-h-[72px] w-full rounded-[7px] border bg-surface-solid px-2.5 py-2 text-[12px] text-ink outline-none placeholder:text-ink-faint focus:border-accent focus:shadow-focus ${error ? 'border-danger-border' : 'border-border'}`}
                   rows={3}
                 />
               ) : field.type === 'select' ? (
@@ -980,7 +980,7 @@ function BlockRenderer({ block, page, catalog, linkedRow, onLinkRow, onRunAction
                   onChange={(event) => updateValue(field.name, event.target.value)}
                   aria-invalid={Boolean(error)}
                   aria-describedby={describedBy}
-                  className={fieldClass}
+                  className={`${fieldClass} cursor-pointer`}
                 >
                   <option value="">请选择…</option>
                   {field.options.map((option) => <option key={option} value={option}>{option}</option>)}
@@ -1022,7 +1022,7 @@ function BlockRenderer({ block, page, catalog, linkedRow, onLinkRow, onRunAction
             onClick={isWizard && !isLastStep ? nextStep : undefined}
             disabled={!binding || formSubmitting}
             aria-busy={formSubmitting}
-            className="w-fit cursor-pointer rounded-md border border-accent-border bg-accent-soft px-2.5 py-1 text-sm text-accent-hover disabled:opacity-50"
+            className="h-8 w-fit cursor-pointer rounded-[7px] border border-ink bg-ink px-3 text-[11.5px] font-medium text-ink-inverse transition-colors duration-fast hover:bg-ink-secondary disabled:cursor-not-allowed disabled:opacity-50"
           >
             {formSubmitting ? '提交中…' : isWizard && !isLastStep ? '下一步' : (stringValue(props['submitLabel']) || '提交')}
           </button>

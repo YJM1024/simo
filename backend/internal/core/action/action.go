@@ -149,6 +149,9 @@ func build() []Definition {
 			out[i].Disabled = true
 			out[i].Description = "已禁用：消息编辑/修改不再提供"
 		}
+		if out[i].Name == "chat.send_card" {
+			out[i].Params = json.RawMessage(`{"type":"object","properties":{"sessionId":{"type":"string","description":"目标会话 id"},"fallbackText":{"type":"string","description":"卡片不可渲染时展示给用户的纯文本，必须非空"},"schema":{"type":"object","description":"视图 schema。最小合法示例：{\"title\":\"标题\",\"meta\":{\"createdBy\":\"agent\"},\"layout\":{\"kind\":\"rows\"},\"blocks\":[{\"id\":\"b1\",\"type\":\"text\",\"props\":{\"text\":\"正文\"}},{\"id\":\"b2\",\"type\":\"form\",\"props\":{\"fields\":[{\"name\":\"choice\",\"label\":\"选择\",\"kind\":\"select\",\"options\":[\"A\",\"B\"]}],\"submitLabel\":\"提交\"},\"actions\":[{\"id\":\"submit\",\"action\":\"chat.send\",\"label\":\"提交\"}]}],\"equivalence\":{\"chatPrompt\":\"用一句话描述这张卡片\"}}；块字段只允许 id/type/props/data/actions，且必须有 meta.createdBy 与 layout.kind"}},"required":["sessionId","schema","fallbackText"]}`)
+		}
 	}
 	return out
 }

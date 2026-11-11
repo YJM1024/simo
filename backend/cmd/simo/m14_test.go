@@ -55,7 +55,7 @@ func TestM14CategoryFromMockMarker(t *testing.T) {
 
 func createSession(t *testing.T, baseURL, parentID, title string) string {
 	t.Helper()
-	status, body := postJSON(t, baseURL+"/api/sessions", map[string]any{"parentId": parentID, "title": title})
+	status, body := postJSON(t, baseURL+"/api/sessions", map[string]any{"parentId": parentID, "title": title, "draft": false})
 	if status != http.StatusCreated {
 		t.Fatalf("create session = %d %s", status, body)
 	}

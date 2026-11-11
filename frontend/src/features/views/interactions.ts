@@ -20,10 +20,15 @@ export function normalizeFormFields(raw: unknown): FormFieldDef[] {
       if (!entry || typeof entry !== 'object') return null
       const record = entry as Record<string, unknown>
       const name = typeof record['name'] === 'string' && record['name'] ? record['name'] : `field-${index}`
+      const kind = typeof record['type'] === 'string' && record['type']
+        ? record['type']
+        : typeof record['kind'] === 'string' && record['kind']
+          ? record['kind']
+          : 'text'
       return {
         name,
         label: typeof record['label'] === 'string' && record['label'] ? record['label'] : name,
-        type: typeof record['type'] === 'string' ? record['type'] : 'text',
+        type: kind,
         required: record['required'] === true,
         options: Array.isArray(record['options'])
           ? record['options']

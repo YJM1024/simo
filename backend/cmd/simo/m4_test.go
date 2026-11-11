@@ -125,7 +125,7 @@ func TestM4AutoRouteTreeAggregateRename(t *testing.T) {
 	}
 
 	// POST /api/sessions 显式创建孙会话。
-	status, created := postJSON(t, ts.URL+"/api/sessions", map[string]any{"parentId": child.ID, "title": "孙会话"})
+	status, created := postJSON(t, ts.URL+"/api/sessions", map[string]any{"parentId": child.ID, "title": "孙会话", "draft": false})
 	if status != http.StatusCreated || !strings.Contains(string(created), `"parentId":"`+child.ID+`"`) {
 		t.Fatalf("POST sessions = %d %s", status, created)
 	}
@@ -149,7 +149,7 @@ func TestM4SessionTreeAndRenamePersistAcrossRestart(t *testing.T) {
 		t.Fatal(err)
 	}
 	ts1 := httptest.NewServer(app1.handler)
-	status, created := postJSON(t, ts1.URL+"/api/sessions", map[string]any{"parentId": "main", "title": "持久子会话"})
+	status, created := postJSON(t, ts1.URL+"/api/sessions", map[string]any{"parentId": "main", "title": "持久子会话", "draft": false})
 	if status != http.StatusCreated {
 		t.Fatalf("create = %d %s", status, created)
 	}
@@ -157,6 +157,10 @@ func TestM4SessionTreeAndRenamePersistAcrossRestart(t *testing.T) {
 		Session treeNode `json:"session"`
 	}
 	_ = json.Unmarshal(created, &createdPayload)
+	if status := postChatSession(t, ts1.URL, createdPayload.Session.ID, "持久消息"); status != http.StatusAccepted {
+		t.Fatalf("persist message = %d", status)
+	}
+	waitForReplyDone(t, ts1.URL, createdPayload.Session.ID)
 	ts1.Close()
 	_ = app1.Close()
 

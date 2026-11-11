@@ -6,12 +6,12 @@ import (
 	"path/filepath"
 	"testing"
 
+	"database/sql"
 	corespec "simo/internal/core/spec"
 	"simo/internal/core/store"
 	coretask "simo/internal/core/task"
 	platformlog "simo/internal/platform/log"
 	"simo/internal/platform/sqlite"
-	"database/sql"
 )
 
 type fakeTasks struct{ tasks []coretask.Task }

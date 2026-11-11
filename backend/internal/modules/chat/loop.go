@@ -13,6 +13,7 @@ import (
 
 	"simo/internal/core/eventlog"
 	corememory "simo/internal/core/memory"
+	coresession "simo/internal/core/session"
 	coretask "simo/internal/core/task"
 	"simo/internal/platform/llm"
 	"simo/internal/platform/tokenmeter"
@@ -132,6 +133,16 @@ func (m *Module) startTurnExplicit(ctx context.Context, sessionID, text string, 
 		sessionID = defaultSessionID
 	}
 	originalSessionID := sessionID
+	if drafts, ok := m.sessions.(coresession.DraftService); ok && drafts.IsDraft(ctx, sessionID) {
+		materialized, found, err := drafts.MaterializeDraft(ctx, sessionID)
+		if err != nil {
+			return Message{}, newRequestError(codeInternal, "物化草稿会话失败: "+err.Error())
+		}
+		if found {
+			sessionID = materialized.ID
+			originalSessionID = materialized.ID
+		}
+	}
 	if m.sessions != nil {
 		session, err := m.sessions.Get(ctx, sessionID)
 		if err == nil && session.Archived != 0 {
@@ -189,7 +200,7 @@ func (m *Module) startTurnExplicit(ctx context.Context, sessionID, text string, 
 	routeNote := ""
 	// M4 兼容：仅在意图路由不可用（mock/旧客户端）时保留旧的“新需求”建子会话行为。
 	if m.sessions != nil && !intentAttempted && autoRouteEnabled() && !explicitSession &&
-		!explicitMainSessionIntent(text) && isNewSessionIntent(text) && routeTo == "" {
+		sessionID == defaultSessionID && !explicitMainSessionIntent(text) && isNewSessionIntent(text) && routeTo == "" {
 		if _, _, isMemory := parseMemoryCommand(text, sessionID); !isMemory {
 			child, err := m.sessions.Create(ctx, sessionID, sessionTitleFromText(text))
 			if err != nil {

@@ -40,11 +40,14 @@ type Module struct {
 	cancel context.CancelFunc
 	unsub  func()
 	wg     sync.WaitGroup
+
+	draftMu sync.Mutex
+	drafts  map[string]draftSession
 }
 
 // New 创建会话模块；Options 可选（不传时退化为 M1 单会话）。
 func New(st *store.Store, logger *slog.Logger, options ...Options) *Module {
-	m := &Module{store: st, log: logger}
+	m := &Module{store: st, log: logger, drafts: make(map[string]draftSession)}
 	if len(options) > 0 {
 		opt := options[0]
 		m.events = opt.Events
@@ -73,6 +76,7 @@ func (m *Module) Start(ctx context.Context) error {
 		ctx = context.Background()
 	}
 	m.ctx, m.cancel = context.WithCancel(ctx)
+	m.cleanupEmptySessions(context.Background())
 	m.ensureAllSpecs(context.Background())
 	if m.events != nil {
 		sub, unsub := m.events.Subscribe(m.ctx)

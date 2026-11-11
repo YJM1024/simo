@@ -38,6 +38,18 @@ import {
   statusTone,
 } from './model.ts'
 
+const DRAFT_ID = 'draft:new'
+const DRAFT_TITLE = '新会话'
+
+function pruneEmptySessions(nodes: readonly SessionNode[], keepId: string | null): SessionNode[] {
+  const out: SessionNode[] = []
+  for (const node of nodes) {
+    const children = pruneEmptySessions(node.children, keepId)
+    if (node.messageCount !== 0 || children.length > 0 || node.id === keepId) out.push({ ...node, children })
+  }
+  return out
+}
+
 const FALLBACK_NODE: SessionNode = Object.freeze({
   id: 'main',
   title: '主会话',
@@ -97,6 +109,7 @@ export default function SessionTreePanel() {
   const [roots, setRoots] = useState<SessionNode[]>([])
   const counts = countTree(roots)
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [drafting, setDrafting] = useState(false)
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -112,6 +125,8 @@ export default function SessionTreePanel() {
   rootsRef.current = roots
   const activeIdRef = useRef<string | null>(activeId)
   activeIdRef.current = activeId
+  const draftingRef = useRef(false)
+  draftingRef.current = drafting
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const publish = useCallback((nextRoots: readonly SessionNode[], id: string) => {
@@ -129,6 +144,24 @@ export default function SessionTreePanel() {
       sessionMeta: flattenSessionMeta(nextRoots),
     })
   }, [])
+
+  const publishDraft = useCallback(() => {
+    draftingRef.current = true
+    setDrafting(true)
+    setActiveId(DRAFT_ID)
+    bus.emit(EVENTS.SESSION_ACTIVE, {
+      sessionId: DRAFT_ID,
+      title: DRAFT_TITLE,
+      depth: 0,
+      archived: false,
+      sessionMeta: flattenSessionMeta(rootsRef.current),
+    })
+  }, [])
+
+  const startDraft = useCallback(() => {
+    setActionError(null)
+    publishDraft()
+  }, [publishDraft])
 
   const load = useCallback(
     async (options: { silent?: boolean } = {}): Promise<SessionNode[]> => {
@@ -148,6 +181,7 @@ export default function SessionTreePanel() {
         const normalized = normalizeSessionTree(payload)
         const resolved = normalized.length > 0 ? normalized : [FALLBACK_NODE]
         setRoots(resolved)
+        if (draftingRef.current) return resolved
         const preferred = activeIdRef.current ?? readSessionId()
         const target = preferred && findNode(resolved, preferred) ? preferred : resolved[0]!.id
         publish(resolved, target)
@@ -175,6 +209,8 @@ export default function SessionTreePanel() {
     (id: string) => {
       const path = findPath(rootsRef.current, id)
       if (path.length === 0) return
+      draftingRef.current = false
+      setDrafting(false)
       setCollapsed((prev) => {
         const next = new Set(prev)
         for (const node of path.slice(0, -1)) next.delete(node.id)
@@ -270,6 +306,18 @@ export default function SessionTreePanel() {
     }
   }, [draftTitle, editingId, load, publish])
 
+  useEffect(
+    () =>
+      bus.on(EVENTS.SESSION_DRAFT_ACCEPT, ({ draftId, sessionId }: { draftId: string; sessionId: string }) => {
+        if (draftId !== DRAFT_ID) return
+        draftingRef.current = false
+        setDrafting(false)
+        setActiveId(sessionId)
+        void load({ silent: true })
+      }),
+    [load],
+  )
+
   const createChild = useCallback(async () => {
     const parentId = activeIdRef.current ?? rootsRef.current[0]?.id
     if (!parentId) return
@@ -335,7 +383,7 @@ export default function SessionTreePanel() {
     [searchMatches],
   )
 
-  const visibleRoots = query.trim() ? filterTree(roots) : roots
+  const visibleRoots = query.trim() ? filterTree(roots) : pruneEmptySessions(roots, activeId)
   const sortPinned = (nodes: readonly SessionNode[]): SessionNode[] =>
     [...nodes].sort((a, b) => Number(pinned.includes(b.id)) - Number(pinned.includes(a.id)))
 
@@ -495,10 +543,11 @@ export default function SessionTreePanel() {
         </button>
         <button
           type="button"
-          onClick={() => void createChild()}
-          disabled={busy || !activeId || activeArchived}
-          title={activeArchived ? '已归档会话只读：恢复后才能新建子会话' : '在当前会话下新建子会话'}
-          aria-label="新建子会话"
+          onClick={startDraft}
+          onDoubleClick={() => void createChild()}
+          disabled={busy || activeArchived}
+          title="新建会话（只保留一个草稿；双击在当前会话下新建子会话）"
+          aria-label="新建会话"
           className="grid h-[34px] w-[34px] flex-none cursor-pointer place-items-center rounded-sm border border-border bg-surface text-ink-muted transition-colors duration-fast hover:border-border-subtle hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
         >
           <span className="text-[18px] leading-none">＋</span>
@@ -560,9 +609,21 @@ export default function SessionTreePanel() {
           </div>
         )}
 
-        {!loading && roots.length === 0 && <p className="m-1 text-sm text-muted">暂无会话。</p>}
+        {drafting && !query.trim() && (
+          <button
+            type="button"
+            onClick={publishDraft}
+            className={`mb-1 flex w-full min-w-0 items-center gap-2 rounded-sm border-0 border-l-2 py-1.5 pr-1.5 text-left transition-colors duration-fast ${activeId === DRAFT_ID ? 'border-l-accent bg-accent-soft' : 'border-l-transparent hover:bg-surface-sunken'}`}
+          >
+            <span className={`h-1 w-1 flex-none rounded-full ${activeId === DRAFT_ID ? 'bg-accent' : 'bg-ink-faint'}`} aria-hidden="true" />
+            <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-ink">新会话</span>
+            <span className="flex-none rounded-[3px] border border-border-subtle bg-surface-sunken px-1 text-[9px] text-ink-faint">草稿</span>
+          </button>
+        )}
 
-        {!loading && roots.length > 0 && visibleRoots.length === 0 && (
+        {!loading && visibleRoots.length === 0 && !query.trim() && !drafting && <p className="m-1 text-sm text-muted">暂无会话。</p>}
+
+        {!loading && query.trim() && roots.length > 0 && visibleRoots.length === 0 && (
           <p className="m-1 text-sm text-muted">没有匹配「{query.trim()}」的会话。</p>
         )}
 

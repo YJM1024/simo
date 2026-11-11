@@ -128,7 +128,7 @@ export default function UsagePage({ onClose }: { onClose: () => void }) {
       <div ref={panelRef} className="popover-surface flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden">
         <header className="flex flex-none flex-wrap items-start justify-between gap-2 border-b border-border-subtle px-4 py-3">
           <div className="min-w-0">
-            <h2 className="m-0 text-lg font-semibold tracking-tight">用量统计</h2>
+            <h2 className="m-0 font-serif text-[18px] font-medium tracking-normal text-ink">用量统计</h2>
             <p className="m-0 mt-0.5 text-sm text-ink-secondary">
               每行一个会话（按会话树缩进）；右侧是同一时间轴上的消息数 / token 序列；父行含子会话汇总。
             </p>

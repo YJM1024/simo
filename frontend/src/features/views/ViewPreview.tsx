@@ -212,7 +212,7 @@ export default function ViewPreview({ onClose }: { onClose: () => void }) {
       <div ref={panelRef} className="popover-surface flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden">
         <header className="flex flex-none flex-wrap items-start justify-between gap-2 border-b border-border-subtle px-3 py-2.5 sm:px-4">
           <div className="min-w-0">
-            <h2 className="m-0 flex flex-wrap items-center gap-1.5 text-lg font-semibold tracking-tight">
+            <h2 className="m-0 flex flex-wrap items-center gap-1.5 font-serif text-[18px] font-medium tracking-normal text-ink">
               自定义视图
               <span className="rounded-pill border border-border-subtle bg-surface-solid px-1.5 font-mono text-2xs text-muted">{versionLabel}</span>
               {page && validation?.fallback && <span className="rounded-pill border border-warn-border bg-warn-soft px-1.5 font-mono text-2xs text-warn-ink">降级</span>}

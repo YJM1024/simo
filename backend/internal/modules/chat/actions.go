@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -167,7 +168,14 @@ func (m *Module) handleActionExecute(w http.ResponseWriter, r *http.Request) {
 	}
 	args := map[string]any{}
 	if r.Body != nil {
-		_ = json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&args)
+		raw, readErr := io.ReadAll(http.MaxBytesReader(w, r.Body, 1<<20))
+		if readErr == nil && len(strings.TrimSpace(string(raw))) > 0 {
+			if err := json.Unmarshal(raw, &args); err != nil {
+				httpserver.WriteJSON(w, http.StatusBadRequest, map[string]any{"ok": false,
+					"error": map[string]any{"code": "INVALID_ACTION_ARGS", "message": "动作参数不是合法 JSON: " + err.Error()}})
+				return
+			}
+		}
 	}
 	sessionID := stringArg(args, "sessionId")
 	if sessionID == "" {

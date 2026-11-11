@@ -1,9 +1,9 @@
 package tasks
 
 import (
-	"simo/internal/platform/sqlite"
 	"context"
 	"database/sql"
+	"simo/internal/platform/sqlite"
 )
 
 // migrations 创建 tasks 表（M2）与 M5 的阶段/产物表。

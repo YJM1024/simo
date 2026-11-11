@@ -24,7 +24,7 @@ func postChatSession(t *testing.T, baseURL, sessionID, text string) int {
 
 func postSession(t *testing.T, baseURL, title, parentID string) string {
 	t.Helper()
-	status, body := postJSON(t, baseURL+"/api/sessions", map[string]any{"title": title, "parentId": parentID})
+	status, body := postJSON(t, baseURL+"/api/sessions", map[string]any{"title": title, "parentId": parentID, "draft": false})
 	if status != http.StatusCreated {
 		t.Fatalf("create session = %d %s", status, body)
 	}
