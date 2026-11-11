@@ -29,7 +29,7 @@ const schedules = read('features/schedules/ScheduleManager.tsx')
 const sessionTree = read('features/sessions/SessionTreePanel.tsx')
 const agents = read('features/agents/AgentsPage.tsx')
 const memory = read('features/memory/MemoryBrowserPage.tsx')
-const topBar = read('app/TopBar.tsx')
+const topBar = read('app/ShellHeader.tsx')
 const pkg = JSON.parse(readRoot('package.json'))
 
 check('P0 右栏任务：340 宽、40px 行、单行省略+状态徽标、无调试文案/换行', () => {

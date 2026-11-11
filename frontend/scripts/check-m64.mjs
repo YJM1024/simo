@@ -20,7 +20,7 @@ function check(name, fn) {
 console.log('M64 布局 / Inspector 断点 / 侧栏自测（前端）')
 
 const chat = read('features/chat/ChatCenter.tsx')
-const topBar = read('app/TopBar.tsx')
+const topBar = read('app/ShellHeader.tsx')
 const permission = read('app/PermissionMenu.tsx')
 const session = read('features/sessions/SessionTreePanel.tsx')
 const rightRail = read('features/tasks/RightRail.tsx')

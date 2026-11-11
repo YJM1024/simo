@@ -262,7 +262,7 @@ function collect(dir, pattern, out = []) {
 }
 const read = (path) => readFileSync(path, 'utf8')
 const permissionMenu = read(resolve(src, 'app/PermissionMenu.tsx'))
-const topBar = read(resolve(src, 'app/TopBar.tsx'))
+const topBar = read(resolve(src, 'app/ShellHeader.tsx'))
 const approvalBar = read(resolve(src, 'features/tasks/ApprovalBar.tsx'))
 const messageList = read(resolve(src, 'features/chat/MessageList.tsx'))
 const packageJson = JSON.parse(read(resolve(root, 'package.json')))

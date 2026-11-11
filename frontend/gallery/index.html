@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>司墨 · 组件画廊</title>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="gallery.css">
+</head>
+<body>
+<div class="g-shell">
+  <aside class="g-side">
+    <div class="g-brand"><span class="g-logo"></span><span>司墨</span><em>组件画廊</em></div>
+    <div class="g-meta">v1 · light-tech · 独立页面</div>
+    <nav class="g-nav">
+      <a class="is-active" href="#foundations">基础 tokens</a>
+      <a href="#buttons">按钮 Buttons</a>
+      <a href="#inputs">输入 Inputs</a>
+      <a href="#badges">徽标与状态</a>
+      <a href="#cards">卡片 Cards</a>
+      <a href="#messages">消息 Messages</a>
+      <a href="#composer">输入区 Composer</a>
+      <a href="#timeline">时间轴 Timeline</a>
+      <a href="#taskstack">任务栈 TaskStack</a>
+      <a href="#overlays">浮层 Overlays</a>
+      <a href="#shell">页面骨架</a>
+      <a href="#states">空态与加载</a>
+    </nav>
+    <div class="g-side-foot">所有页面组件以此为准<br>新增控件必须登记</div>
+  </aside>
+
+  <main class="g-main">
+    <header class="g-head">
+      <div><h1>组件画廊</h1><p>设计语言的唯一可视化基准；新增/修改组件先在这里登记，再进页面。</p></div>
+      <div class="g-head-actions">
+        <button class="s-btn s-btn--ghost" data-dialog="settings">打开设置弹窗</button>
+        <button class="s-btn s-btn--primary" data-toast>触发 Toast</button>
+      </div>
+    </header>
+
+    <!-- foundations -->
+    <section class="g-section" id="foundations">
+      <div class="g-section-head"><h2>基础 tokens</h2><span>颜色 / 字体 / 圆角 / 阴影 / 间距</span></div>
+      <div class="g-grid">
+        <div class="g-spec"><h3>颜色</h3>
+          <div class="swatches">
+            <div class="sw"><i style="background:#FBFAF7"></i><b>paper</b><code>#FBFAF7</code></div>
+            <div class="sw"><i style="background:#FFFFFF;border:1px solid #E8E7E1"></i><b>surface</b><code>#FFFFFF</code></div>
+            <div class="sw"><i style="background:#F6F5F1"></i><b>raise</b><code>#F6F5F1</code></div>
+            <div class="sw"><i style="background:#17181C"></i><b>ink</b><code>#17181C</code></div>
+            <div class="sw"><i style="background:#6F727A"></i><b>muted</b><code>#6F727A</code></div>
+            <div class="sw"><i style="background:#4A4AF0"></i><b>indigo</b><code>#4A4AF0</code></div>
+            <div class="sw"><i style="background:#10A99A"></i><b>teal</b><code>#10A99A</code></div>
+            <div class="sw"><i style="background:#C63C48"></i><b>red</b><code>#C63C48</code></div>
+          </div>
+        </div>
+        <div class="g-spec"><h3>字体</h3>
+          <div class="type-row"><span class="t-serif">司墨 · 会话</span><code>serif · 24/500</code></div>
+          <div class="type-row"><span class="t-h2">任务详情标题</span><code>Segoe · 18/600</code></div>
+          <div class="type-row"><span class="t-body">正文 14px，行高 1.6；用于消息与说明。</span><code>14/1.6</code></div>
+          <div class="type-row"><span class="t-small">辅助文字 11–12px，用于元信息与标签。</span><code>11–12</code></div>
+          <div class="type-row"><span class="mono">Consolas · card-7e95ca1a</span><code>mono</code></div>
+        </div>
+        <div class="g-spec"><h3>圆角 / 阴影</h3>
+          <div class="radius-row"><i style="border-radius:5px"></i><span>5 控件小</span></div>
+          <div class="radius-row"><i style="border-radius:7px"></i><span>7 控件</span></div>
+          <div class="radius-row"><i style="border-radius:10px"></i><span>10 卡片</span></div>
+          <div class="radius-row"><i style="border-radius:14px"></i><span>14 浮层</span></div>
+          <div class="shadow-row"><span style="box-shadow:0 1px 0 rgba(23,24,28,.03),0 1px 2px rgba(23,24,28,.04)">shadow-1</span><span style="box-shadow:0 2px 4px rgba(23,24,28,.03),0 14px 34px -16px rgba(23,24,28,.18)">shadow-2</span></div>
+        </div>
+        <div class="g-spec"><h3>间距</h3>
+          <div class="space-row"><i style="width:4px"></i>4</div>
+          <div class="space-row"><i style="width:8px"></i>8</div>
+          <div class="space-row"><i style="width:12px"></i>12</div>
+          <div class="space-row"><i style="width:16px"></i>16</div>
+          <div class="space-row"><i style="width:24px"></i>24</div>
+          <div class="space-row"><i style="width:32px"></i>32</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- buttons -->
+    <section class="g-section" id="buttons">
+      <div class="g-section-head"><h2>按钮 Buttons</h2><span>primary / secondary / ghost / danger / icon</span></div>
+      <div class="specimen">
+        <div class="specimen-row">
+          <button class="s-btn s-btn--primary">主要按钮</button>
+          <button class="s-btn">次要按钮</button>
+          <button class="s-btn s-btn--ghost">Ghost 按钮</button>
+          <button class="s-btn s-btn--primary" disabled>禁用</button>
+          <button class="s-btn s-btn--danger">危险操作</button>
+        </div>
+        <div class="specimen-row">
+          <button class="s-btn s-btn--sm">小按钮 28</button>
+          <button class="s-btn">默认 32</button>
+          <button class="s-btn s-btn--lg">大按钮 36</button>
+          <button class="s-iconbtn" aria-label="更多">⋯</button>
+          <button class="s-iconbtn" aria-label="设置">⚙</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- inputs -->
+    <section class="g-section" id="inputs">
+      <div class="g-section-head"><h2>输入 Inputs</h2><span>文本 / 搜索 / 下拉 / 多行 / 选择</span></div>
+      <div class="specimen">
+        <div class="specimen-grid">
+          <label class="g-field"><span>名称</span><input class="s-input" placeholder="请输入名称" /></label>
+          <label class="g-field"><span>搜索</span><span class="s-search"><input placeholder="搜索会话、消息…" /><kbd>⌘K</kbd></span></label>
+          <label class="g-field"><span>选择</span><select class="s-input"><option>A 方案</option><option>B 方案</option><option>C 方案</option></select></label>
+          <label class="g-field"><span>多行</span><textarea class="s-input s-textarea" rows="3" placeholder="输入多行内容"></textarea></label>
+          <label class="g-field"><span>错误态</span><input class="s-input is-error" value="不合法的值" /><em>该字段不合法</em></label>
+          <div class="g-field"><span>复选框 / 单选 / 开关</span>
+            <div class="g-inline"><label><input type="checkbox" checked /> 已选</label><label><input type="checkbox" /> 未选</label><label><input type="radio" checked /> 单选</label><span class="s-switch"><i></i></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- badges -->
+    <section class="g-section" id="badges">
+      <div class="g-section-head"><h2>徽标与状态</h2><span>Badge / 状态点 / 头像</span></div>
+      <div class="specimen">
+        <div class="specimen-row"><span class="s-badge">默认</span><span class="s-badge s-badge--ok">已完成</span><span class="s-badge s-badge--run">进行中</span><span class="s-badge s-badge--warn">待确认</span><span class="s-badge s-badge--danger">失败</span></div>
+        <div class="specimen-row"><span class="s-status"><i class="s-dot s-dot--ok"></i>已连接</span><span class="s-status"><i class="s-dot s-dot--warn"></i>进行中</span><span class="s-status"><i class="s-dot"></i>空闲</span></div>
+        <div class="specimen-row"><span class="s-msg__chip">你</span><span class="s-msg__chip s-msg__chip--agent">墨</span><span class="s-avatar">Y</span></div>
+      </div>
+    </section>
+
+    <!-- cards -->
+    <section class="g-section" id="cards">
+      <div class="g-section-head"><h2>卡片 Cards</h2><span>基础卡片 / 指标卡 / 任务卡</span></div>
+      <div class="g-grid three">
+        <article class="s-card"><span class="s-cap">基础卡片</span><h3>本周重点</h3><p>10 项完成 · 1 项待开始；卡片内容遵循 10px 圆角与 1px 线。</p></article>
+        <article class="s-card"><span class="s-cap">指标卡</span><div class="g-metric">12</div><p>进行中的任务</p><span class="s-badge s-badge--run">实时</span></article>
+        <article class="s-card g-taskcard"><span class="s-badge s-badge--run">进行中</span><h3>梳理会话核心契约</h3><p>当前：对齐迁移范围与测试项</p><div class="g-progress"><i style="width:62%"></i></div><span class="s-cap">预计 12 分钟</span></article>
+      </div>
+    </section>
+
+    <!-- messages -->
+    <section class="g-section" id="messages">
+      <div class="g-section-head"><h2>消息 Messages</h2><span>用户 / 助手 / 错误 / 代码</span></div>
+      <div class="specimen g-chat">
+        <div class="s-msg s-msg--user"><span class="s-msg__chip">你</span><div class="s-msg__body"><div class="s-msg__meta"><span class="s-msg__name">你</span><span class="s-msg__dot"></span><span>主会话</span><span class="s-msg__dot"></span><span>10:24</span></div><div class="s-msg__text"><p>帮我整理一下本周的工作重点。</p></div></div></div>
+        <div class="s-msg s-msg--agent"><span class="s-msg__chip">墨</span><div class="s-msg__body"><div class="s-msg__meta"><span class="s-msg__name">司墨</span><span class="s-msg__dot"></span><span>需求澄清</span><span class="s-msg__dot"></span><span>10:25</span></div><div class="s-msg__text"><p>先确认三件事，避免排序偏：</p><ul><li>目标：交付 / 沟通 / 建设</li><li>约束：是否有硬截止</li><li>产出：清单还是表格</li></ul><pre><code>const rows = await load("todo.csv")</code></pre></div></div></div>
+        <div class="s-msg s-msg--agent"><span class="s-msg__chip">墨</span><div class="s-msg__body"><div class="s-msg__meta"><span class="s-msg__name">司墨</span><span class="s-msg__dot"></span><span>进度汇报</span></div><div class="s-msg__text"><p>正在整理重点。</p><div class="s-err">回复中断：模型响应超时，消息已标记为失败。</div></div></div></div>
+      </div>
+    </section>
+
+    <!-- composer -->
+    <section class="g-section" id="composer">
+      <div class="g-section-head"><h2>输入区 Composer</h2><span>多行 / 发送 / 附件 / 提示</span></div>
+      <div class="s-composer g-composer-demo">
+        <textarea rows="3" placeholder="给司墨发消息…"></textarea>
+        <div class="s-composer__foot"><span>支持 Markdown 格式</span><div><span class="g-hint">Enter 发送 · Shift+Enter 换行</span><button class="s-send">发送</button></div></div>
+      </div>
+    </section>
+
+    <!-- timeline -->
+    <section class="g-section" id="timeline">
+      <div class="g-section-head"><h2>时间轴 Timeline</h2><span>36px 栏 / 6px 刻度 / 2px 间距 / 热区</span></div>
+      <div class="specimen g-timeline-demo">
+        <div class="s-rail"><span class="s-tick s-tick--user"></span><span class="s-tick s-tick--agent"></span><span class="s-tick s-tick--user"></span><span class="s-tick s-tick--agent is-cur"></span><span class="s-tick s-tick--user"></span><span class="s-tick s-tick--agent"></span></div>
+        <div class="g-timeline-copy"><p>每条消息一根横条；用户靛蓝、助手深灰；当前消息 8px；固定 2px 间距。</p></div>
+      </div>
+    </section>
+
+    <!-- task stack -->
+    <section class="g-section" id="taskstack">
+      <div class="g-section-head"><h2>任务栈 TaskStack</h2><span>折叠 / 展开 / 步骤三段式</span></div>
+      <div class="g-grid two">
+        <div class="g-spec"><h3>折叠态（最多 3 条）</h3>
+          <div class="s-taskstack">
+            <div class="s-taskcard s-taskcard--active"><div><b>梳理会话核心契约</b><p>当前：对齐迁移范围与测试项</p></div><span class="s-badge s-badge--run">进行中</span></div>
+            <div class="s-taskcard"><div><b>前端组件画廊</b><p>当前：编写组件样例</p></div><span class="s-badge s-badge--run">进行中</span></div>
+            <div class="s-taskcard"><div><b>智能体启动协议</b><p>当前：补充测试用例</p></div><span class="s-badge s-badge--run">进行中</span></div>
+            <button class="g-more">还有 2 个任务，展开</button>
+          </div>
+        </div>
+        <div class="g-spec"><h3>展开态：一个任务的步骤</h3>
+          <div class="s-tasksteps">
+            <div class="s-tasksteps__group">已完成</div>
+            <div class="s-step s-step--done"><i></i><div><b>确认产品规则</b><p>对齐会话与消息迁移</p></div><span>2 分钟</span></div>
+            <div class="s-step s-step--done"><i></i><div><b>整理测试矩阵</b><p>为每个叶子补测试</p></div><span>4 分钟</span></div>
+            <div class="s-tasksteps__group">进行中</div>
+            <div class="s-step s-step--run"><i></i><div><b>实现后端动作</b><p>session.split / message.migrate</p></div><span>6 分钟</span></div>
+            <div class="s-tasksteps__group">未完成</div>
+            <div class="s-step"><i></i><div><b>前端接入</b><p>任务栈与确认卡片</p></div><span>—</span></div>
+            <div class="s-step"><i></i><div><b>截图验收</b><p>1600 / 1180</p></div><span>—</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- overlays -->
+    <section class="g-section" id="overlays">
+      <div class="g-section-head"><h2>浮层 Overlays</h2><span>Popover / Dialog / Toast</span></div>
+      <div class="specimen">
+        <div class="specimen-row"><button class="s-btn" data-popover="g-perm">打开权限 Popover</button><button class="s-btn" data-dialog="settings">打开设置 Dialog</button><button class="s-btn" data-toast>显示 Toast</button></div>
+        <div class="s-popover g-popover-demo" id="g-perm" hidden>
+          <div class="s-popover__head"><b>权限模式</b><span class="mono">切换立即生效</span></div>
+          <div class="s-label">沙盒模式</div>
+          <button class="s-opt is-active"><b>工作区可写</b><span>读写限 workspace/；网络单独授权。</span><em>当前</em></button>
+          <button class="s-opt"><b class="danger">完全访问</b><span>任意路径读写、任意命令。风险最高。</span></button>
+          <div class="s-popover__foot"><span class="mono">写/执行/网络按策略</span><button class="s-btnsm">关闭</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- shell -->
+    <section class="g-section" id="shell">
+      <div class="g-section-head"><h2>页面骨架</h2><span>侧栏 / 顶栏 / 上下文条 / 状态栏</span></div>
+      <div class="g-shell-demo">
+        <aside class="g-mini-side">
+          <div class="g-mini-brand"><span class="g-logo"></span>司墨</div>
+          <div class="g-mini-ws">主工作区</div>
+          <div class="g-mini-item is-active">主会话</div>
+          <div class="g-mini-item">前端排查</div>
+          <div class="g-mini-item">数据分析</div>
+          <div class="g-mini-spacer"></div>
+          <div class="g-mini-usage">本月用量 42.6%</div>
+        </aside>
+        <div class="g-mini-main">
+          <div class="g-mini-top"><span class="g-mini-crumb">司墨 / 主会话</span><span class="g-mini-nav">对话　工作台　任务　智能体　团队　记忆</span><span class="g-mini-status">● 已连接</span></div>
+          <div class="g-mini-context"><b>主会话</b><span>主窗口 · 聚合视图</span><span class="g-mini-seg">仅本会话 / 含子会话</span></div>
+          <div class="g-mini-body">内容区域（消息列 / 页面内容）</div>
+          <div class="g-mini-statusbar">进行中 3 · 1 个任务</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- states -->
+    <section class="g-section" id="states">
+      <div class="g-section-head"><h2>空态与加载</h2><span>Empty / Skeleton / 错误</span></div>
+      <div class="g-grid three">
+        <div class="s-card g-center"><div class="s-empty__mark"></div><h3>先把事情说清楚。</h3><p class="muted">说需求、记信息、派任务。</p><button class="s-btn s-btn--sm">开始对话</button></div>
+        <div class="s-card"><div class="s-skeleton" style="width:60%"></div><div class="s-skeleton"></div><div class="s-skeleton" style="width:80%"></div><p class="muted">加载骨架</p></div>
+        <div class="s-card"><div class="s-err">回复中断：模型响应超时，消息已标记为失败。</div><p class="muted">错误态</p><button class="s-btn s-btn--sm">重试</button></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- dialog -->
+<div class="s-overlay" id="g-dialog" hidden>
+  <div class="s-dialog">
+    <div class="s-dialog__head"><div><h2>设置</h2><p class="mono">模型、权限、主题、目录与快捷键</p></div><button class="s-iconbtn" data-close>×</button></div>
+    <div class="s-dialog__body">
+      <section class="s-field"><div class="s-field__label">模型</div><div class="s-readonly">V4.1 Flash（固定，在智能体页配置）</div></section>
+      <section class="s-field"><div class="s-field__label">权限</div><div class="s-grid2"><div class="s-opt is-active"><b>工作区可写</b><span>默认；写入需审批</span><em>当前</em></div><div class="s-opt is-active"><b>按风险自动批准 / 拒绝</b><span>低风险通过，高风险拒绝</span><em>当前</em></div></div></section>
+      <section class="s-field"><div class="s-field__label">主题</div><div class="s-chips"><span class="s-chip is-active">浅色科技</span><span class="s-chip">深色</span></div></section>
+    </div>
+    <div class="s-dialog__foot"><span class="mono">设置只读展示</span><button class="s-send" data-close>完成</button></div>
+  </div>
+</div>
+
+<div class="g-toast" id="g-toast" hidden>已复制到剪贴板</div>
+<script src="gallery.js"></script>
+</body>
+</html>

@@ -20,8 +20,8 @@ function check(name, fn) {
 console.log('M42 UI 修正自测（前端）')
 
 const styles = read('styles.css')
-const topBar = read('app/TopBar.tsx')
-const topTabs = read('app/TopTabs.tsx')
+const topBar = read('app/ShellHeader.tsx')
+const topTabs = read('app/ShellHeader.tsx')
 const permission = read('app/PermissionMenu.tsx')
 const badges = read('features/chat/MessageBadges.tsx')
 const messageList = read('features/chat/MessageList.tsx')
@@ -69,7 +69,7 @@ check('字距：全局 normal，无 tracking-widest/wide 残留', () => {
 })
 
 check('rounded-full 仅保留头像/加载 spinner（非业务标签/按钮/卡片）', () => {
-  const allowed = new Set(['platform/AgentAvatar.tsx', 'platform/ui/Button.tsx', 'platform/ui/IconButton.tsx', 'features/chat/Composer.tsx', 'features/chat/MessageList.tsx', 'features/chat/MessageBadges.tsx', 'features/schedules/ScheduleManager.tsx', 'features/team/TeamPage.tsx', 'app/TopBar.tsx', 'features/sessions/SessionTreePanel.tsx', 'features/agents/AgentsPage.tsx'])
+  const allowed = new Set(['platform/AgentAvatar.tsx', 'platform/ui/Button.tsx', 'platform/ui/IconButton.tsx', 'features/chat/Composer.tsx', 'features/chat/MessageList.tsx', 'features/chat/MessageBadges.tsx', 'features/schedules/ScheduleManager.tsx', 'features/team/TeamPage.tsx', 'app/ShellHeader.tsx', 'features/sessions/SessionTreePanel.tsx', 'features/agents/AgentsPage.tsx'])
   const files = []
   const walk = (dir) => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -89,7 +89,7 @@ check('rounded-full 仅保留头像/加载 spinner（非业务标签/按钮/卡�
 check('顶栏：两行布局；header 左品牌右状态，导航独立', () => {
   assert.match(topBar, /<header className="relative z-10 flex h-\[54px\]/)
   assert.match(topBar, /NotificationCenter/)
-  assert.equal(/<TopTabs \/>/.test(topBar), true)
+  assert.match(topBar, /<Tabs/)
   assert.match(topBar, /flex flex-none items-center gap-2 whitespace-nowrap/)
   assert.match(topBar, /司墨/)
   assert.match(permission, /text-\[13px\]/)

@@ -7,7 +7,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, ComponentType, PointerEvent as ReactPointerEvent } from 'react'
 import NotificationHost from './NotificationHost.tsx'
-import TopBar from './TopBar.tsx'
+import ShellHeader from './ShellHeader.tsx'
 import { useConnection } from './useConnection.ts'
 import { usePermissions } from './usePermissions.ts'
 import { useWorkspaceStatus } from './useWorkspaceStatus.ts'
@@ -174,7 +174,7 @@ export default function App() {
       <Slot slot="leftTree" entries={slots.leftTree} className="max-[820px]:hidden" />
 
       <div className="flex min-h-0 min-w-0 flex-col">
-        <TopBar
+        <ShellHeader
           connection={status.connection}
           agentStatus={status.agentStatus}
           runningTasks={status.runningTasks}

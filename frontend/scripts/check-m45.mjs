@@ -20,8 +20,8 @@ function check(name, fn) {
 console.log('M45 布局与密度自测（前端）')
 
 const app = read('app/App.tsx')
-const topBar = read('app/TopBar.tsx')
-const topTabs = read('app/TopTabs.tsx')
+const topBar = read('app/ShellHeader.tsx')
+const topTabs = read('app/ShellHeader.tsx')
 const chatCenter = read('features/chat/ChatCenter.tsx')
 const messageList = read('features/chat/MessageList.tsx')
 const historyRail = read('features/chat/HistoryRail.tsx')
@@ -56,9 +56,9 @@ check('输入区：min-w-0、发送固定、与消息列共用 832 列、底部�
 check('顶部两行：52px header + 40px 独立导航；通知在 header；不重叠', () => {
   assert.match(topBar, /h-\[54px\] flex-none items-center/)
   assert.match(topBar, /NotificationCenter/)
-  assert.equal(/<TopTabs \/>/.test(topBar), true)
+  assert.match(topBar, /<Tabs/)
   assert.equal(/h-10 flex-none items-center border-b border-border-subtle bg-surface px-4/.test(app), false)
-  assert.equal(/<TopTabs \/>/.test(app), false)
+  assert.equal(/<Tabs/.test(app), false)
   assert.match(topTabs, /h-8/)
   assert.match(topTabs, /gap-\[18px\]/)
 })

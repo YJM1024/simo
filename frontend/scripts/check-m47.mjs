@@ -22,7 +22,7 @@ console.log('M47 消息头像与分段控件自测（前端）')
 const avatar = read('platform/AgentAvatar.tsx')
 const messageList = read('features/chat/MessageList.tsx')
 const chatCenter = read('features/chat/ChatCenter.tsx')
-const topBar = read('app/TopBar.tsx')
+const topBar = read('app/ShellHeader.tsx')
 const styles = read('styles.css')
 const pkg = JSON.parse(readRoot('package.json'))
 

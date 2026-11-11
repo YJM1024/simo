@@ -37,7 +37,7 @@ check('聊天上下文条/时间轴/Composer 只在 ChatCenter（对话内容）
 })
 check('顶栏与左栏保持全局一致', () => {
   assert.match(app, /<Slot slot="leftTree"/)
-  assert.match(app, /<TopBar/)
+  assert.match(app, /<ShellHeader/)
 })
 check('门禁链包含 check-m68', () => {
   assert.match(pkg.scripts['check'] ?? '', /check-m68\.mjs/)
