@@ -24,9 +24,11 @@ func (m *Module) registerHTTP(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/workflows/{id}/resume", m.handleWorkflowResume)
 	mux.HandleFunc("POST /api/workflows/{id}/cancel", m.handleWorkflowCancel)
 	mux.HandleFunc("GET /api/artifacts", m.handleArtifacts)
+	mux.HandleFunc("GET /api/deliverables", m.handleDeliverables)
 	mux.HandleFunc("GET /api/artifacts/{id}", m.handleArtifact)
 	mux.HandleFunc("GET /api/artifacts/{id}/content", m.handleArtifactContent)
 	mux.HandleFunc("GET /api/sessions/{id}/artifacts", m.handleSessionArtifacts)
+	mux.HandleFunc("GET /api/sessions/{id}/deliverables", m.handleSessionArtifacts)
 }
 
 func (m *Module) handleTeam(w http.ResponseWriter, r *http.Request) {
@@ -221,6 +223,12 @@ func (m *Module) writeTaskError(w http.ResponseWriter, err error) {
 func (m *Module) handleArtifacts(w http.ResponseWriter, r *http.Request) {
 	taskID := strings.TrimSpace(r.URL.Query().Get("taskId"))
 	sessionID := strings.TrimSpace(r.URL.Query().Get("sessionId"))
+	if sessionID != "" && m.sessions != nil {
+		if _, err := m.sessions.Get(r.Context(), sessionID); err != nil {
+			httpserver.WriteError(w, http.StatusNotFound, "会话不存在")
+			return
+		}
+	}
 	var list []coretask.Artifact
 	var err error
 	switch {
@@ -250,6 +258,12 @@ func (m *Module) handleSessionArtifacts(w http.ResponseWriter, r *http.Request) 
 	if sessionID == "" {
 		httpserver.WriteError(w, http.StatusBadRequest, "sessionId 不能为空")
 		return
+	}
+	if m.sessions != nil {
+		if _, err := m.sessions.Get(r.Context(), sessionID); err != nil {
+			httpserver.WriteError(w, http.StatusNotFound, "会话不存在")
+			return
+		}
 	}
 	list, err := m.ListArtifactsBySession(r.Context(), sessionID)
 	if err != nil {

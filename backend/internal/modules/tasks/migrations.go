@@ -118,5 +118,20 @@ func migrations() []sqlite.Migration {
 				return nil
 			},
 		},
+		{
+			Version: 6,
+			Name:    "classify task artifacts as user delivery or internal",
+			Up: func(ctx context.Context, tx *sql.Tx) error {
+				if _, err := tx.ExecContext(ctx, `ALTER TABLE task_artifacts ADD COLUMN delivery_kind TEXT NOT NULL DEFAULT ''`); err != nil {
+					return err
+				}
+				// 历史兼容：会话级生成物是用户交付物；任务作业产物（report-attempt/log/checkpoint）是内部过程文件。
+				_, err := tx.ExecContext(ctx, `UPDATE task_artifacts SET delivery_kind = CASE
+					WHEN task_id LIKE 'session:%' THEN 'user_delivery'
+					ELSE 'internal'
+				END WHERE delivery_kind = ''`)
+				return err
+			},
+		},
 	}
 }

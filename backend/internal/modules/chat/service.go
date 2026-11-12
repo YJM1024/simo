@@ -29,7 +29,7 @@ type DecisionRecord struct {
 func (m *Module) listMessages(ctx context.Context, sessionID string) ([]Message, error) {
 	rows, err := m.store.Query(ctx,
 		`SELECT id, session_id, role, text, at, status, task_id, workflow_id, tool, approval_id, category, reply_to_id
-		   FROM messages WHERE session_id = ? ORDER BY rowid ASC`, sessionID)
+		   FROM messages WHERE session_id = ? AND internal = 0 ORDER BY rowid ASC`, sessionID)
 	if err != nil {
 		return nil, fmt.Errorf("查询消息失败: %w", err)
 	}
@@ -71,7 +71,7 @@ func (m *Module) listMessagesPage(ctx context.Context, sessionIDs []string, befo
 		args = append(args, id)
 	}
 	query := `SELECT id, session_id, role, text, at, status, task_id, workflow_id, tool, approval_id, category, reply_to_id,
-		rowid FROM messages WHERE session_id IN (` + strings.Join(placeholders, ",") + `)`
+		rowid FROM messages WHERE session_id IN (` + strings.Join(placeholders, ",") + `) AND internal = 0`
 	if before != "" {
 		var beforeRow int64
 		if err := m.store.QueryRow(ctx, `SELECT rowid FROM messages WHERE id = ?`, before).Scan(&beforeRow); err != nil {
@@ -126,7 +126,7 @@ func (m *Module) listMessagesForSessions(ctx context.Context, sessionIDs []strin
 		args = append(args, id)
 	}
 	query := `SELECT id, session_id, role, text, at, status, task_id, workflow_id, tool, approval_id, category, reply_to_id FROM messages
-		WHERE session_id IN (` + strings.Join(placeholders, ",") + `)
+		WHERE session_id IN (` + strings.Join(placeholders, ",") + `) AND internal = 0
 		ORDER BY at ASC, rowid ASC`
 	rows, err := m.store.Query(ctx, query, args...)
 	if err != nil {

@@ -167,7 +167,7 @@ func (m *Module) autoRouteChildContext(ctx context.Context, childID string) stri
 		Scan(&goal, &current, &notes) == nil {
 		parts = append(parts, goal, current, notes)
 	}
-	rows, err := m.store.Query(ctx, `SELECT text FROM messages WHERE session_id=? AND role='user'
+	rows, err := m.store.Query(ctx, `SELECT text FROM messages WHERE session_id=? AND role='user' AND internal = 0
 		ORDER BY rowid DESC LIMIT 8`, childID)
 	if err == nil {
 		for rows.Next() {

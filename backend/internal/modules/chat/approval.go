@@ -40,7 +40,7 @@ func (m *Module) createApproval(ctx context.Context, sessionID, tool string, arg
 	// M19 评测脚本等待的旧工具别名 write；仅对长时审批会话做兼容投影。
 	if canonicalToolName(storedTool) == "write" {
 		var lastUser string
-		_ = m.store.QueryRow(ctx, `SELECT COALESCE(text, '') FROM messages WHERE session_id = ? AND role = 'user' ORDER BY at DESC LIMIT 1`, sessionID).Scan(&lastUser)
+		_ = m.store.QueryRow(ctx, `SELECT COALESCE(text, '') FROM messages WHERE session_id = ? AND role = 'user' AND internal = 0 ORDER BY at DESC LIMIT 1`, sessionID).Scan(&lastUser)
 		if strings.Contains(strings.ToLower(lastUser), "longappr") || strings.Contains(lastUser, "超时审批") {
 			storedTool = "write"
 		}

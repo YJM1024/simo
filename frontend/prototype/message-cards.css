@@ -1,0 +1,110 @@
+/* 消息卡片方案：中栏灰底、消息白卡、内部卡片白卡 */
+.message-cards .chat-body { background: var(--surface-3); }
+.message-cards .chat-inner { padding: 16px 20px; }
+.message-cards .msg {
+  display: flex;
+  gap: var(--sp-12);
+  padding: 12px 14px;
+  margin: 0 0 9px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-10);
+  box-shadow: none;
+}
+.message-cards .msg:last-of-type { margin-bottom: 0; }
+.message-cards .msg-avatar { margin-top: 0; }
+.message-cards .msg-body { min-width: 0; flex: 1; }
+.message-cards .msg-text { max-width: var(--msg-width); }
+.message-cards .msg-text > :first-child { margin-top: 0; }
+.message-cards .msg-text > :last-child { margin-bottom: 0; }
+.message-cards .card-block {
+  margin: 8px 0 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-10);
+  box-shadow: none;
+}
+.message-cards .card-block + .card-block { margin-top: 8px; }
+.message-cards .typing { margin: 9px 0 0; }
+@media (max-width: 30em) {
+  .message-cards .chat-inner { padding: 12px 10px; }
+  .message-cards .msg { padding: 10px 12px; margin-bottom: 8px; }
+}
+/* 白卡列独立居中：时间轴绝对定位到卡片列左侧，不参与居中 */
+.message-cards .chat-content {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: var(--msg-width);
+  height: 100%;
+  margin: 0 auto;
+  min-height: 0;
+}
+.message-cards .scroll { height: 100%; min-height: 0; }
+.message-cards .timeline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: calc(100% + 8px);
+  width: var(--gutter-timeline);
+  height: auto;
+  max-height: 100%;
+}
+@media (max-width: 56.25em) {
+  .message-cards .timeline { display: none; }
+}
+@media (max-width: 30em) {
+  .message-cards .chat-inner { padding: 12px 0; }
+}
+
+/* COMP-conversation-panel：卡片列 720 上限 + 16 gutter，独立居中 */
+.message-cards {
+  --conversation-card-w: 720px;
+  --conversation-gutter-x: 16px;
+  --paper: var(--surface-3);
+}
+.message-cards .chat-body { background: var(--paper); }
+.message-cards .chat-content {
+  width: min(var(--conversation-card-w), calc(100% - 2 * var(--conversation-gutter-x)));
+  max-width: none;
+  margin-inline: auto;
+}
+.message-cards .timeline { right: calc(100% + 8px); }
+@media (max-width: 56.25em) { .message-cards .timeline { display: none; } }
+@media (max-width: 30em) {
+  .message-cards { --conversation-gutter-x: 8px; }
+  .message-cards .chat-content { width: calc(100% - 16px); }
+  .message-cards .chat-inner { padding: 12px 0; }
+}
+
+/* 微调：对话标签对齐卡片左缘 */
+.message-cards .chat-tabs {
+  padding-left: calc(max((100% - var(--conversation-card-w)) / 2, var(--conversation-gutter-x)) + 20px);
+}
+/* 微调：Composer 与消息卡同 surface/line/radius，无额外阴影 */
+.message-cards .composer-box {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-10);
+  box-shadow: none;
+}
+/* 微调：右栏任务两组列对齐（三角列 / 点+标题+时间列） */
+.message-cards .exec-head { align-items: baseline; }
+.message-cards .exec-row { padding-left: 0; }
+.message-cards .exec-row .exec-dot { margin-left: 4px; }
+.message-cards .exec-row .exec-title { margin-left: 2px; }
+.message-cards .exec-list { padding-left: 0; }
+@media (max-width: 30em) {
+  .message-cards .chat-tabs { padding-left: 8px; }
+}
+
+/* 用户确认：Composer 外框与消息白卡同宽、左右严格对齐 */
+.message-cards .composer {
+  width: min(calc(var(--conversation-card-w) - 40px), calc(100% - 2 * var(--conversation-gutter-x) - 40px));
+  max-width: none;
+  margin: 8px auto 14px;
+  padding: 0;
+}
+@media (max-width: 30em) {
+  .message-cards .composer { width: calc(100% - 16px); margin: 8px auto 14px; }
+}

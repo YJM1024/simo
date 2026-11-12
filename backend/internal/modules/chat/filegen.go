@@ -12,6 +12,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	coretask "simo/internal/core/task"
 )
 
 const maxGeneratedBytes = 20 << 20
@@ -183,8 +185,8 @@ func (m *Module) registerGeneratedArtifact(ctx context.Context, sessionID, name,
 	id := newID("artifact")
 	if err := m.store.Write(ctx, func(tx *sql.Tx) error {
 		_, err := tx.ExecContext(ctx, `INSERT INTO task_artifacts(
-			id, task_id, name, rel_path, mime, size, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-			id, "session:"+sessionID, name, rel, mime, size, time.Now().UnixMilli())
+			id, task_id, name, rel_path, mime, size, created_at, delivery_kind) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+			id, "session:"+sessionID, name, rel, mime, size, time.Now().UnixMilli(), coretask.ArtifactDeliveryKindUser)
 		return err
 	}); err != nil {
 		return generatedArtifact{}, err

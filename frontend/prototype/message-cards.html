@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>司墨 · 消息卡片方案</title>
+<link rel="stylesheet" href="/prototype/tokens.css?v=m71">
+<link rel="stylesheet" href="/prototype/components.css?v=m71">
+<link rel="stylesheet" href="/prototype/message-cards.css?v=1">
+</head>
+<body class="message-cards">
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><span class="mark"></span><b>司墨</b><span>v4.1</span></div>
+    <div class="ws"><i>S</i><div><b>主工作区</b><span>本地环境</span></div><button title="新建会话">+</button></div>
+    <div class="search"><span>⌕</span><input placeholder="搜索会话、消息…"><kbd>⌘K</kbd></div>
+    <div class="side-scroll">
+      <div class="side-label"><span class="grow">会话</span><span>4</span><button>显示归档</button><button>↻</button><button>＋</button></div>
+      <div class="session active"><span class="dot"></span><span class="title">主会话</span><span class="count">12</span></div>
+      <div class="session child"><span class="dot"></span><span class="title">A 股行情分析</span></div>
+      <div class="session child"><span class="dot"></span><span class="title">前端排查</span></div>
+      <div class="session draft"><span class="dot"></span><span class="title">新会话 · 草稿</span></div>
+    </div>
+    <div class="quota"><div class="quota-row"><span>本月用量</span><span>46.2k</span></div><div class="quota-bar"><i class="is-42"></i></div><div class="quota-note">3 个会话 · 13 条消息</div></div>
+    <div class="user"><span class="avatar">Y</span><div><b>本地用户</b><span>主工作区 · Owner</span></div></div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="crumb">司墨 / <b id="crumb">主会话</b></div>
+      <nav class="nav" id="nav"><button class="active" data-page="chat">对话</button><button data-page="workbench">工作台</button></nav>
+      <div class="top-right"><span class="status"><i class="dot"></i>已连接</span><button class="icon-btn" title="设置">⚙</button><span class="ok-avatar">Y</span></div>
+    </header>
+
+    <!-- 对话 -->
+    <section id="page-chat">
+      <div class="context">
+        <h1>主会话</h1><span class="muted">主窗口 · 聚合视图</span>
+        <span class="seg"><button class="active">仅本会话</button><button>含子会话</button></span>
+        <div class="context-actions"><button>重命名</button><button>置顶</button><button>归档</button></div>
+      </div>
+      <div class="chat">
+        <div class="chat-col">
+          <div class="chat-tabs"><button class="active">对话</button></div>
+          <div class="chat-body">
+            <div class="chat-content">
+            <div class="timeline" id="timeline" tabindex="0" aria-label="消息时间轴"><div class="tl-track" id="tl-track"></div><div class="tl-tip" id="tl-tip" hidden></div></div>
+            <div class="scroll" id="chat-scroll">
+              <div class="chat-inner">
+                <article class="msg from-user"><span class="msg-avatar">你</span><div class="msg-body"><div class="msg-meta"><b>你</b><span>·</span><span>主会话</span><span>·</span><span>10:24</span></div><div class="msg-text"><p>我想看一下最近 A 股大盘的走势，先不要联网，给我一个分析方案。</p></div></div></article>
+
+                <article class="msg from-agent"><span class="msg-avatar">墨</span><div class="msg-body"><div class="msg-meta"><b>司墨</b><span>·</span><span class="tag">需求澄清</span><span>·</span><span>10:25</span></div><div class="msg-text">
+                  <p>可以。先确认三件事，方案会按你的选择定：</p>
+                  <ul>
+                    <li><strong>范围</strong>：只看大盘指数，还是要含行业/个股？</li>
+                    <li><strong>数据</strong>：先用你提供的文件，还是允许联网抓取？</li>
+                    <li><strong>产出</strong>：一段结论，还是带图表和表格的报告？</li>
+                  </ul>
+                  <p>你选完后我再给具体步骤，不会直接开始跑。</p>
+                </div></div></article>
+
+                <article class="msg from-user"><span class="msg-avatar">你</span><div class="msg-body"><div class="msg-meta"><b>你</b><span>·</span><span>主会话</span><span>·</span><span>10:31</span></div><div class="msg-text"><p>先看大盘，用我给的 csv；结论加一个简单表格就行。</p></div></div></article>
+
+                <article class="msg from-agent"><span class="msg-avatar">墨</span><div class="msg-body"><div class="msg-meta"><b>司墨</b><span>·</span><span class="tag">进度汇报</span><span>·</span><span>10:32</span></div><div class="msg-text">
+                  <p>好，按这个方案执行：</p>
+                  <ul><li>读取 workspace 内 csv，确认字段与时间区间</li><li>计算区间涨跌、成交额变化</li><li>输出结论 + 三行表格，不生成额外文件</li></ul>
+                  <p>确认数据文件后我就开始。</p>
+                </div></div></article>
+
+                <article class="msg from-agent"><span class="msg-avatar">墨</span><div class="msg-body"><div class="msg-meta"><b>司墨</b><span>·</span><span class="tag">确认</span><span>·</span><span>10:34</span></div><div class="msg-text"><p>分析范围已确认，请选择数据来源并确认：</p></div>
+                  <div class="card-block">
+                    <div class="card-head"><b>选择数据来源</b><span class="state">进行中 · v1</span></div>
+                    <p class="card-text">workspace 当前有 1 个 csv 文件；也可以改用公开行情，但需要联网批准。</p>
+                    <div class="card-field"><label for="source">数据来源</label>
+                      <select class="select" id="source"><option value="">请选择…</option><option>A · 使用 workspace 里的 csv</option><option>B · 联网抓取公开行情</option><option>C · 只做定性分析</option></select>
+                    </div>
+                    <div class="card-actions"><button class="btn" data-cancel>取消</button><button class="send" id="confirm" disabled>确认</button></div>
+                  </div>
+                </article>
+
+                <div class="typing">司墨正在整理方案</div>
+              </div>
+            </div>
+            </div>
+          </div>
+          <div class="composer">
+            <div class="composer-box">
+              <textarea placeholder="给司墨发消息…" aria-label="消息输入框"></textarea>
+              <div class="composer-foot"><div class="composer-left">▤ <span>支持 Markdown 格式</span></div><div class="composer-right"><span class="composer-hint">Enter 发送 · Shift+Enter 换行</span><button class="send">发送</button></div></div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="inspector">
+          <div class="insp-body">
+
+              <section class="insp-block">
+                <h3 class="insp-label">目标</h3>
+                <p class="insp-text">分析 A 股大盘近期走势，先用于本地文件，不联网；输出结论与三行表格。</p>
+              </section>
+
+              <section class="insp-block">
+                <h3 class="insp-label">输入</h3>
+                <p class="insp-text">workspace/行情.csv · 1 个文件 · 用户 2 条消息</p>
+              </section>
+
+              <section class="insp-block exec-block">
+                <div class="insp-head insp-head--tight"><b>执行会话</b><span>共 28 · 本次 15</span></div>
+
+                <div class="exec-group" data-total="12">
+                  <div class="exec-head" role="button" tabindex="0" aria-expanded="false" data-total="12"><span class="exec-toggle">▸</span><span class="exec-name">已完成</span><b class="exec-count">3/12</b></div>
+                  <div class="exec-list">
+                <div class="exec-row"><i class="exec-dot done"></i><span class="exec-title">确认会话目标</span><span class="exec-time">09:20</span></div>
+                <div class="exec-row"><i class="exec-dot done"></i><span class="exec-title">读取行情文件</span><span class="exec-time">09:32</span></div>
+                <div class="exec-row"><i class="exec-dot done"></i><span class="exec-title">校验字段结构</span><span class="exec-time">09:44</span></div>
+                <div class="exec-row"><i class="exec-dot done"></i><span class="exec-title">清洗缺失值</span><span class="exec-time">09:56</span></div>
+                <div class="exec-row"><i class="exec-dot done"></i><span class="exec-title">计算涨跌幅</span><span class="exec-time">10:08</span></div>
+                <div class="exec-row"><i class="exec-dot done"></i><span class="exec-title">汇总成交量</span><span class="exec-time">10:14</span></div>
+                <div class="exec-row"><i class="exec-dot done"></i><span class="exec-title">生成对比表</span><span class="exec-time">10:20</span></div>
+                <div class="exec-row"><i class="exec-dot done"></i><span class="exec-title">检查异常项</span><span class="exec-time">10:26</span></div>
+                <div class="exec-row"><i class="exec-dot done"></i><span class="exec-title">生成结论草稿</span><span class="exec-time">10:31</span></div>
+                <div class="exec-row is-default"><i class="exec-dot done"></i><span class="exec-title">校对数据口径</span><span class="exec-time">10:38</span></div>
+                <div class="exec-row is-default"><i class="exec-dot done"></i><span class="exec-title">输出结论摘要</span><span class="exec-time">10:44</span></div>
+                <div class="exec-row is-default"><i class="exec-dot done"></i><span class="exec-title">完成结果复核</span><span class="exec-time">10:52</span></div>
+                  </div>
+                </div>
+
+                <div class="exec-group" data-total="7">
+                  <div class="exec-head" role="button" tabindex="0" aria-expanded="false" data-total="7"><span class="exec-toggle">▸</span><span class="exec-name">进行中</span><b class="exec-count">3/7</b></div>
+                  <div class="exec-list">
+                <div class="exec-row is-default"><i class="exec-dot running"></i><span class="exec-title">解析会话目标</span><span class="exec-time">10:02</span></div>
+                <div class="exec-row is-default"><i class="exec-dot running"></i><span class="exec-title">等待数据权限</span><span class="exec-time">10:05</span></div>
+                <div class="exec-row is-default"><i class="exec-dot running"></i><span class="exec-title">抓取行情快照</span><span class="exec-time">10:09</span></div>
+                <div class="exec-row"><i class="exec-dot running"></i><span class="exec-title">生成对比表格</span><span class="exec-time">10:14</span></div>
+                <div class="exec-row"><i class="exec-dot running"></i><span class="exec-title">渲染结果卡片</span><span class="exec-time">10:20</span></div>
+                <div class="exec-row"><i class="exec-dot running"></i><span class="exec-title">更新进度摘要</span><span class="exec-time">10:26</span></div>
+                <div class="exec-row"><i class="exec-dot running"></i><span class="exec-title">检查输出格式</span><span class="exec-time">10:32</span></div>
+                  </div>
+                </div>
+
+                <div class="exec-group" data-total="9">
+                  <div class="exec-head" role="button" tabindex="0" aria-expanded="false" data-total="9"><span class="exec-toggle">▸</span><span class="exec-name">未开始</span><b class="exec-count">3/9</b></div>
+                  <div class="exec-list">
+                <div class="exec-row is-default"><i class="exec-dot pending"></i><span class="exec-title">补充行业口径</span><span class="exec-time">10:40</span></div>
+                <div class="exec-row is-default"><i class="exec-dot pending"></i><span class="exec-title">确认输出格式</span><span class="exec-time">10:43</span></div>
+                <div class="exec-row is-default"><i class="exec-dot pending"></i><span class="exec-title">生成本地报告</span><span class="exec-time">10:47</span></div>
+                <div class="exec-row"><i class="exec-dot pending"></i><span class="exec-title">归档分析记录</span><span class="exec-time">10:52</span></div>
+                <div class="exec-row"><i class="exec-dot pending"></i><span class="exec-title">同步交付物</span><span class="exec-time">10:56</span></div>
+                <div class="exec-row"><i class="exec-dot pending"></i><span class="exec-title">整理附件清单</span><span class="exec-time">11:00</span></div>
+                <div class="exec-row"><i class="exec-dot pending"></i><span class="exec-title">复核交付路径</span><span class="exec-time">11:04</span></div>
+                <div class="exec-row"><i class="exec-dot pending"></i><span class="exec-title">补充风险说明</span><span class="exec-time">11:08</span></div>
+                <div class="exec-row"><i class="exec-dot pending"></i><span class="exec-title">准备最终汇总</span><span class="exec-time">11:12</span></div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="insp-block insp-block--last">
+                <div class="insp-head insp-head--tight"><b>交付物</b><span>0</span></div>
+                <div class="empty empty--compact"><p>暂无交付物</p></div>
+              </section>
+          </div>
+          <div class="insp-rail"><button class="active" title="概览">☰</button><button title="消息">◷</button><button title="交付物">▤</button></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- 工作台 -->
+    <section id="page-workbench" hidden>
+      <div class="page"><div class="page-inner">
+        <div class="page-head"><h1>工作台</h1><p>用量与最近活动；不阻塞对话。</p></div>
+        <div class="section-title"><h2>用量</h2><span>本月 · 6 月 1 日起</span></div>
+        <div class="grid-3">
+          <div class="card"><span class="kicker">Token</span><div class="metric">46.2k</div><p>输入 28.3k · 输出 12.6k · 推理 5.2k</p></div>
+          <div class="card"><span class="kicker">会话</span><div class="metric">3</div><p>13 条消息 · 1 个任务</p></div>
+          <div class="card"><span class="kicker">本次运行</span><div class="metric">0</div><p>0 次模型调用</p></div>
+        </div>
+        <div class="chart" aria-label="每日 token">
+          <div class="bar bar--h18"><i></i><span>06-01</span></div><div class="bar bar--h34"><i></i><span>06-04</span></div><div class="bar bar--h12"><i></i><span>06-07</span></div><div class="bar bar--h56"><i></i><span>06-10</span></div><div class="bar bar--h28"><i></i><span>06-13</span></div><div class="bar bar--h72"><i></i><span>06-16</span></div><div class="bar bar--h46"><i></i><span>06-19</span></div><div class="bar bar--h64"><i></i><span>06-22</span></div><div class="bar bar--h38"><i></i><span>06-25</span></div><div class="bar bar--h82"><i></i><span>06-28</span></div>
+        </div>
+        <div class="section-title"><h2>最近活动</h2><span>3 条</span></div>
+        <div class="list">
+          <div class="row"><span class="kind">会话</span><span class="title">主会话</span><span class="time">10:34</span></div>
+          <div class="row"><span class="kind">会话</span><span class="title">A 股行情分析</span><span class="time">昨天</span></div>
+          <div class="row"><span class="kind">会话</span><span class="title">前端排查</span><span class="time">昨天</span></div>
+        </div>
+      </div></div>
+    </section>
+  </div>
+  <footer class="statusbar"><span>就绪</span><span>V4.1 Flash · 读/写权限按策略</span></footer>
+</div>
+<script>
+  const nav = document.getElementById('nav');
+  const crumb = document.getElementById('crumb');
+  const labels = { chat: '主会话', workbench: '工作台' };
+  nav.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-page]');
+    if (!btn) return;
+    const page = btn.dataset.page;
+    nav.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+    document.getElementById('page-chat').hidden = page !== 'chat';
+    document.getElementById('page-workbench').hidden = page !== 'workbench';
+    crumb.textContent = labels[page];
+  });
+  const pageParam = new URLSearchParams(location.search).get('page');
+  if (pageParam) document.querySelector('[data-page="' + pageParam + '"]')?.click();
+  const source = document.getElementById('source');
+  const confirm = document.getElementById('confirm');
+  source && source.addEventListener('change', () => { confirm.disabled = !source.value; });
+  confirm && confirm.addEventListener('click', () => {
+    confirm.textContent = '已确认';
+    confirm.disabled = true;
+    source.disabled = true;
+  });
+  document.querySelector('[data-cancel]')?.addEventListener('click', () => {
+    source.value = ''; confirm.disabled = true; confirm.textContent = '确认';
+  });
+</script>
+<script>
+(() => {
+  const timeline = document.getElementById('timeline');
+  const track = document.getElementById('tl-track');
+  const tip = document.getElementById('tl-tip');
+  const scroller = document.getElementById('chat-scroll');
+  if (!timeline || !track || !scroller) return;
+
+  const msgs = [...document.querySelectorAll('.msg')];
+  msgs.forEach((m, i) => { m.dataset.idx = String(i); m.id = 'msg-' + i; });
+  const bars = [];
+
+  let lastRole = '';
+  msgs.forEach((m, i) => {
+    const role = m.classList.contains('from-user') ? 'user' : 'agent';
+    const meta = m.querySelector('.msg-meta');
+    const spans = meta ? [...meta.querySelectorAll('span')] : [];
+    const time = spans.length ? spans[spans.length - 1].textContent.trim() : '';
+    const text = (m.querySelector('.msg-text')?.textContent || '').trim().replace(/\s+/g, ' ');
+    if (i === 0) {
+      const d = document.createElement('div');
+      d.className = 'tl-date';
+      d.textContent = '11/12';
+      track.appendChild(d);
+    }
+    const bar = document.createElement('button');
+    bar.className = 'tl-bar is-' + role;
+    bar.type = 'button';
+    bar.title = time + ' · ' + (role === 'user' ? '你' : '司墨');
+    bar.dataset.idx = String(i);
+    bar.addEventListener('click', () => go(i));
+    bar.addEventListener('mouseenter', () => {
+      const sender = role === 'user' ? '你' : '司墨';
+      const session = document.querySelector('.context h1')?.textContent?.trim() || '主会话';
+      const safe = text.replace(/[<>]/g, '');
+      tip.hidden = false;
+      tip.innerHTML = '<div class="tl-tip-top"><b>' + sender + '</b><span class="sep">·</span><span>' + session + '</span><span class="sep">·</span><span>' + time + '</span></div>' +
+        '<div class="tl-tip-body">' + (safe.slice(0, 90) || '消息') + '</div>';
+      const r = bar.getBoundingClientRect();
+      tip.style.left = Math.min(r.right + 10, window.innerWidth - 252) + 'px';
+      tip.style.top = Math.max(8, Math.min(r.top - 4, window.innerHeight - 92)) + 'px';
+    });
+    bar.addEventListener('mouseleave', () => { tip.hidden = true; });
+    track.appendChild(bar);
+    bars.push(bar);
+  });
+
+  let active = -1;
+  function setActive(i, scrollIntoView) {
+    if (i < 0 || i >= bars.length || i === active) return;
+    bars.forEach((b, k) => b.classList.toggle('active', k === i));
+    active = i;
+    if (scrollIntoView !== false) bars[i].scrollIntoView({ block: 'nearest' });
+  }
+  function go(i) {
+    const m = msgs[i];
+    if (!m) return;
+    m.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    m.classList.add('flash');
+    setTimeout(() => m.classList.remove('flash'), 1200);
+    setActive(i);
+  }
+  function sync() {
+    // 当前消息：视口中线以上最近的一条
+    const top = scroller.getBoundingClientRect().top;
+    let best = 0;
+    msgs.forEach((m, i) => { if (m.getBoundingClientRect().top - top <= 120) best = i; });
+    setActive(best);
+  }
+  scroller.addEventListener('scroll', sync, { passive: true });
+  timeline.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); go(Math.min(bars.length - 1, active + 1)); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); go(Math.max(0, active - 1)); }
+    if (e.key === 'Enter' && active >= 0) go(active);
+  });
+  requestAnimationFrame(sync);
+  requestAnimationFrame(() => { scroller.scrollTop = scroller.scrollHeight; sync(); });
+})();
+</script>
+
+<script>
+(() => {
+  document.querySelectorAll('.exec-group').forEach((group) => {
+    const head = group.querySelector('.exec-head');
+    if (!head) return;
+    const toggle = head.querySelector('.exec-toggle');
+    const count = head.querySelector('.exec-count');
+    const total = Number(head.dataset.total || group.dataset.total || 0);
+    head.addEventListener('click', () => {
+      const expanded = group.classList.toggle('is-expanded');
+      head.setAttribute('aria-expanded', String(expanded));
+      if (toggle) toggle.textContent = expanded ? '▾' : '▸';
+      if (count) count.textContent = (expanded ? total : Math.min(3, total)) + '/' + total;
+    });
+    head.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        head.click();
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>

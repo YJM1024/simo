@@ -465,5 +465,20 @@ func migrations() []sqlite.Migration {
 				return err
 			},
 		},
+		{
+			Version: 19,
+			Name:    "M79 hide legacy internal control messages",
+			Up: func(ctx context.Context, tx *sql.Tx) error {
+				if _, err := tx.ExecContext(ctx, `ALTER TABLE messages ADD COLUMN internal INTEGER NOT NULL DEFAULT 0`); err != nil {
+					return err
+				}
+				_, err := tx.ExecContext(ctx, `UPDATE messages SET internal = 1
+					WHERE role IN ('user','system') AND (
+						text LIKE '[卡片操作]%' OR text LIKE '[系统]%' OR text LIKE '[内部]%'
+						OR text LIKE '[tool]%' OR text LIKE '[工具]%'
+					)`)
+				return err
+			},
+		},
 	}
 }

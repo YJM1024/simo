@@ -741,17 +741,18 @@ func (m *Module) writeArtifactReport(task coretask.Task, report string) {
 		return
 	}
 	artifact := coretask.Artifact{
-		ID:        "art-" + randomHex(8),
-		TaskID:    task.ID,
-		Name:      name,
-		Mime:      "text/markdown",
-		Size:      int64(len(content)),
-		CreatedAt: time.Now().UnixMilli(),
+		ID:           "art-" + randomHex(8),
+		TaskID:       task.ID,
+		Name:         name,
+		Mime:         "text/markdown",
+		Size:         int64(len(content)),
+		CreatedAt:    time.Now().UnixMilli(),
+		DeliveryKind: coretask.ArtifactDeliveryKindInternal,
 	}
 	if err := m.store.Write(context.Background(), func(tx *sql.Tx) error {
 		_, err := tx.ExecContext(context.Background(), `INSERT INTO task_artifacts(
-			id, task_id, name, rel_path, mime, size, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-			artifact.ID, artifact.TaskID, artifact.Name, rel, artifact.Mime, artifact.Size, artifact.CreatedAt)
+			id, task_id, name, rel_path, mime, size, created_at, delivery_kind) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+			artifact.ID, artifact.TaskID, artifact.Name, rel, artifact.Mime, artifact.Size, artifact.CreatedAt, artifact.DeliveryKind)
 		return err
 	}); err != nil {
 		m.log.Warn("登记产物失败", "err", err)
@@ -759,7 +760,7 @@ func (m *Module) writeArtifactReport(task coretask.Task, report string) {
 }
 
 func (m *Module) ListArtifacts(ctx context.Context, taskID string) ([]coretask.Artifact, error) {
-	query := `SELECT id, task_id, name, mime, size, created_at FROM task_artifacts`
+	query := `SELECT id, task_id, name, mime, size, created_at, delivery_kind FROM task_artifacts`
 	args := []any{}
 	if strings.TrimSpace(taskID) != "" {
 		query += ` WHERE task_id = ?`
@@ -773,8 +774,8 @@ func (m *Module) ListArtifacts(ctx context.Context, taskID string) ([]coretask.A
 	defer rows.Close()
 	out := make([]coretask.Artifact, 0, 4)
 	for rows.Next() {
-		var artifact coretask.Artifact
-		if err := rows.Scan(&artifact.ID, &artifact.TaskID, &artifact.Name, &artifact.Mime, &artifact.Size, &artifact.CreatedAt); err != nil {
+		artifact, err := scanArtifact(rows)
+		if err != nil {
 			return nil, err
 		}
 		out = append(out, artifact)
@@ -783,18 +784,19 @@ func (m *Module) ListArtifacts(ctx context.Context, taskID string) ([]coretask.A
 }
 
 func (m *Module) ListArtifactsBySession(ctx context.Context, sessionID string) ([]coretask.Artifact, error) {
-	rows, err := m.store.Query(ctx, `SELECT a.id, a.task_id, a.name, a.mime, a.size, a.created_at
+	rows, err := m.store.Query(ctx, `SELECT a.id, a.task_id, a.name, a.mime, a.size, a.created_at, a.delivery_kind
 		FROM task_artifacts a LEFT JOIN tasks t ON t.id = a.task_id
-		WHERE t.session_id = ? OR a.task_id = ? ORDER BY a.created_at ASC, a.id ASC`,
-		sessionID, "session:"+sessionID)
+		WHERE (t.session_id = ? OR a.task_id = ?) AND a.delivery_kind = ?
+		ORDER BY a.created_at ASC, a.id ASC`,
+		sessionID, "session:"+sessionID, coretask.ArtifactDeliveryKindUser)
 	if err != nil {
 		return nil, fmt.Errorf("查询会话产物失败: %w", err)
 	}
 	defer rows.Close()
 	out := make([]coretask.Artifact, 0, 4)
 	for rows.Next() {
-		var artifact coretask.Artifact
-		if err := rows.Scan(&artifact.ID, &artifact.TaskID, &artifact.Name, &artifact.Mime, &artifact.Size, &artifact.CreatedAt); err != nil {
+		artifact, err := scanArtifact(rows)
+		if err != nil {
 			return nil, err
 		}
 		out = append(out, artifact)
@@ -814,7 +816,7 @@ func (m *Module) ListArtifactsForSession(ctx context.Context, sessionID string, 
 		}
 	}
 	placeholders := make([]string, len(ids))
-	args := make([]any, 0, len(ids)*2)
+	args := make([]any, 0, len(ids)*2+1)
 	for i, id := range ids {
 		placeholders[i] = "?"
 		args = append(args, id)
@@ -824,10 +826,12 @@ func (m *Module) ListArtifactsForSession(ctx context.Context, sessionID string, 
 		synth[i] = "?"
 		args = append(args, "session:"+id)
 	}
-	rows, err := m.store.Query(ctx, `SELECT a.id, a.task_id, a.name, a.mime, a.size, a.created_at
+	args = append(args, coretask.ArtifactDeliveryKindUser)
+	rows, err := m.store.Query(ctx, `SELECT a.id, a.task_id, a.name, a.mime, a.size, a.created_at, a.delivery_kind
 		FROM task_artifacts a LEFT JOIN tasks t ON t.id = a.task_id
-		WHERE t.session_id IN (`+strings.Join(placeholders, ",")+`)
-		   OR a.task_id IN (`+strings.Join(synth, ",")+`)
+		WHERE (t.session_id IN (`+strings.Join(placeholders, ",")+`)
+		   OR a.task_id IN (`+strings.Join(synth, ",")+`))
+		   AND a.delivery_kind = ?
 		ORDER BY a.created_at ASC, a.id ASC`, args...)
 	if err != nil {
 		return nil, fmt.Errorf("查询会话产物失败: %w", err)
@@ -835,8 +839,8 @@ func (m *Module) ListArtifactsForSession(ctx context.Context, sessionID string, 
 	defer rows.Close()
 	out := make([]coretask.Artifact, 0, 4)
 	for rows.Next() {
-		var artifact coretask.Artifact
-		if err := rows.Scan(&artifact.ID, &artifact.TaskID, &artifact.Name, &artifact.Mime, &artifact.Size, &artifact.CreatedAt); err != nil {
+		artifact, err := scanArtifact(rows)
+		if err != nil {
 			return nil, err
 		}
 		out = append(out, artifact)
@@ -847,15 +851,32 @@ func (m *Module) ListArtifactsForSession(ctx context.Context, sessionID string, 
 func (m *Module) getArtifact(ctx context.Context, id string) (coretask.Artifact, string, error) {
 	var artifact coretask.Artifact
 	var relPath string
-	err := m.store.QueryRow(ctx, `SELECT id, task_id, name, mime, size, created_at, rel_path FROM task_artifacts WHERE id = ?`, id).
-		Scan(&artifact.ID, &artifact.TaskID, &artifact.Name, &artifact.Mime, &artifact.Size, &artifact.CreatedAt, &relPath)
+	err := m.store.QueryRow(ctx, `SELECT id, task_id, name, mime, size, created_at, delivery_kind, rel_path
+		FROM task_artifacts WHERE id = ?`, id).
+		Scan(&artifact.ID, &artifact.TaskID, &artifact.Name, &artifact.Mime, &artifact.Size,
+			&artifact.CreatedAt, &artifact.DeliveryKind, &relPath)
 	if err == sql.ErrNoRows {
 		return coretask.Artifact{}, "", ErrArtifactNotFound
 	}
 	if err != nil {
 		return coretask.Artifact{}, "", err
 	}
+	artifact.UserDelivery = artifact.DeliveryKind == coretask.ArtifactDeliveryKindUser
+	artifact.PreviewURL = "/api/artifacts/" + artifact.ID + "/content"
+	artifact.DownloadURL = "/api/artifacts/" + artifact.ID + "/content?download=1"
 	return artifact, relPath, nil
+}
+
+func scanArtifact(scanner interface{ Scan(...any) error }) (coretask.Artifact, error) {
+	var artifact coretask.Artifact
+	if err := scanner.Scan(&artifact.ID, &artifact.TaskID, &artifact.Name, &artifact.Mime,
+		&artifact.Size, &artifact.CreatedAt, &artifact.DeliveryKind); err != nil {
+		return coretask.Artifact{}, err
+	}
+	artifact.UserDelivery = artifact.DeliveryKind == coretask.ArtifactDeliveryKindUser
+	artifact.PreviewURL = "/api/artifacts/" + artifact.ID + "/content"
+	artifact.DownloadURL = "/api/artifacts/" + artifact.ID + "/content?download=1"
+	return artifact, nil
 }
 
 func (m *Module) artifactPath(relPath string) (string, error) {

@@ -83,6 +83,7 @@ type activeTurn struct {
 	TeamNote        string
 	QuoteContext    string
 	AutoCreatedNote string
+	InternalPrompt  string
 	lastActivity    atomic.Int64
 	timeoutMu       sync.Mutex
 	timeoutReason   string
@@ -117,6 +118,14 @@ func (m *Module) startTurn(ctx context.Context, sessionID, text string, class me
 	return m.startTurnExplicit(ctx, sessionID, text, class, attachmentIDs, replyToMessageID, false)
 }
 
+// startTurnInternal 用于卡片/团队等内部动作：不参与自动路由/任务分类，不触发内部副作用。
+func (m *Module) startTurnInternal(ctx context.Context, sessionID, text string, class messageClass, attachmentIDs []string, replyToMessageID string) (Message, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return m.startTurnExplicit(withInternalTurn(ctx), sessionID, text, class, attachmentIDs, replyToMessageID, false)
+}
+
 func (m *Module) startTurnExplicit(ctx context.Context, sessionID, text string, class messageClass, attachmentIDs []string, replyToMessageID string, explicitSession bool) (Message, error) {
 	text = strings.TrimSpace(text)
 	attachmentIDs = uniqueStrings(attachmentIDs)
@@ -129,11 +138,15 @@ func (m *Module) startTurnExplicit(ctx context.Context, sessionID, text string, 
 	if utf8.RuneCountInString(text) > maxMessageRunes {
 		return Message{}, newRequestError(codeBadRequest, fmt.Sprintf("消息过长（上限 %d 字）", maxMessageRunes))
 	}
+	if isInternalControlText(text) && !isInternalTurn(ctx) {
+		return Message{}, newRequestError(codeBadRequest, "内部操作文本不允许作为用户消息发送")
+	}
 	sessionID = strings.TrimSpace(sessionID)
 	if sessionID == "" {
 		sessionID = defaultSessionID
 	}
 	originalSessionID := sessionID
+	internal := isInternalTurn(ctx) || isInternalControlText(text)
 	if drafts, ok := m.sessions.(coresession.DraftService); ok && drafts.IsDraft(ctx, sessionID) {
 		materialized, found, err := drafts.MaterializeDraft(ctx, sessionID)
 		if err != nil {
@@ -161,7 +174,14 @@ func (m *Module) startTurnExplicit(ctx context.Context, sessionID, text string, 
 	routeReason := ""
 	routeTo := ""
 	autoCreated := false
-	routeIntent, _, intentAttempted := m.classifyRouteIntent(ctx, sessionID, text, replySessionID, explicitSession)
+	var routeIntent routeIntentResult
+	intentAttempted := true
+	if !internal {
+		routeIntent, _, intentAttempted = m.classifyRouteIntent(ctx, sessionID, text, replySessionID, explicitSession)
+	} else {
+		routeIntent = routeIntentResult{Route: "main", Confidence: 1, Reason: "internal_operation"}
+		intentAttempted = true
+	}
 	if routeIntent.Confidence >= routeConfidenceThreshold() {
 		switch {
 		case strings.HasPrefix(routeIntent.Route, "existing:"):
@@ -200,7 +220,7 @@ func (m *Module) startTurnExplicit(ctx context.Context, sessionID, text string, 
 	}
 	routeNote := ""
 	// M4 兼容：仅在意图路由不可用（mock/旧客户端）时保留旧的“新需求”建子会话行为。
-	if m.sessions != nil && !intentAttempted && autoRouteEnabled() && !explicitSession &&
+	if m.sessions != nil && !internal && !intentAttempted && autoRouteEnabled() && !explicitSession &&
 		sessionID == defaultSessionID && !explicitMainSessionIntent(text) && isNewSessionIntent(text) && routeTo == "" {
 		if _, _, isMemory := parseMemoryCommand(text, sessionID); !isMemory {
 			child, err := m.sessions.Create(ctx, sessionID, sessionTitleFromText(text))
@@ -214,7 +234,11 @@ func (m *Module) startTurnExplicit(ctx context.Context, sessionID, text string, 
 		}
 	}
 	if class == "" {
-		class, _ = classifyMessage(text)
+		if internal {
+			class = ClassRefine
+		} else {
+			class, _ = classifyMessage(text)
+		}
 	}
 	sessionTitle := m.sessionTitle(ctx, sessionID)
 	sessionPath := m.sessionPath(ctx, sessionID)
@@ -247,32 +271,45 @@ func (m *Module) startTurnExplicit(ctx context.Context, sessionID, text string, 
 		SessionPath:  sessionPath,
 		ReplyToID:    strings.TrimSpace(replyToMessageID),
 		ReplyTo:      replySnapshot,
+		Internal:     internal,
 	}
 	if routeTo != "" {
 		user.RoutedFrom = originalSessionID
 		user.RoutedTo = sessionID
 	}
-	if err := m.createMessageWithAttachments(ctx, user); err != nil {
-		return Message{}, fmt.Errorf("写入用户消息失败: %w", err)
-	}
-	if routeTo != "" {
-		m.emitRouteAudit(ctx, originalSessionID, sessionID, user.ID, routeReason)
-		m.recordMessageRoute(ctx, user.ID, originalSessionID, sessionID, routeReason)
-	}
-	if _, err := m.events.Append(ctx, eventlog.TypeMessageCreated, user); err != nil {
-		return Message{}, fmt.Errorf("写 message.created 失败: %w", err)
+	if !internal {
+		if err := m.createMessageWithAttachments(ctx, user); err != nil {
+			return Message{}, fmt.Errorf("写入用户消息失败: %w", err)
+		}
+		if routeTo != "" {
+			m.emitRouteAudit(ctx, originalSessionID, sessionID, user.ID, routeReason)
+			m.recordMessageRoute(ctx, user.ID, originalSessionID, sessionID, routeReason)
+		}
+		if _, err := m.events.Append(ctx, eventlog.TypeMessageCreated, user); err != nil {
+			return Message{}, fmt.Errorf("写 message.created 失败: %w", err)
+		}
 	}
 
-	memoryNote := m.applyMemoryCommand(ctx, sessionID, user.ID, text)
-	if strings.Contains(strings.ToLower(text), "mock:effect-dup") {
-		m.recordMockEffectDup(ctx, sessionID)
-	}
-	workflowNote := m.tryCreateWorkflow(ctx, sessionID, text)
+	memoryNote := ""
+	workflowNote := ""
 	teamNote := ""
-	if strings.Contains(strings.ToLower(text), "mock:team") {
-		teamNote = m.createMockTeam(ctx, sessionID)
+	if !internal {
+		memoryNote = m.applyMemoryCommand(ctx, sessionID, user.ID, text)
+		if strings.Contains(strings.ToLower(text), "mock:effect-dup") {
+			m.recordMockEffectDup(ctx, sessionID)
+		}
+		workflowNote = m.tryCreateWorkflow(ctx, sessionID, text)
+		if strings.Contains(strings.ToLower(text), "mock:team") {
+			teamNote = m.createMockTeam(ctx, sessionID)
+		}
 	}
-	_, decision := classifyMessage(text)
+	var decision DecisionEnvelope
+	if internal {
+		decision = DecisionEnvelope{Kind: DecisionAnswer, Reason: "internal_operation"}
+		class = ClassRefine
+	} else {
+		_, decision = classifyMessage(text)
+	}
 	if class == ClassCorrect && decision.Kind == "" {
 		decision.Kind = DecisionAnswer
 	}
@@ -356,6 +393,9 @@ func (m *Module) startTurnExplicit(ctx context.Context, sessionID, text string, 
 		TeamNote:     teamNote,
 		QuoteContext: replyQuoteContext(replySnapshot),
 	}
+	if internal {
+		active.InternalPrompt = text
+	}
 	if autoCreated {
 		active.AutoCreatedNote = "该子会话已由系统自动创建，无需再次调用 session.create；直接在本会话处理用户请求。"
 	}
@@ -366,6 +406,9 @@ func (m *Module) startTurnExplicit(ctx context.Context, sessionID, text string, 
 
 	m.wg.Add(1)
 	go m.runTurn(active, user, decision, text)
+	if internal {
+		return reply, nil
+	}
 	return user, nil
 }
 
@@ -721,6 +764,9 @@ func (m *Module) buildModelMessages(ctx context.Context, active *activeTurn, use
 			}
 			messages = append(messages, llm.Message{Role: role, Content: content})
 		}
+	}
+	if active.InternalPrompt != "" {
+		messages = append(messages, llm.Message{Role: "user", Content: active.InternalPrompt})
 	}
 	return messages
 }
@@ -1100,6 +1146,9 @@ func (m *Module) effortForRole(role string) string {
 func classifyMessage(text string) (messageClass, DecisionEnvelope) {
 	trimmed := strings.TrimSpace(text)
 	lower := strings.ToLower(trimmed)
+	if isInternalControlText(trimmed) {
+		return ClassRefine, DecisionEnvelope{Kind: DecisionAnswer, Reason: "internal_control"}
+	}
 
 	highRisk := []string{"删除", "删掉", "清空", "格式化", "部署", "上线", "转账", "付款", "下单", "发邮件", "drop ", "delete ", "rm -", "format ", "deploy"}
 	for _, keyword := range highRisk {

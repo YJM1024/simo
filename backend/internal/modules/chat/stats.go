@@ -126,7 +126,7 @@ func (m *Module) handleStats(w http.ResponseWriter, r *http.Request) {
 	fromMS := from.UnixMilli()
 	toMS := to.UnixMilli()
 	rows, err := m.store.Query(r.Context(), `SELECT session_id, at FROM messages
-		WHERE at >= ? AND at <= ?`, fromMS, toMS)
+		WHERE at >= ? AND at <= ? AND internal = 0`, fromMS, toMS)
 	if err != nil {
 		httpserver.WriteError(w, http.StatusInternalServerError, "读取消息统计失败")
 		return

@@ -515,7 +515,7 @@ func (m *Module) fireTeamTrigger(ctx context.Context, triggerID, artifactID, sum
 	started := false
 	startErr := ""
 	if toSession != "" {
-		if _, err := m.startTurn(ctx, toSession, "团队触发："+firstNonEmptyString(summary, "上游交付物已就绪"), ClassRefine, nil, ""); err != nil {
+		if _, err := m.startTurnInternal(ctx, toSession, "团队触发："+firstNonEmptyString(summary, "上游交付物已就绪"), ClassRefine, nil, ""); err != nil {
 			startErr = err.Error()
 		} else {
 			started = true

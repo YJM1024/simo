@@ -28,6 +28,7 @@ type Message struct {
 	AgentID      string            `json:"agentId,omitempty"`
 	RoutedFrom   string            `json:"routedFrom,omitempty"`
 	RoutedTo     string            `json:"routedTo,omitempty"`
+	Internal     bool              `json:"internal,omitempty"`
 	Cards        []Card            `json:"cards,omitempty"`
 }
 

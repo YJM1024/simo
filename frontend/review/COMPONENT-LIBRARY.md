@@ -40,13 +40,13 @@ src/components/
 
 ## 缓存与用量修复
 - `build.mjs` 每次生成 buildId，写入 `<meta name="build-id">` 与 `app.js?v=...` / `app.css?v=...`。
-- 本次 buildId：`mwdd6su7-4tpei`；app.js sha256 `bf5d1771fb390ddcd2257b3059d51d6f1739498022d38818bf96aea38de99dd6`；app.css sha256 `dceb1127330db79f748c336dd351b253f680cdd753a56ff754471fe03ce7bd99`。
+- 本次 buildId：`mwdgx15f-h7dql`；app.js sha256 `bf5d1771fb390ddcd2257b3059d51d6f1739498022d38818bf96aea38de99dd6`；app.css sha256 `dceb1127330db79f748c336dd351b253f680cdd753a56ff754471fe03ce7bd99`。
 - 侧栏/工作台 token 改用 `/api/stats.totals`：tokens=81210 → 显示 81.2k、进度 81%；消息 31、任务 3。
 - Card rect 断言（1600）：label y547–564，control y567–599，`overlap=false`。
 
 
 ## 视觉验收包（本轮）
-- buildId：`mwdd6su7-4tpei`（DPR2 截图生成构建）
+- buildId：`mwdgx15f-h7dql`（DPR2 截图生成构建）
 - DPR2 并排：`visual-1600-dpr2.png`、`visual-1180-dpr2.png`
 - 1600/1180/375：`align-{1600,1180,375}.png`
 - 卡片：`card-fix-before-1600.png` / `card-fix-{1600,1180,375}.png`
@@ -59,3 +59,48 @@ src/components/
 - 侧栏/工作台 token 取 `stats.totals.tokens`，消息取 `stats.totals.messages`，会话取 `/api/sessions` 的 `sessions.length`；不读 `/api/usage`。
 - `stats.totals` 缺失时从 buckets 求和；加载失败保留上次值并显示错误，不回退为 0。
 - 实测 1600/1180：81.2k、3 个会话、31 条消息；工作台同源一致。
+
+## COMP-timeline-tip（待签字，Timeline 未接入）
+- tokens：`--radius-tip:8px`、`--tip-width:236px`。
+- 组件：`TimelineTip`（open/anchorRef/sender/sessionTitle/timeLabel/summary/fallbackLabel/onClose/onStateChange）；fixed portal，`role=tooltip`，宽度 min(236, 100vw-16)，滚动跟随，边缘 clamp。
+- 画廊已登记，截图：`timeline-tip-{1600,1180,375}.png`（DPR2）。
+- 实测：tip width 236、`title=null`、`role=tooltip`、无横向溢出；focus 中心偏差 0.156px；edge-clamped 样例 left=1304 right=1540。
+- Timeline 已接入 TimelineTip；tick 原生 title 已删除；跨 tick 定时器在 onFocus/onMouseEnter 清除 close/show，A→B 保持 ≥500ms。
+- 画廊含键盘 focus 与 edge-clamped 两个真实样例；A1/A2/A4/A8 实机项见验收记录。
+
+## A8 app 实机截图（build mwdfw9t5-lh5d1）
+- `timeline-tip-hover-1600.png`、`timeline-tip-focus-1600.png`、`timeline-tip-switch-1600.png`、`timeline-tip-scroll-1600.png`（app 聊天页，36 ticks，消息区 scrollTop 3710）
+- `timeline-tip-focus-1180.png`、`timeline-tip-375.png`（375 timeline 按既有设计隐藏）
+- `timeline-tip-edge-1600.png`（edge-clamped 样例）
+- tick 原生 title=0；focus ring 实测 **2px**；三档无横向溢出；console 0。
+
+## FE-002/003/004/005 批次（未签字）
+- buildId `mwdgby9z-iq6se`；新增 `LoadingState`/`ErrorState` 统一三态并登记画廊。
+- 截图：`fe-batch-chat-1600/1180/375.png`、`fe-batch-workbench-1600.png`、`fe-error-state-1600.png`。
+- 已验证：错误态不显示假 0、重试按钮；搜索、空结果、归档/恢复、任务定位、工作台最近活动、交付物过滤。
+- 未完成：右栏 SessionSpec 单一投影、ConversationPanel、卡片重复提交服务端幂等实测、真实用户交付物打开、空库工作台。
+
+## ConversationPanel / SessionSpec 投影（build mwdgirii-fqmgz）
+- `ConversationPanel` 已登记画廊并接入聊天页；1600 panel x256 w1028 h656，1180 x244 w640，375 x8 w359；radius 12/8、border 1px、shadow none，无横向溢出。
+- 右栏改为单一 `GET /api/sessions/{id}/spec-projection?taskLimit=3`：status/revision/待确认、goal、constraints+inputs、tasks、deliverables；不再分请求。
+- 截图：`fe-final-{1600,1180,375}.png`。
+- 未验证：卡片服务端重复提交幂等、真实用户交付物打开、空库工作台空态。
+
+## FE-002..005 P0 返工（build mwdgukie-6x8gi）
+- 修复 5s 834 请求循环：稳定 loadSessions/applyStats 依赖；实测 5s 6 个 API，侧栏稳定「会话 3」。
+- 滚动移交 `.conversation-scroll`：client654/scroll4330/top3676（底部），内层 `.chat-scroll` 0；timeline sync。
+- 交付物删除前端文件名硬过滤；CardBlock/MessageItem 增加 readOnly，归档卡片不可提交；错误态「—」不显示假 0。
+
+## 用户级交付物 / 幂等 / 错误文案（build mwdgx15f-h7dql）
+- `/api/deliverables` 当前 404，工作台用户级数据源仍阻塞。
+- 交付物 `previewUrl`/`downloadUrl` 已接入打开；无 userDelivery 时保持空态；`/api/artifacts` fallback 保留。
+- `request()` 网络失败改为「网络请求失败，请检查连接后重试」；409 `CARD_ACTION_IN_PROGRESS` 显示「处理中，请稍后重试」。
+- 未验证：卡片连续两次服务端幂等、空库工作台、FE-002 A5 完整回归。
+
+## message-cards React 基线（build mwdk1oal-pjkx0）
+- 灰底 `--paper` #EFEDE8；消息白卡 1px/10r/12×14/无阴影/9 间距。
+- 卡列 1600 680、1920 680、1180 600、375 359；中心差 0；tab 左缘=卡左缘 430/590/264/8。
+- Composer 同宽同白底/1px/10r；1600 430/680，1180 264/600，375 8/359。
+- Timeline 1600/1920 absolute gutter，1180/375 隐藏；中心不变。
+- 截图：`message-cards-react-{1600,1920,1180,375}.png`。
+- 功能未改：唯一滚动、TimelineTip、SessionSpec、卡片/搜索/归档/三态保留。

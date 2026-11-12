@@ -309,6 +309,55 @@
       ],
       "states": [],
       "owner": "frontend"
+    },
+    {
+      "name": "TimelineTip",
+      "variants": [
+        "visible",
+        "edge-clamped"
+      ],
+      "states": [
+        "hidden",
+        "visible",
+        "edge-clamped"
+      ],
+      "owner": "frontend"
+    },
+    {
+      "name": "LoadingState",
+      "variants": [
+        "default"
+      ],
+      "states": [
+        "loading"
+      ],
+      "owner": "frontend"
+    },
+    {
+      "name": "ErrorState",
+      "variants": [
+        "default"
+      ],
+      "states": [
+        "error"
+      ],
+      "owner": "frontend"
+    },
+    {
+      "name": "ConversationPanel",
+      "variants": [
+        "ready",
+        "loading",
+        "empty",
+        "error"
+      ],
+      "states": [
+        "ready",
+        "loading",
+        "empty",
+        "error"
+      ],
+      "owner": "frontend"
     }
   ],
   "gallery": "/#gallery"

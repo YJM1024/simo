@@ -594,7 +594,8 @@ func (m *Module) executeApprovedTool(tool string, args map[string]any, sandbox, 
 	if err := m.revalidateApproved(name, args, sandbox); err != nil {
 		return neutralize.Text(err.Error())
 	}
-	result := m.runTool(context.Background(), sessionID, name, args, sandbox)
+	ctx := withUserDelivery(context.Background())
+	result := m.runTool(ctx, sessionID, name, args, sandbox)
 	result = m.limitToolOutput(result)
 	return neutralize.Text(result)
 }
@@ -776,6 +777,9 @@ func (m *Module) toolWrite(ctx context.Context, sessionID string, args map[strin
 		return fmt.Sprintf("Error: 写入失败: %v (code=write_failed)", err)
 	}
 	m.reads.record(sessionID, abs)
+	if isUserDeliveryContext(ctx) {
+		m.registerUserDeliveryFile(ctx, sessionID, abs)
+	}
 	return fmt.Sprintf("OK: 已写入 %s（%d 字节）", stringArg(args, "file_path"), len(content))
 }
 
@@ -816,6 +820,9 @@ func (m *Module) toolEdit(ctx context.Context, sessionID string, args map[string
 		return fmt.Sprintf("Error: 写入失败: %v (code=write_failed)", err)
 	}
 	m.reads.record(sessionID, abs)
+	if isUserDeliveryContext(ctx) {
+		m.registerUserDeliveryFile(ctx, sessionID, abs)
+	}
 	return fmt.Sprintf("OK: 已编辑 %s（%d 处替换）", stringArg(args, "file_path"), count)
 }
 

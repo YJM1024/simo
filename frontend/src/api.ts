@@ -1,13 +1,24 @@
-import type { Artifact, Message, PermissionState, Session, SessionOverview, StatsBucket, StatsTotals, Task, Usage } from './types'
+import type { SessionSpecProjection, Artifact, Message, PermissionState, Session, SessionOverview, StatsBucket, StatsTotals, Task, Usage } from './types'
+
+export class ApiError extends Error {
+  status: number
+  code: string
+  constructor(message: string, status = 0, code = '') { super(message); this.status = status; this.code = code }
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(path, {
-    headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
-    ...init,
-  })
+  let response: Response
+  try {
+    response = await fetch(path, { headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) }, ...init })
+  } catch {
+    throw new ApiError('网络请求失败，请检查连接后重试')
+  }
   if (!response.ok) {
-    const body = await response.text().catch(() => '')
-    throw new Error(`${response.status} ${response.statusText}${body ? `: ${body.slice(0, 240)}` : ''}`)
+    const text = await response.text().catch(() => '')
+    let code = ''
+    try { code = (JSON.parse(text) as { code?: string }).code ?? '' } catch { /* not json */ }
+    if (response.status === 409 && code === 'CARD_ACTION_IN_PROGRESS') throw new ApiError('处理中，请稍后重试', 409, code)
+    throw new ApiError(`请求失败（${response.status}），请稍后重试`, response.status, code)
   }
   if (response.status === 204) return undefined as T
   return (await response.json()) as T
@@ -69,7 +80,12 @@ export interface WsDelta {
   delta: string
 }
 
-export function connectEvents(sessionId: string, handlers: { onDelta: (delta: WsDelta) => void; onStatus: (status: string) => void }): () => void {
+export interface ChatEvents {
+  close: () => void
+  stop: () => void
+}
+
+export function connectEvents(sessionId: string, handlers: { onDelta: (delta: WsDelta) => void; onStatus: (status: string) => void }): ChatEvents {
   let stopped = false
   let socket: WebSocket | null = null
   let retry: number | null = null
@@ -95,16 +111,50 @@ export function connectEvents(sessionId: string, handlers: { onDelta: (delta: Ws
       }
     })
     socket.addEventListener('close', () => {
-      handlers.onStatus('closed')
+      handlers.onStatus('reconnecting')
       if (stopped) return
       retry = window.setTimeout(open, retryDelay)
       retryDelay = Math.min(retryDelay * 1.8, 5000)
     })
   }
   open()
-  return () => {
-    stopped = true
-    if (retry !== null) window.clearTimeout(retry)
-    socket?.close()
+  return {
+    close: () => {
+      stopped = true
+      if (retry !== null) window.clearTimeout(retry)
+      socket?.close()
+    },
+    stop: () => {
+      if (socket?.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: 'correct', data: { sessionId } }))
+      }
+    },
   }
+}
+
+export function searchMessages(q: string): Promise<{ messages?: Array<{ sessionId: string }> }> {
+  return request(`/api/messages/search?q=${encodeURIComponent(q)}`)
+}
+
+export function archiveSession(id: string): Promise<unknown> {
+  return request(`/api/sessions/${encodeURIComponent(id)}/archive`, { method: 'POST' })
+}
+
+export function unarchiveSession(id: string): Promise<unknown> {
+  return request(`/api/sessions/${encodeURIComponent(id)}/unarchive`, { method: 'POST' })
+}
+
+export async function getArtifactContent(id: string): Promise<string> {
+  const response = await fetch(`/api/artifacts/${encodeURIComponent(id)}/content`)
+  if (!response.ok) throw new Error(`交付物读取失败（${response.status}）`)
+  return response.text()
+}
+
+export function getSpecProjection(sessionId: string, taskLimit = 3): Promise<SessionSpecProjection> {
+  return request(`/api/sessions/${encodeURIComponent(sessionId)}/spec-projection?taskLimit=${taskLimit}`)
+}
+
+export interface UserDeliverable { id: string; name: string; createdAt?: number; previewUrl?: string; downloadUrl?: string }
+export function getDeliverables(): Promise<{ deliverables?: UserDeliverable[]; total?: number }> {
+  return request('/api/deliverables')
 }

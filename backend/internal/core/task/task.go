@@ -75,14 +75,23 @@ type Step struct {
 	Status  string `json:"status"`
 }
 
+const (
+	ArtifactDeliveryKindUser     = "user_delivery"
+	ArtifactDeliveryKindInternal = "internal"
+)
+
 // Artifact 是任务产物元数据（M5）。
 type Artifact struct {
-	ID        string `json:"id"`
-	TaskID    string `json:"taskId"`
-	Name      string `json:"name"`
-	Mime      string `json:"mime"`
-	Size      int64  `json:"size"`
-	CreatedAt int64  `json:"createdAt"`
+	ID           string `json:"id"`
+	TaskID       string `json:"taskId"`
+	Name         string `json:"name"`
+	Mime         string `json:"mime"`
+	Size         int64  `json:"size"`
+	CreatedAt    int64  `json:"createdAt"`
+	UserDelivery bool   `json:"userDelivery"`
+	DeliveryKind string `json:"deliveryKind"`
+	PreviewURL   string `json:"previewUrl,omitempty"`
+	DownloadURL  string `json:"downloadUrl,omitempty"`
 }
 
 // Task 是后台任务投影。

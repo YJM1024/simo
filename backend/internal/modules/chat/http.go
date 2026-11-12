@@ -170,7 +170,7 @@ func (m *Module) handleMessageSearch(w http.ResponseWriter, r *http.Request) {
 	}
 	args = append(args, "%"+query+"%")
 	rows, err := m.store.Query(r.Context(), `SELECT id, session_id, role, text, at, status, task_id, workflow_id, tool, approval_id, category, reply_to_id
-		FROM messages WHERE session_id IN (`+strings.Join(placeholders, ",")+`) AND text LIKE ?
+		FROM messages WHERE session_id IN (`+strings.Join(placeholders, ",")+`) AND internal = 0 AND text LIKE ?
 		ORDER BY rowid ASC LIMIT 50`, args...)
 	if err != nil {
 		httpserver.WriteError(w, http.StatusInternalServerError, "搜索消息失败")
@@ -426,6 +426,9 @@ func (m *Module) wsPump(ctx context.Context, since int64, replay bool, out chan<
 			if ev.ID <= last || !isWSEventType(ev.Type) {
 				continue
 			}
+			if suppressWSEvent(ev) {
+				continue
+			}
 			if !m.wsSend(ctx, out, eventEnvelope(ev)) {
 				return
 			}
@@ -440,6 +443,9 @@ func (m *Module) wsPump(ctx context.Context, since int64, replay bool, out chan<
 				return
 			}
 			if ev.ID <= last || !isWSEventType(ev.Type) {
+				continue
+			}
+			if suppressWSEvent(ev) {
 				continue
 			}
 			if !m.wsSend(ctx, out, eventEnvelope(ev)) {
@@ -472,6 +478,21 @@ func isWSEventType(typ string) bool {
 
 func eventEnvelope(ev eventlog.Event) wsEnvelope {
 	return wsEnvelope{Type: ev.Type, Data: json.RawMessage(ev.Payload), ID: ev.ID}
+}
+
+func suppressWSEvent(ev eventlog.Event) bool {
+	if ev.Type != eventlog.TypeMessageCreated {
+		return false
+	}
+	var msg struct {
+		Role     string `json:"role"`
+		Text     string `json:"text"`
+		Internal bool   `json:"internal"`
+	}
+	if err := json.Unmarshal(ev.Payload, &msg); err != nil {
+		return false
+	}
+	return msg.Internal || ((msg.Role == RoleUser || msg.Role == "system") && isInternalControlText(msg.Text))
 }
 
 func (m *Module) wsSend(ctx context.Context, out chan<- wsEnvelope, env wsEnvelope) bool {

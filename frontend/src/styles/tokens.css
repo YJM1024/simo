@@ -39,6 +39,13 @@
   --r-6: 6px;
   --r-8: 8px;
   --r-10: 10px;
+  --paper: var(--surface-3);
+  --conversation-card-w: 720px;
+  --conversation-gutter-x: 16px;
+  --radius-panel: 12px;
+  --radius-tip: 8px;
+  --tip-width: 236px;
+  --radius-panel-mobile: 8px;
 
   /* 间距刻度（偶数优先） */
   --sp-2: 2px;

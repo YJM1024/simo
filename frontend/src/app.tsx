@@ -1,20 +1,24 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   connectEvents,
+  type ChatEvents,
+  archiveSession,
   createSessionDraft,
-  getArtifacts,
-  getOverview,
+  getArtifactContent,
+  searchMessages,
+  unarchiveSession,
   getPermissions,
+  getDeliverables,
+  getSpecProjection,
   getStats,
-  getTasks,
   listMessages,
   listSessions,
   renameSession,
   sendChat,
   submitCardAction,
 } from './api'
-import type { Artifact, Card, Message, PermissionState, Session, SessionOverview, StatsBucket, StatsTotals, Task } from './types'
-import { Composer, Icon, MessageItem, RightPanel, Segmented, Sidebar, StatusBar, Timeline, WorkbenchChart, formatTime, formatTokens } from './components'
+import type { Card, Message, PermissionState, Session, StatsBucket, StatsTotals } from './types'
+import { Composer, ConversationPanel, EmptyState, ErrorState, Icon, LoadingState, MessageItem, RightPanel, Segmented, Sidebar, StatusBar, Timeline, WorkbenchChart, formatTime, formatTokens } from './components'
 
 type Page = 'chat' | 'workbench'
 
@@ -42,15 +46,22 @@ function extractSessionId(payload: unknown): string | null {
 export default function App(): React.ReactNode {
   const [page, setPage] = useState<Page>('chat')
   const [sessions, setSessions] = useState<Session[]>([])
+  const [sessionsLoading, setSessionsLoading] = useState(true)
+  const [sessionsError, setSessionsError] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchIds, setSearchIds] = useState<Set<string> | null>(null)
+  const [searching, setSearching] = useState(false)
   const [activeId, setActiveId] = useState('main')
   const [messages, setMessages] = useState<Message[]>([])
-  const [overview, setOverview] = useState<SessionOverview | null>(null)
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [artifacts, setArtifacts] = useState<Artifact[]>([])
+  const [projection, setProjection] = useState<import('./types').SessionSpecProjection | null>(null)
+  const [userDeliverables, setUserDeliverables] = useState<import('./api').UserDeliverable[]>([])
+  const [deliverablesLoading, setDeliverablesLoading] = useState(true)
+  const [deliverablesError, setDeliverablesError] = useState('')
   const [permissions, setPermissions] = useState<PermissionState | null>(null)
   const [connection, setConnection] = useState('connecting')
   const [loadingMessages, setLoadingMessages] = useState(false)
   const [rightLoading, setRightLoading] = useState(false)
+  const [rightError, setRightError] = useState('')
   const [error, setError] = useState('')
   const [activeMessage, setActiveMessage] = useState(0)
   const [statsTotals, setStatsTotals] = useState<StatsTotals | null>(null)
@@ -58,6 +69,8 @@ export default function App(): React.ReactNode {
   const [sessionCount, setSessionCount] = useState(0)
   const [buckets, setBuckets] = useState<StatsBucket[]>([])
   const [workbenchError, setWorkbenchError] = useState('')
+  const [workbenchLoading, setWorkbenchLoading] = useState(false)
+  const [statsRefresh, setStatsRefresh] = useState(0)
   const scrollerRef = useRef<HTMLDivElement>(null)
   const stickToBottomRef = useRef(true)
   const scrollRafRef = useRef<number | null>(null)
@@ -65,6 +78,8 @@ export default function App(): React.ReactNode {
   activeIdRef.current = activeId
   const reloadTimer = useRef<number | null>(null)
   const wasDisconnected = useRef(false)
+  const eventsRef = useRef<ChatEvents | null>(null)
+  const ignoredReplyIds = useRef<Set<string>>(new Set())
 
   const flatSessions = useMemo(() => flattenTree(sessions), [sessions])
   const activeSession = flatSessions.find((session) => session.id === activeId) ?? null
@@ -83,15 +98,23 @@ export default function App(): React.ReactNode {
   }, [])
 
   const loadSessions = useCallback(async (): Promise<void> => {
+    setSessionsLoading(true)
+    setSessionsError('')
+    try {
     const data = await listSessions()
     const roots = data.tree ?? data.sessions ?? []
     setSessions(roots)
     setSessionCount(data.sessions?.length ?? flattenTree(roots).length)
-    if (!flatSessions.some((session) => session.id === activeId)) {
+    if (!flattenTree(roots).some((session) => session.id === activeIdRef.current)) {
       const first = flattenTree(roots)[0]
       if (first) setActiveId(first.id)
     }
-  }, [activeId, flatSessions])
+    } catch (err) {
+      setSessionsError(err instanceof Error ? err.message : '会话加载失败')
+    } finally {
+      setSessionsLoading(false)
+    }
+  }, [])
 
   const loadMessages = useCallback(async (sessionId: string): Promise<void> => {
     setLoadingMessages(true)
@@ -100,7 +123,11 @@ export default function App(): React.ReactNode {
       const data = await listMessages(sessionId)
       const list = [...(data.messages ?? [])].sort((a, b) => a.at - b.at)
       if (activeIdRef.current !== sessionId) return
-      setMessages(list)
+      setMessages((current) => {
+        const map = new Map(current.map((message) => [message.id, message]))
+        for (const message of list) map.set(message.id, message)
+        return [...map.values()].sort((a, b) => a.at - b.at)
+      })
     } catch (err) {
       if (activeIdRef.current === sessionId) setError(err instanceof Error ? err.message : '消息加载失败')
     } finally {
@@ -131,16 +158,12 @@ export default function App(): React.ReactNode {
 
   const loadRight = useCallback(async (sessionId: string): Promise<void> => {
     setRightLoading(true)
+    setRightError('')
     try {
-      const [overviewData, tasksData, artifactsData] = await Promise.all([
-        getOverview(sessionId).catch(() => ({ overview: undefined })),
-        getTasks(sessionId).catch(() => ({ tasks: [] })),
-        getArtifacts(sessionId).catch(() => ({ artifacts: [] })),
-      ])
-      if (activeIdRef.current !== sessionId) return
-      setOverview(overviewData.overview ?? null)
-      setTasks(tasksData.tasks ?? [])
-      setArtifacts(artifactsData.artifacts ?? [])
+      const data = await getSpecProjection(sessionId, 3)
+      if (activeIdRef.current === sessionId) setProjection(data)
+    } catch (err) {
+      setRightError(err instanceof Error ? err.message : '右栏数据加载失败，可稍后刷新重试')
     } finally {
       setRightLoading(false)
     }
@@ -153,55 +176,83 @@ export default function App(): React.ReactNode {
   }, [loadSessions, applyStats])
 
   useEffect(() => {
+    setDeliverablesLoading(true)
+    setDeliverablesError('')
+    void getDeliverables()
+      .then((data) => setUserDeliverables(data.deliverables ?? []))
+      .catch((err: unknown) => setDeliverablesError(err instanceof Error ? err.message : '交付物加载失败'))
+      .finally(() => setDeliverablesLoading(false))
+  }, [])
+
+  useEffect(() => {
     if (!activeId) return
     stickToBottomRef.current = true
     void getPermissions(activeId).then((data) => setPermissions(data.permissions ?? null)).catch(() => setPermissions(null))
     setMessages([])
-    setOverview(null)
-    setTasks([])
-    setArtifacts([])
+    setProjection(null)
     void loadMessages(activeId)
     void loadRight(activeId)
   }, [activeId, loadMessages, loadRight])
 
   useEffect(() => {
     if (!activeId) return
-    const dispose = connectEvents(activeId, {
+    const events = connectEvents(activeId, {
       onStatus: (next) => {
         setConnection(next)
-        if (next === 'closed') wasDisconnected.current = true
+        if (next === 'reconnecting') wasDisconnected.current = true
         if (next === 'open' && wasDisconnected.current) {
           wasDisconnected.current = false
           void loadMessages(activeIdRef.current)
         }
       },
       onDelta: ({ id, delta }) => {
+        if (ignoredReplyIds.current.has(id)) return
         setMessages((current) => {
           const index = current.findIndex((message) => message.id === id)
           if (index < 0) {
             return [...current, { id, sessionId: activeIdRef.current, role: 'agent', text: delta, at: Date.now(), status: 'streaming', agentId: 'simo' }]
           }
+          const existing = current[index]
+          if (existing.status !== 'streaming' && existing.text.endsWith(delta)) return current
           const next = [...current]
-          next[index] = { ...next[index], text: `${next[index].text}${delta}`, status: 'streaming' }
+          next[index] = { ...existing, text: `${existing.text}${delta}`, status: 'streaming' }
           return next
         })
         if (reloadTimer.current !== null) window.clearTimeout(reloadTimer.current)
         reloadTimer.current = window.setTimeout(() => { void loadMessages(activeIdRef.current) }, 1400)
       },
     })
+    eventsRef.current = events
     return () => {
-      dispose()
+      events.close()
+      eventsRef.current = null
       if (reloadTimer.current !== null) window.clearTimeout(reloadTimer.current)
     }
   }, [activeId, loadMessages])
 
   useEffect(() => {
+    const q = searchQuery.trim()
+    if (!q) { setSearchIds(null); setSearching(false); return }
+    let cancelled = false
+    setSearching(true)
+    const timer = window.setTimeout(() => {
+      void searchMessages(q)
+        .then((data) => { if (!cancelled) setSearchIds(new Set((data.messages ?? []).map((message) => message.sessionId))) })
+        .catch(() => { if (!cancelled) setSearchIds(new Set()) })
+        .finally(() => { if (!cancelled) setSearching(false) })
+    }, 250)
+    return () => { cancelled = true; window.clearTimeout(timer) }
+  }, [searchQuery])
+
+  useEffect(() => {
     if (page !== 'workbench') return
     setWorkbenchError('')
+    setWorkbenchLoading(true)
     void getStats('messages')
       .then(applyStats)
       .catch((err: unknown) => setWorkbenchError(err instanceof Error ? err.message : '统计加载失败'))
-  }, [page])
+      .finally(() => setWorkbenchLoading(false))
+  }, [page, applyStats, statsRefresh])
 
   const jumpToMessage = (index: number): void => {
     const node = document.querySelectorAll<HTMLElement>('.chat-scroll .msg')[index]
@@ -220,22 +271,64 @@ export default function App(): React.ReactNode {
     setActiveMessage(next)
   }
 
+  useEffect(() => {
+    const onResize = (): void => { requestAnimationFrame(() => syncTimeline()) }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
+  const stopStreaming = useCallback((): void => {
+    const streaming = messages.filter((message) => message.status === 'streaming')
+    for (const message of streaming) ignoredReplyIds.current.add(message.id)
+    eventsRef.current?.stop()
+    setMessages((current) => current.map((message) => message.status === 'streaming' ? { ...message, status: 'stopped' } : message))
+  }, [messages])
+
   const send = async (text: string): Promise<void> => {
     const sessionId = activeIdRef.current
     setError('')
     try {
       await sendChat(sessionId, text)
-      await loadMessages(sessionId)
     } catch (err) {
       setError(err instanceof Error ? err.message : '发送失败')
       throw err
     }
+    try {
+      await loadMessages(sessionId)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '消息刷新失败')
+    }
   }
 
   const handleCardAction = async (card: Card, action: string, payload: Record<string, unknown>): Promise<void> => {
+    if (activeSession?.archived) { setError('已归档会话为只读，不能提交卡片'); return }
     await submitCardAction(card.id, action, payload)
     await loadMessages(activeIdRef.current)
     await loadRight(activeIdRef.current)
+  }
+
+  const toggleArchive = async (id: string, archived: boolean): Promise<void> => {
+    if (archived) await archiveSession(id)
+    else await unarchiveSession(id)
+    await loadSessions()
+  }
+
+  const openArtifact = async (id: string): Promise<void> => {
+    try {
+      const target = projection?.deliverables.items.find((item) => item.id === id) ?? userDeliverables.find((item) => item.id === id)
+      if (target?.previewUrl) { window.open(target.previewUrl, '_blank', 'noopener,noreferrer'); return }
+      if (target?.downloadUrl) { window.open(target.downloadUrl, '_blank', 'noopener,noreferrer'); return }
+      const text = await getArtifactContent(id)
+      const win = window.open('', '_blank', 'noopener,noreferrer')
+      if (win) { win.document.write(`<pre style="white-space:pre-wrap;font:14px/1.6 Consolas,monospace;padding:24px">${text.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c] ?? c))}</pre>`); win.document.close() }
+    } catch (err) {
+      setRightError(err instanceof Error ? err.message : '交付物打开失败')
+    }
+  }
+
+  const locateTask = (task: { title: string; id: string }): void => {
+    const index = messages.findIndex((message) => message.text.includes(task.title) || (task.id && message.text.includes(task.id)))
+    if (index >= 0) { setActiveMessage(index); const node = document.querySelectorAll<HTMLElement>('.chat-scroll .msg')[index]; node?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
   }
 
   const rename = async (id: string, title: string): Promise<void> => {
@@ -259,20 +352,21 @@ export default function App(): React.ReactNode {
 
   const chartBuckets = buckets.filter((bucket) => bucket.messages > 0 || bucket.tokens > 0).slice(-10)
   const recentSessions = [...flatSessions].sort((a, b) => b.createdAt - a.createdAt).slice(0, 6)
+  const visibleWorkbenchArtifacts = userDeliverables
   const quotaPct = statsTotals?.tokens ? Math.min(100, Math.max(1, Math.round(statsTotals.tokens / 100000 * 100))) : 0
 
   return (
     <div className="app">
       <aside className="sidebar">
         <div className="brand"><span className="mark" /><b>司墨</b><span>v4.1</span></div>
-        <Sidebar sessions={sessions} activeId={activeId} onSelect={setActiveId} onRename={rename} onCreate={() => void createSession()} onRefresh={() => void loadSessions()} connection={connection} usageTotal={statsTotals?.tokens ?? null} quotaPct={quotaPct} sessionCount={sessionCount || flatSessions.length} messageCount={statsTotals?.messages ?? null} statsError={statsError} />
+        <Sidebar sessions={sessions} activeId={activeId} onSelect={setActiveId} onRename={rename} onCreate={() => void createSession()} onRefresh={() => void loadSessions()} connection={connection} loading={sessionsLoading} error={sessionsError} searchQuery={searchQuery} onSearch={setSearchQuery} searching={searching} searchIds={searchIds} onArchive={(id, archived) => void toggleArchive(id, archived)} usageTotal={statsTotals?.tokens ?? null} quotaPct={quotaPct} sessionCount={sessionCount || flatSessions.length} messageCount={statsTotals?.messages ?? null} statsError={statsError} />
       </aside>
       <div className="main">
         <header className="topbar">
           <div className="crumb">司墨 / <b>{page === 'chat' ? activeSession?.title ?? '主会话' : '工作台'}</b></div>
           <Segmented value={page} onChange={setPage} />
           <div className="top-right">
-            <span className="status"><i className={`connection-dot ${connection === 'open' ? 'open' : ''}`} />{connection === 'open' ? '已连接' : '连接中'}</span>
+            <span className="status"><i className={`connection-dot ${connection === 'open' ? 'open' : ''}`} />{connection === 'open' ? '已连接' : connection === 'reconnecting' ? '重连中' : '连接中'}</span>
             <button type="button" className="icon-btn" aria-label="设置" title="设置"><Icon name="gear" /></button>
             <span className="ok-avatar">Y</span>
           </div>
@@ -281,51 +375,57 @@ export default function App(): React.ReactNode {
         {page === 'chat' ? (
           <section className="page-chat" aria-label="对话">
             <div className="context">
-              <div className="context-title"><h1>{activeSession?.title ?? '主会话'}</h1><span className="muted">主窗口 · 聚合视图</span></div>
+              <div className="context-title"><h1>{activeSession?.title ?? '主会话'}</h1><span className="muted">主窗口 · 聚合视图</span>{activeSession?.archived ? <span className="badge warning">已归档 · 只读</span> : null}</div>
               <span className="seg"><button type="button" className="active">仅本会话</button><button type="button" disabled title="当前版本仅加载当前会话">含子会话</button></span>
             </div>
             <div className="chat">
               <div className="chat-col">
                 <div className="chat-tabs"><span className="chat-chip">对话</span></div>
                 <div className="chat-body">
-                  <div className="chat-content">
-                    <Timeline messages={messages} active={activeMessage} onJump={jumpToMessage} />
-                    <div className="chat-scroll" ref={scrollerRef} onScroll={syncTimeline}>
-                      <div className="chat-inner">
-                        {error && <p className="err-text" role="alert">{error}</p>}
-                        {loadingMessages && messages.length === 0 && <p className="loading">消息加载中…</p>}
-                        {!loadingMessages && messages.length === 0 && (
-                          <div className="chat-empty"><div className="empty-mark" aria-hidden="true" /><h2>开始和司墨对话</h2><p>说需求、记信息、派任务，过程和结果都会回流到这里。</p></div>
-                        )}
-                        {messages.map((message) => <MessageItem key={message.id} message={message} onCardAction={handleCardAction} />)}
-                      </div>
+                  <ConversationPanel
+                    timeline={<Timeline messages={messages} active={activeMessage} onJump={jumpToMessage} />}
+                    state={loadingMessages && messages.length === 0 ? 'loading' : error && messages.length === 0 ? 'error' : messages.length === 0 ? 'empty' : 'ready'}
+                    error={<ErrorState title="消息加载失败" description={error} onRetry={() => void loadMessages(activeId)} />}
+                    onRetry={() => void loadMessages(activeId)}
+                    scrollRef={scrollerRef}
+                    onScroll={syncTimeline}
+                  >
+                    <div className="chat-inner">
+                        {error && messages.length > 0 && <p className="err-text" role="alert">{error}</p>}
+                        {messages.map((message) => <MessageItem key={message.id} message={message} onCardAction={handleCardAction} readOnly={Boolean(activeSession?.archived)} />)}
                     </div>
-                  </div>
+                  </ConversationPanel>
                 </div>
-                <Composer disabled={!activeId} onSend={send} />
+                <Composer disabled={!activeId || Boolean(activeSession?.archived)} streaming={messages.some((message) => message.status === 'streaming')} onSend={send} onStop={stopStreaming} sendError={error} />
               </div>
-              <RightPanel session={activeSession} overview={overview} tasks={tasks} artifacts={artifacts} loading={rightLoading} />
+              <RightPanel session={activeSession} projection={projection} loading={rightLoading} error={rightError} onRetry={() => void loadRight(activeId)} onTaskClick={locateTask} onArtifactOpen={(id) => void openArtifact(id)} />
             </div>
           </section>
         ) : (
           <section className="page-workbench" aria-label="工作台">
             <div className="page"><div className="page-inner">
               <div className="page-head"><h1>工作台</h1><p>用量与最近活动，来自真实 API。</p></div>
-              {workbenchError && <p className="err-text" role="alert">{workbenchError}</p>}
+              {workbenchError && <ErrorState title="工作台加载失败" description={workbenchError} onRetry={() => setStatsRefresh((value) => value + 1)} />}
               <div className="section-title"><h2>用量</h2><span>当前实例</span></div>
+              {workbenchLoading && !statsTotals && <LoadingState label="统计加载中…" />}
               <div className="grid-3">
-                <div className="card"><span className="kicker">Token</span><div className="metric">{statsTotals ? formatTokens(statsTotals.tokens) : '—'}</div><p>{statsTotals ? `消息 ${statsTotals.messages} 条 · 任务 ${statsTotals.tasks} 个` : '统计加载中…'}</p></div>
-                <div className="card"><span className="kicker">会话</span><div className="metric">{sessionCount || flatSessions.length}</div><p>{statsTotals ? `${statsTotals.messages} 条统计消息` : '统计加载中…'}</p></div>
+                <div className="card"><span className="kicker">Token</span><div className="metric">{statsTotals ? formatTokens(statsTotals.tokens) : '—'}</div><p>{statsTotals ? `消息 ${statsTotals.messages} 条 · 任务 ${statsTotals.tasks} 个` : workbenchError ? '统计不可用' : '统计加载中…'}</p></div>
+                <div className="card"><span className="kicker">会话</span><div className="metric">{statsTotals ? (sessionCount || flatSessions.length) : '—'}</div><p>{statsTotals ? `${statsTotals.messages} 条统计消息` : workbenchError ? '统计不可用' : '统计加载中…'}</p></div>
                 <div className="card"><span className="kicker">权限</span><div className="metric">{permissions?.sandbox ?? '—'}</div><p>审批 {permissions?.approval ?? '—'}</p></div>
               </div>
               <div className="section-title"><h2>每日消息</h2><span>最近 {chartBuckets.length} 天</span></div>
-              {chartBuckets.length === 0 ? <div className="empty"><p>暂无统计数据。</p></div> : <WorkbenchChart buckets={chartBuckets} />}
+              {chartBuckets.length === 0 ? <EmptyState title="暂无统计数据" description="有消息后每日趋势会出现在这里。" /> : <WorkbenchChart buckets={chartBuckets} />}
               <div className="section-title"><h2>最近活动</h2><span>{recentSessions.length} 个会话</span></div>
               <div className="list">
-                {recentSessions.length === 0 ? <div className="empty"><p>暂无会话。</p></div> : recentSessions.map((session) => (
-                  <div className="row" key={session.id}><span className="kind">会话</span><span className="title">{session.title}</span><span className="time">{formatTime(session.createdAt)}</span></div>
+                {recentSessions.length === 0 ? <EmptyState title="暂无最近活动" description="新建或打开会话后会出现在这里。" /> : recentSessions.map((session) => (
+                  <button className="row" type="button" key={session.id} onClick={() => { setActiveId(session.id); setPage('chat') }}><span className="kind">会话</span><span className="title">{session.title}</span><span className="time">{formatTime(session.createdAt)}</span></button>
                 ))}
               </div>
+              <div className="section-title"><h2>交付物</h2><span>用户产物</span></div>
+              {deliverablesLoading && <LoadingState label="交付物加载中…" />}
+              {!deliverablesLoading && deliverablesError && <ErrorState title="交付物加载失败" description={deliverablesError} onRetry={() => { setDeliverablesLoading(true); setDeliverablesError(''); void getDeliverables().then((data) => setUserDeliverables(data.deliverables ?? [])).catch((err: unknown) => setDeliverablesError(err instanceof Error ? err.message : '交付物加载失败')).finally(() => setDeliverablesLoading(false)) }} />}
+              {!deliverablesLoading && !deliverablesError && visibleWorkbenchArtifacts.length === 0 && <EmptyState title="暂无交付物" description="报告、文档、表格或文件会出现在这里。" />}
+              {!deliverablesLoading && !deliverablesError && visibleWorkbenchArtifacts.length > 0 && <div className="list">{visibleWorkbenchArtifacts.map((artifact) => <button className="row" type="button" key={artifact.id} onClick={() => void openArtifact(artifact.id)}><span className="kind">文件</span><span className="title">{artifact.name}</span><span className="time">{formatTime(artifact.createdAt ?? 0)}</span></button>)}</div>}
             </div></div>
           </section>
         )}

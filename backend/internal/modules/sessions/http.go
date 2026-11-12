@@ -17,6 +17,7 @@ func (m *Module) registerHTTP(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/sessions/tree", m.handleTree)
 	mux.HandleFunc("POST /api/sessions", m.handleCreate)
 	mux.HandleFunc("GET /api/sessions/{id}/overview", m.handleOverviewGet)
+	mux.HandleFunc("GET /api/sessions/{id}/spec-projection", m.handleSpecProjection)
 	mux.HandleFunc("POST /api/sessions/{id}/overview/refresh", m.handleOverviewRefresh)
 	mux.HandleFunc("POST /api/sessions/{id}/archive", m.handleArchive)
 	mux.HandleFunc("POST /api/sessions/{id}/unarchive", m.handleUnarchive)

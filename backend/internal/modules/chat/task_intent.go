@@ -1,6 +1,30 @@
 package chat
 
-import "strings"
+import (
+	"context"
+	"strings"
+)
+
+type internalTurnKey struct{}
+
+func withInternalTurn(ctx context.Context) context.Context {
+	return context.WithValue(ctx, internalTurnKey{}, true)
+}
+
+func isInternalTurn(ctx context.Context) bool {
+	value, _ := ctx.Value(internalTurnKey{}).(bool)
+	return value
+}
+
+func isInternalControlText(text string) bool {
+	trimmed := strings.TrimSpace(text)
+	for _, prefix := range []string{"[卡片操作]", "[系统]", "[内部]", "[tool]", "[工具]"} {
+		if strings.HasPrefix(trimmed, prefix) {
+			return true
+		}
+	}
+	return false
+}
 
 // M71：只有“明确动作 + 交付物/多步工作”才进入后台任务。
 // 简单问答、解释、追问都留在对话循环，不产生 task.created。
@@ -8,6 +32,9 @@ func classifyTaskIntent(text string) (bool, string) {
 	trimmed := strings.TrimSpace(text)
 	if trimmed == "" {
 		return false, "empty"
+	}
+	if isInternalControlText(trimmed) {
+		return false, "internal_control"
 	}
 	lower := strings.ToLower(trimmed)
 	question := isSimpleQuestion(trimmed)

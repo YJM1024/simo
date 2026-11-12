@@ -255,6 +255,9 @@ func (m *Module) sendCard(ctx context.Context, sessionID string, args map[string
 	if rawSchema == nil {
 		rawSchema = args["card"]
 	}
+	if schemaMap, ok := rawSchema.(map[string]any); ok {
+		ensureFormConfirmActions(schemaMap)
+	}
 	schema, _, err := m.validateCardSchema(ctx, sessionID, rawSchema, fallback)
 	if err != nil {
 		return nil, err
@@ -525,24 +528,18 @@ func (m *Module) runCardAction(ctx context.Context, cardID, actionID string, bod
 	payloadRaw, _ := json.Marshal(payload)
 	payloadHash := hashCardPayload(payloadRaw)
 	idempotencyKey := card.ID + ":" + actionID + ":" + payloadHash
-	receiptStatus := "processing"
-	var existingResult string
-	err = m.store.QueryRow(ctx, `SELECT status,result_json FROM card_action_receipts
-		WHERE card_id=? AND action_id=? AND payload_hash=?`, card.ID, actionID, payloadHash).Scan(&receiptStatus, &existingResult)
-	if err == nil {
+	receiptStatus, existingResult, found := m.findCardReceipt(ctx, card.ID, actionID, payloadHash)
+	if found {
 		if receiptStatus == "processing" {
-			return cardActionResult{}, newCardError("CARD_ACTION_IN_PROGRESS", "同一卡片动作正在处理", http.StatusConflict)
+			receiptStatus, existingResult = m.waitCardReceipt(ctx, card.ID, actionID, payloadHash)
+			if receiptStatus == "processing" {
+				return cardActionResult{}, newCardError("CARD_ACTION_IN_PROGRESS", "同一卡片动作正在处理", http.StatusConflict)
+			}
 		}
-		var stored cardActionResult
-		_ = json.Unmarshal([]byte(existingResult), &stored)
-		stored.CardID = card.ID
-		stored.ActionID = actionID
-		stored.OK = stored.OK || stored.Status == http.StatusOK || stored.Status == http.StatusAccepted
-		stored.Idempotent = true
-		if stored.Status == 0 {
-			stored.Status = http.StatusOK
+		stored, ok := decodeCardReceipt(card.ID, actionID, existingResult)
+		if ok {
+			return stored, nil
 		}
-		return stored, nil
 	}
 	if card.Status == "disabled" || card.Status == "expired" || card.Status == "submitted" {
 		return cardActionResult{}, newCardError("CARD_NOT_ACTIONABLE", "卡片已停用、过期或已提交", http.StatusConflict)
@@ -553,6 +550,14 @@ func (m *Module) runCardAction(ctx context.Context, cardID, actionID string, bod
 			card.ID, actionID, payloadHash, idempotencyKey, time.Now().UnixMilli(), time.Now().UnixMilli())
 		return err
 	}); err != nil {
+		// 并发提交时唯一键冲突：先等首请求完成，再返回同一结果；仍处理中则返回明确 in-progress。
+		receiptStatus, existingResult = m.waitCardReceipt(ctx, card.ID, actionID, payloadHash)
+		if receiptStatus == "processing" {
+			return cardActionResult{}, newCardError("CARD_ACTION_IN_PROGRESS", "同一卡片动作正在处理", http.StatusConflict)
+		}
+		if stored, ok := decodeCardReceipt(card.ID, actionID, existingResult); ok {
+			return stored, nil
+		}
 		return cardActionResult{}, err
 	}
 	binding, found := findCardAction(card.Schema, actionID)
@@ -576,7 +581,7 @@ func (m *Module) runCardAction(ctx context.Context, cardID, actionID string, bod
 	}
 	if route == "agent" {
 		text := cardAgentActionText(card, actionID, binding, payload)
-		msg, turnErr := m.startTurn(ctx, card.SessionID, text, ClassRefine, nil, "")
+		msg, turnErr := m.startTurnInternal(ctx, card.SessionID, text, ClassRefine, nil, "")
 		if turnErr != nil {
 			result.OK = false
 			result.Status = http.StatusInternalServerError
@@ -692,13 +697,57 @@ func cardAgentActionText(card Card, actionID string, binding map[string]any, pay
 	if binding != nil {
 		actionName = stringArg(binding, "action")
 	}
-	return fmt.Sprintf("[卡片操作] cardId=%s actionId=%s action=%s payload=%s，请按卡片交互处理并回复用户。",
+	return fmt.Sprintf("用户提交了卡片操作（cardId=%s, actionId=%s, action=%s, payload=%s）。请处理并回复用户。",
 		card.ID, actionID, actionName, string(raw))
 }
 
 func hashCardPayload(payload []byte) string {
 	sum := sha256.Sum256(payload)
 	return hex.EncodeToString(sum[:])
+}
+
+func (m *Module) findCardReceipt(ctx context.Context, cardID, actionID, payloadHash string) (string, string, bool) {
+	var status, result string
+	err := m.store.QueryRow(ctx, `SELECT status,result_json FROM card_action_receipts
+		WHERE card_id=? AND action_id=? AND payload_hash=?`, cardID, actionID, payloadHash).Scan(&status, &result)
+	if err != nil {
+		return "", "", false
+	}
+	return status, result, true
+}
+
+// waitCardReceipt 等待同一幂等键的首请求完成；返回 processing 表示超时仍在执行。
+func (m *Module) waitCardReceipt(ctx context.Context, cardID, actionID, payloadHash string) (string, string) {
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		status, result, ok := m.findCardReceipt(ctx, cardID, actionID, payloadHash)
+		if ok && status != "processing" {
+			return status, result
+		}
+		if time.Now().After(deadline) || ctx.Err() != nil {
+			return "processing", result
+		}
+		select {
+		case <-ctx.Done():
+			return "processing", result
+		case <-time.After(20 * time.Millisecond):
+		}
+	}
+}
+
+func decodeCardReceipt(cardID, actionID, raw string) (cardActionResult, bool) {
+	var stored cardActionResult
+	if err := json.Unmarshal([]byte(raw), &stored); err != nil {
+		return cardActionResult{}, false
+	}
+	stored.CardID = cardID
+	stored.ActionID = actionID
+	stored.OK = stored.OK || stored.Status == http.StatusOK || stored.Status == http.StatusAccepted
+	stored.Idempotent = true
+	if stored.Status == 0 {
+		stored.Status = http.StatusOK
+	}
+	return stored, true
 }
 
 func shortCardHash(text string) string {
@@ -736,4 +785,22 @@ func cardBlocksDepth(value any, level int) int {
 		}
 	}
 	return deepest
+}
+
+// ensureFormConfirmActions 保证带字段的表单卡片一定有确认动作，避免只给下拉框而没有确认按钮。
+func ensureFormConfirmActions(schema map[string]any) {
+	blocks, ok := schema["blocks"].([]any)
+	if !ok {
+		return
+	}
+	for _, raw := range blocks {
+		block, ok := raw.(map[string]any)
+		if !ok || stringArg(block, "type") != "form" {
+			continue
+		}
+		if actions, ok := block["actions"].([]any); ok && len(actions) > 0 {
+			continue
+		}
+		block["actions"] = []any{map[string]any{"id": "confirm", "label": "确认", "action": "chat.send"}}
+	}
 }

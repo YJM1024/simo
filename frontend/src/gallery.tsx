@@ -1,9 +1,13 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   CardBlock,
   Composer,
   DeliverableItem,
   EmptyState,
+  ErrorState,
+  ConversationPanel,
+  MessageItem,
+  LoadingState,
   Icon,
   List,
   Section,
@@ -12,6 +16,7 @@ import {
   StatusBar,
   TaskItem,
   Timeline,
+  TimelineTip,
   WorkbenchChart,
 } from './components'
 import type { Artifact, Card, Message, Task } from './types'
@@ -43,6 +48,11 @@ const sampleCard: Card = {
 
 export default function ComponentGallery(): React.ReactNode {
   const [tab, setTab] = useState<'chat' | 'workbench'>('chat')
+  const keyboardAnchor = useRef<HTMLButtonElement>(null)
+  const edgeAnchor = useRef<HTMLButtonElement>(null)
+  const [tipMode, setTipMode] = useState<'keyboard' | 'edge' | null>(null)
+  const hoverTimer = useRef<number | null>(null)
+  const closeTimer = useRef<number | null>(null)
   return (
     <main className="component-gallery">
       <header className="component-gallery-head">
@@ -54,13 +64,46 @@ export default function ComponentGallery(): React.ReactNode {
         <SectionHeader title="已完成" meta="3/3" />
         <List>{sampleTasks.map((task) => <TaskItem key={task.id} task={task} tone={task.status === 'done' ? 'done' : 'running'} />)}</List>
       </Section>
+      <Section title="LoadingState / ErrorState"><div className="grid-2"><LoadingState label="加载中…" /><ErrorState title="加载失败" description="接口不可用，可重试。" onRetry={() => undefined} /></div></Section>
       <Section title="EmptyState"><EmptyState title="暂无进行中任务" description="任务开始后会出现在这里。" /></Section>
       <Section title="DeliverableItem"><List><DeliverableItem artifact={sampleArtifact} /></List></Section>
+      <Section title="ConversationPanel"><ConversationPanel timeline={<Timeline messages={sampleMessages} active={1} onJump={() => undefined} />}><div className="chat-inner"><MessageItem message={sampleMessages[0]} onCardAction={async () => undefined} /><MessageItem message={sampleMessages[1]} onCardAction={async () => undefined} /></div></ConversationPanel></Section>
+      <Section title="TimelineTip 消息预览">
+        <div className="timeline-tip-stage">
+          <button
+            ref={keyboardAnchor}
+            className="tl-bar is-user timeline-tip-tick"
+            type="button"
+            aria-label="键盘 focus 示例刻度"
+            aria-describedby={tipMode === 'keyboard' ? 'timeline-tip' : undefined}
+            onMouseEnter={() => { if (closeTimer.current) clearTimeout(closeTimer.current); if (hoverTimer.current) clearTimeout(hoverTimer.current); hoverTimer.current = window.setTimeout(() => setTipMode('keyboard'), 120) }}
+            onMouseLeave={() => { if (closeTimer.current) clearTimeout(closeTimer.current); closeTimer.current = window.setTimeout(() => setTipMode(null), 200) }}
+            onFocus={() => { if (closeTimer.current) clearTimeout(closeTimer.current); setTipMode('keyboard') }}
+            onBlur={() => { if (closeTimer.current) clearTimeout(closeTimer.current); closeTimer.current = window.setTimeout(() => setTipMode(null), 200) }}
+          />
+          <span className="insp-text">键盘 focus / hover 120ms / 移出 200ms grace；focus ring 在 tick 上。</span>
+        </div>
+        <div className="timeline-tip-stage timeline-tip-stage--edge">
+          <span className="insp-text">右侧空间不足时左翻（edge-clamped）。</span>
+          <button
+            ref={edgeAnchor}
+            className="tl-bar is-agent timeline-tip-tick"
+            type="button"
+            aria-label="edge clamp 示例刻度"
+            aria-describedby={tipMode === 'edge' ? 'timeline-tip' : undefined}
+            onMouseEnter={() => { if (closeTimer.current) clearTimeout(closeTimer.current); if (hoverTimer.current) clearTimeout(hoverTimer.current); hoverTimer.current = window.setTimeout(() => setTipMode('edge'), 120) }}
+            onMouseLeave={() => { if (closeTimer.current) clearTimeout(closeTimer.current); closeTimer.current = window.setTimeout(() => setTipMode(null), 200) }}
+            onFocus={() => { if (closeTimer.current) clearTimeout(closeTimer.current); setTipMode('edge') }}
+            onBlur={() => { if (closeTimer.current) clearTimeout(closeTimer.current); closeTimer.current = window.setTimeout(() => setTipMode(null), 200) }}
+          />
+        </div>
+        {tipMode && <TimelineTip open anchorRef={tipMode === 'keyboard' ? keyboardAnchor : edgeAnchor} sender={tipMode === 'keyboard' ? 'user' : 'agent'} sessionTitle="主会话" timeLabel={tipMode === 'keyboard' ? '14:20' : '14:22'} summary="这是一条用于画廊登记的消息摘要，最多显示两行，超出后截断。这里刻意写长，验证 line-clamp 与浮层宽度。" onClose={() => setTipMode(null)} />}
+      </Section>
       <Section title="Timeline / Message">
         <Timeline messages={sampleMessages} active={1} onJump={() => undefined} />
         <p className="insp-text">时间轴 44px gutter、20×4、gap2；消息组件由 MessageItem 组合。</p>
       </Section>
-      <Section title="Composer"><Composer disabled={false} onSend={async () => undefined} /></Section>
+      <Section title="Composer"><Composer disabled={false} streaming={false} onSend={async () => undefined} onStop={() => undefined} sendError="" /></Section>
       <Section title="WorkbenchChart"><WorkbenchChart buckets={[{ label: '2026-11-10', messages: 2, tokens: 0, tasks: 0, start: 0 }, { label: '2026-11-11', messages: 5, tokens: 0, tasks: 0, start: 0 }, { label: '2026-11-12', messages: 9, tokens: 0, tasks: 0, start: 0 }]} /></Section>
       <Section title="CardBlock"><CardBlock card={sampleCard} onSubmit={async () => undefined} /></Section>
       <Section title="StatusBar"><StatusBar connection="open" /></Section>
