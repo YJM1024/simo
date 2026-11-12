@@ -1,7 +1,7 @@
 # 司墨 · 当前状态
 
 更新时间：2026-11-13
-当前阶段：**P3 visual gate 按 Lead 裁决转 nightly/warning（不阻断发布）；发布阻断门禁 = check:sdd PASS + 组件 parity 已签（均满足）**
+当前阶段：**P3 visual gate 按 Lead 裁决转 nightly/warning（不阻断发布）；发布阻断门禁 = check:sdd PASS + 组件 parity `mwdsx6vl` 已复签（均满足）**
 
 ## 仓库/环境
 
@@ -42,7 +42,8 @@
 | P2 任务定位修复 | **交互签字通过**（2026-11-13，build `mwdstatg-rknb3`） | msg-a1/task-seed-done-1 fixture：点击 scroll2206→127、active24→1、msg可见、flash1；Enter 同样定位；交付物 Enter 打开 preview；workbench loading 当前截图，无假0；P2/P3 整体仍待 empty 键盘/P3 CI |
 | P3 visual gate 工程能力 | **完成（nightly/warning，非发布阻断）**（2026-11-13，build `mwdsx6vl-4cwln`） | capture:visual/check:visual 已实现并自测（改像素 fail/恢复 pass）；fresh capture 四档夜间 diff 0.038–0.121%/max151，作为 warning；按 Lead 裁决不再要求 fresh full-page 0 diff 签字；发布阻断 = check:sdd PASS + 组件 parity 签（均满足） |
 | 分类标签修复 | **已签字通过**（2026-11-13，build `mwdr52zy-uhku9`） | 主会话 1600/1280/375：agent **16/16** 带标签（进度汇报/需求澄清），user 标签 **0**；meta nowrap、clientW=scrollW、无溢出/console0；空 category 回退路径未用样本截图；待部署 |
-| 组件级 parity（复验） | **已签字通过**（2026-11-13，build `mwdrj27e-3vsey`） | 1600 timeline x358/gap28、1280 x260/gap8、1180 x248/gap8；1600 msg/card-block padding 未回退；375 message/Composer x8/w359、CardBlock x57/w297、chat-inner12px0、无溢出；topbar gear；见 `component-parity.md` 与合成图；待部署 |
+| 组件级 parity（复验） | **已签字通过**（2026-11-13，build `mwdrj27e-3vsey`） | 1600 timeline x358/gap28、1280 x260/gap8、1180 x248/gap8；1600 msg/card-block padding 未回退；375 message/Composer x8/w359、CardBlock x57/w297、chat-inner12px0、无溢出；topbar gear；见 `component-parity.md` 与合成图；历史签字 |
+| 组件级 parity（当前 build 复签） | **已签字通过**（2026-11-13，线上 `mwdsx6vl-4cwln`） | 1600/375 布局/尺寸/位置/边框/间距一致；timeline x358/w44/gap28（y/h 随 Composer 高度既有豁免：+22→panel−22/居中+12）；颜色体系用户已批准豁免；context/右栏/composer padding 为既有批准豁免；产物已按当前 build 重拍；发布门禁满足 |
 | Storybook Spike | 条件可行（P1） | `labs/storybook/`；本沙箱 `spawn EPERM` 无法 build，详见 `storybook-spike.md` |
 
 ## 进行中
@@ -63,7 +64,7 @@
 - **FE-007 祖先消息已签但未部署**：隔离夹具 A1–A10 通过（3→15→45/45 bars/3 groups、空上级推进、归档父可读、413/失败不插入可重试、重复 id 去重、锚定 0.09375px、375 可加载、按钮键盘可操作）；残留 P2：同帧双 click 发2请求（60ms 双击1）、413 为 mock（未造 >50000 实体库）、403 跨用户未造出、按钮文案「显示」vs spec「加载」；未部署；
 - **视觉修复（build `mwdqrape`）已签，当前 8787 已为 `mwdqyg05`**：主会话卡 gap9/375 gap8、timeline 短 track 三档居中 delta0、右栏 5 任务可见；超高 track 为合成布局验证（真实主会话30条短track）；
 - **头像/Composer（build `mwdqyg05`）已签，当前 8787 已为 `mwdqyg05`**：头像容器/字形 center 差0、textarea padding-left14、Composer 与卡同宽；375侧栏隐藏；
-- **组件级 parity 已签字通过（build `mwdrj27e-3vsey`）**：1600/1280/1180 timeline x358/260/248、gap28/8/8；1600 msg/card-block padding 未回退；375 message/Composer x8/w359、CardBlock x57/w297、chat-inner12px0、无溢出；topbar gear。产物 `frontend/review/component-parity/`；**待部署**（8787 仍 wdqyg05）；
+- **组件级 parity 当前 build 已复签（线上 `mwdsx6vl`）**：1600/375 布局/尺寸/位置/边框/间距一致；timeline x358/w44/gap28，y/h 为 Composer 高度既有豁免下游（+22→panel−22/居中+12）；颜色体系用户已批准豁免；context/右栏/composer padding 既有批准豁免；产物 `frontend/review/component-parity/` 已重拍；发布门禁满足；
 - **分类标签（build `mwdr52zy`）已签字通过、待部署**：agent 16/16 标签、user0、meta nowrap；空 category 回退未用空样本截图；parity 门禁已通过，可与 `mwdrj27e` 一起部署；
 - **P2 待交付/未复验**：交付物 preview/download、工作台 loading/empty/error、右栏任务/概览/交付物交互；A1–A8 模板见 `acceptance.md`「P2 验收预检模板」；需固定 build+隔离 home+样本后复验；不签字；
 - **Workspace Batch C/D 待执行/未签**：dry-run/映射/执行/hash/回滚/交付物隔离清单见 `acceptance.md`「Workspace Batch C/D 迁移验收清单」；Batch C/D 实际定义待 Lead 确认；不得用 work/tasks/_internal/specs 冒充交付物；不签字；
@@ -83,7 +84,7 @@
 
 ## 下一步
 
-0. **组件级 parity 已通过（build `mwdrj27e`）**：1600/1280/1180 timeline 与 1600 padding 保持；375 message/Composer x8/w359、CardBlock x57/w297、chat-inner12px0；与分类标签 build 一起部署；
+0. **组件级 parity 当前 build 已复签（`mwdsx6vl`）**：布局/尺寸/位置/边框/间距一致；timeline x358/w44/gap28（y/h 随 Composer 高度既有豁免）；颜色体系用户已批准豁免；发布门禁 = check:sdd PASS + parity 签（均满足）；
 1. 视觉对齐、COMP-timeline-tip 实机接入与 8787 线上 smoke 均已通过；补测真实重命名/卡片/断线 → FE-001 验收签字；
 2. FE-002..005：功能独立验收已通过（卡片幂等/重命名/断线/空库）；如需交付物 preview/download 或 409 再补验；整批签字/部署由 Lead 决定；TimelineGroups 已接入 FE-007 并验收；FE-007 已签（隔离夹具 A1–A10），部署待 Lead 决定；视觉修复 gap/居中已签（build `mwdqrape`），头像/Composer 已签（build `mwdqyg05`），分类标签已签（build `mwdr52zy`），组件 parity 已签（build `mwdrj27e`），可一起部署；
 3. 更新 `specs/FE-001-frontend-rebuild/evidence.md` 并归档；

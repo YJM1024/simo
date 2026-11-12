@@ -775,6 +775,24 @@
 
 **处置（Lead 裁决）**：P3 `check:visual` 为 **nightly/warning**，不阻断发布；`capture/check/自测` 记录为工程能力完成；**不再要求 fresh full-page 0 diff 签字**。发布阻断门禁 = `check:sdd` PASS + 组件 parity 签字（二者均已满足）。
 
+### 组件级 parity 复签（2026-11-13，线上 build `mwdsx6vl-4cwln`，**通过（带既有豁免）**）
+
+**结论：布局 parity 复签通过。** expected 为冻结原型 `frontend/prototype/message-cards.html`，current 为线上 8787 `mwdsx6vl-4cwln`；1600/375、主会话、置顶、DPR2。全页/组件并排/合成图/md 已按当前 build 重拍至 `frontend/review/component-parity/`。
+
+**布局通过**
+- sidebar 240×976、topbar 1360×48、context 1360×42、chat-tabs 1060×51、right-rail 300×886、statusbar 1600×24：位置/尺寸/padding/border 一致。
+- message x430/w680/pad12×14/border1/r10；card-block x481/w614/pad14×16；375 message x8/w359、card-block x57/w297：一致。
+- timeline x358/w44/right402、与卡 gap **28**；375 均隐藏；composer x/w 一致。
+- 颜色体系（四类标签/时间轴三色）为用户已批准变更，记录豁免，不判漂移。
+
+**既有豁免与下游**
+- context 缺操作、右栏 status/rev、Composer padding/高度为既有批准豁免。
+- timeline y141→153 / h684→662 是 **Composer 高度 +22 的下游效应**（chatBody −22、panel 垂直居中 +12；timeline 填满 panel）；timeline x/w/gap 本身一致。若要 timeline 绝对 y/h 完全等于原型，需先撤回 Composer 高度豁免。
+- 数据/文案差异不计样式漂移。
+
+**复用/更新产物**：`component-parity-{1600,375}.png`、`{1600,375}/*-compare.png`、`component-parity.md`、`raw/meta.json`。
+**发布门禁**：`check:sdd` PASS + 本 parity 签字（均满足）；未部署。
+
 ### 检查清单（每轮）
 
 1. 首屏 3 秒能理解产品与下一步；
