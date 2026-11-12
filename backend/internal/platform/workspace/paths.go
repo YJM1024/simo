@@ -22,6 +22,9 @@ type Policy struct {
 	Home      string
 	Workspace string
 	Artifacts string
+	Main      string
+	Specs     string
+	Work      string
 }
 
 // New 创建路径策略并确保目录存在。
@@ -30,6 +33,9 @@ func New(home, workspace, artifacts string) (*Policy, error) {
 		return nil, errors.New("SIMO_HOME 不能为空")
 	}
 	p := &Policy{Home: filepath.Clean(home), Workspace: filepath.Clean(workspace), Artifacts: filepath.Clean(artifacts)}
+	p.Main = filepath.Join(p.Workspace, "main")
+	p.Specs = filepath.Join(p.Workspace, "specs")
+	p.Work = filepath.Join(p.Workspace, "work")
 	for _, dir := range []string{p.Home, p.Workspace, p.Artifacts} {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			return nil, fmt.Errorf("创建目录 %s 失败: %w", dir, err)

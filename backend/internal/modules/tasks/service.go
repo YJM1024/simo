@@ -760,7 +760,7 @@ func (m *Module) writeArtifactReport(task coretask.Task, report string) {
 }
 
 func (m *Module) ListArtifacts(ctx context.Context, taskID string) ([]coretask.Artifact, error) {
-	query := `SELECT id, task_id, name, mime, size, created_at, delivery_kind FROM task_artifacts`
+	query := `SELECT id, task_id, name, mime, size, created_at, delivery_kind, storage_scope, workspace_rel_path FROM task_artifacts`
 	args := []any{}
 	if strings.TrimSpace(taskID) != "" {
 		query += ` WHERE task_id = ?`
@@ -784,9 +784,10 @@ func (m *Module) ListArtifacts(ctx context.Context, taskID string) ([]coretask.A
 }
 
 func (m *Module) ListArtifactsBySession(ctx context.Context, sessionID string) ([]coretask.Artifact, error) {
-	rows, err := m.store.Query(ctx, `SELECT a.id, a.task_id, a.name, a.mime, a.size, a.created_at, a.delivery_kind
+	rows, err := m.store.Query(ctx, `SELECT a.id, a.task_id, a.name, a.mime, a.size, a.created_at, a.delivery_kind, a.storage_scope, a.workspace_rel_path
 		FROM task_artifacts a LEFT JOIN tasks t ON t.id = a.task_id
 		WHERE (t.session_id = ? OR a.task_id = ?) AND a.delivery_kind = ?
+		  AND `+deliverableStoragePredicate+`
 		ORDER BY a.created_at ASC, a.id ASC`,
 		sessionID, "session:"+sessionID, coretask.ArtifactDeliveryKindUser)
 	if err != nil {
@@ -827,11 +828,12 @@ func (m *Module) ListArtifactsForSession(ctx context.Context, sessionID string, 
 		args = append(args, "session:"+id)
 	}
 	args = append(args, coretask.ArtifactDeliveryKindUser)
-	rows, err := m.store.Query(ctx, `SELECT a.id, a.task_id, a.name, a.mime, a.size, a.created_at, a.delivery_kind
+	rows, err := m.store.Query(ctx, `SELECT a.id, a.task_id, a.name, a.mime, a.size, a.created_at, a.delivery_kind, a.storage_scope, a.workspace_rel_path
 		FROM task_artifacts a LEFT JOIN tasks t ON t.id = a.task_id
 		WHERE (t.session_id IN (`+strings.Join(placeholders, ",")+`)
 		   OR a.task_id IN (`+strings.Join(synth, ",")+`))
 		   AND a.delivery_kind = ?
+		   AND `+deliverableStoragePredicate+`
 		ORDER BY a.created_at ASC, a.id ASC`, args...)
 	if err != nil {
 		return nil, fmt.Errorf("查询会话产物失败: %w", err)
@@ -851,10 +853,11 @@ func (m *Module) ListArtifactsForSession(ctx context.Context, sessionID string, 
 func (m *Module) getArtifact(ctx context.Context, id string) (coretask.Artifact, string, error) {
 	var artifact coretask.Artifact
 	var relPath string
-	err := m.store.QueryRow(ctx, `SELECT id, task_id, name, mime, size, created_at, delivery_kind, rel_path
-		FROM task_artifacts WHERE id = ?`, id).
+	err := m.store.QueryRow(ctx, `SELECT id, task_id, name, mime, size, created_at, delivery_kind,
+		storage_scope, workspace_rel_path, rel_path FROM task_artifacts WHERE id = ?`, id).
 		Scan(&artifact.ID, &artifact.TaskID, &artifact.Name, &artifact.Mime, &artifact.Size,
-			&artifact.CreatedAt, &artifact.DeliveryKind, &relPath)
+			&artifact.CreatedAt, &artifact.DeliveryKind, &artifact.StorageScope,
+			&artifact.WorkspacePath, &relPath)
 	if err == sql.ErrNoRows {
 		return coretask.Artifact{}, "", ErrArtifactNotFound
 	}
@@ -870,7 +873,8 @@ func (m *Module) getArtifact(ctx context.Context, id string) (coretask.Artifact,
 func scanArtifact(scanner interface{ Scan(...any) error }) (coretask.Artifact, error) {
 	var artifact coretask.Artifact
 	if err := scanner.Scan(&artifact.ID, &artifact.TaskID, &artifact.Name, &artifact.Mime,
-		&artifact.Size, &artifact.CreatedAt, &artifact.DeliveryKind); err != nil {
+		&artifact.Size, &artifact.CreatedAt, &artifact.DeliveryKind,
+		&artifact.StorageScope, &artifact.WorkspacePath); err != nil {
 		return coretask.Artifact{}, err
 	}
 	artifact.UserDelivery = artifact.DeliveryKind == coretask.ArtifactDeliveryKindUser
@@ -879,10 +883,38 @@ func scanArtifact(scanner interface{ Scan(...any) error }) (coretask.Artifact, e
 	return artifact, nil
 }
 
-func (m *Module) artifactPath(relPath string) (string, error) {
+// deliverableStoragePredicate 只允许 output 下的 user_delivery；legacy artifacts 兼容旧行。
+const deliverableStoragePredicate = `(
+	a.storage_scope IN ('', 'legacy_artifacts')
+	OR (
+		a.storage_scope = 'workspace'
+		AND a.workspace_rel_path <> ''
+		AND instr('/' || lower(a.workspace_rel_path) || '/', '/output/') > 0
+		AND instr(lower(a.workspace_rel_path), '/_internal/') = 0
+		AND lower(a.workspace_rel_path) NOT LIKE 'work/%'
+	)
+)`
+
+func isWorkspaceOutputPath(rel string) bool {
+	normalized := strings.ToLower(filepath.ToSlash(rel))
+	return strings.HasPrefix(normalized, "main/") &&
+		strings.Contains("/"+normalized+"/", "/output/") &&
+		!strings.Contains(normalized, "/_internal/") &&
+		!strings.HasPrefix(normalized, "work/")
+}
+
+func (m *Module) artifactPath(artifact coretask.Artifact, relPath string) (string, error) {
 	if m.sandbox == nil {
 		return "", workspace.ErrEscape
 	}
+	if artifact.StorageScope == coretask.ArtifactStorageWorkspace {
+		if !artifact.UserDelivery || !isWorkspaceOutputPath(artifact.WorkspacePath) {
+			return "", ErrArtifactNotFound
+		}
+		return m.sandbox.ResolveWorkspace(artifact.WorkspacePath)
+	}
+	// 旧 artifacts 根作为兼容读取：内部过程文件仍可由原有 file tab 打开；
+	// 新 workspace 根只允许 output/user_delivery。
 	return m.sandbox.ResolveArtifact(relPath)
 }
 

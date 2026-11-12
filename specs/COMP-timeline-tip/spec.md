@@ -16,6 +16,21 @@ Owner：前端（实现）/ 产品（本 spec）/ 验收（截图与走查）
 - 使用场景：ChatPage 的消息时间轴（Timeline）；这是唯一必需场景；
 - 不用于：任务/团队/记忆/视图页、通知列表、文件列表、任何可编辑内容。
 
+## 1.1 目标
+
+在时间轴 tick 的 hover/focus 旁提供只读消息预览：发送方/会话/时间 + 两行摘要；视口内定位、滚动跟随、键盘可达；禁止原生 title、不做交互。
+
+## 1.2 需求
+
+| ID | 级别 | 需求 |
+|---|---|---|
+| R1 | MUST | hover/focus tick 显示 tooltip；移出/Esc/blur 关闭 |
+| R2 | MUST | 白底 surface、1px line、圆角 8、轻阴影、宽约 236 |
+| R3 | MUST | 上栏发送方/会话/时间；下栏摘要最多两行截断 |
+| R4 | MUST | 视口内 edge-clamped；滚动跟随不消失 |
+| R5 | MUST | role=tooltip + aria-describedby；禁止原生 title |
+| R6 | MUST | 登记画廊；页面不得复制 tooltip/写定制 CSS |
+
 ## 2. 结构
 
 ```text

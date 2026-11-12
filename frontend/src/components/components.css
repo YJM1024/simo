@@ -921,3 +921,7 @@ body { overflow: hidden; }
 .tlg-session.is-current-session { opacity: 1; }
 
 .tlg-session.is-ancestor-session .tl-bar.is-current { opacity: 1; }
+
+.message-top { display: flex; justify-content: center; padding: 0 0 var(--sp-8); }
+.session-divider { display: flex; align-items: center; gap: var(--sp-8); margin: var(--sp-8) 0 var(--sp-8); color: var(--faint); font-size: var(--font-10); }
+.session-divider::before, .session-divider::after { content: ""; height: 1px; flex: 1; background: var(--line-soft); }

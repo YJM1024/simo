@@ -16,6 +16,21 @@ Owner：前端（实现）/ 产品（本 spec）/ 验收（截图与走查）
 - 使用场景：ChatPage 的消息时间轴（Timeline）组件库/画廊；**本 spec 不接页面**；
 - 不用于：任务/团队/记忆/视图页、文件列表、右栏概览、非消息事件时间线。
 
+## 1.1 目标
+
+把多会话消息时间轴按会话/日期分组，用现有角色色区分 user/agent、祖先组降透明、当前 active 加宽；分类只作为 TimelineTip 文本，不进入颜色/形状；44px rail 保持无文字。
+
+## 1.2 需求
+
+| ID | 级别 | 需求 |
+|---|---|---|
+| R1 | MUST | 按 sessionOrder 分组，当前会话正常、上级会话同角色色 opacity .55；active 覆盖为 1 |
+| R2 | MUST | 角色只用现有 user 靛蓝/agent 灰；不新增角色色；当前 active 黑色 24 |
+| R3 | MUST | 44px rail 固定、无文字；普通 tick 20×4、gap2，组切换 gap6，日期分组保留 |
+| R4 | MUST | 分类（需求澄清/进度/确认等）只进 TimelineTip，不改颜色/形状/宽度 |
+| R5 | MUST | 点击/键盘/ hover/focus 跳转与 Tooltip 可用；滚动不消失 |
+| R6 | MUST | 四档 1600/1920/1180/375 无裁切/溢出；画廊登记 |
+
 ## 2. 数据模型
 
 ```ts
@@ -74,7 +89,7 @@ TimelineGroups（nav，44px 宽；组件库内使用）
 - 44px rail 内只画刻度/轨道，**不放任何文字**；会话名、日期、分类只在 `TimelineTip` 或消息区展示；
 - 日期分组保留：每个 `dateKey` 形成独立段落；日期标题由消息区/上层渲染，不在 44px rail 内；
 - 会话分组：组间 6px 间隙；不同会话不共用一段连续轨道；
-- 当前会话正常透明度；上级会话整组（仅刻度）`opacity:.55`，浮层保持不透明；
+- 当前会话正常透明度；上级会话整组（仅非 active 刻度）`opacity:.55`；**祖先组内 active tick 例外 opacity:1**；浮层保持不透明；
 - Tooltip 复用现有 TimelineTip；只增加“分类”一行，不新增浮层组件。
 
 ## 4. 颜色与角色（不新增角色色）
@@ -83,9 +98,12 @@ TimelineGroups（nav，44px 宽；组件库内使用）
 |---|---|---|
 | `user` | `--accent`（现有靛蓝） | 不新增 hex；当前会话正常 |
 | `agent` | `--muted` / `--ink-secondary`（现有灰） | 不新增 hex；与 user 可辨 |
-| `active`（当前） | `--ink` 黑 | **黑色、宽 24**；覆盖角色色，表示当前定位 |
-| `ancestor` | 同角色色 + `opacity:.55` | 仅上级会话刻度；不把浮层变透明 |
-| 分类 | **无颜色/形状变化** | 需求澄清/进度汇报/确认等只进 Tooltip 文本 |
+| `active`（当前） | `--ink` 黑 | **黑色、宽 24**；覆盖角色色；**祖先组内 active 时 opacity:1，覆盖 .55** |
+| `ancestor` | 同角色色 + `opacity:.55` | 仅**非 active** 的上级会话刻度；active tick 例外为 1；浮层保持不透明 |
+| 分类 | **无颜色/形状变化** | 需求澄清/进度汇报/确认等**只进 TimelineTip 文本**，不进入 tick/aria 名称 |
+
+**透明度优先级**：`active > ancestor`。祖先组整组 `.55`，但组内 `activeMessageId` 对应 tick 必须 `opacity:1`（黑色 24），不得因祖先组被压暗；tooltip 始终不透明。
+
 
 禁止：
 
@@ -120,8 +138,8 @@ TimelineGroups（nav，44px 宽；组件库内使用）
 | `default` | 普通 tick | 角色色；20×4；gap2 |
 | `hover` | 指针进入 tick | 视觉反馈 + 打开 TimelineTip；不改变宽度（active 除外） |
 | `focus` | 键盘 focus tick | focus-visible 环；打开 TimelineTip；`aria-describedby` 指向 tip |
-| `active` | `activeMessageId` | `--ink` 黑、宽 24；`aria-current="true"`；不依赖颜色单独表达 |
-| `ancestor` | 非当前会话组 | 同角色色 @.55；tooltip 不透明；仍可 hover/focus/跳转 |
+| `active` | `activeMessageId` | `--ink` 黑、宽 24；`aria-current="true"`；**祖先组内也 opacity:1，覆盖 .55**；不依赖颜色单独表达 |
+| `ancestor` | 非当前会话组、非 active | 同角色色 @.55；组内 active 例外为 1；tooltip 不透明；仍可 hover/focus/跳转 |
 | `edge` | 组首/组尾或 rail 边缘 tick | 热区/轨道不裁切；tip 做视口 clamp；首尾 tick 不被 44px 裁掉 |
 
 **不提供 disabled**：时间轴是导航，不表达不可用；空数据用空态，不把 tick 设为禁用。
@@ -148,7 +166,7 @@ TimelineGroups（nav，44px 宽；组件库内使用）
 ## 9. 可访问性
 
 - 根元素 `nav aria-label="消息时间轴"`；每组有 `aria-label`（会话标题，隐藏在视觉 rail 外也可）；
-- 每个 tick 是 button，`aria-label` 含角色/会话/时间/分类（分类可选）；
+- 每个 tick 是 button，`aria-label` 含角色/会话/时间；**不含分类**（分类只进 TimelineTip，避免与 tooltip 重复/提前泄露）；
 - `aria-current="true"` 标记 active；祖先组用 `aria-label` 说明“上级会话”，不只靠透明度；
 - focus-visible 必须可见；键盘可跳转；Tip 不抢焦点；
 - 颜色区分角色之外，必须有文字（tooltip 发送方）或可访问名称；分类不只靠颜色（本版本来就不进颜色）；
@@ -179,14 +197,14 @@ TimelineGroups（nav，44px 宽；组件库内使用）
 |---|---|---|
 | A1 | 四档（1600/1920/1180/375） | 44px rail 固定；无溢出/裁切；组间隙/日期组保留 |
 | A2 | 角色可辨 | user 靛蓝 / agent 灰可辨；无新增角色色；颜色均来自现有 token |
-| A3 | 当前/active | 当前黑色、宽 24；`aria-current`；普通 20 不被误判 |
-| A4 | 上级会话 | 同角色色 opacity 约 .55；tooltip 不透明；仍可 hover/focus/跳转 |
+| A3 | 当前/active | 当前黑色、宽 24；`aria-current`；普通 20 不被误判；**祖先组内 active 为 opacity:1** |
+| A4 | 上级会话 | 非 active 同角色色 opacity 约 .55；active 覆盖为 1；tooltip 不透明；仍可 hover/focus/跳转 |
 | A5 | 分组间隙 | 每切换一级会话 gap6；日期分组保留；组间不连轨 |
 | A6 | 分类不进视觉 | 需求澄清/进度/确认等不改变颜色/形状/宽度；只在 Tooltip 文本 |
 | A7 | Hover/focus/点击/键盘 | 浮层出现/关闭正确；点击/←→/Home/End/Enter 跳转；焦点不丢 |
 | A8 | 滚动/edge | 滚动时浮层跟随不消失；首尾/组边 tick 不裁切，tip 视口 clamp |
 | A9 | Tooltip 内容 | 上栏含发送方·会话·时间；分类可在上/下栏；下栏两行摘要 |
-| A10 | 无原生 title | 无 `title` 属性；`role=tooltip` + `aria-describedby`；rail 内无文字标签 |
+| A10 | 无原生 title | 无 `title` 属性；`role=tooltip` + `aria-describedby`；**aria-label 不含分类**；rail 内无文字标签 |
 
 ## 12. 影响范围
 

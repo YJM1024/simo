@@ -158,3 +158,7 @@ export interface UserDeliverable { id: string; name: string; createdAt?: number;
 export function getDeliverables(): Promise<{ deliverables?: UserDeliverable[]; total?: number }> {
   return request('/api/deliverables')
 }
+
+export function getAllSessionMessages(sessionId: string): Promise<{ messages?: Message[]; sessionId?: string; archived?: boolean; pagination?: boolean }> {
+  return request(`/api/sessions/${encodeURIComponent(sessionId)}/messages?scope=all`)
+}

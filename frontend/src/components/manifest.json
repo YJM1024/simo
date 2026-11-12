@@ -10,8 +10,11 @@
         "20",
         "24"
       ],
-      "states": [],
-      "owner": "frontend"
+      "states": [
+        "stateless"
+      ],
+      "owner": "frontend",
+      "stateNote": "无状态组件：仅通过 variants 表达外观，无内部/交互状态（2026-11-12 复核）"
     },
     {
       "name": "Segmented",
@@ -196,16 +199,22 @@
         "warning",
         "danger"
       ],
-      "states": [],
-      "owner": "frontend"
+      "states": [
+        "stateless"
+      ],
+      "owner": "frontend",
+      "stateNote": "无状态组件：仅通过 variants 表达外观，无内部/交互状态（2026-11-12 复核）"
     },
     {
       "name": "Card",
       "variants": [
         "metric"
       ],
-      "states": [],
-      "owner": "frontend"
+      "states": [
+        "stateless"
+      ],
+      "owner": "frontend",
+      "stateNote": "无状态组件：仅通过 variants 表达外观，无内部/交互状态（2026-11-12 复核）"
     },
     {
       "name": "Empty",
@@ -213,8 +222,11 @@
         "page",
         "inline"
       ],
-      "states": [],
-      "owner": "frontend"
+      "states": [
+        "stateless"
+      ],
+      "owner": "frontend",
+      "stateNote": "无状态组件：仅通过 variants 表达外观，无内部/交互状态（2026-11-12 复核）"
     },
     {
       "name": "Skeleton",
@@ -222,8 +234,11 @@
         "line",
         "block"
       ],
-      "states": [],
-      "owner": "frontend"
+      "states": [
+        "stateless"
+      ],
+      "owner": "frontend",
+      "stateNote": "无状态组件：仅通过 variants 表达外观，无内部/交互状态（2026-11-12 复核）"
     },
     {
       "name": "Statusbar",
@@ -253,16 +268,22 @@
       "variants": [
         "overview"
       ],
-      "states": [],
-      "owner": "frontend"
+      "states": [
+        "stateless"
+      ],
+      "owner": "frontend",
+      "stateNote": "无状态组件：仅通过 variants 表达外观，无内部/交互状态（2026-11-12 复核）"
     },
     {
       "name": "SectionHeader",
       "variants": [
         "default"
       ],
-      "states": [],
-      "owner": "frontend"
+      "states": [
+        "stateless"
+      ],
+      "owner": "frontend",
+      "stateNote": "无状态组件：仅通过 variants 表达外观，无内部/交互状态（2026-11-12 复核）"
     },
     {
       "name": "List",
@@ -270,8 +291,11 @@
         "task",
         "deliverable"
       ],
-      "states": [],
-      "owner": "frontend"
+      "states": [
+        "stateless"
+      ],
+      "owner": "frontend",
+      "stateNote": "无状态组件：仅通过 variants 表达外观，无内部/交互状态（2026-11-12 复核）"
     },
     {
       "name": "TaskItem",
@@ -280,8 +304,11 @@
         "running",
         "pending"
       ],
-      "states": [],
-      "owner": "frontend"
+      "states": [
+        "stateless"
+      ],
+      "owner": "frontend",
+      "stateNote": "无状态组件：仅通过 variants 表达外观，无内部/交互状态（2026-11-12 复核）"
     },
     {
       "name": "StatusDot",
@@ -290,8 +317,11 @@
         "running",
         "pending"
       ],
-      "states": [],
-      "owner": "frontend"
+      "states": [
+        "stateless"
+      ],
+      "owner": "frontend",
+      "stateNote": "无状态组件：仅通过 variants 表达外观，无内部/交互状态（2026-11-12 复核）"
     },
     {
       "name": "EmptyState",
@@ -299,16 +329,22 @@
         "group",
         "deliverable"
       ],
-      "states": [],
-      "owner": "frontend"
+      "states": [
+        "stateless"
+      ],
+      "owner": "frontend",
+      "stateNote": "无状态组件：仅通过 variants 表达外观，无内部/交互状态（2026-11-12 复核）"
     },
     {
       "name": "DeliverableItem",
       "variants": [
         "default"
       ],
-      "states": [],
-      "owner": "frontend"
+      "states": [
+        "stateless"
+      ],
+      "owner": "frontend",
+      "stateNote": "无状态组件：仅通过 variants 表达外观，无内部/交互状态（2026-11-12 复核）"
     },
     {
       "name": "TimelineTip",

@@ -177,7 +177,7 @@ func (m *Module) finishGenerated(sessionID, name, mime, ext, target string) stri
 }
 
 func (m *Module) registerGeneratedArtifact(ctx context.Context, sessionID, name, mime string, size int64, absPath string) (generatedArtifact, error) {
-	rel, err := filepath.Rel(m.sandbox.Artifacts, absPath)
+	rel, err := filepath.Rel(m.sandbox.Workspace, absPath)
 	if err != nil || strings.HasPrefix(rel, "..") {
 		return generatedArtifact{}, fmt.Errorf("产物路径越界")
 	}
@@ -185,14 +185,16 @@ func (m *Module) registerGeneratedArtifact(ctx context.Context, sessionID, name,
 	id := newID("artifact")
 	if err := m.store.Write(ctx, func(tx *sql.Tx) error {
 		_, err := tx.ExecContext(ctx, `INSERT INTO task_artifacts(
-			id, task_id, name, rel_path, mime, size, created_at, delivery_kind) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-			id, "session:"+sessionID, name, rel, mime, size, time.Now().UnixMilli(), coretask.ArtifactDeliveryKindUser)
+			id, task_id, name, rel_path, mime, size, created_at, delivery_kind, storage_scope, workspace_rel_path)
+			VALUES (?, ?, ?, '', ?, ?, ?, ?, 'workspace', ?)`,
+			id, "session:"+sessionID, name, mime, size, time.Now().UnixMilli(),
+			coretask.ArtifactDeliveryKindUser, rel)
 		return err
 	}); err != nil {
 		return generatedArtifact{}, err
 	}
 	return generatedArtifact{
-		ID: id, Name: name, Mime: mime, Size: size, Path: "artifacts/" + sessionID + "/" + name,
+		ID: id, Name: name, Mime: mime, Size: size, Path: "workspace/" + rel,
 		PreviewURL: "/api/artifacts/" + id + "/content", DownloadURL: "/api/artifacts/" + id + "/content?download=1",
 	}, nil
 }
@@ -209,18 +211,7 @@ func (m *Module) generatedTempRoot() (string, error) {
 }
 
 func (m *Module) generatedPath(sessionID, name string) (string, error) {
-	if m.sandbox == nil {
-		return "", fmt.Errorf("workspace 未配置")
-	}
-	rel := filepath.ToSlash(filepath.Join(sessionID, name))
-	abs, err := m.sandbox.ResolveArtifact(rel)
-	if err != nil {
-		return "", err
-	}
-	if err := os.MkdirAll(filepath.Dir(abs), 0o755); err != nil {
-		return "", err
-	}
-	return abs, nil
+	return m.userOutputPath(context.Background(), sessionID, name)
 }
 
 func sanitizeGeneratedName(input, fallback string) string {

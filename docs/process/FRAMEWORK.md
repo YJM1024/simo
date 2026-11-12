@@ -32,6 +32,8 @@ specs/<CHANGE-ID>/
   evidence.md    命令、截图路径、DOM 测量、测试报告
 ```
 
+**模板入口**：[`templates/`](templates/)（proposal/spec/design/tasks/test-plan/evidence、task-card、handoff-product/api/qa）；新建 spec 直接复制对应模板，不另起格式。
+
 ### 2.2 门禁
 
 | 门禁 | 检查 | 不通过后果 |

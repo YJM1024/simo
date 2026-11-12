@@ -41,3 +41,13 @@
 - **流程完整**：设计 → 组件 → 页面 → 测试/截图 → 验收，不跳步。
 - **单一事实来源**：风格/规则写入文档，代码不得绕开。
 - **诚实汇报**：未完成、未验证、有风险，明确说；不夸大。
+
+## SDD 执行约束
+
+- **无 spec 不开工**：任何变更先建/引用 spec（`specs/<CHANGE-ID>/` 或 COMP spec）；没有 spec 不进入设计/实现。
+- **按 ROLES 交接**：按 [`docs/process/ROLES.md`](docs/process/ROLES.md) 的 owner/评审/交接物执行，不跨写作用域；实现者不改别人的 scope。
+- **任务四要素**：每个任务必须写清 **owner / scope / AC / 证据**；缺一不可派发。
+- **不得自签**：实现者不得给自己的视觉/功能签字；视觉/功能签字由**验收 Agent** 独立完成。
+- **用户验收边界**：用户只验收**前端效果**（视觉/交互/可用性）；后端契约、数据迁移、流程门禁由**验收 Agent** 签字。
+- **场景入口**：[`SCENARIOS.md`](docs/process/SCENARIOS.md) → 主 skill；通用门禁见 [`FRAMEWORK.md`](docs/process/FRAMEWORK.md)；模板见 [`docs/process/templates/`](docs/process/templates/)。
+

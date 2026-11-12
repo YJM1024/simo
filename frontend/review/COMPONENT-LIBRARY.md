@@ -124,3 +124,10 @@ src/components/
 - hover 120ms/focus 立即/200ms grace/Esc；←→/Home/End/Enter/点击跳转。
 - 画廊两组样例：单会话、当前+上级会话；截图 `timeline-groups-{1600,1920,1180,375}.png`。
 - 首页未接入。
+
+## FE-007 祖先消息接入（build mwdnov0d-kq3a7）
+- 子会话默认12条；按钮「显示上级会话：主会话」；一次加载主会话30条，总42、bars42、groups2、祖先组1，按钮到根后消失。
+- prepend 锚定：顶部 id msg-sub-01 offset -46.40625 → -46.3125，差 **0.09375px**；scrollHeight 930→3265。
+- 会话分隔、TimelineGroups 祖先 opacity .55、组 gap6、分类 tooltip；白卡消息保留。
+- 截图：`fe007-{1600,1280,1180,375}.png`。
+- 未实测：切会话清链、加载失败/413、空上级、archived 上级、逐级>2层。

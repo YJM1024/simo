@@ -370,6 +370,77 @@
 
 **范围**：仅组件层预检；未接首页、未部署。组件修复上述 R1/R2（并补 R3 验证）后可复验。
 
+### TimelineGroups 返工后复验（2026-11-12，build `mwdmvfow-9d8pn`，**签字通过**）
+
+**结论：签字通过。** R1 组间距、R2 分类 aria、R3 跳转/active 三项均修复并实测；组件可进入下一步（接首页由 Lead 决定，本轮不接、不部署）。截图 `timeline-groups-{1600,1920,1180,375}.png`（22:19:00–07，晚于构建，DPR2）。
+
+**对象**：`frontend/dist`（buildId `mwdmvfow-9d8pn`，构建 22:18:43）；静态 8898 服务 `/#gallery`；CDP 1600。
+
+| 项 | 判定 | 证据 |
+|---|---|---|
+| R1 组间距 | **已修复** | `.tlg-track gap 0` + `.tlg-session + .tlg-session margin-top 6`；相邻组 first bottom→next top 实测 **6px**（trackGap 计算值 0px，margin-top 6px）。 |
+| R2 分类 aria | **已修复** | 8 个 tick `aria-label` 均为「你/司墨 · 会话 · 时间」，**不含分类**；`title` 计数 **0**；分类「进度汇报」仅在 Tooltip meta 显示；Tooltip `role=tooltip`、无原生 title。 |
+| R3 跳转/active | **已修复** | 单会话点击 g2：onJump 文本 `g2`、`aria-current` 移到 g2、宽 24；多会话点击 p1：onJump `p1`、祖先组 opacity **.55** 下 active bar 按 Lead 确认规则 `opacity:1`、宽 **24**、仅 1 个 aria-current；键盘 focus g3 + Enter：onJump **g3**（可信 CDP 事件）。 |
+| 其余组件项 | 通过 | rail 44 无文字；active 24×4 ink、普通 20×4、bar gap2；当前组 1 / 祖先 .55；两个画廊样例（3 bars / 5 bars 2 组）；manifest `TimelineGroups` dependsOn `TimelineTip`；App 仍用旧 Timeline；console 0。 |
+
+**说明**：祖先组 active 的 `opacity:1` 覆盖已按 Lead 确认实现，spec 由 design-scribe 后续写入；hover120/grace200/Esc 等沿用上一轮验证（本轮仅改 CSS gap/aria/画廊回调）。范围组件层；未接首页、未部署。
+
+### FE-007 祖先消息 · 独立验收预检（2026-11-12，**spec ready / 未实现，不签字**）
+
+**状态**：`specs/FE-007-ancestor-messages/spec.md` 已读。当前**后端全量接口已可用**，**前端尚未实现**祖先按钮/祖先链/prepend/TimelineGroups 接入（App 仍用旧 Timeline）。本轮只准备 A1–A10 验收步骤与证据模板，**不签通过**；待前端交付固定 build 后按此复验。
+
+**线上接口实测（只读，2026-11-12）**
+- 会话树：root `main`（主会话，parentId 空）→ child `sess-fixture-researcher`（研究员，parentId main）；当前无三级链，A3 需隔离夹具补 3 级。
+- `GET /api/sessions/main/messages?scope=all` → 200，`total/messages=30`，`pagination:false`，`scope:"all"`，`archived:false`；`GET /api/sessions/sess-fixture-researcher/messages?scope=all` → 200，**12** 条；均时间正序（后端 `all_messages.go`）。
+- `GET /api/sessions/nope/messages?scope=all` → **404** `session_not_found`；`scope=bad` → **400** `invalid_scope`。
+- 源码 `maxAllSessionMessages=50000`：超过 → **413** `messages_too_many`；归档会话 `archived:true` 仍可读（只读）。
+- 前端 `api.ts` 尚无该调用；`app.tsx` 无祖先按钮/链状态；TimelineGroups 组件已签但未接首页。
+
+**前置夹具（交付前准备，隔离实例；不碰 8787 生产库）**
+1. 固定 buildId；隔离复制库，创建 root→A→B（≥3 级，B 为当前），各级消息数足够触发滚动；另备 empty-parent（0 条）、archived-parent、重复 id、同一 parent 多请求；413 需造 >50000 条或 HTTP mock。
+2. 会话切换目标（树/时间轴/搜索各一条）；记录切换前祖先链；每个用例前恢复默认态。
+3. 浏览器 1600/1180/375；Network 记录 `/messages` 请求；Console/4xx 记录；截图 DPR2。
+
+**A1–A10 验收步骤 / 证据模板（结论待验）**
+
+| # | 场景 | 操作步骤 | 观测与阈值 | 证据字段 | 结论 |
+|---|---|---|---|---|---|
+| A1 | 默认进入 | 硬刷新进入 B（有父）；记录 DOM 消息数、Network 请求；再进 root | 仅当前会话已加载消息；祖先消息 **0**；**0** 个 `/messages?scope=all` 自动请求；有父显示「加载上级会话：<title>」，root 无按钮/禁用「已是根会话」 | buildId、sessionId、msgCount、ancestorCount、请求列表、按钮文本/aria | 待验 |
+| A2 | 加载直接上级 | 滚到中部；点按钮；记录请求/响应/插入；再次点击 | **一次** `GET /api/sessions/{parent}/messages?scope=all`（无分页/cursor）；prepend 整组、无重复；按钮 loading 时 `aria-busy=true` 且禁用；按钮更新为下一级/禁用；当前消息 `sessionId` 不变 | URL/status/total、prepend 前后消息 ids、重复 id 数、按钮 aria-busy/disabled、截图 | 待验 |
+| A3 | 逐级到根 | 连续点击直到 root；每次只加一级；检查组顺序/按钮 | 每点一次只加载**直接上级**；组顺序 root→…→current；到根按钮隐藏/禁用；无一次拉全部祖先的捷径；无重复组 | 每次请求 parentId、组序列、根按钮状态、总消息数 | 待验 |
+| A4 | 切换会话 | 加载 2 级后切到其他会话（树/时间轴/搜索各一次），再切回 B | 祖先链**清空**；只显示新当前会话；无跨会话消息/重复；切回 B 重新默认，不保留旧链 | 切前后 ancestorCount、sessionId 集合、请求列表、截图 | 待验 |
+| A5 | 时间轴覆盖 | 加载全部祖先；量 `.tl-bar` 数、组数、opacity/gap/rail | bars 数 == **已加载消息数**；组 root→…→current；祖先组 `opacity .55`、当前 1；组 gap **6px**；rail **44px** 无文字；active 不丢；无裁切 | barCount/msgCount、组 class/opacity/gap、rail 宽、active、截图 | 待验 |
+| A6 | 滚动不跳（≤1px） | 滚到中部记录顶部可见消息 id+offset、scrollTop、scrollHeight；点加载；DOM 更新后同帧/下一帧测量 | `newScrollTop = oldScrollTop + (newScrollHeight-oldScrollHeight)` 或按顶部 id 偏移校正；**误差 ≤1px**；焦点/选中不变；不强制到底 | old/new scrollTop/scrollHeight、topMsgId+delta、active/focus、截图 | 待验 |
+| A7 | 滚动条稳定 | 用 CDP Fetch 延迟响应，采样 loading 中/后 clientHeight、scrollHeight、overflowY、横向 scrollWidth | 容器/可滚范围不缩；插入后无回弹/闪缩；无横向滚动；thumb 范围稳定 | 三阶段尺寸、overflow、scrollWidth、截图 | 待验 |
+| A8 | 错误/空/重复/413 | 分别：请求失败（Fetch abort/500）；0 消息 parent；连续点两次；重复 id；>50000 或 mock 413 | 失败不插入、按钮恢复+错误/重试、无半组；空 parent 不插入+「上级没有消息」且可继续向上；loading 防重；同一 id 去重；**413** 显示错误不插入（造不出则标未造出） | 每种状态的前后条数、错误文案、请求次数、413 status/code、截图 | 待验 |
+| A9 | 权限/纯度 | 未知 session；跨用户（若可造）；归档 parent；检查 system/internal | 404/403 明确不泄露；归档只读可加载；无 system/合成消息；消息 sessionId/sessionTitle 与来源一致、无跨会话混入 | status/body、archived、消息字段、ids 集合 | 待验 |
+| A10 | 响应式/可访问 | 1600/1180/375 各走一次；键盘 Tab/Enter/Space 按钮；读屏 live region；时间轴 tooltip/键盘 | 无破版/横向滚动；按钮可聚焦、aria-busy/aria-disabled、名称含上级标题；完成播报「已加载 N 条上级消息」不刷屏；TimelineTip/TimelineGroups 不回归；无页面定制 CSS | 三档截图、focus/aria、live region 文本、console 0 | 待验 |
+
+**证据汇总模板**：`buildId / fixtureSessionIds / 每步 API URL+status+total / DOM barCount+msgCount / scrollTop+scrollHeight+误差 / opacity+gap+rail / focus+aria / console+4xx / 截图文件名 / 结论(通过|不通过|未造出原因)`。
+
+**预检判断**：后端接口契约已具备（全量/404/400/413/归档），但前端 FE-007 主功能未交付；**不签字**。交付后先冻结 build、确认 parentId/scope=all 契约未变，再按 A1–A10 全量复验；A5 必须用真实页面（非组件画廊），A6/A7 必须在有足够消息的隔离夹具上测量。
+
+### FE-007 实机验收结果（2026-11-12，build `mwdnshfe-yu2wp`，**视觉+功能通过**）
+
+**结论：签字通过。** 在隔离夹具（真实 `simo-live.exe` mock 模型）上完成 A1–A10：3 级链、空/归档上级、413/失败、去重/锚定/375 均通过。**未部署**；413 为 mock（未造 >50000 实体库），403 跨用户未造出；同帧程序化 double-click 会发 2 个请求（真实 60ms 双击为 1），列 P2 风险不阻塞。
+
+**环境**：dist build `mwdnshfe-yu2wp`；隔离 `SIMO_HOME=.tmp-fe007-home`，树 main(30)→研究员(12)→子级(3)，另有 空父(0)→空子级(3)、归档父(3, archived)→归档子级(3)。静态 8898 代理隔离后端；CDP 1600/375；页面 HTTP 仅 GET；未触碰 8787。
+
+| # | 结果 | 关键证据 |
+|---|---|---|
+| A1 默认 | 通过 | 子级默认 **3** 条/3 bars/1 组；按钮「显示上级会话：研究员」；点击前无 `scope=all` 请求；主会话（root）无按钮。 |
+| A2 整级加载 | 通过 | 一次 `GET /api/sessions/sess-fixture-researcher/messages?scope=all`；3→**15**、bars15、groups2；无重复；按钮更新「主会话」。 |
+| A3 逐级到根 | 通过 | 再加载 main：15→**45**、bars45、**groups3**、组序 main(30)→研究员(12)→子级(3)；按钮消失；无一次拉全祖先。 |
+| A4 切会话清链 | 通过 | 切主会话 30/1组；切回子级 3/1组；搜索过滤后点击子级仍 3/1组，无旧祖先。 |
+| A5 时间轴 | 通过 | bars=45=消息数；祖先组 opacity **.55/.55**、当前 **1**；组 gap **6/6**；rail **44px** 无文字；无溢出。 |
+| A6 prepend 锚定 | 通过 | `msg-sub-01` offset **-46.4063 → -46.3125**，差 **0.09375px ≤1**；scrollTop 200→2535、scrollHeight 930→3265；未到底（max2603），未强制滚底。 |
+| A7 滚动条稳定 | 通过 | pause 加载期间 clientH **662 不变**、scrollHeight 不变；完成后仅内容增长；无横向滚动/闪缩。 |
+| A8 错误/空/重复/413 | 通过（413 mock） | 500 失败：不插入（仍3）、错误「请求失败（500）」、按钮恢复；重试成功15。413 mock：不插入（仍15）、「消息过多，暂不能完整加载」、重试成功45。空上级：不插入、提示「上级没有消息」且按钮推进到主会话，再加载 33/2组。重复 id 响应：15/15、无 console error。 |
+| A9 权限/纯度 | 部分（403 未造出） | 未知会话 404、scope=bad 400（线上实测）；归档父可加载 6 条/2组、祖先 .55；后端过滤 internal=0；单用户本地无 403 场景，标未造出。 |
+| A10 响应式/可访问 | 通过 | 375 点击加载 3→15、timeline `display:none`、无横向溢出；按钮 focus+Enter 可从 12→42；console **0**；DPR2 `fe007-{1600,1280,1180,375}.png` 晚于构建。 |
+
+**P2 风险/说明**：① 同帧同步双 click（0ms）会发 2 个相同 `scope=all` 请求（60ms 真实双击 1 个；无 in-flight ref 合并）；建议加 ref 防重/请求合并。② 按钮文案为「显示上级会话」而 spec 写「加载上级会话」（语义一致，文字差异）。③ 413 为 mock，未造 >50000 实体库；403 未造出；3 级为本次上限（4+级未测）。**范围**：隔离夹具 + mock 错误；未部署、未改代码。
+
 ### 检查清单（每轮）
 
 1. 首屏 3 秒能理解产品与下一步；

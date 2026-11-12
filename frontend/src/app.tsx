@@ -8,6 +8,7 @@ import {
   searchMessages,
   unarchiveSession,
   getPermissions,
+  getAllSessionMessages,
   getDeliverables,
   getSpecProjection,
   getStats,
@@ -18,7 +19,7 @@ import {
   submitCardAction,
 } from './api'
 import type { Card, Message, PermissionState, Session, StatsBucket, StatsTotals } from './types'
-import { Composer, ConversationPanel, EmptyState, ErrorState, Icon, LoadingState, MessageItem, RightPanel, Segmented, Sidebar, StatusBar, Timeline, WorkbenchChart, formatTime, formatTokens } from './components'
+import { Composer, ConversationPanel, EmptyState, ErrorState, Icon, LoadingState, MessageItem, RightPanel, Segmented, Sidebar, StatusBar, TimelineGroups, WorkbenchChart, formatTime, formatTokens } from './components'
 
 type Page = 'chat' | 'workbench'
 
@@ -53,6 +54,11 @@ export default function App(): React.ReactNode {
   const [searching, setSearching] = useState(false)
   const [activeId, setActiveId] = useState('main')
   const [messages, setMessages] = useState<Message[]>([])
+  const [ancestorMessages, setAncestorMessages] = useState<Message[]>([])
+  const [ancestorLoading, setAncestorLoading] = useState(false)
+  const [ancestorError, setAncestorError] = useState('')
+  const [emptyAncestorIds, setEmptyAncestorIds] = useState<Set<string>>(new Set())
+  const prependAnchorRef = useRef<{ scrollTop: number; scrollHeight: number; id: string; offset: number } | null>(null)
   const [projection, setProjection] = useState<import('./types').SessionSpecProjection | null>(null)
   const [userDeliverables, setUserDeliverables] = useState<import('./api').UserDeliverable[]>([])
   const [deliverablesLoading, setDeliverablesLoading] = useState(true)
@@ -157,6 +163,20 @@ export default function App(): React.ReactNode {
   }, [])
 
   useLayoutEffect(() => {
+    const anchor = prependAnchorRef.current
+    const scroller = scrollerRef.current
+    if (!anchor || !scroller) return
+    prependAnchorRef.current = null
+    const apply = (): void => {
+      const target = anchor.id ? scroller.querySelector<HTMLElement>(`[data-message-id="${anchor.id}"]`) : null
+      const nextTop = target ? target.getBoundingClientRect().top - scroller.getBoundingClientRect().top : null
+      scroller.scrollTop = nextTop !== null ? anchor.scrollTop + (nextTop - anchor.offset) : anchor.scrollTop + (scroller.scrollHeight - anchor.scrollHeight)
+    }
+    apply()
+    requestAnimationFrame(apply)
+  }, [ancestorMessages])
+
+  useLayoutEffect(() => {
     if (restoreScrollRef.current !== null) {
       const target = restoreScrollRef.current
       restoreScrollRef.current = null
@@ -211,6 +231,10 @@ export default function App(): React.ReactNode {
     stickToBottomRef.current = saved === undefined
     void getPermissions(activeId).then((data) => setPermissions(data.permissions ?? null)).catch(() => setPermissions(null))
     setMessages([])
+    setAncestorMessages([])
+    setAncestorError('')
+    setEmptyAncestorIds(new Set())
+    setAncestorLoading(false)
     setProjection(null)
     void loadMessages(activeId)
     void loadRight(activeId)
@@ -277,7 +301,7 @@ export default function App(): React.ReactNode {
   }, [page, applyStats, statsRefresh])
 
   const jumpToMessage = (index: number): void => {
-    const node = document.querySelectorAll<HTMLElement>('.chat-scroll .msg')[index]
+    const node = document.querySelectorAll<HTMLElement>('.conversation-scroll .msg')[index]
     node?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     setActiveMessage(index)
   }
@@ -352,6 +376,36 @@ export default function App(): React.ReactNode {
     }
   }
 
+  const loadAncestor = async (): Promise<void> => {
+    if (!nextParent || ancestorLoading) return
+    const scroller = scrollerRef.current
+    if (scroller) {
+      const top = scroller.getBoundingClientRect().top
+      const nodes = [...scroller.querySelectorAll<HTMLElement>('.msg')]
+      const visible = nodes.find((node) => node.getBoundingClientRect().bottom > top + 1)
+      prependAnchorRef.current = {
+        scrollTop: scroller.scrollTop,
+        scrollHeight: scroller.scrollHeight,
+        id: visible?.dataset.messageId ?? '',
+        offset: visible ? visible.getBoundingClientRect().top - top : 0,
+      }
+    }
+    setAncestorLoading(true)
+    setAncestorError('')
+    try {
+      const data = await getAllSessionMessages(nextParent.id)
+      const incoming = (data.messages ?? []).filter((message) => !messages.some((existing) => existing.id === message.id) && !ancestorMessages.some((existing) => existing.id === message.id))
+      if (incoming.length === 0) { setAncestorError('上级没有消息'); setEmptyAncestorIds((current) => new Set(current).add(nextParent.id)) }
+      else setAncestorMessages((current) => [...incoming, ...current].sort((a, b) => a.at - b.at))
+      stickToBottomRef.current = false
+    } catch (err) {
+      const raw = err instanceof Error ? err.message : '上级消息加载失败'
+      setAncestorError(raw.includes('413') ? '消息过多，暂不能完整加载' : raw)
+    } finally {
+      setAncestorLoading(false)
+    }
+  }
+
   const locateTask = (task: { title: string; id: string }): void => {
     const index = messages.findIndex((message) => message.text.includes(task.title) || (task.id && message.text.includes(task.id)))
     if (index >= 0) { setActiveMessage(index); const node = document.querySelectorAll<HTMLElement>('.chat-scroll .msg')[index]; node?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
@@ -376,9 +430,50 @@ export default function App(): React.ReactNode {
     }
   }
 
+  const flatAll = useMemo(() => flattenTree(sessions), [sessions])
+  const activeMeta = flatAll.find((session) => session.id === activeId) ?? null
+  const loadedAncestorIds = useMemo(() => new Set(ancestorMessages.map((message) => message.sessionId)), [ancestorMessages])
+  const visitedAncestorIds = useMemo(() => new Set([...loadedAncestorIds, ...emptyAncestorIds]), [loadedAncestorIds, emptyAncestorIds])
+  const nextParent = useMemo(() => {
+    let cursor = activeMeta
+    while (cursor && cursor.parentId) {
+      const parent = flatAll.find((session) => session.id === cursor?.parentId)
+      if (!parent) return null
+      if (!visitedAncestorIds.has(parent.id)) return parent
+      cursor = parent
+    }
+    return null
+  }, [activeMeta, flatAll, visitedAncestorIds])
+  const ancestorChain = useMemo(() => {
+    const ids: string[] = []
+    let cursor = activeMeta
+    while (cursor && cursor.parentId) {
+      const parent = flatAll.find((session) => session.id === cursor?.parentId)
+      if (!parent) break
+      ids.unshift(parent.id)
+      cursor = parent
+    }
+    return ids.filter((id) => loadedAncestorIds.has(id))
+  }, [activeMeta, flatAll, loadedAncestorIds])
+
   const chartBuckets = buckets.filter((bucket) => bucket.messages > 0 || bucket.tokens > 0).slice(-10)
   const recentSessions = [...flatSessions].sort((a, b) => b.createdAt - a.createdAt).slice(0, 6)
   const visibleWorkbenchArtifacts = userDeliverables
+  const combinedMessages = useMemo(() => {
+    const seen = new Set<string>()
+    return [...ancestorMessages, ...messages].filter((message) => { if (seen.has(message.id)) return false; seen.add(message.id); return true }).sort((a, b) => a.at - b.at)
+  }, [ancestorMessages, messages])
+  const timelineGroupMessages = useMemo(() => {
+    const order = new Map<string, number>()
+    ancestorChain.forEach((id, index) => order.set(id, index))
+    order.set(activeId, ancestorChain.length)
+    return combinedMessages.map((message) => ({
+      id: message.id, sessionId: message.sessionId, sessionTitle: message.sessionTitle ?? (flatAll.find((session) => session.id === message.sessionId)?.title ?? '会话'),
+      sessionOrder: order.get(message.sessionId) ?? 0, isCurrentSession: message.sessionId === activeId,
+      role: message.role, category: message.category as 'clarification' | 'progress' | 'confirmation' | 'result' | 'error' | undefined,
+      at: message.at, dateKey: new Date(message.at).toISOString().slice(0, 10), summary: message.text,
+    }))
+  }, [combinedMessages, ancestorChain, activeId, flatAll])
   const quotaPct = statsTotals?.tokens ? Math.min(100, Math.max(1, Math.round(statsTotals.tokens / 100000 * 100))) : 0
 
   return (
@@ -409,7 +504,7 @@ export default function App(): React.ReactNode {
                 <div className="chat-tabs"><span className="chat-chip">对话</span></div>
                 <div className="chat-body">
                   <ConversationPanel
-                    timeline={<Timeline messages={messages} active={activeMessage} onJump={jumpToMessage} />}
+                    timeline={<TimelineGroups messages={timelineGroupMessages} currentSessionId={activeId} activeMessageId={combinedMessages[activeMessage]?.id} onJump={(messageId) => { const index = combinedMessages.findIndex((message) => message.id === messageId); if (index >= 0) { jumpToMessage(index) } }} />}
                     state={loadingMessages && messages.length === 0 ? 'loading' : error && messages.length === 0 ? 'error' : messages.length === 0 ? 'empty' : 'ready'}
                     empty={<EmptyState title="开始和司墨对话" description="说需求、记信息、派任务，过程和结果都会回流到这里。" action={<button className="btn sm" type="button" onClick={() => document.querySelector<HTMLTextAreaElement>('.composer textarea')?.focus()}>发送第一条消息</button>} />}
                     error={<ErrorState title="消息加载失败" description={error} onRetry={() => void loadMessages(activeId)} />}
@@ -418,8 +513,14 @@ export default function App(): React.ReactNode {
                     onScroll={syncTimeline}
                   >
                     <div className="chat-inner">
-                        {error && messages.length > 0 && <p className="err-text" role="alert">{error}</p>}
-                        {messages.map((message) => <MessageItem key={message.id} message={message} onCardAction={handleCardAction} readOnly={Boolean(activeSession?.archived)} />)}
+                      {nextParent && <div className="message-top"><button className="btn sm" type="button" disabled={ancestorLoading} aria-busy={ancestorLoading} onClick={() => void loadAncestor()}>{ancestorLoading ? '加载中…' : `显示上级会话：${nextParent.title}`}</button></div>}
+                      {ancestorError && <p className="err-text" role="alert">{ancestorError}</p>}
+                      {error && messages.length > 0 && <p className="err-text" role="alert">{error}</p>}
+                      {combinedMessages.map((message, index) => {
+                        const previous = combinedMessages[index - 1]
+                        const divider = !previous || previous.sessionId !== message.sessionId
+                        return <div key={message.id}>{divider && <div className="session-divider"><span>{message.sessionTitle ?? (message.sessionId === activeId ? activeSession?.title : '会话')}</span></div>}<MessageItem message={message} onCardAction={handleCardAction} readOnly={Boolean(activeSession?.archived) || message.sessionId !== activeId} /></div>
+                      })}
                     </div>
                   </ConversationPanel>
                   {!atBottom && <button type="button" className="jump-bottom" onClick={scrollToBottom}>回到底部{unread > 0 ? ` · ${unread} 条新消息` : ''}</button>}

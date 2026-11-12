@@ -133,5 +133,20 @@ func migrations() []sqlite.Migration {
 				return err
 			},
 		},
+		{
+			Version: 7,
+			Name:    "M82 workspace artifact storage scope",
+			Up: func(ctx context.Context, tx *sql.Tx) error {
+				for _, stmt := range []string{
+					`ALTER TABLE task_artifacts ADD COLUMN storage_scope TEXT NOT NULL DEFAULT 'legacy_artifacts'`,
+					`ALTER TABLE task_artifacts ADD COLUMN workspace_rel_path TEXT NOT NULL DEFAULT ''`,
+				} {
+					if _, err := tx.ExecContext(ctx, stmt); err != nil {
+						return err
+					}
+				}
+				return nil
+			},
+		},
 	}
 }

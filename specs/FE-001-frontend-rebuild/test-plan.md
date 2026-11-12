@@ -67,3 +67,22 @@
 
 - 连续两轮只剩像素级差异（1–2px、色值微调）→ 停止迭代，列 TODO 交付；
 - 任一 MUST 需求未通过 → 不上线。
+
+## 7. A 编号证据映射（FE-001）
+
+> 与 `evidence.md` / `docs/tasks/acceptance.md` 对应；未覆盖项不写通过。
+
+| A | 证据/位置 | 状态 |
+|---|---|---|
+| A1 | 截图 + `docs/tasks/acceptance.md` React 视觉/功能 | 已覆盖（三档） |
+| A2 | 交互测试「会话切换」+ evidence 滚动 | 已覆盖 |
+| A3 | evidence「真实发送/流式」 | 已覆盖 |
+| A4 | test-plan「断线恢复」；evidence 注明未真实断网 | 部分/未实测 |
+| A5 | evidence「真实重命名」 | 已覆盖 |
+| A6 | evidence「真实卡片提交」 | 已覆盖 |
+| A7 | test-plan「右栏三组」+ acceptance 右栏签字 | 已覆盖 |
+| A8 | evidence「时间轴」 | 已覆盖 |
+| A9 | evidence「1600/1180/375」 | 已覆盖 |
+| A10 | `docs/tasks/acceptance.md`「React 版视觉对齐 · 返工后复验」 | 已签字（以最新验收为准） |
+| A11 | evidence tsc/build/console | 已覆盖 |
+| A12 | test-plan 画廊 + acceptance 组件画廊 | 已覆盖 |

@@ -9,7 +9,7 @@ Owner：前端（实现）/ 产品（本 spec）/ 验收（滚动与时间轴走
 
 ## 1. 目标
 
-在对话页默认只显示当前会话；用户可用**顶部按钮**按“直接上级会话”为单位，**整级加载**该上级会话的全部消息；可逐级向上直到根。加载后：
+在对话页默认只显示当前会话；用户可用**消息区顶部按钮**按“直接上级会话”为单位，**整级加载**该上级会话的全部消息；可逐级向上直到根。加载后：
 
 - 时间轴覆盖**全部已加载消息**（祖先 + 当前）；
 - 上级会话组 opacity .55、组间 gap6；
@@ -35,13 +35,13 @@ Owner：前端（实现）/ 产品（本 spec）/ 验收（滚动与时间轴走
 ### 4.1 默认
 
 - 进入/切到会话：只显示当前会话已加载消息；祖先链为空；
-- 顶部操作区显示按钮：`加载上级会话：<标题>`；
-- 当前会话已是根（无 parentId）：按钮隐藏或禁用，提示“已是根会话”；
+- 按钮位于**消息区顶部**（消息列表上方、ConversationPanel 内；不是页面 Header/顶栏）：`加载上级会话：<标题>`；
+- 当前会话已是根（`parentId === ""`）：按钮隐藏或禁用，提示“已是根会话”；
 - 不自动加载祖先，不在后台预取。
 
 ### 4.2 点击加载
 
-1. 读取当前会话的 `parentId`/标题；无 parent → 不显示按钮；
+1. 读取当前会话的 `parentId`/标题；`parentId === ""` → 根，不显示按钮；
 2. 按钮进入 loading（`aria-busy=true`，禁用防重复）；
 3. **一次请求**直接上级的全部消息（无分页、无 `before`）；
 4. 成功：把整组祖先消息 prepend 到消息列表顶部；时间轴增加对应会话组；按钮更新为“下一级上级”（若还有 parent），到根后禁用/隐藏；
@@ -63,6 +63,21 @@ Owner：前端（实现）/ 产品（本 spec）/ 验收（滚动与时间轴走
 
 ## 5. 数据/接口需求
 
+### 5.0 需求
+
+| ID | 级别 | 需求 |
+|---|---|---|
+| R1 | MUST | 默认只显示当前会话；不自动加载祖先 |
+| R2 | MUST | 消息区顶部按钮一次加载直接上级整级全部消息（无分页） |
+| R3 | MUST | 可逐级向上直到根；`parentId=""` 为根，按钮禁用/隐藏 |
+| R4 | MUST | 切换会话清空祖先链，不串会话 |
+| R5 | MUST | 时间轴覆盖全部已加载消息；祖先 opacity .55、active 覆盖 1、组 gap6、44 rail 无文字 |
+| R6 | MUST | prepend 用 `data-message-id` 锚定，滚动位置偏移 ≤1px、范围稳定 |
+| R7 | MUST | 祖先接口 `?scope=all` 且 `pagination:false`/`hasMore:false`；否则不插入 |
+| R8 | MUST | 413 显示“消息过多”且不分页降级；失败/空/重复有明确状态 |
+| R9 | MUST | 权限/归档只读/无 system/合成消息，跨会话拒绝 |
+| R10 | MUST | 1600/1180/375 无破版；按钮/时间轴键盘可达；无页面定制 CSS |
+
 > 前端只消费接口；若后端接口未就绪，本 spec 视为“待接口确认”，不得用假数据冒充。
 
 ### 5.1 会话 parent
@@ -73,12 +88,13 @@ Owner：前端（实现）/ 产品（本 spec）/ 验收（滚动与时间轴走
 interface SessionMeta {
   id: string
   title: string
-  parentId: string | null
+  parentId: string          // 根 = ""（空字符串，不是 null/undefined）
   archived?: boolean
 }
 ```
 
-- `parentId` 用于识别直接上级；无 parent / 不可见 → 按钮不出现；
+- `parentId === ""` 表示根；非空表示直接上级 id；
+- `parentId` 用于识别直接上级；根 / 不可见 → 按钮不出现；
 - 不在前端自行从标题/树顺序猜 parent。
 
 ### 5.2 祖先整级消息
@@ -98,14 +114,17 @@ GET /api/sessions/{sessionId}/messages?scope=all
     {"id":"m1","sessionId":"s-parent","role":"user","at":1760000000000,"text":"...","category":"clarification"},
     {"id":"m2","sessionId":"s-parent","role":"agent","at":1760000000001,"text":"...","category":"progress"}
   ],
+  "pagination": false,
   "hasMore": false
 }
 ```
 
-- `scope=all`：返回该会话全部消息，按时间升序；**不得分页**；不返回 `hasMore=true`；
-- 消息字段满足 `TimelineGroups` 所需：`id/sessionId/sessionTitle/category/at/role`；
+- `scope=all`：返回该会话全部消息，按时间升序；**`pagination` 必须为 `false`**，`hasMore` 必须为 `false`；
+- **判定**：只有 `pagination === false` 且 `hasMore === false` 才视为“整级全量”；任一为 true/缺失 → 视为契约不满足，整组不插入、按错误提示，**不得把分页结果拼成“全部”**；
+- 消息字段满足 `TimelineGroups` 所需：`id/sessionId/sessionTitle/category/at/role`；每条消息 DOM 必须有 `data-message-id="<id>"`（滚动锚定用）；
 - 不返回 system/合成消息；不跨会话混入；
 - 权限：仅当前用户可见的会话；归档只读仍可读；403/404 明确，不泄露；
+- 413：祖先消息量超过后端整级返回上限 → 显示“祖先会话消息过多，暂不能整级加载”，不插入任何消息、不分页降级；见 §7；
 - 若后端暂不支持 `scope=all`，可在前端 spec 中降级为“暂不可用”，不得用当前分页接口拼假“全部”。
 
 ## 6. 消息与滚动
@@ -121,10 +140,11 @@ GET /api/sessions/{sessionId}/messages?scope=all
 
 前置插入后，用户当前看到的内容**不得跳动**：
 
-1. 加载前记录：`scrollTop`、`scrollHeight`、顶部可见消息 id/偏移；
+1. 加载前记录：`scrollTop`、`scrollHeight`、顶部可见消息的 `data-message-id` 与相对偏移；
 2. 加载完成后（DOM 更新后同一帧/下一帧）：
    - `newScrollTop = oldScrollTop + (newScrollHeight - oldScrollHeight)`；
-   - 若顶部可见消息 id 仍存在，优先以该消息偏移校正；
+   - 若顶部可见消息的 `data-message-id` 仍存在，优先以该消息偏移校正；
+   - 所有消息行必须带 `data-message-id`，不得用 index/文本猜测锚点；
    - 误差 ≤1px（允许亚像素/浏览器取整）；
 3. 加载期间/加载后，滚动容器高度与可滚动范围不因 loading/空态切换而缩小；
 4. 不把用户强制拉到底部；不改变当前选中/焦点消息；
@@ -148,6 +168,7 @@ GET /api/sessions/{sessionId}/messages?scope=all
 | root | 按钮禁用/隐藏；提示“已是根会话” |
 | no-parent | 同 root，不显示不存在的上级 |
 | empty-parent | 上级会话存在但 0 条消息：不插入；提示“上级没有消息”，按钮仍可继续向上（若还有 parent） |
+| payload-too-large（413） | 显示“祖先会话消息过多，暂不能整级加载”；不插入、不分页降级、不重试风暴；按钮可继续向上/返回 |
 | archived-parent | 只读；可加载查看；不显示写操作 |
 
 - 并发：加载中不允许再次触发；同一 parent 的重复请求合并；
@@ -166,19 +187,19 @@ GET /api/sessions/{sessionId}/messages?scope=all
 | # | 场景 | 通过标准 |
 |---|---|---|
 | A1 | 默认进入 | 只显示当前会话；祖先消息 0 条；无自动请求 |
-| A2 | 点击加载直接上级 | 一次请求返回直接上级全部消息（无分页）；整组 prepend；无重复 |
-| A3 | 逐级到根 | 每点一次只上一级；到根后按钮禁用/隐藏；组顺序 root→…→current |
+| A2 | 点击加载直接上级 | 一次请求 `?scope=all`，响应 `pagination:false` 且 `hasMore:false`；整组 prepend；无分页/无重复 |
+| A3 | 逐级到根 | 每点一次只上一级；`parentId=""` 为根；到根后按钮禁用/隐藏；组顺序 root→…→current |
 | A4 | 切换会话 | 祖先链清空；回到只显示当前会话；不串会话 |
 | A5 | 时间轴覆盖 | 时间轴包含全部已加载消息；上级 opacity .55；组 gap6；44 rail 无文字 |
-| A6 | 滚动不跳 | prepend 后顶部可见内容偏移 ≤1px；焦点/选中不变；不强制滚底 |
+| A6 | 滚动不跳 | prepend 后以 `data-message-id` 锚定，顶部可见内容偏移 ≤1px；焦点/选中不变；不强制滚底 |
 | A7 | 滚动条稳定 | 加载期间容器高度/范围不缩小；插入后无回弹/闪缩；无横向滚动 |
-| A8 | 错误/空/重复 | 失败不插入、可重试；空上级提示且不插入；重复加载/重复 id 去重；loading 不可重复点 |
+| A8 | 错误/空/重复/413 | 失败不插入、可重试；空上级提示且不插入；重复加载/重复 id 去重；loading 不可重复点；413 显示消息过多且不分页降级 |
 | A9 | 权限/纯度 | 仅可见会话；跨会话 403/404；无 system/合成消息；归档只读可读 |
 | A10 | 响应式/可访问 | 1600/1180/375 无破版；按钮键盘可达；时间轴 tooltip/键盘不回归；无自定义页面 CSS |
 
 ## 10. 影响范围
 
-- **ConversationPanel / ChatPage**：顶部按钮、祖先链状态、prepend/滚动锚定；
+- **ConversationPanel / ChatPage**：消息区顶部按钮、祖先链状态、prepend/滚动锚定；
 - **TimelineGroups**：接入祖先组、opacity .55、gap6、全部已加载消息；不改 44px rail 规则；
 - **API**：需要 parentId + `scope=all` 全量消息接口；未就绪时功能降级为“暂不可用”；
 - **Composer/右栏/发送流**：不改；

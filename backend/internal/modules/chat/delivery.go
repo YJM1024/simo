@@ -3,6 +3,7 @@ package chat
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"mime"
 	"os"
 	"path/filepath"
@@ -24,7 +25,7 @@ func isUserDeliveryContext(ctx context.Context) bool {
 }
 
 // registerUserDeliveryFile 只在“用户审批后明确执行写文件”的上下文中调用。
-// 文件会复制到 artifacts/<session>/ 并登记为 user_delivery，内容原文件不移动。
+// 文件会复制到会话 output/ 并登记为 user_delivery，内容原文件不移动。
 func (m *Module) registerUserDeliveryFile(ctx context.Context, sessionID, absPath string) {
 	if m.sandbox == nil || strings.TrimSpace(sessionID) == "" {
 		return
@@ -54,7 +55,7 @@ func (m *Module) registerUserDeliveryFile(ctx context.Context, sessionID, absPat
 			return
 		}
 	}
-	rel, err := filepath.Rel(m.sandbox.Artifacts, target)
+	rel, err := filepath.Rel(m.sandbox.Workspace, target)
 	if err != nil || strings.HasPrefix(rel, "..") {
 		m.log.Warn("用户交付文件路径越界", "err", err)
 		return
@@ -67,12 +68,38 @@ func (m *Module) registerUserDeliveryFile(ctx context.Context, sessionID, absPat
 	id := newID("artifact")
 	if err := m.store.Write(ctx, func(tx *sql.Tx) error {
 		_, err := tx.ExecContext(ctx, `INSERT INTO task_artifacts(
-			id, task_id, name, rel_path, mime, size, created_at, delivery_kind)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-			id, "session:"+sessionID, name, rel, mimeType, info.Size(), time.Now().UnixMilli(),
-			coretask.ArtifactDeliveryKindUser)
+			id, task_id, name, rel_path, mime, size, created_at, delivery_kind, storage_scope, workspace_rel_path)
+			VALUES (?, ?, ?, '', ?, ?, ?, ?, 'workspace', ?)`,
+			id, "session:"+sessionID, name, mimeType, info.Size(), time.Now().UnixMilli(),
+			coretask.ArtifactDeliveryKindUser, rel)
 		return err
 	}); err != nil {
 		m.log.Warn("登记用户交付文件失败", "err", err)
 	}
+}
+
+func (m *Module) workspaceSessionSegments(ctx context.Context, sessionID string) []string {
+	segments := []string{"main"}
+	for _, item := range m.sessionPath(ctx, sessionID) {
+		if item.ID == "" || item.ID == "main" {
+			continue
+		}
+		segments = append(segments, "conversations", item.ID)
+	}
+	return segments
+}
+
+func (m *Module) userOutputPath(ctx context.Context, sessionID, name string) (string, error) {
+	if m.sandbox == nil {
+		return "", fmt.Errorf("workspace 未配置")
+	}
+	segments := m.workspaceSessionSegments(ctx, sessionID)
+	dir, err := m.sandbox.SessionArea(segments, "output")
+	if err != nil {
+		return "", err
+	}
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, sanitizeGeneratedName(name, "delivery.txt")), nil
 }

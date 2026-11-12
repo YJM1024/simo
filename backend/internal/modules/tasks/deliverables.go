@@ -81,7 +81,8 @@ func (m *Module) ListUserDeliverables(ctx context.Context, limit, offset int) ([
 	var total int
 	if err := m.store.QueryRow(ctx, `SELECT COUNT(*) FROM task_artifacts a
 		LEFT JOIN tasks t ON t.id = a.task_id
-		WHERE a.delivery_kind = 'user_delivery'`).Scan(&total); err != nil {
+		WHERE a.delivery_kind = 'user_delivery'
+		  AND `+deliverableStoragePredicate).Scan(&total); err != nil {
 		return nil, 0, err
 	}
 	rows, err := m.store.Query(ctx, `SELECT a.id, a.name, a.mime, a.size, a.created_at,
@@ -90,6 +91,7 @@ func (m *Module) ListUserDeliverables(ctx context.Context, limit, offset int) ([
 		LEFT JOIN tasks t ON t.id = a.task_id
 		LEFT JOIN sessions s ON s.id = `+sessionExpr+`
 		WHERE a.delivery_kind = 'user_delivery'
+		  AND `+deliverableStoragePredicate+`
 		ORDER BY a.created_at DESC, a.id DESC LIMIT ? OFFSET ?`, limit, offset)
 	if err != nil {
 		return nil, 0, err

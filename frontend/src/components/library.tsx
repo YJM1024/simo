@@ -170,7 +170,7 @@ export function MessageItem({ message, onCardAction, readOnly = false }: { messa
   const isUser = message.role === 'user'
   const category = message.category ? (CATEGORY_LABEL[message.category] ?? '信息') : ''
   return (
-    <article className={`msg ${isUser ? 'from-user' : 'from-agent'}`}>
+    <article className={`msg ${isUser ? 'from-user' : 'from-agent'}`} data-message-id={message.id} data-session-id={message.sessionId}>
       <span className="msg-avatar">{isUser ? '你' : '墨'}</span>
       <div className="msg-body">
         <div className="msg-meta"><b>{isUser ? '你' : '司墨'}</b><span>·</span>{category && <><span className="tag">{category}</span><span>·</span></>}<span>{formatTime(message.at)}</span>{message.status === 'failed' && <span className="badge danger">失败</span>}{message.text.trim() && <button type="button" className="msg-copy" onClick={() => void copy()} aria-label="复制消息">{copied ? '已复制' : '复制'}</button>}</div>

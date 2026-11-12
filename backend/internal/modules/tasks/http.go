@@ -292,15 +292,19 @@ func (m *Module) handleArtifactContent(w http.ResponseWriter, r *http.Request) {
 		m.writeTaskError(w, err)
 		return
 	}
-	path, err := m.artifactPath(relPath)
+	path, err := m.artifactPath(artifact, relPath)
 	if err != nil {
-		httpserver.WriteError(w, http.StatusNotFound, "产物路径非法")
+		httpserver.WriteError(w, http.StatusNotFound, "产物路径非法或不可作为用户交付物")
 		return
 	}
-	// 二次防护：解析后必须仍在 artifacts 根内。
-	root, _ := filepath.Abs(m.sandbox.Artifacts)
+	// 二次防护：解析后必须仍在对应存储根内。
+	root := m.sandbox.Artifacts
+	if artifact.StorageScope == coretask.ArtifactStorageWorkspace {
+		root = m.sandbox.Workspace
+	}
+	rootAbs, _ := filepath.Abs(root)
 	abs, _ := filepath.Abs(path)
-	rel, err := filepath.Rel(root, abs)
+	rel, err := filepath.Rel(rootAbs, abs)
 	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
 		httpserver.WriteError(w, http.StatusNotFound, "产物路径非法")
 		return
