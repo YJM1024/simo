@@ -40,7 +40,8 @@ func (m *Module) handleSessionFiles(w http.ResponseWriter, r *http.Request) {
 	files := make([]sessionFile, 0, 8)
 	seen := make(map[string]bool)
 	if kind == "" || kind == "artifact" {
-		rows, err := m.store.Query(r.Context(), `SELECT a.id, a.task_id, a.name, a.rel_path, a.mime, a.size, a.created_at
+		rows, err := m.store.Query(r.Context(), `SELECT a.id, a.task_id, a.name, a.rel_path, a.mime, a.size, a.created_at,
+			a.storage_scope, a.workspace_rel_path
 			FROM task_artifacts a LEFT JOIN tasks t ON t.id = a.task_id
 			WHERE t.session_id = ? OR a.task_id = ? ORDER BY a.created_at ASC, a.id ASC`,
 			sessionID, "session:"+sessionID)
@@ -50,14 +51,18 @@ func (m *Module) handleSessionFiles(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		for rows.Next() {
-			var id, taskID, name, relPath, mime string
+			var id, taskID, name, relPath, mime, storageScope, workspaceRel string
 			var size, createdAt int64
-			if err := rows.Scan(&id, &taskID, &name, &relPath, &mime, &size, &createdAt); err != nil {
+			if err := rows.Scan(&id, &taskID, &name, &relPath, &mime, &size, &createdAt, &storageScope, &workspaceRel); err != nil {
 				_ = rows.Close()
 				httpserver.WriteError(w, http.StatusInternalServerError, "读取文件失败")
 				return
 			}
-			key := strings.ToLower(strings.TrimPrefix(filepathToSlash(relPath), "./"))
+			sourcePath := "artifacts/" + filepathToSlash(relPath)
+			if storageScope == "workspace" && workspaceRel != "" {
+				sourcePath = "workspace/" + filepathToSlash(workspaceRel)
+			}
+			key := strings.ToLower(strings.TrimPrefix(sourcePath, "./"))
 			if seen[key] {
 				continue
 			}
@@ -65,9 +70,9 @@ func (m *Module) handleSessionFiles(w http.ResponseWriter, r *http.Request) {
 			files = append(files, sessionFile{
 				ID: "file-artifact-" + id, Kind: "artifact", Name: name, Mime: mime, Size: size,
 				CreatedAt:   createdAt,
-				Source:      map[string]string{"taskId": taskID, "path": "artifacts/" + filepathToSlash(relPath)},
-				PreviewURL:  "/api/artifacts/" + id + "/content",
-				DownloadURL: "/api/artifacts/" + id + "/content?download=1",
+				Source:      map[string]string{"taskId": taskID, "path": sourcePath},
+				PreviewURL:  "/api/artifacts/" + id + "/content?source=files",
+				DownloadURL: "/api/artifacts/" + id + "/content?download=1&source=files",
 			})
 		}
 		if err := rows.Err(); err != nil {

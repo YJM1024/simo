@@ -67,9 +67,9 @@
 | 项 | 内容 |
 |---|---|
 | 输入 | spec/AC、测试计划、build/URL/契约、前端截图、后端测试/迁移记录 |
-| 输出 | test-plan/evidence、失败复现、通过/失败/未跑清单、发布建议、回归结论 |
+| 输出 | test-plan/evidence、失败复现、通过/失败/未跑清单、发布建议、回归结论；发布前 `component-parity.md` + `component-parity-1600.png`/`375.png` |
 | DoR | AC 可验证；环境/数据/账号可用；build/契约已交接；风险清单明确 |
-| DoD | AC 100% 有断言/证据；正常/边界/错误/权限/迁移覆盖；失败有复现；未跑项标注 |
+| DoD | AC 100% 有断言/证据；正常/边界/错误/权限/迁移覆盖；失败有复现；未跑项标注；发布前组件 parity 图/报告齐全并由验收 Agent 签字 |
 | 禁止 | 只测 happy path；用覆盖率代替风险覆盖；未跑写“通过”；失败重跑掩盖；替实现者自签 |
 
 **Skill**：`testing-strategy`、`release-checklist`、`spec-driven`；`incident-retro`（待补）。
@@ -93,8 +93,8 @@
 - 规格 → 设计：AC 可验证、非目标明确，产品 O；Lead + 前后端评审；
 - 设计 → 实现：design/contract/迁移回滚齐全，前后端 O；产品/测试/验收评审；
 - 实现 → 验收：build/契约/截图/证据齐全，前后端 O；测试独立验收；
-- 验收 → 发布：A1–A10/AC 全过、未跑项有豁免，测试 O；验收 Agent 签字；
-- 发布：包/hash/smoke/回滚齐全，后端 O；测试/验收 Agent 复核。
+- 验收 → 发布：A1–A10/AC 全过、未跑项有豁免，测试 O；验收 Agent 签字；**组件 parity 图/报告（1600/375 + component-parity.md）必须齐全并由验收 Agent 签字**；
+- 发布：包/hash/smoke/回滚齐全，后端 O；测试/验收 Agent 复核；无 parity 签字不得上线。
 
 > 每个门禁的“自动/人工”边界见 [`SCENARIOS.md`](SCENARIOS.md) §0.1。机器证明“有没有/跑没跑”，人证明“该不该/够不够”。
 
@@ -171,11 +171,14 @@
 
 ### 4.4 测试 → 发布（Release Evidence Handoff）
 
+> 发布前按 [`RELEASE-CHECKLIST.md`](RELEASE-CHECKLIST.md) 与 [`COMPONENT-PARITY-GATE.md`](COMPONENT-PARITY-GATE.md) 执行；缺 parity 签字=No-Go。
+
 ```md
 # HANDOFF · <VERSION> · 测试 → 发布
 - 版本/范围/变更：
 - AC/测试结论（通过/失败/未跑）：
 - 失败清单/豁免（谁批/原因）：
+- **组件 parity**：`component-parity.md`、`component-parity-1600.png`、`component-parity-375.png`；基线=冻结原型；当前 build=____；逐组件对齐结果；允许像素微差（记录范围），组件错位/风格漂移=No-Go；
 - 截图/证据路径：
 - 迁移/备份/回滚演练：
 - 风险/已知问题：

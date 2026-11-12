@@ -441,6 +441,218 @@
 
 **P2 风险/说明**：① 同帧同步双 click（0ms）会发 2 个相同 `scope=all` 请求（60ms 真实双击 1 个；无 in-flight ref 合并）；建议加 ref 防重/请求合并。② 按钮文案为「显示上级会话」而 spec 写「加载上级会话」（语义一致，文字差异）。③ 413 为 mock，未造 >50000 实体库；403 未造出；3 级为本次上限（4+级未测）。**范围**：隔离夹具 + mock 错误；未部署、未改代码。
 
+### 视觉修复复验（2026-11-13，build `mwdqrape-bp0ko`，**视觉+功能通过**）
+
+**结论：签字通过。** 主会话（30 条消息、5 个任务）实测：消息卡 gap 9（375 为 8）、timeline 短 track 三档居中 delta 0、右栏 5 个任务全部可见；截图 `fe-gapfix-{1600,1280,1180,375}.png` 晚于构建（DPR2）。**未部署**，8787 未改。
+
+| 项 | 结果 | 证据 |
+|---|---|---|
+| 消息卡间距 | 通过 | 1600/1280/1180 连续 29 个 gap 全部 **9.00**、computed margin-bottom **9px**；375 全部 **8.00**、margin-bottom 8px；padding 仍 **12px 14px**、border 1px（非 padding 伪装）；无 `.msg:last-child` 清 margin 命中。 |
+| 时间轴居中（短 track） | 通过 | 1600/1280/1180：track w24 h178 top395.06，`margin-block:auto` 计算 **242.062px**；trackCenter=scrollCenter=**484.06**，delta **0**；375 timeline `display:none`。 |
+| 超高 track | 通过（合成布局） | 在页面内克隆 bars 至 180 根：track h**778** > rail client **662**，margin-block 归 **0**，track top 与 rail top 对齐（差0），rail `overflow-y:auto`，scrollTop 最大可到 **116**（可滚）；真实主会话 30 条为短 track，已实测居中。 |
+| 右栏任务 | 通过 | 主会话任务行 **5**：已完成 3/3（汇总本周进展/整理风险清单/生成下周计划），进行中 2/2（生成周报初稿/等待确认交付格式），未开始 0/0；宽屏全部 visible=3/2；375 右栏按响应式隐藏（预期）。 |
+| 稳定性 | 通过 | 三档 `scrollWidth==innerWidth`、console **0**；build `mwdqrape-bp0ko`；未改 8787、未部署。 |
+
+**说明/限制**：超高 track 证据为页面内合成 180 根 bars 的 CSS 布局测量（非真实 180 条会话；真实主会话为 30 条短 track）；375 右栏隐藏属既有响应式规则。改动仅视觉间距/居中，未触及数据/接口。
+
+### 视觉修复复验（2026-11-13，build `mwdqyg05-famq9`，**视觉+功能通过**）
+
+**结论：签字通过。** 左下头像居中、Composer 左内边距修复实测通过；截图 `fe-avatar-composer-{1600,1280,375}.png` 晚于构建（DPR2）；未部署、8787 未改。
+
+| 项 | 结果 | 证据 |
+|---|---|---|
+| 左下头像居中 | 通过 | 1600/1280：avatar **28×28**，容器 center **(26, 947.84)**，字形 center **同值**，x/y 差 **0/0**；字形 5.72×14；computed `display:grid`、`place-items:center`、`line-height:10px`、`text-align:center`。375 侧栏隐藏（avatar rect 0，视觉不可测），computed 规则一致。 |
+| Composer 左内边距 | 通过 | textarea computed `padding-left:14px`（1600/1280/375）；1600 textarea left431 → 文本起点 **445**（+14）；375 left9 → 起点23。placeholder/光标从14开始。 |
+| 未回归 | 通过 | Composer 与首卡同 x/同宽：1600 **430–1110**，1280 **312–908**，375 **8–367**；footer/发送按钮位置正常，textarea 多行高度/最小高度正常，无横向溢出；console **0**。 |
+
+**说明**：375 左下头像随侧栏隐藏（既有响应式），故 375 仅验证 computed 规则，头像可见性以 1600/1280 实测为准；改动仅头像对齐与 textarea 左 padding，未触及数据/接口。
+
+### 组件级 parity 对比（2026-11-13，current 8787 `mwdqyg05-famq9`，**未通过：禁止上线**）
+
+**结论：组件级 parity 未通过。** 以冻结原型 `frontend/prototype/message-cards.html` 为 expected、8787 主会话 build `mwdqyg05-famq9` 为 current，同视口（1600×1000 / 375×812）、主会话、滚动顶部、DPR2；产出全页图、11 个组件并排图、合成总图与判定表。内容/数据差异单列，不计为风格漂移；**组件错位/风格漂移/缺元素**判为阻断。
+
+**产物**：`frontend/review/component-parity/`
+- `expected-1600.png` / `current-1600.png` / `expected-375.png` / `current-375.png`（全页置顶）
+- `component-parity-1600.png` / `component-parity-375.png`（合成总图，逐行组件名+判定）
+- `1600/<component>-compare.png`、`375/<component>-compare.png`（expected vs current 并排；`card-block` 因首屏被 Composer 覆盖另做滚动裁切）
+- `component-parity.md`（判定表）
+- `raw/`（全页原图、`meta.json` DOM 框/样式）
+
+**阻断项**
+1. **context 缺操作**：current 未渲染「重命名 / 置顶 / 归档」，expected 有。
+2. **timeline 错位**：expected x358/y141/44×684.13 → current x378/y153/44×662.13；与卡间距 expected **28** → current **8px**。
+3. **composer padding/高度**：expected pad0/h128.88/top833.13 → current pad8/0/14、h150.88/top811.13；发送按钮 state 不同。
+4. **375 消息/卡片 padding**：expected 10×12 / 卡12 → current 12×14 / 卡14×16；卡宽 297→295。
+5. **right-rail 多状态行**：current 顶部「进行中 rev2 / 待确认1」不在冻结原型。
+6. topbar 右侧图标 gear→sun（非主阻断，需确认规范）。
+
+**非阻断/数据差异**：sidebar 会话列表、message 文案/条数、card-block 内容、right-rail 任务数据、timeline bars 数量；不单独判风格漂移。
+
+**Gate：未通过。未修复/未确认上述阻断项前不得部署上线。** 证据见 `component-parity.md` 与合成图。
+
+### 分类标签修复（2026-11-13，build `mwdr52zy-uhku9`，**视觉+功能通过**）
+
+**结论：签字通过。** 主会话 1600/1280/375 实测：agent **16/16** 均渲染分类标签，示例「进度汇报 / 需求澄清」；user 标签 **0**；`.msg-meta` `nowrap`，tag `flex:none`，clientWidth=scrollWidth，无换行/溢出；三档无横向溢出、console 0。截图 `fe-category-top/mid-{1600,1280,375}.png` 晚于构建。未部署；8787 仍为 `mwdqyg05`。
+
+| 视口 | agents / withTag | 标签示例 | user tags | meta nowrap | overflow |
+|---|---|---|---|---|---|
+| 1600 | 16 / **16** | 进度汇报、需求澄清 | **0** | clientW=scrollW=614 | 无 |
+| 1280 | 16 / **16** | 进度汇报、需求澄清 | **0** | clientW=scrollW=530 | 无 |
+| 375 | 16 / **16** | 进度汇报、需求澄清 | **0** | clientW=scrollW=295 | 无 |
+
+**限制**：空 `category` 回退「信息」的路径代码已覆盖（`message.category ? label : '信息'`），但当前 live 数据所有 agent category 非空，未用空分类样本截图；可在隔离夹具补一条空分类消息再验证。**部署仍受组件 parity 门禁阻断**（见上节）。
+
+### 组件级 parity 复验（2026-11-13，build `mwdre4c5-3o0m0`，**仍未通过：375 宽度/位置漂移**）
+
+**结论：仍未通过，禁止上线。** 1600/1280/1180 必修项已修：timeline 1600 x358/w44/right402、card x430、gap28、insideCol true；1280 x260/right304、card312、gap8；1180 x248/right292、card300、gap8；375 hidden。1600 msg padding12×14、card-block14×16；375 msg padding10×12、card-block12；topbar gear 恢复（`.icon-btn` 1 个，无新增图标）。**但 375 的宽度/位置仍与冻结原型不一致**：
+
+| 项 | expected | current | 判定 |
+|---|---|---|---|
+| 375 message-user/agent | x8 / w359 | **x39 / w297** | 有差异（宽度/位置） |
+| 375 card-block | x57 / w297 | **x86 / w237** | 有差异（宽度/位置） |
+| 375 composer | x8 / w359 | **x39 / w297** | 有差异（宽度/位置） |
+
+已批准豁免保留：context 无操作、右栏 status/rev、Composer padding/高度、数据/文案差异。**当前“375 card x39/w297、composer x39/w297”与冻结原型 x8/w359 冲突**；需二选一：按原型恢复，或更新冻结原型并明确写豁免后再签。产物已更新：`frontend/review/component-parity/component-parity-{1600,375}.png`、`component-parity.md`、各组件 compare 图；未部署，8787 仍 `mwdqyg05`。
+
+### 组件级 parity 签字（2026-11-13，build `mwdrj27e-3vsey`，**通过**）
+
+**结论：通过（可部署）。** 按冻结原型重跑 1600/375（1280/1180 同步核对），主会话、置顶、DPR2：
+
+| 项 | 结果 |
+|---|---|
+| 1600 timeline | x358/w44/right402、card430、gap **28**、在 chat-body 内 |
+| 1280/1180 timeline | x260/right304/gap8、x248/right292/gap8 |
+| 375 timeline | 均 `display:none` |
+| 1600 msg/card-block | msg x430/w680、pad12×14；block x481/w614、pad14×16（未回退） |
+| 375 message | x**8** / w**359**、padding10×12 |
+| 375 Composer | x**8** / w**359** |
+| 375 CardBlock | x**57** / w**297**、padding12 |
+| 375 chat-inner | padding12px 0；无横向溢出（375/375） |
+| topbar | gear 恢复，title=设置，`.icon-btn` 1 个，无新增图标 |
+
+已批准豁免保留：context 操作、右栏 status/rev、Composer padding/高度、数据/文案差异。未发现组件级错位/风格漂移。产物 `frontend/review/component-parity/`（全页、11 组件并排、合成图、`component-parity.md`）已更新至当前 build。8787 仍 `mwdqyg05`，本 build 未部署；分类标签 build `mwdr52zy` 同待部署。
+
+### P2 验收预检模板：交付物 preview/download · 工作台三态 · 右栏交互（A1–A8，待交付，不签字）
+
+**状态：模板就绪，不签通过。** 本模板供前端/后端交付固定 build 后直接复验；覆盖 P2 三类：交付物打开/下载、工作台 loading/empty/error、右栏任务/概览/交付物交互。所有结论必须用当前 build 实测，禁止用假数据/示例数据。
+
+**前置**：冻结 build；隔离 `SIMO_HOME`（不碰生产库）；准备交付物样本（docx/xlsx/pdf/png/文本各 1）、0 数据 home、3 组任务（done/running/queued 有展开样本）；浏览器 1600/1180/375，DPR2；Network/Console 记录。
+
+| # | 场景 | 操作步骤 | 通过标准 | 证据模板 |
+|---|---|---|---|---|
+| A1 | 交付物 preview | 点击交付物「打开/预览」；分别试文本/docx/pdf/图片；观察是否新窗口/预览层、请求与 Content-Type | 打开真实内容（非下载、非空白、非 HTML 假页）；`previewUrl` 200、Content-Type 匹配；无绝对路径/token 泄露；404/403 有明确错误；console/4xx=0（预期外） | buildId、deliverableId、URL/status/Content-Type、截图、console/4xx |
+| A2 | 交付物 download | 点击下载；记录响应头/文件大小/SHA256；重复下载 | `Content-Disposition: attachment`、文件名安全；内容与源文件 hash 一致、大小一致；不使用 `file://`/绝对路径；重复下载稳定；无路径穿越 | 文件名、bytes、sha256（源/下载）、headers、截图 |
+| A3 | 工作台 loading | 用 CDP Fetch 延迟 `/api/stats`、`/api/deliverables` 等 500–1000ms；进入工作台 | 显示 LoadingState（非 0/错误/空白）；加载期间不闪假 0、不跳布局；完成后真实数据替换；请求去重/旧请求不覆盖 | 截图（加载前/中/后）、请求列表、loading 文案、DOM 计数 |
+| A4 | 工作台 empty | 切换到 0 数据 home（无任务/无交付物/0 消息） | 空态与错误态可区分；真实 0 展示「0/暂无」，不显示示例数据；不出现 `undefined/NaN`；图表空态；无假 0 掩盖失败 | home、API total、空态文案/截图、DOM 值 |
+| A5 | 工作台 error/retry | Fetch 注入 500/断网；再点重试并恢复 | ErrorState/错误文案本地化；不保留旧假数据/不显示 loading 与 error 并存；重试成功后恢复真实数据；console/未处理异常 0 | 错误注入方式、status、错误文案、重试前后截图、console |
+| A6 | 右栏任务分组 | 默认查看三组；逐组展开/收回；检查计数/aria | 默认每组 3 行；展开后显示真实总数（如 done 3/12、running 3/7、queued 3/9）；`aria-expanded` 同步；空组不伪造行；不重复键 | 组名、count、visible 行数、aria-expanded、截图 |
+| A7 | 右栏概览/交付物/导航 | 滚动右栏、点 rail 导航/交付物、Tab 键盘；375 检查隐藏 | 四节顺序 目标→输入→执行会话→交付物；rail 贴右、内容可滚、无重叠；交付物打开/下载走 A1/A2；键盘可达；375 右栏按设计隐藏 | 各节 rect、scrollHeight/clientHeight、rail 位置、focus、截图 |
+| A8 | 跨面一致/三档回归 | 同一会话对比右侧任务/交付物与 API；1600/1180/375 全页；检查 Spec 泄露/溢出 | 数字与 API 一致（不静默 0）；任务 done/running/queued 与工作台/右栏一致；交付物列表同一来源；无 `specId/version` 等内部字段；三档无横向溢出、console 0 | API counts、DOM counts、三档截图、`scrollWidth==innerWidth`、console |
+
+**证据汇总模板**：`buildId / isolatedHome / sessionId / A1–A8 结果 / API status+body摘要 / counts / sha256 / 截图名 / console+4xx / 未造出原因`。
+**签字规则**：全部 A1–A8 通过且证据为当前 build；未测项必须列“未造出”，不得用示例/历史 build 补签。
+
+### Workspace Batch C/D 迁移验收清单（模板，待交付，不签字）
+
+**状态：模板就绪，不签通过。** Batch C/D 的命名与批次定义以 Lead 确认为准；本清单按 `docs/workspace-layout.md` §7/W8/W10 与 `docs/admin-guide.md` 备份/迁移纪律，预设：**Batch C = dry-run + 映射执行；Batch D = 独立验证 + 回滚/交付物隔离**。若实际定义不同，按对应字段替换，验收标准不变。
+
+**前置**：停服务；整包备份 `SIMO_HOME`（含 DB/workspace/specs）；冻结迁移版本与二进制；隔离目标 home；记录源/目标路径、数量、SHA256 清单；准备旧 `data/workspace`、`data/artifacts`、SessionSpec 样本与失败注入脚本。
+
+#### Batch C：dry-run 与迁移执行
+
+| # | 检查 | 通过标准 | 证据 |
+|---|---|---|---|
+| C1 | 前置备份/冻结 | 备份可解压、manifest 完整；服务已停；旧二进制/旧 home 保留；回滚路径明确 | 备份路径、manifest、时间、大小、校验 |
+| C2 | dry-run | `--dry-run`/预演零副作用（DB/文件/审计状态变更=0）；输出源→目标映射、冲突、预计条数；失败项可见 | dry-run 报告、前后文件数/hash、DB 变更计数 |
+| C3 | 映射规则 | `data/workspace→workspace/main/data/legacy-workspace`；`data/artifacts/session-*`→`workspace/main/output/legacy/session-*`；`task-*`→output/legacy；其他→output/legacy 或 data 待确认；SessionSpec→specs/main | 映射表、样例路径、无法判定项清单 |
+| C4 | 执行/幂等 | 只复制/建索引，不删旧数据；重复执行不重复导入；失败整体可重试；无半写 | 执行前后计数、二次执行差异=0、失败注入结果 |
+| C5 | 文件完整/hash | 每个迁移文件源/目标 SHA256 一致；数量一致；空文件/大文件/中文名正常；mtime/size 记录 | 逐文件 hash 清单、mismatch=0、抽样截图 |
+| C6 | 交付物隔离 | 只有 `output/`+`user_delivery:true` 进交付物 API；`work/tasks/code/data/_internal/specs` 不出现；旧路径不被 API 直接读取 | API 列表、负向探测（各目录/穿越/绝对路径） |
+| C7 | 失败/回滚 | 迁移失败 fail-closed，旧数据/旧服务可用；按备份恢复后计数/hash 回原值；不自动半回滚 | 失败日志、恢复后 hash/计数、旧二进制启动 |
+| C8 | 旧数据保留 | 旧目录原地保留（只读/不删）；迁移记录 `_internal/migration/workspace-layout-v1.json` 含源/目标/hash/版本 | 旧路径存在证据、迁移 manifest |
+
+#### Batch D：迁移后独立验证
+
+| # | 检查 | 通过标准 | 证据 |
+|---|---|---|---|
+| D1 | 独立实例启动 | 新 home 独立端口启动成功；health 200；不连生产 8787；重启持久化 | buildId、port、health、重启前后数据 |
+| D2 | 计数/树结构 | sessions/messages/artifacts/specs 计数与迁移报告一致；main/子会话树无环；路径/shortId 稳定 | counts、树 dump、diff=0 |
+| D3 | 文件 hash 复核 | 抽样+全量 hash 与 C5 manifest 一致；交付物内容可打开；无损坏/截断 | hash 复核表、mismatch=0 |
+| D4 | 交付物隔离/权限 | output 只读；工作区路径不可 API 访问；跨 session 默认拒绝；symlink/`..`/绝对路径/UNC 拒绝；归档只读 | 正向/负向 API 测试、403/404、截图 |
+| D5 | 回滚演练 | 从备份恢复 + 旧二进制启动；计数/hash 回到迁移前；旧客户端可用；无数据丢失 | 回滚命令、前后 hash/计数、截图/日志 |
+| D6 | 回归/smoke | 会话/消息/工作台/右栏/交付物打开下载 smoke；M1–当前 evals 不回归；console/4xx 0 | smoke 输出、截图、console |
+| D7 | 备份/恢复演练 | 备份清单包含 main+specs、可选 work；恢复顺序 specs→_internal→output→work；不覆盖新 output | restore 日志、版本冲突处理记录 |
+| D8 | 证据/签字 | 所有 C/D 项当前版本证据齐全；未造出项列明；签字后才切生产 | 报告、截图、hash、失败注入记录 |
+
+**证据汇总模板**：`源/目标 home / 迁移版本 / dry-run 报告 / 文件数 / SHA256 manifest / API 隔离结果 / 回滚前后 hash&counts / 旧数据保留 / 回归结果 / 未造出`。
+**硬规则**：dry-run 零副作用；迁移失败不切换；未通过不删旧数据；**不得把 work/tasks/_internal/specs 暴露为交付物**。
+
+### Wave 1 缺口预检（2026-11-13，build `mwdrvjtb-ni7pe`，**不签字**）
+
+**结论：预检不签字。** 文案/复制失败提示、recent activity 排序、会话滚动恢复、check-sdd 均通过；**交付物 download 语义未通过**（`download=1` 仍 `Content-Disposition: inline`，工作台文件点击只打开 preview，无单独下载入口）；Markdown 代码块、剪贴板成功路径、工作台 loading/error 仍未实测。未部署，8787 仍 `mwdrj27e-3vsey`。
+
+**已通过**
+- 复制失败：headless 点击 `.msg-copy`，250ms 时文案 **「复制失败」**，1.75s 恢复「复制」；非静默成功。成功路径/权限环境未测。
+- 交付物：`/api/deliverables` 有 `weekly-report.md`（101 bytes，userDelivery true，preview/download URL）；preview 200/101 bytes `text/markdown`；`download=1` 200/101 bytes；工作台点击打开 `/api/artifacts/art-weekly-report/content`（window.open 实测）。
+- 最近活动：main spec-projection `updatedAt=1794490352701` → DOM「主会话 21:31」；researcher `1794484675094` → 「研究员 19:57」，顺序/时间一致。
+- 会话位置恢复：1600 单页，研究员 scrollTop **300** → 主会话 → 研究员，恢复 **300**。
+- check-sdd：`node scripts/check-sdd.mjs` **PASS**（11 specs、COMP 3、A 93/93、manifest 32）。
+- 截图 `fe-wave1-{1600,375}.png` 晚于构建；build `mwdrvjtb-ni7pe`。
+
+**不通过/未验证**
+1. **download 语义**：`GET /api/artifacts/art-weekly-report/content?download=1` 实际返回 `Content-Disposition: inline; filename="weekly-report.md"`，非 attachment；工作台文件行点击只 `window.open(previewUrl)`，未见下载按钮/下载动作。P2 A2 不通过。
+2. **Markdown fenced code / inline code**：源码已加（`renderMessageText`，React 文本节点），但 live 无代码块样本，未渲染截图；不签该项。
+3. **工作台 loading/error 三态**：代码存在，但未逐态截图/未注入延迟/失败，未验证。
+4. **复制成功路径**：headless 无剪贴板权限，未测；当前只证明失败不静默。
+
+**Gate：不签字。** 修 download（attachment/独立下载入口）并补 Markdown/三态/复制成功证据后再复验。
+
+### Wave 1 复验（2026-11-13，build `mwds0fkm-0l3zy`，**不签字：scroll 恢复失败**）
+
+**结论：不签字。** 下载入口、Markdown 解析、工作台三态已独立验证；但**会话位置恢复实测仍为 0（未达 300）**，与提交声明不一致；复制成功路径仍无法验证。服务端 `download=1` 仍是 `inline`（前端 `<a download>` 已让 UI 真实下载，标为技术债）。
+
+**通过**
+- 下载入口：工作台文件行有 `<a class="download-link" href="/api/artifacts/art-weekly-report/content?download=1" download aria-label="下载 weekly-report.md">下载</a>`；点击后真实落盘 **weekly-report.md 101 bytes**，内容与 preview 一致；preview 仍保留。
+- Markdown：隔离夹具插入 fenced+inline 样例，渲染 `.msg-text pre>code` 1 个、inline `code` 1 个；`script/img` DOM **0**；无 HTML 注入；短样例 `scrollWidth==clientWidth==614`（长代码溢出未复现，提交称 1352>680 未在 live 数据中复现）。
+- 工作台 loading/error（CDP Fetch 延迟/失败注入）：loading 显示 `.state-loading`「统计加载中…/交付物加载中…」；失败显示 `.state-error`「工作台加载失败/交付物加载失败」+2 个重试；无假 0/无 loading+error 并存。
+- 复制失败：headless 点击后显示「复制失败」，非静默；成功路径未验证。
+- 最近活动：主会话 21:31、研究员 19:57（按 spec-projection.updatedAt）；check-sdd **PASS**（11 specs、COMP3、A93/93、manifest32）；截图 `fe-wave1-{1600,375}.png`/`fe-wave1-code-1600.png` 晚于构建。
+
+**不通过**
+- **会话位置恢复**：1600 单页，研究员 `scrollTop=300` → 主会话 → 研究员，实测恢复 **0**（连续两次复测均 0）；提交声明 300 不成立。根因方向：activeId effect 在消息重新加载前设置 restoreScroll，空内容时 scrollTop 被钳到 0，后续加载完成不再恢复。
+
+**未验证/技术债**
+- 剪贴板成功路径：headless + CDP grant 仍失败；仅失败路径通过。
+- 长代码块 `scrollWidth>clientWidth` 横向滚动：短夹具未溢出，未复现提交的 1352/680。
+- `?download=1` 响应头仍 `Content-Disposition: inline`；UI 用 `download` 属性实现下载，API 直链/第三方客户端仍不会强制下载（技术债，非本次 UI 阻断）。
+
+**回答“是否接受未验证项”**：下载 UI、Markdown 解析、工作台三态 **可接受已验部分**；**不接受 scroll 恢复声明**（实测失败）；复制成功路径与长代码溢出仍为未验证，不能写成通过。**Gate：不签字**，修 scroll 恢复后再复验。
+
+### Wave 1 复验签字（2026-11-13，build `mwds5zb9-ti3mj`，**通过（带已知限制）**）
+
+**结论：Wave1 预检签字通过。** scroll 恢复修复独立复验全部通过；下载 UI、Markdown、工作台三态、recent activity、check-sdd 通过。已知限制：headless 剪贴板成功路径不可验（只验失败路径）；服务端 `download=1` 仍 inline（UI `<a download>` 实际下载可用，技术债）；live 数据无代码块，长代码用隔离夹具验证。**未部署**，8787 仍 `mwdrj27e`。
+
+| 项 | 结果 | 证据 |
+|---|---|---|
+| scroll 首次进入 | 通过 | 研究员 max=376，首次 top **376**（回底） |
+| scroll 0 | 通过 | 设 0 → 主会话 → 研究员，恢复 **0** |
+| scroll 300 | 通过 | 设 300 → 主会话 → 研究员，恢复 **300**，delta **0** |
+| scroll clamp | 通过 | 设 99999（clamp 376）→ 主会话 → 研究员，恢复 **376**，delta **0** |
+| 下载入口 | 通过 | 工作台/右栏 `<a class=download-link download href=…?download=1>`；点击真实落盘 weekly-report.md **101 bytes**，内容一致；preview 保留 |
+| Markdown | 通过 | 隔离夹具：`pre>code` 1、inline code 1；`pre scrollWidth **1530** > clientW **614**，overflow-x auto`；`script/img` DOM **0**；无 HTML 注入 |
+| 工作台三态 | 通过 | Fetch 延迟：两处 `.state-loading`；失败：两处 `.state-error`+重试；无假 0/无 loading+error 并存 |
+| 复制失败路径 | 通过 | headless 点击显示「复制失败」，非静默 |
+| 最近活动 | 通过 | 主 21:31 / 研究员 19:57（updatedAt 排序） |
+| check-sdd | 通过 | `scripts/check-sdd.mjs` PASS：11 specs、COMP3、A93/93、manifest32 |
+| 截图 | 通过 | `fe-wave1-{1600,375}.png`、`fe-wave1-code-1600.png` 晚于构建 |
+
+**已知限制（接受，不阻断本次预检）**
+- 剪贴板成功路径：headless + CDP grant 仍失败，仅验证失败路径；真实浏览器权限环境需人工确认。
+- 服务端 `download=1` 仍 `Content-Disposition: inline`；UI `download` 属性已验证可落盘，API 直链仍非 attachment（技术债）。
+- live 数据无代码块样本；Markdown 解析与长代码溢出用隔离夹具验证（长代码 scrollWidth 1530 vs 声明 1352 因样本长度不同，行为一致）。
+
+**范围**：Wave1 缺口修复预检；未部署、未改代码；部署由 Lead 决定（连同已签 parity/分类 build）。
+
 ### 检查清单（每轮）
 
 1. 首屏 3 秒能理解产品与下一步；

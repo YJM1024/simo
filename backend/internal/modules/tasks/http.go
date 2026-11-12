@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -292,7 +293,8 @@ func (m *Module) handleArtifactContent(w http.ResponseWriter, r *http.Request) {
 		m.writeTaskError(w, err)
 		return
 	}
-	path, err := m.artifactPath(artifact, relPath)
+	allowInternal := strings.EqualFold(strings.TrimSpace(r.URL.Query().Get("source")), "files")
+	path, err := m.artifactPath(artifact, relPath, allowInternal)
 	if err != nil {
 		httpserver.WriteError(w, http.StatusNotFound, "产物路径非法或不可作为用户交付物")
 		return
@@ -315,12 +317,9 @@ func (m *Module) handleArtifactContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	contentType := contentTypeFor(artifact.Name, data)
-	disposition := "inline"
-	if !inlineArtifactMime(contentType) {
-		disposition = "attachment"
-	}
 	w.Header().Set("Content-Type", contentType)
-	w.Header().Set("Content-Disposition", disposition+`; filename="`+filepath.Base(artifact.Name)+`"`)
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(data)))
+	w.Header().Set("Content-Disposition", contentDisposition(artifact.Name, isDownloadRequest(r)))
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(data)
 }

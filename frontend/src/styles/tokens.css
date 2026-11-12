@@ -39,6 +39,17 @@
   --r-6: 6px;
   --r-8: 8px;
   --r-10: 10px;
+  --msg-cat-requirement-bg: #E8ECFB;
+  --msg-cat-requirement-ink: #2F4BB8;
+  --msg-cat-clarification-bg: #FBF0DA;
+  --msg-cat-clarification-ink: #8A5A00;
+  --msg-cat-progress-bg: #E2F1E8;
+  --msg-cat-progress-ink: #246B4E;
+  --msg-cat-consultation-bg: #F1F0EC;
+  --msg-cat-consultation-ink: #5E6068;
+  --timeline-user: #AEBDF7;
+  --timeline-agent: #6FAF8E;
+  --timeline-selected: #232A8C;
   --paper: var(--surface-3);
   --conversation-card-w: 720px;
   --conversation-gutter-x: 16px;

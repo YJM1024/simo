@@ -28,7 +28,7 @@ export function Icon({ name, size = 16 }: { name: string; size?: number }): Reac
     search: <><circle cx="7" cy="7" r="4.5" /><path d="m10.5 10.5 3 3" /></>,
     plus: <path d="M8 3v10M3 8h10" />,
     more: <><circle cx="3.5" cy="8" r=".8" /><circle cx="8" cy="8" r=".8" /><circle cx="12.5" cy="8" r=".8" /></>,
-    gear: <><circle cx="8" cy="8" r="2.2" /><path d="M8 2.5v1.4M8 12.1v1.4M2.5 8h1.4M12.1 8h1.4M4.1 4.1l1 1M10.9 10.9l1 1M11.9 4.1l-1 1M5.1 10.9l-1 1" /></>,
+    gear: <><circle cx="8" cy="8" r="2.2" /><path d="M8 1.8v1.3M8 12.9v1.3M1.8 8h1.3M12.9 8h1.3M3.6 3.6l.9.9M11.5 11.5l.9.9M12.4 3.6l-.9.9M4.5 11.5l-.9.9" /><circle cx="8" cy="8" r="4.6" /></>,
     bell: <><path d="M4 11h8l-1-2V6a3 3 0 0 0-6 0v3Z" /><path d="M6.5 13a1.5 1.5 0 0 0 3 0" /></>,
     file: <><path d="M5 2h4l3 3v9H5Z" /><path d="M9 2v3h3" /></>,
     send: <path d="M3 8l10-5-3 10-2-4-5-1Z" />,
@@ -160,22 +160,53 @@ export function StatusBar({ connection }: { connection: string }): React.ReactNo
   return <footer className="statusbar"><span>{connection === 'open' ? '就绪' : connection === 'reconnecting' ? '重连中' : '连接中'}</span><span>V4.1 Flash · 读/写权限按策略</span></footer>
 }
 
+function renderMessageText(text: string): React.ReactNode {
+  const fenced = text.split(/(```[\s\S]*?```)/g)
+  return fenced.map((part, index) => {
+    if (part.startsWith('```')) {
+      const code = part.replace(/^```[^\n]*\n?/, '').replace(/```$/, '')
+      return <pre key={index}><code>{code}</code></pre>
+    }
+    return part.split(/\n{2,}/).filter(Boolean).map((paragraph, pIndex) => (
+      <p key={`${index}-${pIndex}`}>{paragraph.split(/(`[^`]+`)/g).map((piece, cIndex) => piece.startsWith('`') && piece.endsWith('`') ? <code key={cIndex}>{piece.slice(1, -1)}</code> : <span key={cIndex}>{piece}</span>)}</p>
+    ))
+  })
+}
+
 export function MessageItem({ message, onCardAction, readOnly = false }: { message: Message; onCardAction: (card: Card, action: string, payload: Record<string, unknown>) => Promise<void>; readOnly?: boolean }): React.ReactNode {
   const [streaming, setStreaming] = useState(false)
-  const [copied, setCopied] = useState(false)
-  const copy = async (): Promise<void> => { try { await navigator.clipboard.writeText(message.text); setCopied(true); window.setTimeout(() => setCopied(false), 1200) } catch { setCopied(false) } }
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle')
+  const copy = async (): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(message.text)
+      setCopyState('copied')
+    } catch {
+      try {
+        const area = document.createElement('textarea')
+        area.value = message.text
+        area.style.position = 'fixed'; area.style.opacity = '0'
+        document.body.appendChild(area); area.select()
+        const ok = document.execCommand('copy')
+        document.body.removeChild(area)
+        setCopyState(ok ? 'copied' : 'error')
+      } catch { setCopyState('error') }
+    }
+    window.setTimeout(() => setCopyState('idle'), 1500)
+  }
   useEffect(() => {
     setStreaming(message.status === 'streaming')
   }, [message.status])
   const isUser = message.role === 'user'
-  const category = message.category ? (CATEGORY_LABEL[message.category] ?? '信息') : ''
+  const rawCategory = message.category === 'delivery' ? 'progress' : message.category
+  const categoryKey = isUser ? '' : (rawCategory && CATEGORY_LABEL[rawCategory] ? rawCategory : 'consultation')
+  const category = categoryKey ? CATEGORY_LABEL[categoryKey] : ''
   return (
     <article className={`msg ${isUser ? 'from-user' : 'from-agent'}`} data-message-id={message.id} data-session-id={message.sessionId}>
       <span className="msg-avatar">{isUser ? '你' : '墨'}</span>
       <div className="msg-body">
-        <div className="msg-meta"><b>{isUser ? '你' : '司墨'}</b><span>·</span>{category && <><span className="tag">{category}</span><span>·</span></>}<span>{formatTime(message.at)}</span>{message.status === 'failed' && <span className="badge danger">失败</span>}{message.text.trim() && <button type="button" className="msg-copy" onClick={() => void copy()} aria-label="复制消息">{copied ? '已复制' : '复制'}</button>}</div>
+        <div className="msg-meta"><b>{isUser ? '你' : '司墨'}</b><span>·</span>{category && <><span className={`tag msg-tag msg-tag-${categoryKey}`}>{category}</span><span>·</span></>}<span>{formatTime(message.at)}</span>{message.status === 'failed' && <span className="badge danger">失败</span>}{message.text.trim() && <button type="button" className="msg-copy" onClick={() => void copy()} aria-label="复制消息">{copyState === 'copied' ? '已复制' : copyState === 'error' ? '复制失败' : '复制'}</button>}</div>
         <div className="msg-text">
-          {message.text.trim() ? <p>{message.text}{streaming && <span className="stream-caret" aria-hidden="true" />}</p> : streaming ? <p><span className="stream-caret" aria-hidden="true" /></p> : null}
+          {message.text.trim() ? <>{renderMessageText(message.text)}{streaming && <p><span className="stream-caret" aria-hidden="true" /></p>}</> : streaming ? <p><span className="stream-caret" aria-hidden="true" /></p> : null}
           {(message.cards ?? []).map((card) => <CardBlock key={card.id} card={card} onSubmit={onCardAction} readOnly={readOnly} />)}
         </div>
       </div>
@@ -553,13 +584,16 @@ export function ErrorState({ title = '加载失败', description, onRetry }: { t
   return <div className="state-block state-error" role="alert"><span className="state-mark" aria-hidden="true" /><b>{title}</b>{description && <p>{description}</p>}{onRetry && <button className="btn sm" type="button" onClick={onRetry}>重试</button>}</div>
 }
 
-export function DeliverableItem({ artifact, onOpen }: { artifact: Artifact; onOpen?: () => void }): React.ReactNode {
+export function DeliverableItem({ artifact, onOpen, downloadUrl }: { artifact: Artifact; onOpen?: () => void; downloadUrl?: string }): React.ReactNode {
   return (
-    <button type="button" className="exec-row deliverable-row" onClick={onOpen} title={onOpen ? '打开交付物' : undefined}>
-      <span className="deliverable-icon"><Icon name="file" size={14} /></span>
-      <span className="exec-title" title={artifact.name}>{artifact.name}</span>
-      <span className="exec-time">{formatTime(artifact.createdAt)}</span>
-    </button>
+    <div className="deliverable-line">
+      <button type="button" className="exec-row deliverable-row" onClick={onOpen} title={onOpen ? '打开交付物' : undefined}>
+        <span className="deliverable-icon"><Icon name="file" size={14} /></span>
+        <span className="exec-title" title={artifact.name}>{artifact.name}</span>
+        <span className="exec-time">{formatTime(artifact.createdAt)}</span>
+      </button>
+      {downloadUrl && <a className="download-link" href={downloadUrl} download aria-label={`下载 ${artifact.name}`}>下载</a>}
+    </div>
   )
 }
 
@@ -633,7 +667,7 @@ export function OverviewPanel({ session, projection, loading, error = '', onRetr
           <section className="insp-block">
             <SectionHeader title="交付物" meta={deliverables.length} />
             {deliverables.length === 0 ? <EmptyState title="暂无交付物" description="报告、文档、表格或文件会出现在这里。" /> : (
-              <List>{deliverables.slice(0, 8).map((artifact) => <DeliverableItem key={artifact.id} artifact={{ id: artifact.id, name: artifact.name, createdAt: artifact.createdAt ?? 0, mime: 'application/octet-stream', size: 0 }} onOpen={onArtifactOpen ? () => onArtifactOpen(artifact.id) : undefined} />)}</List>
+              <List>{deliverables.slice(0, 8).map((artifact) => <DeliverableItem key={artifact.id} artifact={{ id: artifact.id, name: artifact.name, createdAt: artifact.createdAt ?? 0, mime: 'application/octet-stream', size: 0 }} onOpen={onArtifactOpen ? () => onArtifactOpen(artifact.id) : undefined} downloadUrl={artifact.downloadUrl} />)}</List>
             )}
           </section>
         </>}

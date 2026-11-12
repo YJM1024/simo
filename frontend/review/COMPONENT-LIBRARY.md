@@ -131,3 +131,25 @@ src/components/
 - 会话分隔、TimelineGroups 祖先 opacity .55、组 gap6、分类 tooltip；白卡消息保留。
 - 截图：`fe007-{1600,1280,1180,375}.png`。
 - 未实测：切会话清链、加载失败/413、空上级、archived 上级、逐级>2层。
+
+## 反馈：消息间距/时间轴居中（build mwdqrape-bp0ko）
+- 根因：每条消息外层 wrapper 使 `.msg:last-child` 对所有消息生效，margin 被清 0；删除该规则。
+- 1600/1280/1180 gap=9/margin9；375 gap=8。
+- `.tlg-track { margin-block:auto }`：1600/1280/1180 trackCenter=scrollCenter=484.06，delta0；375 timeline隐藏。
+- 右栏任务 5：已完成3/3、进行中2/2、未开始0/0，无隐藏。
+- 截图：`fe-gapfix-{1600,1280,1180,375}.png`。
+
+## 组件 parity 修复（build mwdre4c5-3o0m0）
+- Timeline 1600 x358 w44，gap28；1280/1180 x260/248 gap8，insideCol；375 hidden。
+- 375 card x39 w297、msg padding10×12、CardBlock padding12、Composer 同宽297；1600 未变 card680/msg12×14/card14×16。
+- Topbar gear 图标恢复（非 sun）。
+- 已批准豁免：context 无操作、SessionSpec status/rev、Composer左14、数据文案差异。
+- 截图：`fe-parity-{1600,1280,1180,375}.png`。
+
+## Wave1 缺口（build mwdrvjtb-ni7pe）
+- 复制失败显示「复制失败」，不静默；headless 权限失败已验证。
+- 交付物 preview/download：click -> `/api/artifacts/art-weekly-report/content`；preview/download 200。
+- 最近活动按 spec-projection.updatedAt 排序。
+- 会话位置恢复单页 1600：研究员滚到300，切主会话再回，scrollTop=300。
+- check-sdd：PASS（11 specs/93 A/32 components）。
+- 未验证：fenced code 真实样本渲染（无 live 样本）、复制成功权限、工作台 loading/error 三态。

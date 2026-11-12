@@ -58,6 +58,7 @@ export default function App(): React.ReactNode {
   const [ancestorLoading, setAncestorLoading] = useState(false)
   const [ancestorError, setAncestorError] = useState('')
   const [emptyAncestorIds, setEmptyAncestorIds] = useState<Set<string>>(new Set())
+  const [activityAt, setActivityAt] = useState<Record<string, number>>({})
   const prependAnchorRef = useRef<{ scrollTop: number; scrollHeight: number; id: string; offset: number } | null>(null)
   const [projection, setProjection] = useState<import('./types').SessionSpecProjection | null>(null)
   const [userDeliverables, setUserDeliverables] = useState<import('./api').UserDeliverable[]>([])
@@ -178,9 +179,12 @@ export default function App(): React.ReactNode {
 
   useLayoutEffect(() => {
     if (restoreScrollRef.current !== null) {
+      if (loadingMessages || messages.length === 0) return
       const target = restoreScrollRef.current
       restoreScrollRef.current = null
-      requestAnimationFrame(() => { const scroller = scrollerRef.current; if (scroller) scroller.scrollTop = target })
+      const apply = (): void => { const scroller = scrollerRef.current; if (scroller) scroller.scrollTop = target }
+      apply()
+      requestAnimationFrame(apply)
       return
     }
     if (stickToBottomRef.current) scrollToBottom()
@@ -444,6 +448,14 @@ export default function App(): React.ReactNode {
     }
     return null
   }, [activeMeta, flatAll, visitedAncestorIds])
+  useEffect(() => {
+    let cancelled = false
+    void Promise.all(flatAll.map(async (session) => {
+      try { const data = await getSpecProjection(session.id, 1); return [session.id, data.updatedAt] as const } catch { return [session.id, session.createdAt] as const }
+    })).then((entries) => { if (!cancelled) setActivityAt(Object.fromEntries(entries)) })
+    return () => { cancelled = true }
+  }, [flatAll])
+
   const ancestorChain = useMemo(() => {
     const ids: string[] = []
     let cursor = activeMeta
@@ -456,8 +468,14 @@ export default function App(): React.ReactNode {
     return ids.filter((id) => loadedAncestorIds.has(id))
   }, [activeMeta, flatAll, loadedAncestorIds])
 
+  const switchSession = useCallback((sessionId: string): void => {
+    const scroller = scrollerRef.current
+    if (scroller) scrollPositionsRef.current.set(activeIdRef.current, scroller.scrollTop)
+    setActiveId(sessionId)
+  }, [])
+
   const chartBuckets = buckets.filter((bucket) => bucket.messages > 0 || bucket.tokens > 0).slice(-10)
-  const recentSessions = [...flatSessions].sort((a, b) => b.createdAt - a.createdAt).slice(0, 6)
+  const recentSessions = [...flatSessions].sort((a, b) => (activityAt[b.id] ?? b.createdAt) - (activityAt[a.id] ?? a.createdAt)).slice(0, 6)
   const visibleWorkbenchArtifacts = userDeliverables
   const combinedMessages = useMemo(() => {
     const seen = new Set<string>()
@@ -480,7 +498,7 @@ export default function App(): React.ReactNode {
     <div className="app">
       <aside className="sidebar">
         <div className="brand"><span className="mark" /><b>司墨</b><span>v4.1</span></div>
-        <Sidebar sessions={sessions} activeId={activeId} onSelect={setActiveId} onRename={rename} onCreate={() => void createSession()} onRefresh={() => void loadSessions()} connection={connection} loading={sessionsLoading} error={sessionsError} searchQuery={searchQuery} onSearch={setSearchQuery} searching={searching} searchIds={searchIds} onArchive={(id, archived) => void toggleArchive(id, archived)} usageTotal={statsTotals?.tokens ?? null} quotaPct={quotaPct} sessionCount={sessionCount || flatSessions.length} messageCount={statsTotals?.messages ?? null} statsError={statsError} />
+        <Sidebar sessions={sessions} activeId={activeId} onSelect={switchSession} onRename={rename} onCreate={() => void createSession()} onRefresh={() => void loadSessions()} connection={connection} loading={sessionsLoading} error={sessionsError} searchQuery={searchQuery} onSearch={setSearchQuery} searching={searching} searchIds={searchIds} onArchive={(id, archived) => void toggleArchive(id, archived)} usageTotal={statsTotals?.tokens ?? null} quotaPct={quotaPct} sessionCount={sessionCount || flatSessions.length} messageCount={statsTotals?.messages ?? null} statsError={statsError} />
       </aside>
       <div className="main">
         <header className="topbar">
@@ -554,7 +572,7 @@ export default function App(): React.ReactNode {
               {deliverablesLoading && <LoadingState label="交付物加载中…" />}
               {!deliverablesLoading && deliverablesError && <ErrorState title="交付物加载失败" description={deliverablesError} onRetry={() => { setDeliverablesLoading(true); setDeliverablesError(''); void getDeliverables().then((data) => setUserDeliverables(data.deliverables ?? [])).catch((err: unknown) => setDeliverablesError(err instanceof Error ? err.message : '交付物加载失败')).finally(() => setDeliverablesLoading(false)) }} />}
               {!deliverablesLoading && !deliverablesError && visibleWorkbenchArtifacts.length === 0 && <EmptyState title="暂无交付物" description="报告、文档、表格或文件会出现在这里。" />}
-              {!deliverablesLoading && !deliverablesError && visibleWorkbenchArtifacts.length > 0 && <div className="list">{visibleWorkbenchArtifacts.map((artifact) => <button className="row" type="button" key={artifact.id} onClick={() => void openArtifact(artifact.id)}><span className="kind">文件</span><span className="title">{artifact.name}</span><span className="time">{formatTime(artifact.createdAt ?? 0)}</span></button>)}</div>}
+              {!deliverablesLoading && !deliverablesError && visibleWorkbenchArtifacts.length > 0 && <div className="list">{visibleWorkbenchArtifacts.map((artifact) => <div className="deliverable-line" key={artifact.id}><button className="row" type="button" onClick={() => void openArtifact(artifact.id)}><span className="kind">文件</span><span className="title">{artifact.name}</span><span className="time">{formatTime(artifact.createdAt ?? 0)}</span></button>{artifact.downloadUrl && <a className="download-link" href={artifact.downloadUrl} download aria-label={`下载 ${artifact.name}`}>下载</a>}</div>)}</div>}
             </div></div>
           </section>
         )}

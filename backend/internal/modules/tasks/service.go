@@ -297,6 +297,7 @@ func (m *Module) Create(ctx context.Context, input coretask.NewTask) (coretask.T
 	if err := m.saveTask(ctx, task); err != nil {
 		return coretask.Task{}, fmt.Errorf("创建任务失败: %w", err)
 	}
+	m.ensureTaskDirs(ctx, task.SessionID, task.ID)
 	m.emit(ctx, eventlog.TypeTaskCreated, taskEvent(task, "", ""))
 	// 立即补一条 queued 的 task.updated，保证前端/WSE 在 task.created 后能拿到 phases/progress。
 	m.emit(ctx, eventlog.TypeTaskUpdated, taskEvent(task, "", ""))
@@ -717,17 +718,18 @@ func (m *Module) writeArtifact(task coretask.Task) {
 }
 
 func (m *Module) writeArtifactReport(task coretask.Task, report string) {
-	if m.sandbox == nil || strings.TrimSpace(m.sandbox.Artifacts) == "" {
+	if m.sandbox == nil || strings.TrimSpace(m.sandbox.Workspace) == "" {
 		return
 	}
 	name := "report-attempt-" + strconv.Itoa(task.Attempt) + ".md"
-	rel := filepath.ToSlash(filepath.Join(task.ID, name))
-	path, err := m.sandbox.ResolveArtifact(rel)
+	segments := m.sessionWorkspaceSegments(context.Background(), task.SessionID)
+	dir, err := m.sandbox.TaskArea(segments, task.ID, "_internal")
 	if err != nil {
 		m.log.Warn("产物路径非法", "err", err, "taskId", task.ID)
 		return
 	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+	path := filepath.Join(dir, name)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		m.log.Warn("创建产物目录失败", "err", err)
 		return
 	}
@@ -740,19 +742,28 @@ func (m *Module) writeArtifactReport(task coretask.Task, report string) {
 		m.log.Warn("写产物失败", "err", err, "taskId", task.ID)
 		return
 	}
+	workspaceRel, err := m.workspaceRelPath(context.Background(), path)
+	if err != nil {
+		m.log.Warn("产物相对路径失败", "err", err, "taskId", task.ID)
+		return
+	}
 	artifact := coretask.Artifact{
-		ID:           "art-" + randomHex(8),
-		TaskID:       task.ID,
-		Name:         name,
-		Mime:         "text/markdown",
-		Size:         int64(len(content)),
-		CreatedAt:    time.Now().UnixMilli(),
-		DeliveryKind: coretask.ArtifactDeliveryKindInternal,
+		ID:            "art-" + randomHex(8),
+		TaskID:        task.ID,
+		Name:          name,
+		Mime:          "text/markdown",
+		Size:          int64(len(content)),
+		CreatedAt:     time.Now().UnixMilli(),
+		DeliveryKind:  coretask.ArtifactDeliveryKindInternal,
+		StorageScope:  coretask.ArtifactStorageWorkspace,
+		WorkspacePath: workspaceRel,
 	}
 	if err := m.store.Write(context.Background(), func(tx *sql.Tx) error {
 		_, err := tx.ExecContext(context.Background(), `INSERT INTO task_artifacts(
-			id, task_id, name, rel_path, mime, size, created_at, delivery_kind) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-			artifact.ID, artifact.TaskID, artifact.Name, rel, artifact.Mime, artifact.Size, artifact.CreatedAt, artifact.DeliveryKind)
+			id, task_id, name, rel_path, mime, size, created_at, delivery_kind, storage_scope, workspace_rel_path)
+			VALUES (?, ?, ?, '', ?, ?, ?, ?, 'workspace', ?)`,
+			artifact.ID, artifact.TaskID, artifact.Name, artifact.Mime, artifact.Size,
+			artifact.CreatedAt, artifact.DeliveryKind, workspaceRel)
 		return err
 	}); err != nil {
 		m.log.Warn("登记产物失败", "err", err)
@@ -903,12 +914,16 @@ func isWorkspaceOutputPath(rel string) bool {
 		!strings.HasPrefix(normalized, "work/")
 }
 
-func (m *Module) artifactPath(artifact coretask.Artifact, relPath string) (string, error) {
+func (m *Module) artifactPath(artifact coretask.Artifact, relPath string, allowInternal bool) (string, error) {
 	if m.sandbox == nil {
 		return "", workspace.ErrEscape
 	}
 	if artifact.StorageScope == coretask.ArtifactStorageWorkspace {
-		if !artifact.UserDelivery || !isWorkspaceOutputPath(artifact.WorkspacePath) {
+		if !artifact.UserDelivery {
+			if !allowInternal || !isWorkspaceInternalPath(artifact.WorkspacePath) {
+				return "", ErrArtifactNotFound
+			}
+		} else if !isWorkspaceOutputPath(artifact.WorkspacePath) {
 			return "", ErrArtifactNotFound
 		}
 		return m.sandbox.ResolveWorkspace(artifact.WorkspacePath)
@@ -916,6 +931,14 @@ func (m *Module) artifactPath(artifact coretask.Artifact, relPath string) (strin
 	// 旧 artifacts 根作为兼容读取：内部过程文件仍可由原有 file tab 打开；
 	// 新 workspace 根只允许 output/user_delivery。
 	return m.sandbox.ResolveArtifact(relPath)
+}
+
+func isWorkspaceInternalPath(rel string) bool {
+	normalized := strings.ToLower(filepath.ToSlash(rel))
+	return strings.HasPrefix(normalized, "main/") &&
+		strings.Contains(normalized, "/tasks/") &&
+		strings.Contains(normalized, "/_internal/") &&
+		!strings.HasPrefix(normalized, "work/")
 }
 
 func maxInt(a, b int) int {

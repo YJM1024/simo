@@ -225,6 +225,8 @@
 
 ## 5. 发布（Release）
 
+> 执行清单：[`RELEASE-CHECKLIST.md`](RELEASE-CHECKLIST.md)；组件 parity 清单：[`COMPONENT-PARITY-GATE.md`](COMPONENT-PARITY-GATE.md)。
+
 ### 触发
 
 - 一批变更通过 Verify，准备出包/上线（含 8787/容器/便携包）；
@@ -234,6 +236,7 @@
 
 - Release checklist：范围/版本/变更说明/已知问题；
 - 全量验证证据：tsc/build/test/evals/截图/健康检查；
+- **组件级 parity 图**：`component-parity-1600.png`、`component-parity-375.png` + `component-parity.md`（基线=冻结原型，对比对象=当前 build；允许像素微差，不允许组件错位/风格漂移）；
 - 迁移备份/回滚计划；包/镜像/SHA256；
 - 发布后 smoke 与监控记录。
 
@@ -243,6 +246,7 @@
 |---|---|---|
 | Release Ready | Blocking | 范围/版本/说明/已知问题齐全 |
 | Verify | Blocking | 全量门禁通过，无 blocking 缺陷 |
+| **Component Parity** | **Blocking** | **1600/375 parity 图 + 报告齐全；对照冻结原型逐组件对齐；无错位/风格漂移；像素微差已记录；验收 Agent 签字** |
 | Package | Blocking | 包可复现、hash 记录、无密钥 |
 | Smoke | Blocking | 目标环境启动/健康/关键路径通过 |
 | Rollback Ready | Blocking | 旧版/备份可回退 |
@@ -256,7 +260,8 @@ Release owner/Lead、模块 owner、测试/验收、运维（部署/监控）。
 
 - 目标环境真实路径走通；健康检查/关键 API/UI 通过；
 - 包 hash/版本/说明一致；无密钥/敏感文件；
-- 回滚演练或回滚命令可用。
+- 回滚演练或回滚命令可用；
+- **组件 parity**：`component-parity-1600.png`/`375.png` 与 `component-parity.md` 齐全；冻结原型 vs 当前 build 逐组件对齐；允许像素微差（记录原因/范围），不允许组件错位/风格漂移；**验收 Agent 签字**；未签不得上线。
 
 ### 升级 / 降级
 
@@ -266,7 +271,8 @@ Release owner/Lead、模块 owner、测试/验收、运维（部署/监控）。
 ### 反模式
 
 - “本地过了”直接上线；无回滚包；发布说明只写“优化”；
-- 带密钥/临时文件打包；发布后不看监控。
+- 带密钥/临时文件打包；发布后不看监控；
+- **无 component parity 图/报告就上线，或用“整体看起来差不多”代替逐组件对齐**；把像素微差当风格漂移放行。
 
 ---
 

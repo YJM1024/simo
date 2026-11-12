@@ -135,7 +135,7 @@ func TestM12DocxAndXlsxHelpers(t *testing.T) {
 	if !exts["docx"] || !exts["xlsx"] || !exts["pptx"] || !exts["png"] {
 		t.Fatalf("Office 扩展名 = %v (%+v)", exts, artifacts)
 	}
-	// Office/图片下载：正确 MIME + attachment（不再 415）。
+	// Office/图片预览：正确 MIME + inline（下载语义由 ?download=1 验证）。
 	for _, artifact := range artifacts {
 		name, _ := artifact["name"].(string)
 		lowerName := strings.ToLower(name)
@@ -154,12 +154,8 @@ func TestM12DocxAndXlsxHelpers(t *testing.T) {
 		}
 		contentType := response.Header.Get("Content-Type")
 		disposition := response.Header.Get("Content-Disposition")
-		if strings.HasSuffix(strings.ToLower(name), ".png") {
-			if !strings.HasPrefix(contentType, "image/png") || !strings.HasPrefix(disposition, "inline") {
-				t.Fatalf("PNG header = %q %q", contentType, disposition)
-			}
-		} else if !strings.HasPrefix(disposition, "attachment") ||
-			!strings.Contains(contentType, "openxmlformats") {
+		if !strings.HasPrefix(disposition, "inline") ||
+			!strings.Contains(contentType, "openxmlformats") && !strings.HasPrefix(contentType, "image/png") {
 			t.Fatalf("Office header = %q %q (%s)", contentType, disposition, name)
 		}
 	}

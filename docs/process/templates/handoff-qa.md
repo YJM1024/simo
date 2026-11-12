@@ -27,6 +27,7 @@
 | 测试结论（通过/失败/未跑） | |
 | 失败清单/豁免 | |
 | 截图/证据路径 | |
+| **组件 parity** | `component-parity.md`、`component-parity-1600.png`、`component-parity-375.png`；基线=冻结原型；当前 build；逐组件对齐结果 |
 | 迁移/备份/回滚演练 | |
 | 风险/已知问题 | |
 | Go/No-Go | |

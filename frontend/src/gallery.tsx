@@ -32,6 +32,7 @@ const sampleMessages: Message[] = [
   { id: 'm1', sessionId: 'main', role: 'user', text: '先做一份数据核查。', at: Date.now() - 90000, status: 'done' },
   { id: 'm2', sessionId: 'main', role: 'agent', text: '可以。先确认三件事，方案会按你的选择定。', at: Date.now() - 60000, status: 'done', agentId: 'simo', category: 'clarification' },
 ]
+const codeMessage: Message = { id: 'code-message', sessionId: 'main', role: 'agent', text: '示例代码：\n```ts\nconst value: string = "<script>alert(1)</script>"\nconsole.log(value)\nconst veryLongLine = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"\nconsole.log(veryLongLine)\n```\n行内 `inlineCode` 与安全文本 <b>不会变成 HTML</b>。', at: Date.now() - 30000, status: 'done', agentId: 'simo', category: 'progress' }
 const sampleCard: Card = {
   id: 'card-gallery',
   sessionId: 'main',
@@ -123,6 +124,10 @@ export default function ComponentGallery(): React.ReactNode {
         <Timeline messages={sampleMessages} active={1} onJump={() => undefined} />
         <p className="insp-text">时间轴 44px gutter、20×4、gap2；消息组件由 MessageItem 组合。</p>
       </Section>
+      <Section title="Message categories 四类">
+        {(['requirement','clarification','progress','consultation'] as const).map((category, index) => <MessageItem key={category} message={{ id: `cat-${category}`, sessionId: 'main', role: 'agent', text: `分类样例：${category}`, at: Date.now() - index * 1000, status: 'done', agentId: 'simo', category }} onCardAction={async () => undefined} />)}
+      </Section>
+      <Section title="Message Markdown code"><MessageItem message={codeMessage} onCardAction={async () => undefined} /></Section>
       <Section title="Composer"><Composer disabled={false} streaming={false} onSend={async () => undefined} onStop={() => undefined} sendError="" /></Section>
       <Section title="WorkbenchChart"><WorkbenchChart buckets={[{ label: '2026-11-10', messages: 2, tokens: 0, tasks: 0, start: 0 }, { label: '2026-11-11', messages: 5, tokens: 0, tasks: 0, start: 0 }, { label: '2026-11-12', messages: 9, tokens: 0, tasks: 0, start: 0 }]} /></Section>
       <Section title="CardBlock"><CardBlock card={sampleCard} onSubmit={async () => undefined} /></Section>

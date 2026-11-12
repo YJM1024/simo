@@ -385,6 +385,7 @@ a { color: inherit; text-decoration: none; }
   .gallery { padding: var(--sp-20) var(--sp-16) var(--space-60); }
 }
 @media (max-width: 30em) {
+  .conversation-panel .msg { margin-bottom: 8px; }
   .topbar { gap: var(--space-6); padding: 0 var(--sp-8); }
   .crumb { max-width: var(--size-86); font-size: var(--font-10); }
   .nav button { height: var(--size-26); min-width: var(--size-48); padding: 0 var(--space-6); font-size: var(--font-12); }
@@ -818,7 +819,7 @@ body { overflow: hidden; }
 /* COMP-conversation-panel 仕様：灰底 stage + 白卡独立居中 + 时间轴绝对 gutter */
 .chat-body { background: var(--paper); }
 .conversation-panel { position: relative; width: min(var(--conversation-card-w), calc(100% - 2 * var(--conversation-gutter-x))); max-width: none; margin: var(--sp-12) auto var(--sp-16); overflow: visible; }
-.conversation-panel > .timeline { position: absolute; left: calc(-1 * var(--gutter-timeline) + 12px); top: 0; bottom: 0; width: var(--gutter-timeline); height: auto; }
+.conversation-panel > .timeline { position: absolute; left: calc(-1 * (var(--gutter-timeline) + var(--sp-8))); top: 0; bottom: 0; width: var(--gutter-timeline); height: auto; }
 .conversation-scroll { border-radius: inherit; }
 @media (max-width: 93.75em) { .conversation-panel > .timeline { display: none; } }
 @media (max-width: 30em) {
@@ -845,7 +846,7 @@ body { overflow: hidden; }
   position: absolute;
   top: 0;
   bottom: 0;
-  left: calc(-1 * var(--gutter-timeline) + 12px);
+  left: calc(-1 * (var(--gutter-timeline) + var(--sp-8)));
   width: var(--gutter-timeline);
   height: auto;
 }
@@ -859,7 +860,6 @@ body { overflow: hidden; }
   border-radius: var(--r-10);
   box-shadow: none;
 }
-.conversation-panel .msg:last-child { margin-bottom: 0; }
 .conversation-panel .msg-avatar { margin-top: 0; }
 .conversation-panel .msg-text { max-width: none; }
 .conversation-panel .card-block {
@@ -913,6 +913,7 @@ body { overflow: hidden; }
 }
 
 .timeline-groups { width: var(--gutter-timeline); }
+.timeline-groups .tlg-track { margin-block: auto; }
 .tlg-track { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
 .tlg-session { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
 .tlg-session + .tlg-session { margin-top: 6px; }
@@ -925,3 +926,40 @@ body { overflow: hidden; }
 .message-top { display: flex; justify-content: center; padding: 0 0 var(--sp-8); }
 .session-divider { display: flex; align-items: center; gap: var(--sp-8); margin: var(--sp-8) 0 var(--sp-8); color: var(--faint); font-size: var(--font-10); }
 .session-divider::before, .session-divider::after { content: ""; height: 1px; flex: 1; background: var(--line-soft); }
+@media (max-width: 30em) { .conversation-panel .msg { margin-bottom: 8px; } }
+
+/* 用户反馈：左下头像字形居中 + Composer 左内边距 14 */
+.user .avatar { display: grid; place-items: center; line-height: 1; text-align: center; }
+.composer textarea { padding-left: var(--space-14); }
+
+.msg-meta { flex-wrap: nowrap; white-space: nowrap; min-width: 0; }
+.msg-meta .tag { flex: none; }
+
+@media (max-width: 85.375em) and (min-width: 56.26em) { .conversation-panel > .timeline { left: calc(-1 * var(--gutter-timeline) + 12px); } }
+@media (max-width: 30em) {
+  .conversation-panel .chat-inner { padding: var(--sp-12) 31px; }
+  .conversation-panel .msg { padding: 10px 12px; }
+  .conversation-panel .card-block { padding: var(--sp-12); }
+}
+@media (max-width: 30em) { .composer { width: calc(100% - 78px); margin-inline: auto; } }
+@media (max-width: 30em) {
+  .conversation-panel .chat-inner { padding: var(--sp-12) 0; }
+  .conversation-panel .msg { padding: 10px 12px; }
+  .conversation-panel .card-block { padding: var(--sp-12); }
+  .composer { width: calc(100% - var(--sp-16)); margin-inline: auto; }
+}
+@media (max-width: 30em) { .conversation-panel .card-block { margin-left: 2px; } }
+
+.deliverable-line { display: flex; align-items: center; gap: var(--sp-4); }
+.deliverable-line .deliverable-row { flex: 1; min-width: 0; }
+.download-link { flex: none; padding: 2px var(--sp-4); font-size: var(--font-10); color: var(--accent); text-decoration: none; }
+.download-link:hover { text-decoration: underline; }
+
+.msg-tag-requirement { background: var(--msg-cat-requirement-bg); color: var(--msg-cat-requirement-ink); }
+.msg-tag-clarification { background: var(--msg-cat-clarification-bg); color: var(--msg-cat-clarification-ink); }
+.msg-tag-progress { background: var(--msg-cat-progress-bg); color: var(--msg-cat-progress-ink); }
+.msg-tag-consultation { background: var(--msg-cat-consultation-bg); color: var(--msg-cat-consultation-ink); }
+.timeline-groups .tl-bar.is-user { background: var(--timeline-user); opacity: 1; }
+.timeline-groups .tl-bar.is-agent { background: var(--timeline-agent); opacity: 1; }
+.timeline-groups .tl-bar.is-current { background: var(--timeline-selected); width: var(--size-24); opacity: 1; }
+.timeline-groups .tl-bar:hover { width: var(--size-24); }

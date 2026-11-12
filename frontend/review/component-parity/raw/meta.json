@@ -1,0 +1,1198 @@
+[
+ {
+  "width": 1600,
+  "side": "expected",
+  "file": "1600-expected.png",
+  "viewport": {
+   "w": 1600,
+   "h": 1000,
+   "dpr": 2
+  },
+  "scroll": {
+   "windowY": 0,
+   "chat": 0,
+   "chatH": 849,
+   "clientH": 684
+  },
+  "doc": {
+   "scrollW": 1600,
+   "scrollH": 1000,
+   "bodyW": 1600,
+   "bodyH": 1000
+  },
+  "comps": {
+   "sidebar": {
+    "selector": ".sidebar",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 240,
+     "h": 976
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "240px",
+     "height": "976px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": "司墨v4.1\n    S主工作区本地环境+\n    ⌕⌘K\n    \n      会话4显示归档↻＋\n      主会话12\n      A 股行情分析\n   "
+   },
+   "topbar": {
+    "selector": ".topbar",
+    "rect": {
+     "x": 240,
+     "y": 0,
+     "w": 1360,
+     "h": 48
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "1360px",
+     "height": "48px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px 16px",
+     "gap": "12px",
+     "opacity": "1"
+    },
+    "text": "司墨 / 主会话\n      对话工作台\n      已连接⚙Y"
+   },
+   "context": {
+    "selector": ".context",
+    "rect": {
+     "x": 240,
+     "y": 48,
+     "w": 1360,
+     "h": 42
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "1360px",
+     "height": "42px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px 16px",
+     "gap": "10px",
+     "opacity": "1"
+    },
+    "text": "主会话主窗口 · 聚合视图\n        仅本会话含子会话\n        重命名置顶归档"
+   },
+   "chat-tabs": {
+    "selector": ".chat-tabs",
+    "rect": {
+     "x": 240,
+     "y": 90,
+     "w": 1060,
+     "h": 51
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "1060px",
+     "height": "51px",
+     "fontSize": "11px",
+     "lineHeight": "18.15px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(104, 107, 115)",
+     "padding": "8px 0px 12px 190px",
+     "gap": "14px",
+     "opacity": "1"
+    },
+    "text": "对话"
+   },
+   "message-user": {
+    "selector": ".msg.from-user",
+    "rect": {
+     "x": 430,
+     "y": 157,
+     "w": 680,
+     "h": 69.09
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "680px",
+     "height": "69.0938px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "10px",
+     "background": "rgb(255, 255, 255)",
+     "border": "1px solid rgb(230, 228, 222)",
+     "color": "rgb(22, 23, 27)",
+     "padding": "12px 14px",
+     "gap": "12px",
+     "opacity": "1"
+    },
+    "text": "你你·主会话·10:24我想看一下最近 A 股大盘的走势，先不要联网，给我一个分析方案。"
+   },
+   "message-agent": {
+    "selector": ".msg.from-agent",
+    "rect": {
+     "x": 430,
+     "y": 235.09,
+     "w": 680,
+     "h": 177.47
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "680px",
+     "height": "177.469px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "10px",
+     "background": "rgb(255, 255, 255)",
+     "border": "1px solid rgb(230, 228, 222)",
+     "color": "rgb(22, 23, 27)",
+     "padding": "12px 14px",
+     "gap": "12px",
+     "opacity": "1"
+    },
+    "text": "墨司墨·需求澄清·10:25\n                  可以。先确认三件事，方案会按你的选择定：\n                  \n       "
+   },
+   "card-block": {
+    "selector": ".card-block",
+    "rect": {
+     "x": 481,
+     "y": 750.22,
+     "w": 614,
+     "h": 183.48
+    },
+    "style": {
+     "display": "block",
+     "position": "static",
+     "width": "614px",
+     "height": "183.484px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "10px",
+     "background": "rgb(255, 255, 255)",
+     "border": "1px solid rgb(230, 228, 222)",
+     "color": "rgb(22, 23, 27)",
+     "padding": "14px 16px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": "选择数据来源进行中 · v1\n                    workspace 当前有 1 个 csv 文件；也可以改用公开行情，但需要联网批准。\n "
+   },
+   "timeline": {
+    "selector": ".timeline",
+    "rect": {
+     "x": 358,
+     "y": 141,
+     "w": 44,
+     "h": 684.13
+    },
+    "style": {
+     "display": "flex",
+     "position": "absolute",
+     "width": "44px",
+     "height": "684.125px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgba(0, 0, 0, 0)",
+     "border": "0px none rgb(22, 23, 27)",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": "11/12"
+   },
+   "composer": {
+    "selector": ".composer",
+    "rect": {
+     "x": 430,
+     "y": 833.13,
+     "w": 680,
+     "h": 128.88
+    },
+    "style": {
+     "display": "block",
+     "position": "static",
+     "width": "680px",
+     "height": "128.875px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgba(0, 0, 0, 0)",
+     "border": "0px none rgb(22, 23, 27)",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": "▤ 支持 Markdown 格式Enter 发送 · Shift+Enter 换行发送"
+   },
+   "right-rail": {
+    "selector": ".inspector",
+    "rect": {
+     "x": 1300,
+     "y": 90,
+     "w": 300,
+     "h": 886
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "300px",
+     "height": "886px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": "目标\n                分析 A 股大盘近期走势，先用于本地文件，不联网；输出结论与三行表格。\n              \n\n         "
+   },
+   "statusbar": {
+    "selector": ".statusbar",
+    "rect": {
+     "x": 0,
+     "y": 976,
+     "w": 1600,
+     "h": 24
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "1600px",
+     "height": "24px",
+     "fontSize": "10px",
+     "lineHeight": "16.5px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(154, 156, 164)",
+     "padding": "0px 16px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": "就绪V4.1 Flash · 读/写权限按策略"
+   }
+  }
+ },
+ {
+  "width": 1600,
+  "side": "current",
+  "file": "1600-current.png",
+  "viewport": {
+   "w": 1600,
+   "h": 1000,
+   "dpr": 2
+  },
+  "scroll": {
+   "windowY": 0,
+   "chat": 0,
+   "chatH": 2673,
+   "clientH": 662
+  },
+  "doc": {
+   "scrollW": 1600,
+   "scrollH": 1000,
+   "bodyW": 1600,
+   "bodyH": 1000
+  },
+  "comps": {
+   "sidebar": {
+    "selector": ".sidebar",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 240,
+     "h": 976
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "240px",
+     "height": "976px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": "司墨v4.1S主工作区本地环境⌘K会话2显示归档＋主会话42⋯研究员⋯本月用量02 个会话 · 42 条消息Y本地用户主工作区 · Owner"
+   },
+   "topbar": {
+    "selector": ".topbar",
+    "rect": {
+     "x": 240,
+     "y": 0,
+     "w": 1360,
+     "h": 48
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "1360px",
+     "height": "48px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px 16px",
+     "gap": "12px",
+     "opacity": "1"
+    },
+    "text": "司墨 / 主会话对话工作台已连接Y"
+   },
+   "context": {
+    "selector": ".context",
+    "rect": {
+     "x": 240,
+     "y": 48,
+     "w": 1360,
+     "h": 42
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "1360px",
+     "height": "42px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px 16px",
+     "gap": "10px",
+     "opacity": "1"
+    },
+    "text": "主会话主窗口 · 聚合视图仅本会话含子会话"
+   },
+   "chat-tabs": {
+    "selector": ".chat-tabs",
+    "rect": {
+     "x": 240,
+     "y": 90,
+     "w": 1060,
+     "h": 51
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "1060px",
+     "height": "51px",
+     "fontSize": "11px",
+     "lineHeight": "18.15px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(104, 107, 115)",
+     "padding": "8px 0px 12px 190px",
+     "gap": "14px",
+     "opacity": "1"
+    },
+    "text": "对话"
+   },
+   "message-user": {
+    "selector": ".msg.from-user",
+    "rect": {
+     "x": 430,
+     "y": 201.5,
+     "w": 680,
+     "h": 69.09
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "680px",
+     "height": "69.0938px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "10px",
+     "background": "rgb(255, 255, 255)",
+     "border": "1px solid rgb(230, 228, 222)",
+     "color": "rgb(22, 23, 27)",
+     "padding": "12px 14px",
+     "gap": "12px",
+     "opacity": "1"
+    },
+    "text": "你你·21:22复制帮我整理一份本周工作周报，输出成 Markdown 文件。"
+   },
+   "message-agent": {
+    "selector": ".msg.from-agent",
+    "rect": {
+     "x": 430,
+     "y": 279.59,
+     "w": 680,
+     "h": 92.19
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "680px",
+     "height": "92.1875px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "10px",
+     "background": "rgb(255, 255, 255)",
+     "border": "1px solid rgb(230, 228, 222)",
+     "color": "rgb(22, 23, 27)",
+     "padding": "12px 14px",
+     "gap": "12px",
+     "opacity": "1"
+    },
+    "text": "墨司墨·进度汇报·21:22复制可以。我先确认周报范围和输出内容，再开始整理：\n\n- 范围：本周（11/09–11/15）\n- 内容：进展、风险、下周计划\n- "
+   },
+   "card-block": {
+    "selector": ".card-block",
+    "rect": {
+     "x": 481,
+     "y": 444.88,
+     "w": 614,
+     "h": 234.69
+    },
+    "style": {
+     "display": "block",
+     "position": "static",
+     "width": "614px",
+     "height": "234.688px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "10px",
+     "background": "rgb(255, 255, 255)",
+     "border": "1px solid rgb(230, 228, 222)",
+     "color": "rgb(58, 60, 67)",
+     "padding": "14px 16px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": "本周周报 · 确认范围active · v1我会按本周（11/09–11/15）整理进展、风险和下周计划。周报范围请选择…本周（11/09–11/15）上周（1"
+   },
+   "timeline": {
+    "selector": ".timeline-groups",
+    "rect": {
+     "x": 378,
+     "y": 153,
+     "w": 44,
+     "h": 662.13
+    },
+    "style": {
+     "display": "flex",
+     "position": "absolute",
+     "width": "44px",
+     "height": "662.125px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgba(0, 0, 0, 0)",
+     "border": "0px solid rgb(22, 23, 27)",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": ""
+   },
+   "composer": {
+    "selector": ".composer",
+    "rect": {
+     "x": 430,
+     "y": 811.13,
+     "w": 680,
+     "h": 150.88
+    },
+    "style": {
+     "display": "block",
+     "position": "static",
+     "width": "680px",
+     "height": "150.875px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgba(0, 0, 0, 0)",
+     "border": "0px solid rgb(22, 23, 27)",
+     "color": "rgb(22, 23, 27)",
+     "padding": "8px 0px 14px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": "支持 Markdown 格式Enter 发送 · Shift+Enter 换行发送"
+   },
+   "right-rail": {
+    "selector": ".inspector",
+    "rect": {
+     "x": 1300,
+     "y": 90,
+     "w": 300,
+     "h": 886
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "300px",
+     "height": "886px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": "进行中rev 2待确认 1目标本会话未记录目标。输入暂无输入约束。执行会话共 5 · 本次 5▸已完成3/3汇总本周进展21:25整理风险清单21:25生成下周"
+   },
+   "statusbar": {
+    "selector": ".statusbar",
+    "rect": {
+     "x": 0,
+     "y": 976,
+     "w": 1600,
+     "h": 24
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "1600px",
+     "height": "24px",
+     "fontSize": "10px",
+     "lineHeight": "16.5px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(154, 156, 164)",
+     "padding": "0px 16px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": "就绪V4.1 Flash · 读/写权限按策略"
+   }
+  }
+ },
+ {
+  "width": 375,
+  "side": "expected",
+  "file": "375-expected.png",
+  "viewport": {
+   "w": 375,
+   "h": 812,
+   "dpr": 2
+  },
+  "scroll": {
+   "windowY": 0,
+   "chat": 0,
+   "chatH": 924,
+   "clientH": 502
+  },
+  "doc": {
+   "scrollW": 375,
+   "scrollH": 812,
+   "bodyW": 375,
+   "bodyH": 812
+  },
+  "comps": {
+   "sidebar": {
+    "selector": ".sidebar",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 0,
+     "h": 0
+    },
+    "style": {
+     "display": "none",
+     "position": "static",
+     "width": "auto",
+     "height": "auto",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": "司墨v4.1\n    S主工作区本地环境+\n    ⌕⌘K\n    \n      会话4显示归档↻＋\n      主会话12\n      A 股行情分析\n   "
+   },
+   "topbar": {
+    "selector": ".topbar",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 375,
+     "h": 48
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "375px",
+     "height": "48px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px 8px",
+     "gap": "6px",
+     "opacity": "1"
+    },
+    "text": "司墨 / 主会话\n      对话工作台\n      已连接⚙Y"
+   },
+   "context": {
+    "selector": ".context",
+    "rect": {
+     "x": 0,
+     "y": 48,
+     "w": 375,
+     "h": 42
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "375px",
+     "height": "42px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px 10px",
+     "gap": "6px",
+     "opacity": "1"
+    },
+    "text": "主会话主窗口 · 聚合视图\n        仅本会话含子会话\n        重命名置顶归档"
+   },
+   "chat-tabs": {
+    "selector": ".chat-tabs",
+    "rect": {
+     "x": 0,
+     "y": 90,
+     "w": 375,
+     "h": 51
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "375px",
+     "height": "51px",
+     "fontSize": "10.5px",
+     "lineHeight": "17.325px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(104, 107, 115)",
+     "padding": "8px 0px 12px 8px",
+     "gap": "14px",
+     "opacity": "1"
+    },
+    "text": "对话"
+   },
+   "message-user": {
+    "selector": ".msg.from-user",
+    "rect": {
+     "x": 8,
+     "y": 153,
+     "w": 359,
+     "h": 88.19
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "359px",
+     "height": "88.1875px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "10px",
+     "background": "rgb(255, 255, 255)",
+     "border": "1px solid rgb(230, 228, 222)",
+     "color": "rgb(22, 23, 27)",
+     "padding": "10px 12px",
+     "gap": "12px",
+     "opacity": "1"
+    },
+    "text": "你你·主会话·10:24我想看一下最近 A 股大盘的走势，先不要联网，给我一个分析方案。"
+   },
+   "message-agent": {
+    "selector": ".msg.from-agent",
+    "rect": {
+     "x": 8,
+     "y": 249.19,
+     "w": 359,
+     "h": 219.66
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "359px",
+     "height": "219.656px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "10px",
+     "background": "rgb(255, 255, 255)",
+     "border": "1px solid rgb(230, 228, 222)",
+     "color": "rgb(22, 23, 27)",
+     "padding": "10px 12px",
+     "gap": "12px",
+     "opacity": "1"
+    },
+    "text": "墨司墨·需求澄清·10:25\n                  可以。先确认三件事，方案会按你的选择定：\n                  \n       "
+   },
+   "card-block": {
+    "selector": ".card-block",
+    "rect": {
+     "x": 57,
+     "y": 816.59,
+     "w": 297,
+     "h": 198.67
+    },
+    "style": {
+     "display": "block",
+     "position": "static",
+     "width": "297px",
+     "height": "198.672px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "10px",
+     "background": "rgb(255, 255, 255)",
+     "border": "1px solid rgb(230, 228, 222)",
+     "color": "rgb(22, 23, 27)",
+     "padding": "12px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": "选择数据来源进行中 · v1\n                    workspace 当前有 1 个 csv 文件；也可以改用公开行情，但需要联网批准。\n "
+   },
+   "timeline": {
+    "selector": ".timeline",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 0,
+     "h": 0
+    },
+    "style": {
+     "display": "none",
+     "position": "absolute",
+     "width": "44px",
+     "height": "auto",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgba(0, 0, 0, 0)",
+     "border": "0px none rgb(22, 23, 27)",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": "11/12"
+   },
+   "composer": {
+    "selector": ".composer",
+    "rect": {
+     "x": 8,
+     "y": 651.13,
+     "w": 359,
+     "h": 122.88
+    },
+    "style": {
+     "display": "block",
+     "position": "static",
+     "width": "359px",
+     "height": "122.875px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgba(0, 0, 0, 0)",
+     "border": "0px none rgb(22, 23, 27)",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": "▤ 支持 Markdown 格式Enter 发送 · Shift+Enter 换行发送"
+   },
+   "right-rail": {
+    "selector": ".inspector",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 0,
+     "h": 0
+    },
+    "style": {
+     "display": "none",
+     "position": "static",
+     "width": "280px",
+     "height": "auto",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": "目标\n                分析 A 股大盘近期走势，先用于本地文件，不联网；输出结论与三行表格。\n              \n\n         "
+   },
+   "statusbar": {
+    "selector": ".statusbar",
+    "rect": {
+     "x": 0,
+     "y": 788,
+     "w": 375,
+     "h": 24
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "375px",
+     "height": "24px",
+     "fontSize": "10px",
+     "lineHeight": "16.5px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(154, 156, 164)",
+     "padding": "0px 8px",
+     "gap": "8px",
+     "opacity": "1"
+    },
+    "text": "就绪V4.1 Flash · 读/写权限按策略"
+   }
+  }
+ },
+ {
+  "width": 375,
+  "side": "current",
+  "file": "375-current.png",
+  "viewport": {
+   "w": 375,
+   "h": 812,
+   "dpr": 2
+  },
+  "scroll": {
+   "windowY": 0,
+   "chat": 0,
+   "chatH": 3070,
+   "clientH": 480
+  },
+  "doc": {
+   "scrollW": 375,
+   "scrollH": 812,
+   "bodyW": 375,
+   "bodyH": 812
+  },
+  "comps": {
+   "sidebar": {
+    "selector": ".sidebar",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 0,
+     "h": 0
+    },
+    "style": {
+     "display": "none",
+     "position": "static",
+     "width": "auto",
+     "height": "auto",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": "司墨v4.1S主工作区本地环境⌘K会话2显示归档＋主会话42⋯研究员⋯本月用量02 个会话 · 42 条消息Y本地用户主工作区 · Owner"
+   },
+   "topbar": {
+    "selector": ".topbar",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 375,
+     "h": 48
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "375px",
+     "height": "48px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px 8px",
+     "gap": "6px",
+     "opacity": "1"
+    },
+    "text": "司墨 / 主会话对话工作台已连接Y"
+   },
+   "context": {
+    "selector": ".context",
+    "rect": {
+     "x": 0,
+     "y": 48,
+     "w": 375,
+     "h": 42
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "375px",
+     "height": "42px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px 10px",
+     "gap": "6px",
+     "opacity": "1"
+    },
+    "text": "主会话主窗口 · 聚合视图仅本会话含子会话"
+   },
+   "chat-tabs": {
+    "selector": ".chat-tabs",
+    "rect": {
+     "x": 0,
+     "y": 90,
+     "w": 375,
+     "h": 51
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "375px",
+     "height": "51px",
+     "fontSize": "10.5px",
+     "lineHeight": "17.325px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(104, 107, 115)",
+     "padding": "8px 0px 12px 8px",
+     "gap": "14px",
+     "opacity": "1"
+    },
+    "text": "对话"
+   },
+   "message-user": {
+    "selector": ".msg.from-user",
+    "rect": {
+     "x": 8,
+     "y": 197.5,
+     "w": 359,
+     "h": 92.19
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "359px",
+     "height": "92.1875px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "10px",
+     "background": "rgb(255, 255, 255)",
+     "border": "1px solid rgb(230, 228, 222)",
+     "color": "rgb(22, 23, 27)",
+     "padding": "12px 14px",
+     "gap": "10px",
+     "opacity": "1"
+    },
+    "text": "你你·21:22复制帮我整理一份本周工作周报，输出成 Markdown 文件。"
+   },
+   "message-agent": {
+    "selector": ".msg.from-agent",
+    "rect": {
+     "x": 8,
+     "y": 297.69,
+     "w": 359,
+     "h": 138.38
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "359px",
+     "height": "138.375px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "10px",
+     "background": "rgb(255, 255, 255)",
+     "border": "1px solid rgb(230, 228, 222)",
+     "color": "rgb(22, 23, 27)",
+     "padding": "12px 14px",
+     "gap": "10px",
+     "opacity": "1"
+    },
+    "text": "墨司墨·进度汇报·21:22复制可以。我先确认周报范围和输出内容，再开始整理：\n\n- 范围：本周（11/09–11/15）\n- 内容：进展、风险、下周计划\n- "
+   },
+   "card-block": {
+    "selector": ".card-block",
+    "rect": {
+     "x": 57,
+     "y": 531.25,
+     "w": 295,
+     "h": 253.88
+    },
+    "style": {
+     "display": "block",
+     "position": "static",
+     "width": "295px",
+     "height": "253.875px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "10px",
+     "background": "rgb(255, 255, 255)",
+     "border": "1px solid rgb(230, 228, 222)",
+     "color": "rgb(58, 60, 67)",
+     "padding": "14px 16px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": "本周周报 · 确认范围active · v1我会按本周（11/09–11/15）整理进展、风险和下周计划。周报范围请选择…本周（11/09–11/15）上周（1"
+   },
+   "timeline": {
+    "selector": ".timeline-groups",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 0,
+     "h": 0
+    },
+    "style": {
+     "display": "none",
+     "position": "absolute",
+     "width": "44px",
+     "height": "auto",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgba(0, 0, 0, 0)",
+     "border": "0px solid rgb(22, 23, 27)",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": ""
+   },
+   "composer": {
+    "selector": ".composer",
+    "rect": {
+     "x": 8,
+     "y": 629.13,
+     "w": 359,
+     "h": 144.88
+    },
+    "style": {
+     "display": "block",
+     "position": "static",
+     "width": "359px",
+     "height": "144.875px",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgba(0, 0, 0, 0)",
+     "border": "0px solid rgb(22, 23, 27)",
+     "color": "rgb(22, 23, 27)",
+     "padding": "8px 0px 14px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": "支持 Markdown 格式Enter 发送 · Shift+Enter 换行发送"
+   },
+   "right-rail": {
+    "selector": ".inspector",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 0,
+     "h": 0
+    },
+    "style": {
+     "display": "none",
+     "position": "static",
+     "width": "280px",
+     "height": "auto",
+     "fontSize": "14px",
+     "lineHeight": "23.1px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(22, 23, 27)",
+     "padding": "0px",
+     "gap": "normal",
+     "opacity": "1"
+    },
+    "text": "进行中rev 2待确认 1目标本会话未记录目标。输入暂无输入约束。执行会话共 5 · 本次 5▸已完成3/3汇总本周进展21:25整理风险清单21:25生成下周"
+   },
+   "statusbar": {
+    "selector": ".statusbar",
+    "rect": {
+     "x": 0,
+     "y": 788,
+     "w": 375,
+     "h": 24
+    },
+    "style": {
+     "display": "flex",
+     "position": "static",
+     "width": "375px",
+     "height": "24px",
+     "fontSize": "10px",
+     "lineHeight": "16.5px",
+     "borderRadius": "0px",
+     "background": "rgb(255, 255, 255)",
+     "border": "",
+     "color": "rgb(154, 156, 164)",
+     "padding": "0px 8px",
+     "gap": "8px",
+     "opacity": "1"
+    },
+    "text": "就绪V4.1 Flash · 读/写权限按策略"
+   }
+  }
+ }
+]
