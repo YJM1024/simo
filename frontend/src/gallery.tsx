@@ -16,6 +16,7 @@ import {
   StatusBar,
   TaskItem,
   Timeline,
+  TimelineGroups,
   TimelineTip,
   WorkbenchChart,
 } from './components'
@@ -51,6 +52,9 @@ export default function ComponentGallery(): React.ReactNode {
   const keyboardAnchor = useRef<HTMLButtonElement>(null)
   const edgeAnchor = useRef<HTMLButtonElement>(null)
   const [tipMode, setTipMode] = useState<'keyboard' | 'edge' | null>(null)
+  const [lastJump, setLastJump] = useState('')
+  const [singleActive, setSingleActive] = useState('g1')
+  const [multiActive, setMultiActive] = useState('m3')
   const hoverTimer = useRef<number | null>(null)
   const closeTimer = useRef<number | null>(null)
   return (
@@ -68,6 +72,22 @@ export default function ComponentGallery(): React.ReactNode {
       <Section title="EmptyState"><EmptyState title="暂无进行中任务" description="任务开始后会出现在这里。" /></Section>
       <Section title="DeliverableItem"><List><DeliverableItem artifact={sampleArtifact} /></List></Section>
       <Section title="ConversationPanel"><ConversationPanel timeline={<Timeline messages={sampleMessages} active={1} onJump={() => undefined} />}><div className="chat-inner"><MessageItem message={sampleMessages[0]} onCardAction={async () => undefined} /><MessageItem message={sampleMessages[1]} onCardAction={async () => undefined} /></div></ConversationPanel></Section>
+      <Section title="TimelineGroups 单会话"><span className="insp-text">onJump: {lastJump || '—'}</span>
+        <TimelineGroups currentSessionId="main" activeMessageId={singleActive} onJump={(id) => { setLastJump(id); setSingleActive(id) }} messages={[
+          { id: 'g1', sessionId: 'main', sessionTitle: '主会话', sessionOrder: 0, isCurrentSession: true, role: 'user', at: 1, dateKey: '2026-11-12', summary: '单会话样例 1' },
+          { id: 'g2', sessionId: 'main', sessionTitle: '主会话', sessionOrder: 0, isCurrentSession: true, role: 'agent', at: 2, dateKey: '2026-11-12', category: 'progress', summary: '单会话样例 2' },
+          { id: 'g3', sessionId: 'main', sessionTitle: '主会话', sessionOrder: 0, isCurrentSession: true, role: 'user', at: 3, dateKey: '2026-11-13', summary: '单会话样例 3' },
+        ]} />
+      </Section>
+      <Section title="TimelineGroups 当前 + 上级会话"><span className="insp-text">onJump: {lastJump || '—'}</span>
+        <TimelineGroups currentSessionId="main" activeMessageId={multiActive} onJump={(id) => { setLastJump(id); setMultiActive(id) }} messages={[
+          { id: 'p1', sessionId: 'parent', sessionTitle: '研究员-验收', sessionOrder: 0, isCurrentSession: false, role: 'user', at: 1, dateKey: '2026-11-11', summary: '上级会话消息' },
+          { id: 'p2', sessionId: 'parent', sessionTitle: '研究员-验收', sessionOrder: 0, isCurrentSession: false, role: 'agent', at: 2, dateKey: '2026-11-11', category: 'result', summary: '上级会话结果' },
+          { id: 'm1', sessionId: 'main', sessionTitle: '主会话', sessionOrder: 1, isCurrentSession: true, role: 'user', at: 3, dateKey: '2026-11-12', summary: '当前会话消息 1' },
+          { id: 'm2', sessionId: 'main', sessionTitle: '主会话', sessionOrder: 1, isCurrentSession: true, role: 'agent', at: 4, dateKey: '2026-11-12', category: 'clarification', summary: '当前会话澄清' },
+          { id: 'm3', sessionId: 'main', sessionTitle: '主会话', sessionOrder: 1, isCurrentSession: true, role: 'user', at: 5, dateKey: '2026-11-13', summary: '当前会话消息 2' },
+        ]} />
+      </Section>
       <Section title="TimelineTip 消息预览">
         <div className="timeline-tip-stage">
           <button

@@ -358,6 +358,25 @@
         "error"
       ],
       "owner": "frontend"
+    },
+    {
+      "name": "TimelineGroups",
+      "variants": [
+        "single-session",
+        "current-and-ancestor"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "focus",
+        "active",
+        "ancestor",
+        "edge"
+      ],
+      "owner": "frontend",
+      "dependsOn": [
+        "TimelineTip"
+      ]
     }
   ],
   "gallery": "/#gallery"

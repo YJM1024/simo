@@ -162,6 +162,8 @@ export function StatusBar({ connection }: { connection: string }): React.ReactNo
 
 export function MessageItem({ message, onCardAction, readOnly = false }: { message: Message; onCardAction: (card: Card, action: string, payload: Record<string, unknown>) => Promise<void>; readOnly?: boolean }): React.ReactNode {
   const [streaming, setStreaming] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const copy = async (): Promise<void> => { try { await navigator.clipboard.writeText(message.text); setCopied(true); window.setTimeout(() => setCopied(false), 1200) } catch { setCopied(false) } }
   useEffect(() => {
     setStreaming(message.status === 'streaming')
   }, [message.status])
@@ -171,7 +173,7 @@ export function MessageItem({ message, onCardAction, readOnly = false }: { messa
     <article className={`msg ${isUser ? 'from-user' : 'from-agent'}`}>
       <span className="msg-avatar">{isUser ? '你' : '墨'}</span>
       <div className="msg-body">
-        <div className="msg-meta"><b>{isUser ? '你' : '司墨'}</b><span>·</span>{category && <><span className="tag">{category}</span><span>·</span></>}<span>{formatTime(message.at)}</span>{message.status === 'failed' && <span className="badge danger">失败</span>}</div>
+        <div className="msg-meta"><b>{isUser ? '你' : '司墨'}</b><span>·</span>{category && <><span className="tag">{category}</span><span>·</span></>}<span>{formatTime(message.at)}</span>{message.status === 'failed' && <span className="badge danger">失败</span>}{message.text.trim() && <button type="button" className="msg-copy" onClick={() => void copy()} aria-label="复制消息">{copied ? '已复制' : '复制'}</button>}</div>
         <div className="msg-text">
           {message.text.trim() ? <p>{message.text}{streaming && <span className="stream-caret" aria-hidden="true" />}</p> : streaming ? <p><span className="stream-caret" aria-hidden="true" /></p> : null}
           {(message.cards ?? []).map((card) => <CardBlock key={card.id} card={card} onSubmit={onCardAction} readOnly={readOnly} />)}
@@ -245,7 +247,7 @@ export function WorkbenchChart({ buckets }: { buckets: StatsBucket[] }): React.R
 
 export type TimelineTipState = 'hidden' | 'visible' | 'edge-clamped'
 
-export function TimelineTip({ open, anchorRef, sender, sessionTitle, timeLabel, summary, fallbackLabel, onClose, onStateChange }: {
+export function TimelineTip({ open, anchorRef, sender, sessionTitle, timeLabel, summary, fallbackLabel, category, onClose, onStateChange }: {
   open: boolean
   anchorRef: RefObject<HTMLElement | null>
   sender: 'user' | 'agent'
@@ -253,6 +255,7 @@ export function TimelineTip({ open, anchorRef, sender, sessionTitle, timeLabel, 
   timeLabel: string
   summary: string
   fallbackLabel?: string
+  category?: string
   onClose: () => void
   onStateChange?: (state: TimelineTipState) => void
 }): React.ReactNode {
@@ -311,7 +314,7 @@ export function TimelineTip({ open, anchorRef, sender, sessionTitle, timeLabel, 
   if (!open) return null
   return createPortal(
     <div ref={tipRef} id="timeline-tip" className="timeline-tip-surface" role="tooltip" style={{ left: pos.left, top: pos.top }} data-state={state}>
-      <div className="timeline-tip-meta"><b>{sender === 'user' ? '你' : '司墨'}</b><span>·</span><span className="session">{sessionTitle}</span><span>·</span><span className="time">{timeLabel}</span></div>
+      <div className="timeline-tip-meta"><b>{sender === 'user' ? '你' : '司墨'}</b><span>·</span><span className="session">{sessionTitle}</span>{category && <><span>·</span><span className="tag">{category}</span></>}<span>·</span><span className="time">{timeLabel}</span></div>
       <div className="timeline-tip-summary">{summary || fallbackLabel || '（消息内容为空）'}</div>
     </div>,
     document.body,
@@ -382,6 +385,96 @@ export function Timeline({ messages, active, onJump }: { messages: Message[]; ac
   )
 }
 
+export interface TimelineGroupMessage {
+  id: string
+  sessionId: string
+  sessionTitle: string
+  sessionOrder: number
+  isCurrentSession: boolean
+  role: 'user' | 'agent'
+  category?: 'clarification' | 'progress' | 'confirmation' | 'result' | 'error'
+  at: number
+  dateKey: string
+  summary?: string
+}
+
+export function TimelineGroups({ messages, currentSessionId, activeMessageId, onJump, ariaLabel = '消息时间轴' }: {
+  messages: readonly TimelineGroupMessage[]
+  currentSessionId: string
+  activeMessageId?: string
+  onJump: (messageId: string) => void
+  ariaLabel?: string
+}): React.ReactNode {
+  const [tipIndex, setTipIndex] = useState<number | null>(null)
+  const [tipOpen, setTipOpen] = useState(false)
+  const barsRef = useRef<Array<HTMLButtonElement | null>>([])
+  const anchorRef = useRef<HTMLElement | null>(null)
+  const showTimer = useRef<number | null>(null)
+  const closeTimer = useRef<number | null>(null)
+  const sorted = [...messages].sort((a, b) => a.sessionOrder - b.sessionOrder || a.dateKey.localeCompare(b.dateKey) || a.at - b.at)
+  const flat = sorted
+  const clearShow = (): void => { if (showTimer.current !== null) { window.clearTimeout(showTimer.current); showTimer.current = null } }
+  const clearClose = (): void => { if (closeTimer.current !== null) { window.clearTimeout(closeTimer.current); closeTimer.current = null } }
+  const openTip = (index: number): void => { clearShow(); clearClose(); anchorRef.current = barsRef.current[index] ?? null; setTipIndex(index); setTipOpen(true) }
+  const scheduleOpen = (index: number): void => { clearClose(); clearShow(); showTimer.current = window.setTimeout(() => openTip(index), 120) }
+  const scheduleClose = (): void => { clearShow(); clearClose(); closeTimer.current = window.setTimeout(() => setTipOpen(false), 200) }
+  useEffect(() => () => { clearShow(); clearClose() }, [])
+  const categoryLabel = (category?: string): string => category ? (CATEGORY_LABEL[category] ?? category) : ''
+  const groups: Array<{ sessionId: string; title: string; current: boolean; messages: Array<{ message: TimelineGroupMessage; index: number }> }> = []
+  let cursor = 0
+  for (const message of sorted) {
+    let group = groups[groups.length - 1]
+    if (!group || group.sessionId !== message.sessionId) {
+      group = { sessionId: message.sessionId, title: message.sessionTitle, current: message.sessionId === currentSessionId, messages: [] }
+      groups.push(group)
+    }
+    group.messages.push({ message, index: cursor++ })
+  }
+  const tipMessage = tipIndex !== null ? flat[tipIndex] : null
+  const onTimelineKeyDown = (event: React.KeyboardEvent<HTMLElement>): void => {
+    const active = document.activeElement as HTMLElement | null
+    const index = barsRef.current.findIndex((bar) => bar === active)
+    if (index < 0) return
+    let next = index
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') next = Math.min(barsRef.current.length - 1, index + 1)
+    else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') next = Math.max(0, index - 1)
+    else if (event.key === 'Home') next = 0
+    else if (event.key === 'End') next = barsRef.current.length - 1
+    else if (event.key === 'Escape') { clearShow(); clearClose(); setTipOpen(false); return }
+    else return
+    event.preventDefault()
+    barsRef.current[next]?.focus()
+  }
+  return (
+    <nav className="timeline timeline-groups" aria-label={ariaLabel} onMouseLeave={scheduleClose} onKeyDown={onTimelineKeyDown} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node)) scheduleClose() }}>
+      <div className="tlg-track">
+        {groups.map((group) => (
+          <div className={`tlg-session ${group.current ? 'is-current-session' : 'is-ancestor-session'}`} key={group.sessionId} aria-label={`${group.current ? '当前会话' : '上级会话'}：${group.title}`}>
+            {group.messages.map(({ message, index }) => (
+              <button
+                key={message.id}
+                ref={(element) => { barsRef.current[index] = element }}
+                type="button"
+                className={`tl-bar ${message.role === 'user' ? 'is-user' : 'is-agent'} ${message.id === activeMessageId ? 'is-current' : ''}`}
+                aria-current={message.id === activeMessageId ? 'true' : undefined}
+                aria-describedby={tipOpen && tipIndex === index ? 'timeline-tip' : undefined}
+                aria-label={`${message.role === 'user' ? '你' : '司墨'} · ${message.sessionTitle} · ${formatTime(message.at)}`}
+                onClick={() => onJump(message.id)}
+                onMouseEnter={() => scheduleOpen(index)}
+                onFocus={() => openTip(index)}
+                onBlur={scheduleClose}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+      {tipOpen && tipMessage && (
+        <TimelineTip key={tipIndex ?? 0} open anchorRef={anchorRef} sender={tipMessage.role} sessionTitle={tipMessage.sessionTitle} timeLabel={formatTime(tipMessage.at)} summary={tipMessage.summary ?? ''} category={categoryLabel(tipMessage.category)} onClose={() => { clearShow(); clearClose(); setTipOpen(false) }} />
+      )}
+    </nav>
+  )
+}
+
 export function Composer({ disabled, streaming, onSend, onStop, sendError }: { disabled: boolean; streaming: boolean; onSend: (text: string) => Promise<void>; onStop: () => void; sendError: string }): React.ReactNode {
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
@@ -443,11 +536,11 @@ export function Section({ title, children }: { title: string; children: React.Re
   return <section className="insp-block"><h3 className="insp-label">{title}</h3>{children}</section>
 }
 
-export function EmptyState({ title, description }: { title: string; description?: string }): React.ReactNode {
+export function EmptyState({ title, description, action }: { title: string; description?: string; action?: React.ReactNode }): React.ReactNode {
   return (
     <div className="overview-empty">
       <span className="overview-empty-mark" aria-hidden="true">·</span>
-      <div><b>{title}</b>{description && <span>{description}</span>}</div>
+      <div><b>{title}</b>{description && <span>{description}</span>}{action}</div>
     </div>
   )
 }

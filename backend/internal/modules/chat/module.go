@@ -171,6 +171,8 @@ func (m *Module) Migrations() []module.Migration { return migrations() }
 // Register 实现 module.Module。
 func (m *Module) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/messages", m.handleMessages)
+	mux.HandleFunc("GET /api/sessions/{id}/messages", m.handleSessionMessagesAll)
+	mux.HandleFunc("GET /api/sessions/{id}/messages/all", m.handleSessionMessagesAll)
 	mux.HandleFunc("GET /api/messages/search", m.handleMessageSearch)
 	mux.HandleFunc("POST /api/messages/{id}/edit", m.handleEditDisabled)
 	mux.HandleFunc("POST /api/messages/{id}/correct", m.handleEditDisabled)

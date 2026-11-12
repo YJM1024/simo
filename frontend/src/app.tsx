@@ -74,6 +74,11 @@ export default function App(): React.ReactNode {
   const scrollerRef = useRef<HTMLDivElement>(null)
   const stickToBottomRef = useRef(true)
   const scrollRafRef = useRef<number | null>(null)
+  const scrollPositionsRef = useRef<Map<string, number>>(new Map())
+  const restoreScrollRef = useRef<number | null>(null)
+  const prevMessageCountRef = useRef(0)
+  const [atBottom, setAtBottom] = useState(true)
+  const [unread, setUnread] = useState(0)
   const activeIdRef = useRef(activeId)
   activeIdRef.current = activeId
   const reloadTimer = useRef<number | null>(null)
@@ -136,6 +141,9 @@ export default function App(): React.ReactNode {
   }, [])
 
   const scrollToBottom = useCallback((): void => {
+    restoreScrollRef.current = null
+    setUnread(0)
+    setAtBottom(true)
     if (scrollRafRef.current !== null) cancelAnimationFrame(scrollRafRef.current)
     scrollRafRef.current = requestAnimationFrame(() => {
       const scroller = scrollerRef.current
@@ -149,8 +157,20 @@ export default function App(): React.ReactNode {
   }, [])
 
   useLayoutEffect(() => {
+    if (restoreScrollRef.current !== null) {
+      const target = restoreScrollRef.current
+      restoreScrollRef.current = null
+      requestAnimationFrame(() => { const scroller = scrollerRef.current; if (scroller) scroller.scrollTop = target })
+      return
+    }
     if (stickToBottomRef.current) scrollToBottom()
   }, [messages, loadingMessages, activeId, scrollToBottom])
+
+  useEffect(() => {
+    const previous = prevMessageCountRef.current
+    prevMessageCountRef.current = messages.length
+    if (messages.length > previous && !stickToBottomRef.current) setUnread((value) => value + (messages.length - previous))
+  }, [messages])
 
   useEffect(() => () => {
     if (scrollRafRef.current !== null) cancelAnimationFrame(scrollRafRef.current)
@@ -186,7 +206,9 @@ export default function App(): React.ReactNode {
 
   useEffect(() => {
     if (!activeId) return
-    stickToBottomRef.current = true
+    const saved = scrollPositionsRef.current.get(activeId)
+    restoreScrollRef.current = saved ?? null
+    stickToBottomRef.current = saved === undefined
     void getPermissions(activeId).then((data) => setPermissions(data.permissions ?? null)).catch(() => setPermissions(null))
     setMessages([])
     setProjection(null)
@@ -263,7 +285,11 @@ export default function App(): React.ReactNode {
   const syncTimeline = (): void => {
     const scroller = scrollerRef.current
     if (!scroller) return
-    stickToBottomRef.current = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 64
+    const distance = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight
+    stickToBottomRef.current = distance < 64
+    setAtBottom(distance < 64)
+    if (distance < 64) setUnread(0)
+    scrollPositionsRef.current.set(activeIdRef.current, scroller.scrollTop)
     const nodes = [...scroller.querySelectorAll<HTMLElement>('.msg')]
     const top = scroller.getBoundingClientRect().top + 64
     let next = 0
@@ -385,6 +411,7 @@ export default function App(): React.ReactNode {
                   <ConversationPanel
                     timeline={<Timeline messages={messages} active={activeMessage} onJump={jumpToMessage} />}
                     state={loadingMessages && messages.length === 0 ? 'loading' : error && messages.length === 0 ? 'error' : messages.length === 0 ? 'empty' : 'ready'}
+                    empty={<EmptyState title="开始和司墨对话" description="说需求、记信息、派任务，过程和结果都会回流到这里。" action={<button className="btn sm" type="button" onClick={() => document.querySelector<HTMLTextAreaElement>('.composer textarea')?.focus()}>发送第一条消息</button>} />}
                     error={<ErrorState title="消息加载失败" description={error} onRetry={() => void loadMessages(activeId)} />}
                     onRetry={() => void loadMessages(activeId)}
                     scrollRef={scrollerRef}
@@ -395,6 +422,7 @@ export default function App(): React.ReactNode {
                         {messages.map((message) => <MessageItem key={message.id} message={message} onCardAction={handleCardAction} readOnly={Boolean(activeSession?.archived)} />)}
                     </div>
                   </ConversationPanel>
+                  {!atBottom && <button type="button" className="jump-bottom" onClick={scrollToBottom}>回到底部{unread > 0 ? ` · ${unread} 条新消息` : ''}</button>}
                 </div>
                 <Composer disabled={!activeId || Boolean(activeSession?.archived)} streaming={messages.some((message) => message.status === 'streaming')} onSend={send} onStop={stopStreaming} sendError={error} />
               </div>

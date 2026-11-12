@@ -318,6 +318,58 @@
 
 **其他观察**：当前 build 源码中 `CardBlock` 已把 `readOnly` 纳入 disabled 并禁用字段；工作台错误态 notes 已改为「统计不可用」（上一轮 P1-4/P1-5 残留在此 build 看来已修复，未单独回归归档态）。**未签整批**：本报告仅覆盖上述 6 项功能验收；FE-002–005 的整批签字与部署仍由 Lead 决定。
 
+### 用户反馈三处修复 · 视觉签字（2026-11-12，build `mwdmbz6k-vd4lp`，**签字通过**）
+
+**结论：视觉签字通过。** 右栏状态间距、Composer/卡同宽（滚动条修复）、Timeline 1280/1180 显示三处均与声明一致；四档无横向溢出、console 0。**仅签本轮反馈修复，未部署；FE-002–005 其余功能范围不变。**
+
+**对象**：`frontend/dist`（buildId `mwdmbz6k-vd4lp`，构建 22:03:36）；临时 8898 静态服务（dist）+ `/api` 只读代理 8787；CDP 实测 1600/1280/1180/375。截图 `fe-feedback-{1600,1280,1180,375}.png`（22:03:52–04:00，晚于构建，DPR2）。
+
+| 项 | 判定 | 证据 |
+|---|---|---|
+| 1. 右栏状态间距 | **通过** | `.insp-spec-status` gap **8px**、b margin-right **8px**、em padding-left **8px**、em margin-left auto（无负 margin）。B/SPAN/EM x：1600 **1315 / 1360.84 / 1500.14**（目标 1315/1361/1500，亚像素差 ≤0.16）；1280 **995 / 1040.84 / 1180.14**；1180 **915 / 960.84 / 1080.14**。 |
+| 2. Composer / 卡同宽（滚动条） | **通过** | `.conversation-scroll` `scrollbarWidth=none`，offsetW==clientW（1600 720、1280 708、1180 640、375 359）→ 无滚动条占宽。卡/Composer x·w·right：1600 **430/680/1110**（右留 490）、1280 **276/668/944**（336）、1180 **264/600/864**（316）、375 **8/359/367**（8）；四档 **dx/dw/dr = 0/0/0**。 |
+| 3. Timeline 1280/1180 | **通过** | 1600 display flex x358 w44；1280 flex x204 w44；1180 flex x192 w44；375 display none。卡列中心不变（770/610/564/187.5，delta 0）；1180 卡与 Composer 仍 600；四档无横向溢出。 |
+
+**控制台**：console error **0**、4xx **0**。范围说明：只覆盖本轮三处反馈修复；FE-002–005 其余未闭环项按原记录，未部署。
+
+### 1280/1180 时间轴可见性修复 · 视觉签字（2026-11-12，build `mwdmisy7-z4cbf`，**签字通过**）
+
+**结论：视觉签字通过。** 1280/1180 已为 timeline 预留 52px gutter，卡列/Composer 同步收窄且仍居中；timeline 在真实布局中可见、可命中、不越过 sidebar、不被裁切，与卡列间距 **8px**。1600 保持卡 680/Composer 680；四档无横向溢出、console 0。**未部署；FE 其余范围不变。**
+
+**对象**：`frontend/dist`（buildId `mwdmisy7-z4cbf`，构建 22:08:54）；临时 8898 静态服务 + `/api` 只读代理 8787；CDP 1600/1280/1180/375。截图 `fe-tlfix-{1600,1280,1180,375}.png`（22:08:58–09:05，晚于构建，DPR2）。
+
+| 宽度 | Timeline（x / w / right） | 卡（x / w） | gap | bars（visible/total） | insideCol / 命中 | 卡列中心 | Composer vs 卡 | 溢出 |
+|---|---|---|---|---|---|---|---|---|
+| 1600 | 378 / 44 / 422 | 430 / 680 | **8** | 30/30 | true / `.tl-bar` inTimeline | 770 / 770 | dx/dw/dr 0 | 无 |
+| 1280 | 260 / 44 / 304 | 312 / 596 | **8** | 30/30 | true / `.tl-bar` inTimeline | 610 / 610 | 0/0/0 | 无 |
+| 1180 | 248 / 44 / 292 | 300 / 528 | **8** | 30/30 | true / `.tl-bar` inTimeline | 564 / 564 | 0/0/0 | 无 |
+| 375 | display:none | 8 / 359 | — | 0/30（DOM 存在不渲染） | — | 187.5 / 187.5 | 0/0/0 | 无 |
+
+- **不越 sidebar**：timeline x 260（1280）> sidebar right 240；x 248（1180）> 228；x 378（1600）> 240；`withinBody=true`（1280/1180/1600），`elementFromPoint` 命中 timeline 内 `.tl-bar`，非裁切不可见。
+- **卡列/Composer 同步收窄**：1600 680、1280 **596**、1180 **528**、375 359；四档卡列中心差 **0**。
+- 控制台：console error **0**、4xx **0**。范围：仅本轮 1280/1180 timeline 可见性修复；当前未部署（8787 仍 `mwdfw9t5`）。
+
+### TimelineGroups 组件视觉签字（2026-11-12，build `mwdmpfa5-low53`，**不签字：2 项返工 + 1 项未验证**）
+
+**结论：不签字。** 组件主体（分组/active/祖先透明度/Tooltip/键盘/画廊登记）基本达标，但 ① 会话组实际间距 **8px**（声明 6px）；② 分类被写进 tick 的 `aria-label`，不符合「分类只写入 Tooltip 文本」；③ gallery 样例 `onJump` 为 noop，Enter/点击跳转无法验证。**未接首页、未部署。**
+
+**对象**：`frontend/dist`（buildId `mwdmpfa5-low53`，构建 22:14:03）；静态 8898 服务 `/#gallery`；CDP 1600 实测。截图 `timeline-groups-{1600,1920,1180,375}.png`（22:14:24–31，晚于构建，DPR2）。
+
+| 项 | 判定 | 证据 |
+|---|---|---|
+| 组件/分组/画廊 | 通过 | 两个样例（单会话 3 bars；当前+上级 5 bars/2 组）；排序按 sessionOrder/dateKey/at；rail 44×… 无文字；manifest TimelineGroups dependsOn TimelineTip；App 仍用旧 Timeline。 |
+| bars | 通过 | active 24×4 `rgb(22,23,27)`、普通 20×4、bar gap 2；user `rgb(61,61,224)` opacity .78、agent `rgb(104,107,115)` opacity .55（复用旧色，无新增色）。 |
+| 祖先组 | 通过 | `.tlg-session.is-ancestor-session` computed opacity **0.55**；当前组 1；`is-ancestor-session .tl-bar.is-current` 有 opacity:1 覆盖（见 R3）。 |
+| Tooltip | 通过（除分类） | hover 60ms 无、220ms 出现；role=tooltip、无原生 title、分类「进度汇报」在 Tooltip meta；TimelineTip 复用。移出 100ms 开/320ms 关（200ms grace）；focus 立即；Esc 关闭。 |
+| 键盘 | 部分验证 | focus 后 ArrowRight/End/Home 正确移动（End→index 2、Home→0）；Esc 关闭且焦点保留；**Enter/click 的 onJump 因样例 noop 未验证**。 |
+
+**必须返工**
+1. **R1 会话组间距 8px ≠ 声明 6px**：CSS `.tlg-track` gap 2 + `.tlg-session + .tlg-session` margin-top 6 → 实测相邻组 first bottom 1244.33 → next top 1252.33 = **8.00px**。若目标为组间距 6，应调整（如 margin-top 4 或取消 track gap 对 session 的作用）。
+2. **R2 分类泄漏到 aria-label**：tick 的 `aria-label` 为「司墨 · 主会话 · 08:00 · 进度汇报」「… · result」「… · 需求澄清」，而要求是「分类只写入 Tooltip 文本」。应从 aria-label 移除分类，仅保留在 Tooltip。
+3. **R3 未验证/边界**：gallery 两样例 `onJump={() => undefined}`，Enter/点击跳转无法观察；且 CSS `.is-ancestor-session .tl-bar.is-current { opacity:1 }` 会让「祖先组中的 active bar」突破祖先组 .55——若 active 可能在祖先组，需明确这是否预期，并补样例/测试。
+
+**范围**：仅组件层预检；未接首页、未部署。组件修复上述 R1/R2（并补 R3 验证）后可复验。
+
 ### 检查清单（每轮）
 
 1. 首屏 3 秒能理解产品与下一步；

@@ -104,3 +104,23 @@ src/components/
 - Timeline 1600/1920 absolute gutter，1180/375 隐藏；中心不变。
 - 截图：`message-cards-react-{1600,1920,1180,375}.png`。
 - 功能未改：唯一滚动、TimelineTip、SessionSpec、卡片/搜索/归档/三态保留。
+
+## 用户反馈三处（build mwdmbz6k-vd4lp）
+- `.insp-spec-status` gap 8px；1600 b/ span 间距 16px 可视，待确认靠右并 padding-left 8。
+- `.conversation-scroll` 隐藏滚动条；card/composer 同宽：1600 430/680、1280 276/668、1180 264/600、375 8/359。
+- Timeline 改为 ≤56.25em 隐藏；1280/1180 显示（1180 x192 w44），卡列中心不变。
+- 截图：`fe-feedback-{1600,1280,1180,375}.png`。
+
+## Timeline 1280/1180 可见性修复（build mwdmisy7-z4cbf）
+- 1280：timeline x260 w44，卡 x312 w596，卡/Composer 同宽，gap8，insideCol true，bars30，elementFromPoint 命中 timeline。
+- 1180：timeline x248 w44，卡 x300 w528，gap8，insideCol true。
+- 1600：timeline x378，卡 x430 w680；375 hidden；中心差 0。
+- 截图：`fe-tlfix-{1600,1280,1180,375}.png`。
+
+## TimelineGroups（build mwdmpfa5-low53，未接页面）
+- API：messages/currentSessionId/activeMessageId/onJump；按 sessionOrder→dateKey→at 分组，组 gap6。
+- 当前会话正常、上级组 opacity .55；active 24px `--ink`，普通 20px，gap2；44 rail 无文字。
+- 复用 TimelineTip，category 仅进 tooltip 文本；无原生 title；role=tooltip/aria-describedby。
+- hover 120ms/focus 立即/200ms grace/Esc；←→/Home/End/Enter/点击跳转。
+- 画廊两组样例：单会话、当前+上级会话；截图 `timeline-groups-{1600,1920,1180,375}.png`。
+- 首页未接入。

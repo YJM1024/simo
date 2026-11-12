@@ -1,7 +1,7 @@
 # 司墨 · 当前状态
 
 更新时间：2026-11-12
-当前阶段：**冻结 build `mwdk1oal-pjkx0` 独立功能验收完成：卡片提交+幂等/重命名/断线/空库通过；交付物打开未验证（无样本）、409 未造出；未部署**
+当前阶段：**TimelineGroups 组件预检：不签字（会话组 gap 8≠6、分类入 aria-label、Enter/click jump 未验证）；build `mwdmpfa5-low53` 未接页面/未部署**
 
 ## 仓库/环境
 
@@ -30,7 +30,9 @@
 | React 视觉对齐 | **已签字通过**（2026-11-12，buildId `mwdctn2y-oumh8`） | 上轮 2 类 P0 已复验修复：未定义变量 0、右栏 sections 1315/915、CardBlock 14·16/标题 511·343、375 chip 16；三档无溢出、console 0；见 `acceptance.md`「React 版视觉对齐 · 返工后复验」 |
 | message-cards 定稿基线（视觉） | **已签字通过**（2026-11-12，buildId `mwdk1oal-pjkx0`） | 四档卡列/中栏中心差 0（770/930/564/187.5）；卡 x/w 430·680、590·680、264·600、8·359；chip=卡左；Composer dx/dw/dr=0；paper #EFEDE8；白卡 1px/r10/pad12·14/mb9/shadow none；Timeline 1600/1920 显示、1180/375 隐藏；无溢出、console 0；见 `acceptance.md`「message-cards 定稿基线 · 视觉签字」 |
 | COMP-timeline-tip（实机接入 + 线上） | **已签字通过 + 线上闭环**（2026-11-12，buildId `mwdfw9t5-lh5d1`） | 8787 线上：build-id/health 正常；36 ticks、tick title 0；hover 第 4 tick tooltip 236×75「你·主会话·22:44/怎么重复生成句子？」；focus/切换/Esc/滚动 smoke 通过；console 0、4xx 0；见 `acceptance.md`「COMP-timeline-tip · 8787 线上 smoke」 |
-| FE-002–005 独立功能验收 | **4/6 全通过，2 项部分/未验证**（2026-11-12，build `mwdk1oal-pjkx0`） | 卡片提交+幂等（409 未造出）、重命名刷新持久、断线重连无重复、空库工作台真实 0/空态/错误态通过；工作台交付物 `/api/deliverables` total=0 空/错误态通过、loading 未捕获；交付物打开无样本未验证；见 `acceptance.md`「FE-002–005 独立功能验收」 |
+| FE-002–005 独立功能验收 | **4/6 全通过，2 项部分/未验证**（2026-11-12，build 快照库隔离实例） | 卡片提交+幂等（409 未造出）、重命名刷新持久、断线重连无重复、空库工作台真实 0/空态/错误态通过；工作台交付物 `/api/deliverables` total=0 空/错误态通过、loading 未捕获；交付物打开无样本未验证；见 `acceptance.md`「FE-002–005 独立功能验收」 |
+| 用户反馈三处修复 | **已签字通过**（2026-11-12，buildId `mwdmbz6k-vd4lp`） | 右栏状态间距（1600 B/SPAN/EM 1315/1360.84/1500.14；1280 995/1040.84/1180.14；1180 915/960.84/1080.14）；Composer/卡四档 dx/dw/dr=0 且 scrollbarWidth none；Timeline 1600/1280/1180 flex（358/204/192，w44）、375 none；无溢出、console 0；见 `acceptance.md`「用户反馈三处修复 · 视觉签字」 |
+| 1280/1180 时间轴可见性 | **已签字通过**（2026-11-12，buildId `mwdmisy7-z4cbf`） | 1280 timeline 260/44/304、卡312/596、gap8；1180 248/44/292、卡300/528、gap8；1600 378/44/422、卡430/680；bars30、insideCol、elementFromPoint 命中、不越 sidebar；中心 770/610/564/187.5 delta0；无溢出、console0；见 `acceptance.md`「1280/1180 时间轴可见性修复 · 视觉签字」 |
 | Storybook Spike | 条件可行（P1） | `labs/storybook/`；本沙箱 `spawn EPERM` 无法 build，详见 `storybook-spike.md` |
 
 ## 进行中
@@ -39,6 +41,7 @@
 |---|---|---|
 | FE-001 验收签字 | `schema-drafter` | **视觉对齐已签字**（2026-11-12，buildId `mwdctn2y-oumh8`）；FE-001 总签字待真实双击重命名/卡片提交/断线重连补测 |
 | FE-002..005 批次 | `memory-researcher` | **功能独立验收已完成**（见已完成表）：卡片幂等/重命名/断线/空库通过；交付物打开无样本未验证、409 未造出；整批签字与部署待 Lead 决定 |
+| TimelineGroups 组件 | `memory-researcher` | **预检不签字**（build `mwdmpfa5-low53`）：R1 会话组实际 gap 8px≠声明 6；R2 分类写入 tick aria-label（应仅 Tooltip）；R3 gallery onJump noop，Enter/click jump 未验证；另 ancestor active opacity:1 边界待明确；未接首页/未部署 |
 | Storybook P1 | `harness-scout` | 正常环境/CI 跑通 build/preview/screenshot 后再评估 |
 
 ## 阻塞 / 未覆盖
@@ -46,6 +49,8 @@
 - **FE-002–005 功能验收（build `mwdk1oal`）**：卡片提交+幂等通过（409 未造出）、重命名通过、断线重连通过、空库工作台通过（loading 未捕获）；工作台交付物 `/api/deliverables` total=0 空/错误态通过；交付物打开未验证（无样本）；
 - **未闭环**：真实用户交付物打开/preview/download（无样本，需 Lead 决定是否造样本）；409 并发未造出；FE-002–005 整批签字与部署待 Lead 决定；
 - **无视觉 P0 阻塞**：React 视觉对齐已签字（证据见 `acceptance.md`「React 版视觉对齐 · 返工后复验」）；
+- **TimelineGroups 组件（build `mwdmpfa5-low53`）预检不签字**：R1 会话组间距实测 8px（声明 6px，`tlg-track gap2` + `tlg-session margin-top6`）；R2 分类写入 tick `aria-label`，应仅 Tooltip；R3 gallery onJump 为 noop，Enter/click 跳转未验证；ancestor active `opacity:1` 边界待明确；未接首页、未部署；证据见 `acceptance.md`「TimelineGroups 组件视觉签字」；
+- **build `mwdmisy7` 已签但未部署**：含 1280/1180 时间轴 gutter 修复 + 用户反馈三处；8787 仍为 `mwdfw9t5`；部署与整批签字由 Lead 决定；
 - **COMP-timeline-tip 线上已闭环**：8787 已部署 build `mwdfw9t5-lh5d1`，build-id/health 正常，hover/focus/切换/滚动 smoke 通过（tick title 0、console 0、4xx 0）；证据见 `acceptance.md`「COMP-timeline-tip · 8787 线上 smoke」；
 - 真实重命名、卡片提交、断线重连已在隔离真实后端验收通过（快照库 + mock 模型，未触碰 8787）；见 `acceptance.md`「FE-002–005 独立功能验收」；
 - 真实数据只有 3 条 done 任务、无进行中/未开始样本，右栏展开覆盖不足；

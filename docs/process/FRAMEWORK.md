@@ -102,16 +102,32 @@ specs/<CHANGE-ID>/
 
 | Skill | 用途 |
 |---|---|
-| product-discovery | JTBD、四风险、机会评估 |
-| pitch-writing | Shape Up pitch、appetite、no-gos |
-| spec-driven | Simo SDD 全流程、模板、门禁 |
-| design-first-frontend | 设计先行与截图自检（已有） |
-| component-gallery | 组件登记、变体/状态、截图基线 |
-| frontend-implementation | 组合组件、tokens、无定制 CSS |
-| backend-contract | ADR、OpenAPI、C4、迁移安全 |
-| testing-strategy | 风险测试、契约、门禁 |
+| [`product-discovery`](skills/product-discovery/SKILL.md) | JTBD、四风险、机会评估 |
+| [`pitch-writing`](skills/pitch-writing/SKILL.md) | Shape Up pitch、appetite、no-gos |
+| [`spec-driven`](skills/spec-driven/SKILL.md) | Simo SDD 全流程、模板、门禁 |
+| [`component-gallery`](skills/component-gallery/SKILL.md) | 组件登记、变体/状态、截图基线 |
+| [`frontend-implementation`](skills/frontend-implementation/SKILL.md) | 组合组件、tokens、无定制 CSS |
+| [`backend-contract`](skills/backend-contract/SKILL.md) | ADR、OpenAPI、C4、迁移安全 |
+| [`testing-strategy`](skills/testing-strategy/SKILL.md) | 风险测试、契约、门禁 |
+| [`release-checklist`](skills/release-checklist/SKILL.md) | 版本、包/hash、smoke、回滚 |
 
-存放：`docs/process/skills/<name>/SKILL.md`（待建）；可导出到 `$DSH_HOME` 技能库。
+存放：`docs/process/skills/<name>/SKILL.md`；可导出到 `$DSH_HOME` 技能库。
+> 外部既有 `design-first-frontend` 仍可作参考，但**不属本批 8 个**；本批以 `frontend-implementation` 承接“设计先行”要求。
+
+### 5.1 场景矩阵入口
+
+先按场景取路径，再进对应 skill；完整触发/必产物/门禁/升级降级见 [`SCENARIOS.md`](SCENARIOS.md)。
+
+| 场景 | 场景流程 | 主 skill | 自动门禁 | 人工门禁 |
+|---|---|---|---|---|
+| 新功能 | [`SCENARIOS` 新功能](SCENARIOS.md#1-新功能feature) | [`spec-driven`](skills/spec-driven/SKILL.md) + [`product-discovery`](skills/product-discovery/SKILL.md) | spec lint、AC 映射、tests/build | 范围/价值/AC 意图 |
+| 组件 | [`SCENARIOS` 组件](SCENARIOS.md#2-组件component) | [`component-gallery`](skills/component-gallery/SKILL.md) + [`frontend-implementation`](skills/frontend-implementation/SKILL.md) | manifest/截图存在、tsc/build | 视觉/状态/API 取舍 |
+| Bugfix | [`SCENARIOS` Bugfix](SCENARIOS.md#3-bugfix) | [`testing-strategy`](skills/testing-strategy/SKILL.md) | 失败→通过、回归套件 | 定级/是否升级 |
+| 数据迁移 | [`SCENARIOS` 数据迁移](SCENARIOS.md#4-数据迁移migration) | [`backend-contract`](skills/backend-contract/SKILL.md) + [`testing-strategy`](skills/testing-strategy/SKILL.md) | dry-run、hash/行数、回滚脚本 | 语义/可接受丢失/切换决策 |
+| 发布 | [`SCENARIOS` 发布](SCENARIOS.md#5-发布release) | [`release-checklist`](skills/release-checklist/SKILL.md) | 全量门禁、hash、健康检查 | 发布窗口/回滚决策 |
+| 事故 | [`SCENARIOS` 事故](SCENARIOS.md#6-事故incident) | [`testing-strategy`](skills/testing-strategy/SKILL.md) + [`backend-contract`](skills/backend-contract/SKILL.md) | 日志/监控收集、回归 | 定级/根因/改进决策 |
+
+> 矩阵是入口，不是替代品：升级条件命中时按 SCENARIOS 切换主场景并补齐产物；小改可精简产物，但 AC/证据不可省。
 
 ## 6. 实施路线
 
