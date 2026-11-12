@@ -17,24 +17,27 @@ import (
 	"simo/internal/core/module"
 	"simo/internal/core/store"
 	coretask "simo/internal/core/task"
+	"simo/internal/platform/workspace"
 )
 
 // Options 是 sessions 的可选依赖（composition root 注入）。
 type Options struct {
-	Events *eventlog.Logger
-	Tasks  coretask.Service
-	Memory corememory.Service
-	Debug  bool
+	Events    *eventlog.Logger
+	Tasks     coretask.Service
+	Memory    corememory.Service
+	Debug     bool
+	Workspace *workspace.Policy
 }
 
 // Module 实现 core/module.Module。
 type Module struct {
-	store  *store.Store
-	log    *slog.Logger
-	events *eventlog.Logger
-	tasks  coretask.Service
-	memory corememory.Service
-	debug  bool
+	store     *store.Store
+	log       *slog.Logger
+	events    *eventlog.Logger
+	tasks     coretask.Service
+	memory    corememory.Service
+	debug     bool
+	workspace *workspace.Policy
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -54,6 +57,7 @@ func New(st *store.Store, logger *slog.Logger, options ...Options) *Module {
 		m.tasks = opt.Tasks
 		m.memory = opt.Memory
 		m.debug = opt.Debug
+		m.workspace = opt.Workspace
 	}
 	return m
 }
@@ -78,6 +82,7 @@ func (m *Module) Start(ctx context.Context) error {
 	m.ctx, m.cancel = context.WithCancel(ctx)
 	m.cleanupEmptySessions(context.Background())
 	m.ensureAllSpecs(context.Background())
+	m.materializeSpecFiles(context.Background())
 	if m.events != nil {
 		sub, unsub := m.events.Subscribe(m.ctx)
 		m.unsub = unsub

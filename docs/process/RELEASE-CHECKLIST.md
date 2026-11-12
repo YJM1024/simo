@@ -6,6 +6,18 @@
 
 > **硬规则**：无 spec 不发布；无组件 parity 签字不发布；实现者不得自签；用户只验收前端效果，后端/迁移/流程由验收 Agent 签字。
 
+## 0.1 门禁级别（Lead 裁决）
+
+| 门禁 | 级别 | 说明 |
+|---|---|---|
+| `check:sdd` | **Blocking** | spec/AC/映射不通过不得发布 |
+| 组件级 parity | **Blocking** | 1600/375 图 + 报告 + 验收 Agent 签字；见 [`COMPONENT-PARITY-GATE.md`](COMPONENT-PARITY-GATE.md) |
+| `check:visual` 整页像素对比 | **Nightly / Warning** | **不阻断发布**；消息时间/数据动态导致 fresh capture 不稳定，不能当假门禁；结果进趋势/人工复核 |
+| tsc/build/tests/evals | Blocking | 现有质量门禁 |
+| smoke/rollback | Blocking | 发布前必须通过 |
+
+> `check:visual` 的 warning 不能替代组件 parity；parity 仍必须按当前 build 重新生成并签字。
+
 ## 0. 发布元信息
 
 | 字段 | 值 |
@@ -29,12 +41,14 @@
 
 ## 2. 质量门禁
 
+- [ ] **`check:sdd` 通过（Blocking）**：spec/AC/映射；
 - [ ] tsc 0 / build 通过；
 - [ ] 后端测试/evals 通过（未跑项列明）；
 - [ ] 前端关键交互/三态；
 - [ ] 1600/1180/375 无溢出/裁切（必要时 1920）；
 - [ ] console error 0、关键请求无 4xx/5xx；
 - [ ] 分类/时间轴等本轮视觉项已按 spec 复验；
+- [ ] `check:visual` 整页像素对比仅作 nightly/warning，记录结果但**不作为发布阻断**（动态时间/数据导致 fresh capture 不稳定）；不得用它替代组件 parity；
 - [ ] 无页面定制 CSS/inline style（按项目规范）。
 
 ## 3. 组件级 parity（Blocking）

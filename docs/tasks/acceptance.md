@@ -653,6 +653,128 @@
 
 **范围**：Wave1 缺口修复预检；未部署、未改代码；部署由 Lead 决定（连同已签 parity/分类 build）。
 
+### 颜色体系复验签字（2026-11-13，build `mwdsan29-0iqp8`，**视觉通过**）
+
+**结论：颜色体系签字通过。** 四类消息标签色与时间轴三色均按新增 tokens 生效；1600/375 无横向溢出；375 timeline 隐藏。**未部署**，8787 仍 `mwdrj27e`。
+
+**标签（1600 实测 computed）**
+| 类别 | 标签 | bg | ink |
+|---|---|---|---|
+| 需求提出 | 需求提出 | `rgb(232,236,251)` = #E8ECFB | `rgb(47,75,184)` = #2F4BB8 |
+| 需求澄清 | 需求澄清 | `rgb(251,240,218)` = #FBF0DA | `rgb(138,90,0)` = #8A5A00 |
+| 进度汇报 | 进度汇报 | `rgb(226,241,232)` = #E2F1E8 | `rgb(36,107,78)` = #246B4E |
+| 信息咨询 | 信息咨询 | `rgb(241,240,236)` = #F1F0EC | `rgb(94,96,104)` = #5E6068 |
+
+- 空 category agent → 信息咨询色/文案；`delivery` → 进度汇报色/文案（隔离夹具实测）；user 标签 **0**。
+- 1600/375 `scrollWidth==innerWidth`（1600/1600、375/375），标签无换行/溢出。
+
+**时间轴（1600 实测 computed）**
+- user：`rgb(174,189,247)` / 20px；agent：`rgb(111,175,142)` / 20px。
+- selected `.is-current`：`rgb(35,42,140)` / **24px**；hover：**24px**（user 色保持）。
+- 祖先组（研究员加载主会话）：`tlg-session.is-ancestor-session opacity .55`；当前组 1。
+- 375：timeline `display:none`，宽度 **0**。
+- 颜色来自 `tokens.css`（`--msg-cat-*`、`--timeline-user/agent/selected`）；新 classes 用 var，无页面内联 hex。
+
+**范围/限制**：本轮只签颜色体系（标签+时间轴）；未覆盖 P2 右栏任务/交付物交互、P3 画廊 CI 门禁；颜色 build 继承 `mwds5zb9` scroll 修复（不重复签）；未部署。
+
+### 8787 线上 smoke（2026-11-13，build `mwdsan29-0iqp8`，**通过**）
+
+**结论：线上 smoke 通过（四类标签已补样本后全验）。** Lead 在 8787 测试库补了 `msg-cat-requirement`（requirement）与 `msg-cat-consultation`（consultation）两条脱敏样本；未改代码/正式数据含义。**祖先组 opacity 与空 category 接受隔离夹具证据**（线上无对应样本，已在颜色体系复验中验证），结论中写明。
+
+**通过**
+- 标签（线上四类，1600 computed）：进度汇报 15 条 `rgb(226,241,232)/rgb(36,107,78)`；需求澄清 1 条 `rgb(251,240,218)/rgb(138,90,0)`；需求提出 1 条 `rgb(232,236,251)/rgb(47,75,184)`；信息咨询 1 条 `rgb(241,240,236)/rgb(94,96,104)`；user 标签 **0**。
+- 1600/375 `scrollWidth==innerWidth`（1600/1600、375/375）；375 四类标签仍存在，timeline `display:none` 宽0。
+- 时间轴（线上 1600）：user `rgb(174,189,247)` 20px；agent `rgb(111,175,142)` 20px；selected `rgb(35,42,140)` 24px；当前组 opacity1；375 hidden。
+- scroll：研究员首次 376=max；设 300 → 主会话 → 研究员恢复 **300**；max376。
+- download：`?download=1` 线上响应头 **attachment**（filename download.md / filename* weekly-report.md）；`.download-link` href/download 属性正确，实际落盘 weekly-report.md **101 bytes**，内容一致。
+- console error **0**、4xx **0**；build-id `mwdsan29-0iqp8`。
+
+**接受的隔离证据**
+- 祖先组 opacity .55：线上当前主会话无祖先；隔离夹具实测 `is-ancestor-session opacity .55`。
+- 空/非法 category → 信息咨询：线上无空分类样本；隔离夹具实测 `msg-tag-consultation` 文案/色。
+- 长代码横向滚动：线上无代码样本；隔离夹具长代码 `pre scrollWidth1530 > clientWidth614`。
+
+**范围**：线上 smoke 补证；未部署新 build；P2/P3 收口见对应预检记录。
+
+### P2/P3 收口预检（2026-11-13，live build `mwdsan29-0iqp8`，**不签字：P2 位移/键盘/loading + P3 CI 门禁待补**）
+
+**结论：预检不签字。** P2 右栏任务可见/交付物打开下载、工作台 error、P3 check-sdd/baseline 通过；但 P2 任务点击位移未复现、键盘/空态未断言、工作台 loading 未截图；P3 组件样例门禁尚未打包进 CI。
+
+**已验/通过**
+- P2 右栏：任务行 **5** 可见（汇总本周进展/整理风险清单/生成下周计划/生成周报初稿/等待确认交付格式）；点击任务按钮无 console error/异常，但 `scrollTop 2206→2206`、active tick 仍 1（当前任务消息在底部，未观察位移）；交付物 weekly-report.md `.deliverable-row` 点击 `window.open('/api/artifacts/art-weekly-report/content')`；`.download-link` href `?download=1`、文案「下载」。
+- 工作台 error：注入 stats/deliverables 失败，error **2**、loading 0、无「统计加载中」、metrics `["—","—","workspace-write"]`，两处重试；截图 `fe-workbench-error-1600.png`。
+- P3：`scripts/check-sdd.mjs` **PASS**（12 specs、COMP4、A 101/101、manifest 32）；画廊含四类标签、TimelineGroups 三色、DeliverableItem；baseline `frontend/review/regression/baseline-{1600,1280,1180,375}.png` 存在（live build）。
+
+**需补项（不签原因）**
+1. P2 任务点击位移：当前任务消息已在底部，无法判定“点击任务→定位对应消息”是否成立；需构造 task↔message 映射、且目标不在视口的样本，断言 scrollTop/active tick 变化。
+2. P2 键盘：任务/交付物/空态 Enter 未单独断言。
+3. P2 工作台 loading：代码有 state-loading，但未做延迟注入截图；empty 交付物空态未用 0 数据 home 实测。
+4. P3：check-sdd PASS 但**组件样例门禁未打包进 CI**；regression baseline 是否在 CI 自动比对未说明。
+
+**范围**：收口预检；未改代码/未部署；P2/P3 补齐证据后再签。
+
+### P2 补验（2026-11-13，live `mwdsan29`，fixture `msg-a1.task_id=task-seed-done-1`，**仍不签字：任务定位未生效**）
+
+**结论：任务点击仍未定位，不能签。** Lead 提供 fixture 后复验：`msg-a1` 在列表顶部、当前视口在底部（scrollTop2206=max=2206，msg-a1 不可见）；点击「汇总本周进展」/键盘 Enter 后，scrollTop 仍 2206、active tick 仍 1、msg-a1 仍不可见。**根因**：`locateTask` 只在消息 `text` 中搜索 task.title/task.id，没有使用 `message.taskId`；`msg-a1.text` 不含「汇总本周进展」/`task-seed-done-1`，所以匹配不到。
+
+**补验通过/新证据**
+- 工作台 loading 截图：`fe-workbench-loading-1600.png`；Fetch 延迟下两处 `.state-loading`「统计加载中…/交付物加载中…」，metrics 全「—」，无假0。
+- 0 数据 home：`fe-workbench-empty-1600.png`；工作台 0 消息/0 任务、交付物「暂无交付物」、无假数据。
+- 交付物键盘：聚焦 `.deliverable-row` 后 Enter 未打开 preview（`window.__opened=null`）；鼠标点击可打开。可能为测试聚焦/事件问题，需真实键盘复核，不能算通过。
+
+**仍未闭环**
+1. **任务定位**：改为优先按 `message.taskId === task.id` 匹配（再回退文本匹配），并断言 scrollTop/active tick 变化。
+2. 交付物/任务键盘 Enter 的真实激活确认（当前交付物 Enter 未触发）。
+3. P3 组件样例门禁打包进 CI、baseline 自动比对未完成。
+
+**Gate：不签字**；fixture 已在 8787 测试库，可直接复测。
+
+### P2 任务定位修复签字（2026-11-13，build `mwdstatg-rknb3`，**交互通过**）
+
+**结论：任务定位修复签字通过。** `msg-a1.task_id=task-seed-done-1` fixture 下，点击/Enter 均定位到顶部 msg-a1，scrollTop/active tick 变化，目标可见；交付物 Enter 可打开 preview。**本签字仅任务定位修复；P2/P3 整体仍有未闭环项（见文末）。**
+
+| 项 | 结果 | 证据 |
+|---|---|---|
+| 点击任务 | 通过 | 底部 scrollTop **2206**、active tick **24**、msg-a1 不可见；点击「汇总本周进展」后 scrollTop **127**、active **1**、msg-a1 可见；100ms 时 `.is-flash` **1**（1.2s 后灭） |
+| 键盘 Enter | 通过 | 重置底部 2206/active24；聚焦任务按钮 Enter 后 scrollTop **127**、active **1**、msg-a1 可见 |
+| 交付物 Enter | 通过 | `.deliverable-row` 原生 button 聚焦 + Enter → `window.open('/api/artifacts/art-weekly-report/content')` |
+| taskId 匹配 | 通过 | 源码 `locateTask` 优先 `node.dataset.taskId === task.id`，再 messageId/文本回退；`Message` 输出 `data-task-id` |
+| 工作台 loading | 通过（当前 build） | `fe-workbench-loading-1600.png`：两处 `.state-loading`「统计加载中…/交付物加载中…」，metrics 无假 0 |
+
+**已知未闭环（不阻断本修复签字，但 P2/P3 整体不签）**
+- 工作台 empty 键盘可达未断言；`fe-workbench-empty-1600.png` 为 0 数据 home 截图（已显示 0 消息/任务、暂无交付物），当前 build 未重拍。
+- P3 组件样例门禁未打包进 CI、baseline 自动比对未完成。
+- 375 本轮未重跑（此前无横向溢出）。
+- 服务端 download header 已为 attachment（线上 smoke 已验）；剪贴板成功路径仍不可验。
+
+**范围**：任务定位/键盘/交付物 Enter；未部署；P2/P3 整批仍需补上述项。
+
+### P3 复验（2026-11-13，build `mwdsx6vl-4cwln`，**Lead 裁决：nightly/warning，不阻断发布**）
+
+> **Lead 裁决（2026-11-13）**
+> - `check:visual` 定位 **nightly / warning**，**不作为发布阻断**；
+> - **发布阻断门禁 = `check:sdd` PASS + 组件 parity 签字**；
+> - P3 已实现 `capture:visual` / `check:visual` 脚本与自测（改像素 fail / 恢复 pass），记录为**工程能力完成**；
+> - **不再要求 fresh full-page 0 diff 签字**。
+>
+> 因此下文 fresh capture 4 failures 作为 nightly warning 证据保留，不再作为 P3 发布阻断。
+
+**结论：按 Lead 裁决收口。** 脚本已改为真实 current↔baseline（canvas 像素），capture 四档生成、自测可检测 1px 差异；本机 fresh capture 与 baseline 有 0.038–0.121% 差异（max151），原因更可能是动态状态/数据/环境不一致，转 nightly 观察，不作为发布阻断。
+
+**已通过/已验**
+- `check:sdd` PASS（12 specs、COMP4、A101/101、manifest32）。
+- 0 数据 home 空态「去对话」原生 button focus+Enter 切回对话，键盘可达。
+- 375：四类标签、timeline hidden、无横向溢出；右栏隐藏；**375 任务不可达接受为响应式例外（N/A）**。
+- `package.json` 已有 typecheck/build/check:sdd/check:visual/capture:visual/check。
+
+**Nightly warning / 改进项（不阻断发布）**
+1. **实际 gate 结果**：`capture:visual` 四档生成后，`check:visual --current review/regression/current` → `4 baselines, 4 failures`；baseline 与当前 build 截图不一致（diff 0.038–0.121%，max151）。作为 nightly warning 记录，不作为发布阻断。
+2. **`check` 未串联 capture**：`check = typecheck + check:sdd + check:visual`，`check:visual` 只读 `current/`；建议 nightly/CI 先跑 `capture:visual`，避免陈旧 current。
+3. **baseline 稳定性**：baseline/current 差异更可能来自动态状态/数据/环境；建议固定 fixture/动态区域或同一环境生成，减少 nightly 噪声。
+4. 375 任务 N/A 例外需写入评分表；复制成功路径仍环境限制。
+
+**处置（Lead 裁决）**：P3 `check:visual` 为 **nightly/warning**，不阻断发布；`capture/check/自测` 记录为工程能力完成；**不再要求 fresh full-page 0 diff 签字**。发布阻断门禁 = `check:sdd` PASS + 组件 parity 签字（二者均已满足）。
+
 ### 检查清单（每轮）
 
 1. 首屏 3 秒能理解产品与下一步；

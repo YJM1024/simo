@@ -84,7 +84,7 @@ func (m *Module) workspaceSessionSegments(ctx context.Context, sessionID string)
 		if item.ID == "" || item.ID == "main" {
 			continue
 		}
-		segments = append(segments, "conversations", item.ID)
+		segments = append(segments, item.ID)
 	}
 	return segments
 }

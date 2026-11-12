@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -25,6 +27,8 @@ type artifactEntry struct {
 	WorkspaceRel string `json:"workspaceRelPath"`
 	Source       string `json:"source"`
 	TargetAbs    string `json:"targetAbs"`
+	SourceSHA256 string `json:"sourceSha256,omitempty"`
+	TargetSHA256 string `json:"targetSha256,omitempty"`
 	Status       string `json:"status"`
 	Reason       string `json:"reason,omitempty"`
 }
@@ -149,15 +153,30 @@ func buildPlan(home string) (planReport, error) {
 			base = filepath.Join(base, "tasks", e.TaskID, "_internal")
 		}
 		e.TargetAbs = filepath.Join(base, filepath.Base(e.Name))
-		e.WorkspaceRel = filepath.ToSlash(strings.TrimPrefix(strings.TrimPrefix(e.TargetAbs, filepath.Join(home, "workspace")), string(filepath.Separator)))
-		if _, err := os.Stat(e.Source); err != nil {
-			e.Status = "missing-source"
-			report.Missing = append(report.Missing, e.ID)
-		} else if len([]byte(e.TargetAbs)) > 240 {
-			e.Status = "path-too-long"
-			report.LongPaths = append(report.LongPaths, e.TargetAbs)
-		} else {
-			e.Status = "ready"
+		if rel, err := filepath.Rel(filepath.Join(home, "workspace"), e.TargetAbs); err == nil {
+			e.WorkspaceRel = filepath.ToSlash(rel)
+		}
+		e.SourceSHA256, _ = fileSHA256(e.Source)
+		switch {
+		case !insidePath(filepath.Join(home, "artifacts"), e.Source):
+			e.Status = "unsafe-source"
+			e.Reason = "source outside artifacts root"
+		case !insidePath(filepath.Join(home, "workspace"), e.TargetAbs):
+			e.Status = "unsafe-target"
+			e.Reason = "target outside workspace root"
+		case !safeSegment(e.TaskID):
+			e.Status = "unsafe-task"
+			e.Reason = "taskId contains path separators or traversal"
+		default:
+			if _, err := os.Stat(e.Source); err != nil {
+				e.Status = "missing-source"
+				report.Missing = append(report.Missing, e.ID)
+			} else if len([]byte(e.TargetAbs)) > 240 {
+				e.Status = "path-too-long"
+				report.LongPaths = append(report.LongPaths, e.TargetAbs)
+			} else {
+				e.Status = "ready"
+			}
 		}
 		targets[e.TargetAbs]++
 		report.Counts[e.DeliveryKind]++
@@ -195,12 +214,56 @@ func sessionSegments(sessionID string, sessions map[string]string) []string {
 	return segments
 }
 
+func safeSegment(value string) bool {
+	if strings.TrimSpace(value) == "" || value == "." || value == ".." {
+		return false
+	}
+	if strings.ContainsAny(value, `/\`) || filepath.IsAbs(value) || filepath.VolumeName(value) != "" {
+		return false
+	}
+	return true
+}
+
+func insidePath(root, candidate string) bool {
+	rel, err := filepath.Rel(filepath.Clean(root), filepath.Clean(candidate))
+	if err != nil {
+		return false
+	}
+	return rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) && !filepath.IsAbs(rel)
+}
+
+func fileSHA256(path string) (string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	sum := sha256.Sum256(data)
+	return hex.EncodeToString(sum[:]), nil
+}
+
+func writeManifest(dir string, report planReport) error {
+	if strings.TrimSpace(dir) == "" {
+		return nil
+	}
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	raw, err := json.MarshalIndent(report, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(dir, "manifest.json"), raw, 0o644)
+}
+
 func applyPlan(home string, report planReport, backupDir string) error {
 	backupDir = strings.TrimSpace(backupDir)
 	if backupDir == "" {
 		backupDir = filepath.Join(home, "backups", "workspace-migrate-"+time.Now().Format("20060102-150405"))
 	}
 	if err := os.MkdirAll(backupDir, 0o755); err != nil {
+		return err
+	}
+	if err := writeManifest(backupDir, report); err != nil {
 		return err
 	}
 	for _, suffix := range []string{"", "-wal", "-shm"} {
@@ -219,7 +282,8 @@ func applyPlan(home string, report planReport, backupDir string) error {
 	if err := ensureArtifactColumns(db); err != nil {
 		return err
 	}
-	for _, entry := range report.Entries {
+	for i := range report.Entries {
+		entry := &report.Entries[i]
 		if entry.Status != "ready" {
 			continue
 		}
@@ -229,8 +293,16 @@ func applyPlan(home string, report planReport, backupDir string) error {
 		if err := copyFile(entry.Source, entry.TargetAbs); err != nil {
 			return err
 		}
+		targetHash, err := fileSHA256(entry.TargetAbs)
+		if err != nil {
+			return err
+		}
+		entry.TargetSHA256 = targetHash
+		if entry.SourceSHA256 != "" && targetHash != entry.SourceSHA256 {
+			return fmt.Errorf("hash mismatch after copy: %s", entry.ID)
+		}
 	}
-	return db.Write(context.Background(), func(tx *sql.Tx) error {
+	err = db.Write(context.Background(), func(tx *sql.Tx) error {
 		for _, entry := range report.Entries {
 			if entry.Status != "ready" {
 				continue
@@ -243,6 +315,10 @@ func applyPlan(home string, report planReport, backupDir string) error {
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+	return writeManifest(backupDir, report)
 }
 
 func verifyHome(home string) error {
@@ -251,31 +327,49 @@ func verifyHome(home string) error {
 		return err
 	}
 	defer db.Close()
-	rows, err := db.Query(context.Background(), `SELECT id, COALESCE(storage_scope,'legacy_artifacts'), COALESCE(workspace_rel_path,'')
-		FROM task_artifacts`)
+	rows, err := db.Query(context.Background(), `SELECT id, COALESCE(storage_scope,'legacy_artifacts'),
+		COALESCE(workspace_rel_path,''), COALESCE(rel_path,'') FROM task_artifacts`)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
 	missing := 0
+	mismatch := 0
 	workspace := 0
 	for rows.Next() {
-		var id, scope, rel string
-		if err := rows.Scan(&id, &scope, &rel); err != nil {
+		var id, scope, rel, legacyRel string
+		if err := rows.Scan(&id, &scope, &rel, &legacyRel); err != nil {
 			return err
 		}
 		if scope != "workspace" {
 			continue
 		}
 		workspace++
-		if _, err := os.Stat(filepath.Join(home, "workspace", filepath.FromSlash(rel))); err != nil {
+		target := filepath.Join(home, "workspace", filepath.FromSlash(rel))
+		if _, err := os.Stat(target); err != nil {
 			missing++
+			continue
+		}
+		if legacyRel == "" {
+			continue
+		}
+		source := filepath.Join(home, "artifacts", filepath.FromSlash(legacyRel))
+		if _, err := os.Stat(source); err != nil {
+			continue
+		}
+		sourceHash, err1 := fileSHA256(source)
+		targetHash, err2 := fileSHA256(target)
+		if err1 != nil || err2 != nil || sourceHash != targetHash {
+			mismatch++
 		}
 	}
 	if missing > 0 {
 		return fmt.Errorf("verify failed: %d workspace artifact(s) missing", missing)
 	}
-	fmt.Printf("verify ok: workspace_artifacts=%d\n", workspace)
+	if mismatch > 0 {
+		return fmt.Errorf("verify failed: %d artifact(s) hash mismatch", mismatch)
+	}
+	fmt.Printf("verify ok: workspace_artifacts=%d hash_checked=%d\n", workspace, workspace)
 	return nil
 }
 

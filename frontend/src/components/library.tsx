@@ -201,7 +201,7 @@ export function MessageItem({ message, onCardAction, readOnly = false }: { messa
   const categoryKey = isUser ? '' : (rawCategory && CATEGORY_LABEL[rawCategory] ? rawCategory : 'consultation')
   const category = categoryKey ? CATEGORY_LABEL[categoryKey] : ''
   return (
-    <article className={`msg ${isUser ? 'from-user' : 'from-agent'}`} data-message-id={message.id} data-session-id={message.sessionId}>
+    <article className={`msg ${isUser ? 'from-user' : 'from-agent'}`} data-message-id={message.id} data-task-id={message.taskId} data-session-id={message.sessionId}>
       <span className="msg-avatar">{isUser ? '你' : '墨'}</span>
       <div className="msg-body">
         <div className="msg-meta"><b>{isUser ? '你' : '司墨'}</b><span>·</span>{category && <><span className={`tag msg-tag msg-tag-${categoryKey}`}>{category}</span><span>·</span></>}<span>{formatTime(message.at)}</span>{message.status === 'failed' && <span className="badge danger">失败</span>}{message.text.trim() && <button type="button" className="msg-copy" onClick={() => void copy()} aria-label="复制消息">{copyState === 'copied' ? '已复制' : copyState === 'error' ? '复制失败' : '复制'}</button>}</div>
@@ -637,11 +637,11 @@ export function OverviewPanel({ session, projection, loading, error = '', onRetr
   loading: boolean
   error?: string
   onRetry?: () => void
-  onTaskClick?: (task: { id: string; title: string }) => void
+  onTaskClick?: (task: { id: string; title: string; messageId?: string }) => void
   onArtifactOpen?: (id: string) => void
 }): React.ReactNode {
   const statusLabel = projection ? ({ completed: '已完成', active: '进行中', draft: '草稿', blocked: '阻塞', done: '已完成' }[projection.status] ?? projection.status) : ''
-  const mapTasks = (items: Array<{ id: string; title: string; state: string; updatedAt: number }>): Task[] => items.map((item) => ({ id: item.id, sessionId: projection?.sessionId ?? session?.id ?? '', title: item.title, status: item.state, createdAt: item.updatedAt, updatedAt: item.updatedAt }))
+  const mapTasks = (items: Array<{ id: string; title: string; state: string; updatedAt: number; messageId?: string }>): Task[] => items.map((item) => ({ id: item.id, sessionId: projection?.sessionId ?? session?.id ?? '', title: item.title, status: item.state, createdAt: item.updatedAt, updatedAt: item.updatedAt, messageId: item.messageId }))
   const groups = {
     done: mapTasks(projection?.tasks.done.items ?? []),
     running: mapTasks([...(projection?.tasks.running.items ?? []), ...(projection?.tasks.pending.items ?? [])]),
@@ -660,8 +660,8 @@ export function OverviewPanel({ session, projection, loading, error = '', onRetr
           <Section title="输入"><p className="insp-text">{projection.constraints.length || projection.inputs.length ? [...projection.constraints, ...projection.inputs].join(' · ') : '暂无输入约束。'}</p></Section>
           <section className="insp-block">
             <SectionHeader title="执行会话" meta={`共 ${projection.tasks.done.total + projection.tasks.running.total + projection.tasks.pending.total} · 本次 ${projection.tasks.done.items.length + projection.tasks.running.items.length + projection.tasks.pending.items.length}`} />
-            <ExecutionGroup title="已完成" tasks={groups.done} defaultCount={3} tone="done" emptyTitle="暂无已完成任务" emptyDescription="任务完成后会出现在这里。" onTaskClick={(task) => onTaskClick?.({ id: task.id, title: task.title })} />
-            <ExecutionGroup title="进行中" tasks={groups.running} defaultCount={3} tone="running" emptyTitle="暂无进行中任务" emptyDescription="任务开始后会出现在这里。" onTaskClick={(task) => onTaskClick?.({ id: task.id, title: task.title })} />
+            <ExecutionGroup title="已完成" tasks={groups.done} defaultCount={3} tone="done" emptyTitle="暂无已完成任务" emptyDescription="任务完成后会出现在这里。" onTaskClick={(task) => onTaskClick?.({ id: task.id, title: task.title, messageId: task.messageId })} />
+            <ExecutionGroup title="进行中" tasks={groups.running} defaultCount={3} tone="running" emptyTitle="暂无进行中任务" emptyDescription="任务开始后会出现在这里。" onTaskClick={(task) => onTaskClick?.({ id: task.id, title: task.title, messageId: task.messageId })} />
             <ExecutionGroup title="未开始" tasks={groups.queued} defaultCount={3} tone="pending" emptyTitle="暂无未开始任务" emptyDescription="新任务会先排在这里。" />
           </section>
           <section className="insp-block">

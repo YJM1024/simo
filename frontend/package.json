@@ -6,7 +6,11 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "node build.mjs",
-    "dev": "node dev-server.mjs"
+    "dev": "node dev-server.mjs",
+    "check:sdd": "node ../scripts/check-sdd.mjs",
+    "check:visual": "node scripts/check-visual-baseline.mjs",
+    "check": "npm run typecheck && npm run check:sdd && npm run capture:visual && npm run check:visual",
+    "capture:visual": "node scripts/capture-visual.mjs"
   },
   "dependencies": {
     "http-proxy": "^1.18.1",

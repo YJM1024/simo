@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -71,6 +72,19 @@ func TestMigrationToolPlanApplyVerifyRollback(t *testing.T) {
 	if err := applyPlan(home, plan, backup); err != nil {
 		t.Fatal(err)
 	}
+	manifestRaw, err := os.ReadFile(filepath.Join(backup, "manifest.json"))
+	if err != nil {
+		t.Fatalf("manifest missing: %v", err)
+	}
+	var manifest planReport
+	if err := json.Unmarshal(manifestRaw, &manifest); err != nil || len(manifest.Entries) != 2 {
+		t.Fatalf("manifest = %s err=%v", manifestRaw, err)
+	}
+	for _, entry := range manifest.Entries {
+		if entry.SourceSHA256 == "" || entry.TargetSHA256 != entry.SourceSHA256 {
+			t.Fatalf("manifest hash mismatch: %+v", entry)
+		}
+	}
 	for _, rel := range []string{"workspace/main/output/交付.md", "workspace/main/tasks/task-1/_internal/report-attempt-1.md"} {
 		if _, err := os.Stat(filepath.Join(home, filepath.FromSlash(rel))); err != nil {
 			t.Fatalf("target %s missing: %v", rel, err)
@@ -96,5 +110,52 @@ func TestMigrationToolPlanApplyVerifyRollback(t *testing.T) {
 	}
 	if scope != "legacy_artifacts" {
 		t.Fatalf("rollback scope = %q", scope)
+	}
+}
+
+func TestMigrationVerifyDetectsHashMismatch(t *testing.T) {
+	home, backup := setupMigrationHome(t)
+	plan, err := buildPlan(home)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := applyPlan(home, plan, backup); err != nil {
+		t.Fatal(err)
+	}
+	target := filepath.Join(home, "workspace", "main", "output", "交付.md")
+	if err := os.WriteFile(target, []byte("tampered"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := verifyHome(home); err == nil {
+		t.Fatalf("verify 应发现 hash mismatch")
+	}
+}
+
+func TestMigrationRejectsUnsafePath(t *testing.T) {
+	home, _ := setupMigrationHome(t)
+	db, err := sqlite.Open(filepath.Join(home, "simo.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Write(context.Background(), func(tx *sql.Tx) error {
+		_, err := tx.ExecContext(context.Background(), `UPDATE task_artifacts SET task_id='session:../evil' WHERE id='art-user'`)
+		return err
+	}); err != nil {
+		db.Close()
+		t.Fatal(err)
+	}
+	db.Close()
+	plan, err := buildPlan(home)
+	if err != nil {
+		t.Fatal(err)
+	}
+	unsafe := false
+	for _, entry := range plan.Entries {
+		if entry.Status == "unsafe-target" || entry.Status == "unsafe-source" || entry.Status == "unsafe-task" {
+			unsafe = true
+		}
+	}
+	if !unsafe {
+		t.Fatalf("traversal 未被拒绝: %+v", plan.Entries)
 	}
 }

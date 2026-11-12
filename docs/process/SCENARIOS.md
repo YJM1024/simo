@@ -245,11 +245,13 @@
 | 门禁 | 类型 | 通过条件 |
 |---|---|---|
 | Release Ready | Blocking | 范围/版本/说明/已知问题齐全 |
+| **`check:sdd`** | **Blocking** | spec/AC/映射通过 |
 | Verify | Blocking | 全量门禁通过，无 blocking 缺陷 |
 | **Component Parity** | **Blocking** | **1600/375 parity 图 + 报告齐全；对照冻结原型逐组件对齐；无错位/风格漂移；像素微差已记录；验收 Agent 签字** |
 | Package | Blocking | 包可复现、hash 记录、无密钥 |
 | Smoke | Blocking | 目标环境启动/健康/关键路径通过 |
 | Rollback Ready | Blocking | 旧版/备份可回退 |
+| **`check:visual` 整页像素对比** | **Nightly / Warning** | **不阻断发布**；消息时间/数据动态导致 fresh capture 不稳定，不能当假门禁；结果进趋势/人工复核，且不得替代 parity |
 | Archive | Warning | 发布证据归档 |
 
 ### 角色
@@ -261,7 +263,8 @@ Release owner/Lead、模块 owner、测试/验收、运维（部署/监控）。
 - 目标环境真实路径走通；健康检查/关键 API/UI 通过；
 - 包 hash/版本/说明一致；无密钥/敏感文件；
 - 回滚演练或回滚命令可用；
-- **组件 parity**：`component-parity-1600.png`/`375.png` 与 `component-parity.md` 齐全；冻结原型 vs 当前 build 逐组件对齐；允许像素微差（记录原因/范围），不允许组件错位/风格漂移；**验收 Agent 签字**；未签不得上线。
+- **组件 parity**：`component-parity-1600.png`/`375.png` 与 `component-parity.md` 齐全；冻结原型 vs 当前 build 逐组件对齐；允许像素微差（记录原因/范围），不允许组件错位/风格漂移；**验收 Agent 签字**；未签不得上线；
+- **`check:visual`**：整页像素对比只作为 nightly/warning 记录，**不作为发布阻断**；动态时间/数据导致 fresh capture 不稳定，不能当假门禁，也不能替代 parity。
 
 ### 升级 / 降级
 
@@ -272,7 +275,8 @@ Release owner/Lead、模块 owner、测试/验收、运维（部署/监控）。
 
 - “本地过了”直接上线；无回滚包；发布说明只写“优化”；
 - 带密钥/临时文件打包；发布后不看监控；
-- **无 component parity 图/报告就上线，或用“整体看起来差不多”代替逐组件对齐**；把像素微差当风格漂移放行。
+- **无 component parity 图/报告就上线，或用“整体看起来差不多”代替逐组件对齐**；把像素微差当风格漂移放行；
+- 把 `check:visual` warning 当发布阻断/或反过来当通过依据——它只是 nightly 趋势，不是假门禁。
 
 ---
 

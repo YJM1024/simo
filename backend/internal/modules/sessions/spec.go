@@ -141,7 +141,7 @@ func (m *Module) CanArchive(ctx context.Context, specID string) (corespec.Archiv
 }
 
 func (m *Module) updateSpec(ctx context.Context, sessionID string, mutate func(*corespec.Spec)) error {
-	return m.store.Write(ctx, func(tx *sql.Tx) error {
+	err := m.store.Write(ctx, func(tx *sql.Tx) error {
 		var spec corespec.Spec
 		var keysJSON, evidenceJSON string
 		err := tx.QueryRowContext(ctx, `SELECT id, session_id, status, version, acceptance_keys, evidence, created_at, updated_at
@@ -179,6 +179,10 @@ func (m *Module) updateSpec(ctx context.Context, sessionID string, mutate func(*
 			spec.ID, spec.SessionID, spec.Status, spec.Version, string(keys), string(evidence), spec.CreatedAt, spec.UpdatedAt)
 		return err
 	})
+	if err == nil {
+		m.writeSpecMirror(ctx, sessionID)
+	}
+	return err
 }
 
 func insertSpecTx(ctx context.Context, tx *sql.Tx, spec corespec.Spec) error {

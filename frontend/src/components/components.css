@@ -955,11 +955,13 @@ body { overflow: hidden; }
 .download-link { flex: none; padding: 2px var(--sp-4); font-size: var(--font-10); color: var(--accent); text-decoration: none; }
 .download-link:hover { text-decoration: underline; }
 
-.msg-tag-requirement { background: var(--msg-cat-requirement-bg); color: var(--msg-cat-requirement-ink); }
-.msg-tag-clarification { background: var(--msg-cat-clarification-bg); color: var(--msg-cat-clarification-ink); }
-.msg-tag-progress { background: var(--msg-cat-progress-bg); color: var(--msg-cat-progress-ink); }
-.msg-tag-consultation { background: var(--msg-cat-consultation-bg); color: var(--msg-cat-consultation-ink); }
+.msg-meta .msg-tag-requirement { background: var(--msg-cat-requirement-bg); color: var(--msg-cat-requirement-ink); }
+.msg-meta .msg-tag-clarification { background: var(--msg-cat-clarification-bg); color: var(--msg-cat-clarification-ink); }
+.msg-meta .msg-tag-progress { background: var(--msg-cat-progress-bg); color: var(--msg-cat-progress-ink); }
+.msg-meta .msg-tag-consultation { background: var(--msg-cat-consultation-bg); color: var(--msg-cat-consultation-ink); }
 .timeline-groups .tl-bar.is-user { background: var(--timeline-user); opacity: 1; }
 .timeline-groups .tl-bar.is-agent { background: var(--timeline-agent); opacity: 1; }
 .timeline-groups .tl-bar.is-current { background: var(--timeline-selected); width: var(--size-24); opacity: 1; }
 .timeline-groups .tl-bar:hover { width: var(--size-24); }
+
+.msg.is-flash { border-color: var(--accent-line); background: var(--accent-soft); transition: background .18s ease, border-color .18s ease; }

@@ -23,6 +23,7 @@ export interface Message {
   at: number
   status: string
   agentId?: string
+  taskId?: string
   category?: string
   cards?: Card[]
   attachments?: Array<{ id: string; name?: string; mime?: string }>
@@ -80,6 +81,7 @@ export interface Task {
   progress?: number
   createdAt: number
   updatedAt: number
+  messageId?: string
 }
 
 export interface Artifact {
@@ -121,7 +123,7 @@ export interface StatsBucket {
   start: number
 }
 
-export interface SpecTaskItem { id: string; title: string; state: string; updatedAt: number }
+export interface SpecTaskItem { id: string; title: string; state: string; updatedAt: number; messageId?: string }
 export interface SpecTaskGroup { total: number; items: SpecTaskItem[]; hasMore: boolean }
 export interface SpecDeliverable { id: string; name: string; createdAt?: number; kind?: string; previewUrl?: string; downloadUrl?: string }
 export interface SessionSpecProjection {

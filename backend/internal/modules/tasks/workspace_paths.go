@@ -25,7 +25,7 @@ func (m *Module) sessionWorkspaceSegments(ctx context.Context, sessionID string)
 		current = parent
 	}
 	for i := len(reversed) - 1; i >= 0; i-- {
-		segments = append(segments, "conversations", reversed[i])
+		segments = append(segments, reversed[i])
 	}
 	return segments
 }

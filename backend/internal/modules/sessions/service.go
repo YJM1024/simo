@@ -133,6 +133,7 @@ func (m *Module) Create(ctx context.Context, parentID, title string) (Session, e
 	}); err != nil {
 		return Session{}, fmt.Errorf("创建会话失败: %w", err)
 	}
+	m.writeSpecMirror(ctx, session.ID)
 	return session, nil
 }
 

@@ -410,9 +410,24 @@ export default function App(): React.ReactNode {
     }
   }
 
-  const locateTask = (task: { title: string; id: string }): void => {
-    const index = messages.findIndex((message) => message.text.includes(task.title) || (task.id && message.text.includes(task.id)))
-    if (index >= 0) { setActiveMessage(index); const node = document.querySelectorAll<HTMLElement>('.chat-scroll .msg')[index]; node?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
+  const locateTask = (task: { title: string; id: string; messageId?: string }): void => {
+    const nodes = [...document.querySelectorAll<HTMLElement>('.conversation-scroll .msg')]
+    const index = nodes.findIndex((node) => node.dataset.taskId === task.id) >= 0
+      ? nodes.findIndex((node) => node.dataset.taskId === task.id)
+      : task.messageId
+        ? nodes.findIndex((node) => node.dataset.messageId === task.messageId)
+        : nodes.findIndex((node) => (node.textContent ?? '').includes(task.title))
+    if (index < 0) return
+    setActiveMessage(index)
+    const node = nodes[index]
+    nodes.forEach((item) => item.classList.remove('is-flash'))
+    node.classList.add('is-flash')
+    window.setTimeout(() => node.classList.remove('is-flash'), 1200)
+    const scroller = scrollerRef.current
+    if (!scroller) return
+    const box = node.getBoundingClientRect()
+    const viewTop = scroller.getBoundingClientRect().top
+    if (box.top < viewTop || box.bottom > viewTop + scroller.clientHeight) node.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   const rename = async (id: string, title: string): Promise<void> => {
@@ -571,7 +586,7 @@ export default function App(): React.ReactNode {
               <div className="section-title"><h2>交付物</h2><span>用户产物</span></div>
               {deliverablesLoading && <LoadingState label="交付物加载中…" />}
               {!deliverablesLoading && deliverablesError && <ErrorState title="交付物加载失败" description={deliverablesError} onRetry={() => { setDeliverablesLoading(true); setDeliverablesError(''); void getDeliverables().then((data) => setUserDeliverables(data.deliverables ?? [])).catch((err: unknown) => setDeliverablesError(err instanceof Error ? err.message : '交付物加载失败')).finally(() => setDeliverablesLoading(false)) }} />}
-              {!deliverablesLoading && !deliverablesError && visibleWorkbenchArtifacts.length === 0 && <EmptyState title="暂无交付物" description="报告、文档、表格或文件会出现在这里。" />}
+              {!deliverablesLoading && !deliverablesError && visibleWorkbenchArtifacts.length === 0 && <EmptyState title="暂无交付物" description="报告、文档、表格或文件会出现在这里。" action={<button className="btn sm" type="button" onClick={() => setPage('chat')}>去对话</button>} />}
               {!deliverablesLoading && !deliverablesError && visibleWorkbenchArtifacts.length > 0 && <div className="list">{visibleWorkbenchArtifacts.map((artifact) => <div className="deliverable-line" key={artifact.id}><button className="row" type="button" onClick={() => void openArtifact(artifact.id)}><span className="kind">文件</span><span className="title">{artifact.name}</span><span className="time">{formatTime(artifact.createdAt ?? 0)}</span></button>{artifact.downloadUrl && <a className="download-link" href={artifact.downloadUrl} download aria-label={`下载 ${artifact.name}`}>下载</a>}</div>)}</div>}
             </div></div>
           </section>

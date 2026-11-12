@@ -94,6 +94,7 @@ func (m *Module) MaterializeDraft(ctx context.Context, id string) (Session, bool
 		return Session{}, false, fmt.Errorf("物化草稿失败: %w", err)
 	}
 	delete(m.drafts, id)
+	m.writeSpecMirror(ctx, draft.Session.ID)
 	return draft.Session, true, nil
 }
 

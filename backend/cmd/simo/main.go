@@ -167,9 +167,10 @@ func buildAppWithProvider(ctx context.Context, cfg config.Config, logger *slog.L
 	}
 
 	sessionOpts := sessions.Options{
-		Events: events,
-		Tasks:  taskSvc,
-		Debug:  cfg.Debug,
+		Events:    events,
+		Tasks:     taskSvc,
+		Debug:     cfg.Debug,
+		Workspace: sandbox,
 	}
 	if memoryMod != nil {
 		sessionOpts.Memory = memoryMod

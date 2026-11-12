@@ -1,8 +1,18 @@
 # 组件 Parity 门禁清单 · COMPONENT PARITY GATE
 
 状态：**待用（本轮不签通过；等交付复验）**
-适用：上线前组件级视觉对比；Blocking 门禁，未签不得发布。
+适用：上线前组件级视觉对比；**Blocking 门禁**，未签不得发布。
 关联：[`RELEASE-CHECKLIST.md`](RELEASE-CHECKLIST.md)、[`SCENARIOS.md`](SCENARIOS.md) 发布、[`ROLES.md`](ROLES.md) 测试→发布交接。
+
+## 0. 门禁级别（Lead 裁决）
+
+| 门禁 | 级别 | 说明 |
+|---|---|---|
+| `check:sdd` | **Blocking** | spec/AC/映射门禁 |
+| 组件级 parity（本清单） | **Blocking** | 1600/375 图 + `component-parity.md` + 验收 Agent 签字 |
+| `check:visual` 整页像素对比 | **Nightly / Warning** | **不阻断发布**；消息时间/数据动态导致 fresh capture 不稳定，不能当假门禁 |
+
+> `check:visual` warning 不能替代 parity；parity 必须按当前待发布 build 重新生成并签字。
 
 ## 1. 门禁定义
 

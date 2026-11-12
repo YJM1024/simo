@@ -38,6 +38,7 @@ type specTaskView struct {
 	Title     string `json:"title"`
 	State     string `json:"state"`
 	UpdatedAt int64  `json:"updatedAt"`
+	MessageID string `json:"messageId"`
 }
 
 type specGroup[T any] struct {
@@ -131,6 +132,26 @@ func (m *Module) handleSpecProjection(w http.ResponseWriter, r *http.Request) {
 	httpserver.WriteJSON(w, http.StatusOK, projection)
 }
 
+func (m *Module) taskMessageIDs(ctx context.Context, sessionID string) map[string]string {
+	out := map[string]string{}
+	rows, err := m.store.Query(ctx, `SELECT task_id, id FROM messages
+		WHERE session_id = ? AND task_id <> '' AND internal = 0
+		ORDER BY at ASC, rowid ASC`, sessionID)
+	if err != nil {
+		return out
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var taskID, messageID string
+		if rows.Scan(&taskID, &messageID) == nil && taskID != "" {
+			if _, exists := out[taskID]; !exists {
+				out[taskID] = messageID
+			}
+		}
+	}
+	return out
+}
+
 func (m *Module) buildSpecProjection(ctx context.Context, session Session, limit int) (specProjection, int, error) {
 	status := "draft"
 	revision := 1
@@ -168,12 +189,14 @@ func (m *Module) buildSpecProjection(ctx context.Context, session Session, limit
 		Running: specGroup[specTaskView]{Items: []specTaskView{}},
 		Pending: specGroup[specTaskView]{Items: []specTaskView{}},
 	}
+	taskMessageIDs := m.taskMessageIDs(ctx, session.ID)
 	if m.tasks != nil {
 		list, listErr := m.tasks.List(ctx, session.ID)
 		if listErr == nil {
 			for _, task := range list {
 				state := projectionTaskState(task.Status)
-				item := specTaskView{ID: task.ID, Title: task.Title, State: state, UpdatedAt: task.UpdatedAt}
+				item := specTaskView{ID: task.ID, Title: task.Title, State: state, UpdatedAt: task.UpdatedAt,
+					MessageID: taskMessageIDs[task.ID]}
 				switch state {
 				case "done":
 					tasks.Done.Total++

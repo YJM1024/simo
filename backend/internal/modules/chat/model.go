@@ -17,7 +17,7 @@ type Message struct {
 	FinishedAt   int64             `json:"finishedAt,omitempty"`
 	Status       string            `json:"status"`
 	Attachments  []Attachment      `json:"attachments"`
-	TaskID       string            `json:"taskId,omitempty"`
+	TaskID       string            `json:"taskId"`
 	WorkflowID   string            `json:"workflowId,omitempty"`
 	Tool         string            `json:"tool,omitempty"`
 	ApprovalID   string            `json:"approvalId,omitempty"`
