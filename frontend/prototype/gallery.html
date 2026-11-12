@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="zh-CN" class="gallery-doc">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>司墨 · 组件画廊</title>
+<link rel="stylesheet" href="/prototype/tokens.css?v=m71">
+<link rel="stylesheet" href="/prototype/components.css?v=m71">
+</head>
+<body class="gallery-page">
+<div class="gallery-shell">
+  <aside class="gallery-nav">
+    <div class="gallery-brand">
+      <h1>组件画廊</h1>
+      <p>唯一视觉基准：新增/修改组件先在这里登记，再进页面。页面只组合组件，不写临时样式。</p>
+    </div>
+    <nav class="gallery-links" aria-label="组件画廊导航">
+        <a href="#spec-button" class="active">按钮 Button</a>
+        <a href="#spec-input">输入 Input</a>
+        <a href="#spec-tabs">Tabs</a>
+        <a href="#spec-badge">Badge</a>
+        <a href="#spec-session">会话行</a>
+        <a href="#spec-message">消息</a>
+        <a href="#spec-timeline">时间轴</a>
+        <a href="#spec-composer">Composer</a>
+        <a href="#spec-card">卡片</a>
+        <a href="#spec-overview">右栏概览</a>
+        <a href="#spec-states">空/加载/错误</a>
+        <a href="#spec-dialog">弹窗</a>
+        <a href="#spec-tokens">Tokens</a>
+        <a href="#spec-statusbar">Statusbar</a>
+    </nav>
+  </aside>
+  <main class="gallery-main" id="gallery-main">
+    <div class="gallery">
+
+
+  <section class="spec" id="spec-button">
+    <h2>按钮 Button</h2>
+    <div class="stage">
+      <div class="row"><button class="btn primary">主要操作</button><button class="btn">次要操作</button><button class="btn ghost">Ghost</button><button class="btn" disabled>禁用</button><button class="send">发送</button><button class="send" disabled>发送禁用</button></div>
+      <div class="row"><button class="btn sm">小按钮</button><button class="btn sm primary">小主按钮</button><button class="icon-btn" title="设置">⚙</button><button class="icon-btn" title="通知">◔</button></div>
+    </div>
+  </section>
+
+  <section class="spec" id="spec-input">
+    <h2>输入 Input / Select / Textarea</h2>
+    <div class="stage split">
+      <div><label class="kicker" for="g-name">名称</label><input class="input" id="g-name" placeholder="请输入名称"><p class="hint-line">默认</p></div>
+      <div><label class="kicker" for="g-focus">聚焦</label><input class="input" id="g-focus" value="已聚焦" autofocus><p class="hint-line">focus 环</p></div>
+      <div><label class="kicker" for="g-sel">下拉</label><select class="select" id="g-sel"><option>请选择…</option><option>A</option><option>B</option></select></div>
+      <div><label class="kicker" for="g-ta">多行</label><textarea class="textarea" id="g-ta" placeholder="输入多行内容"></textarea></div>
+    </div>
+  </section>
+
+  <section class="spec" id="spec-tabs">
+    <h2>选项卡 Tabs</h2>
+    <div class="stage"><div class="tabs tabs--short"><button class="active">对话</button><button>工作台</button></div></div>
+  </section>
+
+  <section class="spec" id="spec-badge">
+    <h2>徽标 Badge</h2>
+    <div class="stage"><div class="row"><span class="badge">默认</span><span class="badge accent">进行中</span><span class="badge success">已完成</span><span class="badge warning">待确认</span><span class="badge danger">失败</span></div></div>
+  </section>
+
+  <section class="spec" id="spec-session">
+    <h2>会话行 SessionRow</h2>
+    <div class="stage split">
+      <div><div class="session active"><span class="dot"></span><span class="title">主会话</span><span class="count">12</span></div><div class="session child"><span class="dot"></span><span class="title">A 股行情分析</span></div><div class="session draft"><span class="dot"></span><span class="title">新会话 · 草稿</span></div></div>
+      <div><div class="session archived"><span class="dot"></span><span class="title">已归档会话</span></div><div class="session"><span class="dot"></span><span class="title">默认会话</span></div></div>
+    </div>
+  </section>
+
+  <section class="spec" id="spec-message">
+    <h2>消息 Message</h2>
+    <div class="stage">
+      <article class="msg user"><span class="msg-avatar">你</span><div class="msg-body"><div class="msg-meta"><b>你</b><span>·</span><span>主会话</span><span>·</span><span>10:24</span></div><div class="msg-text"><p>用户消息：默认左对齐，不使用气泡。</p></div></div></article>
+      <article class="msg agent"><span class="msg-avatar">墨</span><div class="msg-body"><div class="msg-meta"><b>司墨</b><span>·</span><span class="tag">需求澄清</span><span>·</span><span>10:25</span></div><div class="msg-text"><p>智能体消息：支持 <strong>粗体</strong>、<code>行内代码</code> 与列表：</p><ul><li>第一项</li><li>第二项</li></ul></div></div></article>
+    </div>
+  </section>
+
+  <section class="spec" id="spec-timeline">
+    <h2>时间轴 Timeline（20×4 / 纵向 gap 2 / 44px gutter）</h2>
+    <div class="stage"><div class="timeline timeline--gallery"><div class="tl-track"><span class="tl-date">11/12</span><button class="tl-bar is-user" title="用户"></button><button class="tl-bar is-agent" title="智能体"></button><button class="tl-bar is-user" title="用户"></button><button class="tl-bar is-agent active" title="当前"></button></div></div><p class="hint-line">一条消息一个纵向聚合横条：20×4，纵向 gap 2，44px gutter；用户靛蓝 / 智能体灰；悬停/当前宽 24；日期分组，点击/上下键定位。</p></div>
+  </section>
+
+  <section class="spec" id="spec-composer">
+    <h2>输入区 Composer</h2>
+    <div class="stage"><div class="composer composer--flush"><div class="composer-box"><textarea placeholder="给司墨发消息…"></textarea><div class="composer-foot"><div class="composer-left">▤ <span>支持 Markdown 格式</span></div><div class="composer-right"><span class="composer-hint">Enter 发送 · Shift+Enter 换行</span><button class="send" disabled>发送</button></div></div></div></div></div>
+  </section>
+
+  <section class="spec" id="spec-card">
+    <h2>交互卡片 CardBlock</h2>
+    <div class="stage">
+      <div class="card-block card-block--gallery">
+        <div class="card-head"><b>选择数据来源</b><span class="state">进行中 · v1</span></div>
+        <p class="card-text">请选择后确认；确认前不会执行。</p>
+        <div class="card-field"><label for="g-source">数据来源</label><select class="select" id="g-source"><option>请选择…</option><option>A · workspace csv</option><option>B · 联网抓取</option></select></div>
+        <div class="card-actions"><button class="btn">取消</button><button class="send">确认</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="spec" id="spec-overview">
+    <h2>右栏概览 OverviewPanel</h2>
+    <div class="stage stage--narrow">
+      <div class="insp-head"><b>会话概览</b><span>只读</span></div>
+      <div class="insp-section"><span class="label">当前会话</span><p>主会话</p></div>
+      <div class="insp-section"><span class="label">消息</span><p>13 条 · 用户 6 · 智能体 7</p></div>
+      <div class="insp-section"><span class="label">模型</span><p>V4.1 Flash · 只读</p></div>
+    </div>
+  </section>
+
+  <section class="spec" id="spec-states">
+    <h2>空态 / 加载 / 错误</h2>
+    <div class="stage split">
+      <div class="empty"><div class="empty-mark empty-mark--gallery"></div><h3>还不会话</h3><p>说需求、记信息、派任务。</p><button class="btn sm">开始对话</button></div>
+      <div><div class="skeleton skeleton--w60"></div><div class="skeleton skeleton--w90"></div><div class="skeleton skeleton--w75"></div><p class="loading loading--gallery">加载中…</p></div>
+      <div><p class="err-text">回复中断：模型响应超时，消息已标记为失败。</p><button class="btn sm btn--mt8">重试</button></div>
+    </div>
+  </section>
+
+  
+
+  <section class="spec" id="spec-dialog">
+    <h2>弹窗 Dialog</h2>
+    <div class="stage"><button class="btn" id="open-modal">打开设置弹窗</button></div>
+  </section>
+
+<section class="spec" id="spec-tokens">
+    <h2>Tokens / 尺寸刻度</h2>
+    <div class="stage">
+      <div class="token-grid">
+        <div class="token-card"><b>Spacing</b><div class="token-row"><span>2</span><span>4</span><span>8</span><span>12</span><span>16</span><span>20</span><span>24</span><span>32</span><span>40</span><span>48</span><span>64</span></div></div>
+        <div class="token-card"><b>Icon</b><div class="token-row"><span class="token-dot token-sp">16</span><span class="token-dot token-sp">20</span><span class="token-dot token-sp">24</span></div></div>
+        <div class="token-card"><b>Radius</b><div class="token-row"><span>4</span><span>6</span><span>8</span><span>10</span></div></div>
+      </div>
+      <p class="hint-line">组件只使用 tokens.css 的 spacing / size / radius；页面层不使用内联样式。</p>
+    </div>
+  </section>
+
+  <section class="spec" id="spec-statusbar">
+    <h2>底部状态栏 Statusbar</h2>
+    <div class="stage"><div class="statusbar statusbar--preview"><span>就绪</span><span>V4.1 Flash · 读/写权限按策略</span></div><p class="hint-line">全局 24px 底栏，跨侧栏 + 主区；侧栏、主区、输入区、右栏在同一底边结束。</p></div>
+  </section>
+
+    </div>
+  </main>
+</div>
+
+<div class="overlay" id="modal" hidden>
+  <div class="modal">
+    <div class="modal-head"><div><h2>设置</h2><p>模型、权限与工作区</p></div><button class="icon-btn" id="close-modal">×</button></div>
+    <div class="modal-body">
+      <div class="field"><label>模型</label><div class="kv"><span>对话模型</span><b>V4.1 Flash（固定）</b></div></div>
+      <div class="field"><label>权限</label><div class="kv"><span>沙盒</span><b>工作区可写</b></div><div class="kv"><span>审批</span><b>按风险自动</b></div></div>
+    </div>
+    <div class="modal-foot"><span>设置只读展示</span><button class="btn primary" id="done-modal">完成</button></div>
+  </div>
+</div>
+
+<script>
+  const modal = document.getElementById('modal');
+  document.getElementById('open-modal')?.addEventListener('click', () => { modal.hidden = false; });
+  ['close-modal', 'done-modal'].forEach(id => document.getElementById(id)?.addEventListener('click', () => { modal.hidden = true; }));
+  modal?.addEventListener('click', (e) => { if (e.target === modal) modal.hidden = true; });
+</script>
+<script>
+(() => {
+  const main = document.getElementById('gallery-main');
+  const links = [...document.querySelectorAll('.gallery-links a')];
+  const sections = links.map((link) => document.querySelector(link.getAttribute('href')));
+  if (!main || sections.some((section) => !section)) return;
+  const activate = (link) => {
+    links.forEach((item) => {
+      const on = item === link;
+      item.classList.toggle('active', on);
+      if (on) item.setAttribute('aria-current', 'location');
+      else item.removeAttribute('aria-current');
+    });
+  };
+  let ticking = false;
+  const spy = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      const top = main.getBoundingClientRect().top;
+      let current = sections[0];
+      for (const section of sections) {
+        if (section.getBoundingClientRect().top - top <= 72) current = section;
+      }
+      if (main.scrollTop + main.clientHeight >= main.scrollHeight - 2) current = sections[sections.length - 1];
+      const link = links.find((item) => item.getAttribute('href') === '#' + current.id);
+      if (link) activate(link);
+      ticking = false;
+    });
+  };
+  main.addEventListener('scroll', spy, { passive: true });
+  links.forEach((link) => {
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      const section = document.querySelector(link.getAttribute('href'));
+      if (!section) return;
+      const y = section.getBoundingClientRect().top - main.getBoundingClientRect().top + main.scrollTop - 12;
+      main.scrollTo({ top: y, behavior: 'smooth' });
+      activate(link);
+    });
+  });
+  window.addEventListener('load', spy);
+  spy();
+})();
+</script>
+</body>
+</html>

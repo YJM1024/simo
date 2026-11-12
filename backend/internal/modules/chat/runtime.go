@@ -208,17 +208,102 @@ func (m *Module) handleTaskRuntime(w http.ResponseWriter, r *http.Request) {
 	}
 	checkpoint := m.latestCheckpoint(r.Context(), "task", task.ID)
 	httpserver.WriteJSON(w, http.StatusOK, map[string]any{
-		"ok": true,
-		"runtime": map[string]any{
-			"id": task.ID, "sessionId": task.SessionID, "status": task.Status,
-			"attempt": task.Attempt, "progress": task.Progress,
-			"lastProgressAt": task.UpdatedAt, "lastHeartbeatAt": task.UpdatedAt,
-			"nextAction": "继续执行当前任务", "etaHint": "未知",
-			"stallState": "", "resumePoint": "next_step",
-			"checkpoint": checkpoint, "lastCheckpointAt": checkpoint["at"],
-			"budget": map[string]any{"taskTokenBudget": 200000, "remaining": 200000, "used": 0},
-		},
+		"ok":      true,
+		"runtime": buildTaskRuntime(task, checkpoint, m.runtimeNow().UnixMilli()),
 	})
+}
+
+// buildTaskRuntime 固定任务 runtime 契约；保留旧字段，新增 step/stepsSummary 等。
+func buildTaskRuntime(task coretask.Task, checkpoint map[string]any, now int64) map[string]any {
+	stepsSummary := make([]map[string]any, 0, len(task.Steps))
+	for _, step := range task.Steps {
+		stepsSummary = append(stepsSummary, map[string]any{
+			"id": step.ID, "phaseId": step.PhaseID, "title": step.Title, "status": step.Status,
+		})
+	}
+	makeStep := func(step coretask.Step) map[string]any {
+		return map[string]any{"id": step.ID, "phaseId": step.PhaseID, "title": step.Title, "status": step.Status}
+	}
+	currentIndex := -1
+	for i, step := range task.Steps {
+		if step.Status == "running" {
+			currentIndex = i
+			break
+		}
+	}
+	if currentIndex < 0 {
+		if task.Status == coretask.StatusDone && len(task.Steps) > 0 {
+			currentIndex = len(task.Steps) - 1
+		} else {
+			for i, step := range task.Steps {
+				if step.Status == "pending" {
+					currentIndex = i
+					break
+				}
+			}
+		}
+	}
+	if currentIndex < 0 && len(task.Steps) > 0 {
+		currentIndex = len(task.Steps) - 1
+	}
+	var stepView any
+	currentStepID := ""
+	if currentIndex >= 0 {
+		step := task.Steps[currentIndex]
+		currentStepID = step.ID
+		stepView = makeStep(step)
+	}
+	stepIndex := 0
+	if currentIndex >= 0 {
+		stepIndex = currentIndex + 1
+	}
+	nextAction := "等待执行"
+	switch task.Status {
+	case coretask.StatusRunning:
+		if currentIndex >= 0 {
+			nextAction = "执行步骤：" + task.Steps[currentIndex].Title
+		} else {
+			nextAction = "继续执行当前任务"
+		}
+	case coretask.StatusQueued, coretask.StatusPending:
+		nextAction = "排队等待执行"
+	case coretask.StatusDone:
+		nextAction = "已完成"
+	case coretask.StatusFailed:
+		nextAction = "执行失败，可重试"
+	case coretask.StatusCancelled:
+		nextAction = "已取消"
+	case coretask.StatusInterrupted:
+		nextAction = "已中断，可恢复"
+	}
+	stallState := ""
+	if reason, _ := checkpoint["reason"].(string); strings.Contains(strings.ToLower(reason), "stall") {
+		stallState = reason
+	}
+	checkpointAt := int64(0)
+	if value, ok := checkpoint["at"].(int64); ok {
+		checkpointAt = value
+	}
+	lastHeartbeatAt := task.UpdatedAt
+	if checkpointAt > lastHeartbeatAt {
+		lastHeartbeatAt = checkpointAt
+	}
+	resumePoint := "next_step"
+	if currentStepID != "" {
+		resumePoint = currentStepID
+	}
+	_ = now
+	return map[string]any{
+		"id": task.ID, "sessionId": task.SessionID, "status": task.Status,
+		"attempt": task.Attempt, "progress": task.Progress,
+		"startedAt": task.CreatedAt, "lastProgressAt": task.UpdatedAt,
+		"lastHeartbeatAt": lastHeartbeatAt, "nextAction": nextAction, "etaHint": "未知",
+		"stallState": stallState, "resumePoint": resumePoint,
+		"step": stepView, "stepIndex": stepIndex, "totalSteps": len(task.Steps),
+		"stepsSummary": stepsSummary,
+		"checkpoint":   checkpoint, "lastCheckpointAt": checkpoint["at"],
+		"budget": map[string]any{"taskTokenBudget": 200000, "remaining": 200000, "used": 0},
+	}
 }
 
 func (m *Module) handleDebugRuntimeConfig(w http.ResponseWriter, r *http.Request) {

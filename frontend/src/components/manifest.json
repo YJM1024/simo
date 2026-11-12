@@ -1,0 +1,315 @@
+{
+  "owner": "frontend",
+  "source": "src/components/",
+  "publicApi": "src/components/index.ts",
+  "components": [
+    {
+      "name": "Icon",
+      "variants": [
+        "16",
+        "20",
+        "24"
+      ],
+      "states": [],
+      "owner": "frontend"
+    },
+    {
+      "name": "Segmented",
+      "variants": [
+        "top-nav"
+      ],
+      "states": [
+        "chat",
+        "workbench"
+      ],
+      "owner": "frontend"
+    },
+    {
+      "name": "Sidebar",
+      "variants": [
+        "workspace",
+        "session-tree",
+        "quota",
+        "user"
+      ],
+      "states": [
+        "active",
+        "renaming",
+        "empty",
+        "connected",
+        "connecting"
+      ],
+      "owner": "frontend"
+    },
+    {
+      "name": "StatusBar",
+      "variants": [
+        "global"
+      ],
+      "states": [
+        "ready",
+        "connecting"
+      ],
+      "owner": "frontend"
+    },
+    {
+      "name": "MessageItem",
+      "variants": [
+        "user",
+        "agent"
+      ],
+      "states": [
+        "done",
+        "streaming",
+        "failed",
+        "with-card"
+      ],
+      "owner": "frontend"
+    },
+    {
+      "name": "CardBlock",
+      "variants": [
+        "select",
+        "input",
+        "textarea",
+        "multi-field"
+      ],
+      "states": [
+        "active",
+        "busy",
+        "submitted",
+        "disabled",
+        "error"
+      ],
+      "owner": "frontend"
+    },
+    {
+      "name": "Timeline",
+      "variants": [
+        "minimap"
+      ],
+      "states": [
+        "active",
+        "user",
+        "agent"
+      ],
+      "owner": "frontend"
+    },
+    {
+      "name": "Composer",
+      "variants": [
+        "default"
+      ],
+      "states": [
+        "idle",
+        "sending",
+        "disabled"
+      ],
+      "owner": "frontend"
+    },
+    {
+      "name": "ExecutionGroup",
+      "variants": [
+        "done",
+        "running",
+        "queued"
+      ],
+      "states": [
+        "collapsed",
+        "expanded",
+        "empty"
+      ],
+      "owner": "frontend"
+    },
+    {
+      "name": "RightPanel",
+      "variants": [
+        "overview"
+      ],
+      "states": [
+        "loading",
+        "empty",
+        "ready"
+      ],
+      "owner": "frontend"
+    },
+    {
+      "name": "WorkbenchChart",
+      "variants": [
+        "daily-messages"
+      ],
+      "states": [
+        "empty",
+        "data"
+      ],
+      "owner": "frontend"
+    },
+    {
+      "name": "Button",
+      "variants": [
+        "primary",
+        "secondary",
+        "ghost",
+        "sm",
+        "send"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "disabled",
+        "busy"
+      ],
+      "owner": "frontend"
+    },
+    {
+      "name": "Input",
+      "variants": [
+        "text",
+        "select",
+        "textarea"
+      ],
+      "states": [
+        "default",
+        "focus",
+        "error",
+        "disabled"
+      ],
+      "owner": "frontend"
+    },
+    {
+      "name": "Tabs",
+      "variants": [
+        "sm"
+      ],
+      "states": [
+        "active",
+        "inactive"
+      ],
+      "owner": "frontend"
+    },
+    {
+      "name": "Badge",
+      "variants": [
+        "default",
+        "accent",
+        "success",
+        "warning",
+        "danger"
+      ],
+      "states": [],
+      "owner": "frontend"
+    },
+    {
+      "name": "Card",
+      "variants": [
+        "metric"
+      ],
+      "states": [],
+      "owner": "frontend"
+    },
+    {
+      "name": "Empty",
+      "variants": [
+        "page",
+        "inline"
+      ],
+      "states": [],
+      "owner": "frontend"
+    },
+    {
+      "name": "Skeleton",
+      "variants": [
+        "line",
+        "block"
+      ],
+      "states": [],
+      "owner": "frontend"
+    },
+    {
+      "name": "Statusbar",
+      "variants": [
+        "global"
+      ],
+      "states": [
+        "ready",
+        "connecting"
+      ],
+      "owner": "frontend"
+    },
+    {
+      "name": "OverviewPanel",
+      "variants": [
+        "overview"
+      ],
+      "states": [
+        "loading",
+        "empty",
+        "ready"
+      ],
+      "owner": "frontend"
+    },
+    {
+      "name": "Section",
+      "variants": [
+        "overview"
+      ],
+      "states": [],
+      "owner": "frontend"
+    },
+    {
+      "name": "SectionHeader",
+      "variants": [
+        "default"
+      ],
+      "states": [],
+      "owner": "frontend"
+    },
+    {
+      "name": "List",
+      "variants": [
+        "task",
+        "deliverable"
+      ],
+      "states": [],
+      "owner": "frontend"
+    },
+    {
+      "name": "TaskItem",
+      "variants": [
+        "done",
+        "running",
+        "pending"
+      ],
+      "states": [],
+      "owner": "frontend"
+    },
+    {
+      "name": "StatusDot",
+      "variants": [
+        "done",
+        "running",
+        "pending"
+      ],
+      "states": [],
+      "owner": "frontend"
+    },
+    {
+      "name": "EmptyState",
+      "variants": [
+        "group",
+        "deliverable"
+      ],
+      "states": [],
+      "owner": "frontend"
+    },
+    {
+      "name": "DeliverableItem",
+      "variants": [
+        "default"
+      ],
+      "states": [],
+      "owner": "frontend"
+    }
+  ],
+  "gallery": "/#gallery"
+}

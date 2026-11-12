@@ -53,6 +53,7 @@ type IntentFrame struct {
 type DecisionEnvelope struct {
 	Kind            string `json:"kind"` // ANSWER | CLARIFY | CALL_TOOL | DELEGATE | WAIT | CLOSE
 	TaskTitle       string `json:"taskTitle,omitempty"`
+	TaskIntent      bool   `json:"taskIntent,omitempty"`
 	ClarifyQuestion string `json:"clarifyQuestion,omitempty"`
 	Reason          string `json:"reason,omitempty"`
 }
@@ -491,8 +492,17 @@ func (m *Module) streamClarify(ctx context.Context, active *activeTurn, decision
 }
 
 func (m *Module) delegate(ctx context.Context, active *activeTurn, decision DecisionEnvelope, userText string) {
+	taskIntent, intentReason := classifyTaskIntent(userText)
+	if decision.Kind != DecisionDelegate || !decision.TaskIntent || !taskIntent {
+		m.log.Info("跳过 DELEGATE：非明确任务",
+			"decision_kind", decision.Kind, "taskIntent", taskIntent,
+			"skipReason", intentReason, "taskId", "")
+		return
+	}
 	if m.taskSvc == nil {
-		m.log.Warn("DELEGATE 但 tasks 模块未启用，跳过建任务")
+		m.log.Info("跳过 DELEGATE：tasks 模块未启用",
+			"decision_kind", decision.Kind, "taskIntent", taskIntent,
+			"skipReason", "tasks_module_disabled", "taskId", "")
 		return
 	}
 	title := strings.TrimSpace(decision.TaskTitle)
@@ -506,10 +516,13 @@ func (m *Module) delegate(ctx context.Context, active *activeTurn, decision Deci
 		Payload:   userText,
 	})
 	if err != nil {
-		m.log.Error("创建后台任务失败（回复继续）", "err", err)
+		m.log.Error("创建后台任务失败（回复继续）", "err", err,
+			"decision_kind", decision.Kind, "taskIntent", taskIntent,
+			"skipReason", "create_failed", "taskId", "")
 		return
 	}
-	m.log.Info("后台任务已创建", "taskId", task.ID, "title", task.Title)
+	m.log.Info("后台任务已创建", "taskId", task.ID, "title", task.Title,
+		"decision_kind", decision.Kind, "taskIntent", taskIntent, "skipReason", "")
 }
 
 // streamModel 调用真实/mock provider；支持工具回合；content 增量实时落库并推送。
@@ -1095,11 +1108,12 @@ func classifyMessage(text string) (messageClass, DecisionEnvelope) {
 		}
 	}
 
-	taskWords := []string{"帮我", "帮忙", "帮我做", "任务", "待办", "排序", "计划", "纪要", "报告", "方案", "文档", "清单", "生成", "整理", "分析", "修复", "实现", "创建", "写一个", "写一份", "写个", "总结", "翻译", "计算", "检查", "优化", "设计", "查一下", "搜一下", "列出", "导出", "规划", "调研", "学习", "write ", "create ", "generate ", "analyze ", "fix ", "build ", "summarize ", "search ", "find ", "list ", "plan "}
-	for _, keyword := range taskWords {
-		if strings.Contains(lower, keyword) {
-			title := truncate(trimmed, 80)
-			return ClassNewTask, DecisionEnvelope{Kind: DecisionDelegate, TaskTitle: title, Reason: "任务类请求，异步执行"}
+	if taskIntent, reason := classifyTaskIntent(trimmed); taskIntent {
+		return ClassNewTask, DecisionEnvelope{
+			Kind:       DecisionDelegate,
+			TaskTitle:  truncate(trimmed, 80),
+			TaskIntent: true,
+			Reason:     reason,
 		}
 	}
 
