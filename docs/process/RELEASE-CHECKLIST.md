@@ -2,7 +2,7 @@
 
 状态：**待用（本轮不签通过；等交付复验）**
 适用：8787/容器/便携包发布；每次发布复制本清单填写，不口头放行。
-关联：[`SCENARIOS.md`](SCENARIOS.md) 发布场景、[`ROLES.md`](ROLES.md) 测试/发布交接、[`COMPONENT-PARITY-GATE.md`](COMPONENT-PARITY-GATE.md)。
+关联：[`SCENARIOS.md`](SCENARIOS.md) 发布场景、[`ROLES.md`](ROLES.md) 测试/发布交接、[`COMPONENT-PARITY-GATE.md`](COMPONENT-PARITY-GATE.md)、生产切换执行：[`PRODUCTION-CUTOVER.md`](PRODUCTION-CUTOVER.md)。
 
 > **硬规则**：无 spec 不发布；无组件 parity 签字不发布；实现者不得自签；用户只验收前端效果，后端/迁移/流程由验收 Agent 签字。
 
