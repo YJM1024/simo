@@ -100,4 +100,4 @@
 - 契约变更必须先改 `docs/m*-contract.md`，再改实现/评测；
 - 视觉规范以 `../DESIGN.md` 为唯一来源，历史 `design-system.md`/`visual-language.md` 不再作为当前裁决依据；
 - `docs/process/` 由 design-scribe 维护，其他角色只读引用，避免抢写；
-- 归档目录（design/research/harness/skeleton/labs/旧 prototype）在迁移后加 `archive/README.md` 说明原因与替代入口。
+- 归档入口见 [`../archive/README.md`](../archive/README.md)：`research/`、`labs/`、`frontend/prototype-v3/`、`design/26-前端原型-v3.md` 已移入；其余 `design/`、`harness/`、`skeleton/` 及 `frontend/prototype/` 保留原位（原因见归档清单）。

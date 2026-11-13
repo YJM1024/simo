@@ -13,7 +13,7 @@
 > - [`17-评测设计-v0.md`](17-评测设计-v0.md)（E0）：L1-4（记忆写回）、L1-5（记忆读）、L1-9（上下文装配）、L1-11（注入防护）、grader 六种 + 新增四种、§3.4 排除规则、§6.2"目标全 TBD"。
 > - [`10-设计对话记录.md`](10-设计对话记录.md) §27–33：用户关注的内核八题（含"RAG 怎么使用"）、自研框架、Spec 内部化、Spec 不可见。
 > - [`13-交互协议-候选方案.md`](13-交互协议-候选方案.md)：Intent Frame（"这一轮要什么"）、当前子会话、撤回。
-> - `research/memory-first-prior-art.md`（检索多信号、失效不删、episode 溯源、AgentPoison）；`research/adjacent-frameworks.md`（EARS/RFC2119/Gherkin 的"可判定原子句"、契约即证据、证伪而非证真）。
+> - `archive/research/memory-first-prior-art.md`（检索多信号、失效不删、episode 溯源、AgentPoison）；`archive/research/adjacent-frameworks.md`（EARS/RFC2119/Gherkin 的"可判定原子句"、契约即证据、证伪而非证真）。
 >
 > **标记约定**（沿用 19/20）：【拍板】= 用户已确认（含用户 2026-11-06 授权 lead 拍板）；【沿用】= 上游文档已定，本稿不改；【本稿】= 本稿提出的候选（可推翻）；【推断】= 分析判断；【待核实】= 证据不足或依赖未定；【待对齐】= 依赖 design/20 v0.2 定稿。**所有数字默认值都不是验收承诺**（17 §6.2：目标值先采基线，后校准）。
 
@@ -82,7 +82,7 @@
 - **可见性**：**记忆页/用户可见检索/上下文注入默认排除内部 kind**（`spec`、未确认的 `decision` 草稿）；用户看到的是"合并后的记忆"，不是 Spec（10 §31/§32；18 §8.5）。E4 的检索因此有两个入口：
   - **内部检索**（E2 组装、秘书验收）：允许 `kind=spec`，但结果只进秘书上下文、**不进用户可见界面**；
   - **用户搜索/记忆页**：过滤内部 kind，只返回普通记忆条目。
-- **片段（v0.3 补）**：Spec 可被检索的单位是 **Requirement / Scenario / Acceptance 原子句**（EARS 已保证"一条需求一个可测行为"，见 `research/adjacent-frameworks.md` §1）；Spec 正文不整篇进检索。**Requirement 与 Task 均带 `acceptanceKeys[]`**（18 §3.3/§3.4）：它既是覆盖检查与 `canArchive` 的判定单位，也是 E4 **验收类检索的过滤键**（`filters.acceptanceKeys[]`）与**引用键**（`[spec:specId@ver#<acceptanceKey>]`）。
+- **片段（v0.3 补）**：Spec 可被检索的单位是 **Requirement / Scenario / Acceptance 原子句**（EARS 已保证"一条需求一个可测行为"，见 `archive/research/adjacent-frameworks.md` §1）；Spec 正文不整篇进检索。**Requirement 与 Task 均带 `acceptanceKeys[]`**（18 §3.3/§3.4）：它既是覆盖检查与 `canArchive` 的判定单位，也是 E4 **验收类检索的过滤键**（`filters.acceptanceKeys[]`）与**引用键**（`[spec:specId@ver#<acceptanceKey>]`）。
 - **边界（v0.3 补）**：Task/Plan 的 `boundary{writeScope[],readScopes[],allowedTools[],forbiddenActions[]}`（18 §3.4/§5.1）约束 E4：
   - **读**：实际可读作用域 = `作用域链 ∩ boundary.readScopes`（更严者生效）；越界不返回并记 `policy_denied`；
   - **写**：候选的目标作用域必须是 `boundary.writeScope` 的子集（§3.3 自检）；
@@ -847,8 +847,8 @@ score = 0.50·rel + 0.25·imp + 0.15·rec + 0.10·str
 | [`19-AgentLoop设计-v0.md`](19-AgentLoop设计-v0.md) | Step 六阶段/Frame/surface/不可丢项；检索结果只在 `assembling` 进 T3/T6 |
 | [`13-交互协议-候选方案.md`](13-交互协议-候选方案.md) | Intent Frame 来源、当前子会话、撤回；本稿不重写对话 |
 | [`15-开发路线图-v1.md`](15-开发路线图-v1.md) | 里程碑：E4 设计在 M3 前评审；检索"结构化过滤 + 全文检索 + 重要度/时近性排序；向量可选增强"与本稿 V1/P1 一致 |
-| `research/memory-first-prior-art.md` | 多信号检索（M12/M13）、失效不删（M8）、episode 溯源（M9）、AgentPoison（§7） |
-| `research/adjacent-frameworks.md` | EARS 原子句（Spec 片段 chunk 依据）、契约即证据（cite 纪律）、证伪/证据充分性（评测） |
+| `archive/research/memory-first-prior-art.md` | 多信号检索（M12/M13）、失效不删（M8）、episode 溯源（M9）、AgentPoison（§7） |
+| `archive/research/adjacent-frameworks.md` | EARS 原子句（Spec 片段 chunk 依据）、契约即证据（cite 纪律）、证伪/证据充分性（评测） |
 
 ### 12.2 一处编号漂移（已确认，由路线图 v1.3 统一修）
 

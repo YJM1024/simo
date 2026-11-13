@@ -146,7 +146,7 @@ agent/
 ├── evals/      评测（mock 套件 + real-smoke + release-smoke）
 ├── deploy/     容器交付物（Dockerfile / compose；**本机无 Docker，未实测**）
 ├── toolchain/  自包含 Go 工具链
-├── research/   外部机制调研（参考）
+├── archive/    归档：research / labs / prototype-v3 / 旧设计稿（见 archive/README.md）
 └── harness/    DSH 机制地图（参考）
 ```
 

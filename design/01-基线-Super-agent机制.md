@@ -1,6 +1,6 @@
 # 基线：DeepSeek Super-agent 到底设计了什么
 
-> 提炼版。完整证据链（含官方原型仓库 docs/000–007 的代码级细节、实验数据、12 条"被明确拒绝的概念"）见 [`../research/super-agent-report.md`](../research/super-agent-report.md)。
+> 提炼版。完整证据链（含官方原型仓库 docs/000–007 的代码级细节、实验数据、12 条"被明确拒绝的概念"）见 [`../archive/research/super-agent-report.md`](../archive/research/super-agent-report.md)。
 > 证据分级：〔A〕官方文章明确 · 〔B〕官方原型代码/文档 · 〔C〕媒体转述 · 〔D〕调研者推断。
 
 ## 一句话

@@ -1,0 +1,44 @@
+/* 司墨 v3 · light-tech tokens（design/26-前端原型-v3.md 唯一来源） */
+:root {
+  --canvas: #F7F8FA;
+  --surface: #FFFFFF;
+  --surface-2: #F1F3F6;
+  --surface-3: #E9EDF2;
+  --line: #E4E7EC;
+  --line-soft: #EEF0F4;
+  --ink: #0A0C10;
+  --ink-2: #313A48;
+  --muted: #5C6675;
+  --faint: #66717F;
+  --accent: #2F5BFF;
+  --accent-hover: #254BE0;
+  --accent-2: #6E4BFF;
+  --cyan: #00A6C0;
+  --accent-soft: #EEF1FF;
+  --accent-line: rgba(47, 91, 255, 0.24);
+  --ok: #0F8A63;
+  --ok-soft: #E9F5F0;
+  --warn: #9A5B00;
+  --warn-soft: #FBF3E4;
+  --danger: #C62F3C;
+  --danger-soft: #FBEDEE;
+  --focus: 0 0 0 3px rgba(47, 91, 255, 0.28);
+
+  --sans: "Segoe UI Variable Text", "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --display: "Segoe UI Variable Display", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --mono: Consolas, "Cascadia Mono", "SF Mono", monospace;
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --shadow-sm: 0 1px 2px rgba(10, 12, 16, 0.04), 0 6px 16px -10px rgba(10, 12, 16, 0.14);
+  --shadow-pop: 0 20px 44px -24px rgba(10, 12, 16, 0.28), 0 2px 6px rgba(10, 12, 16, 0.05);
+  --grad: linear-gradient(110deg, #2F5BFF, #6E4BFF 52%, #00A6C0);
+
+  --sidebar: 248px;
+  --inspector: 320px;
+  --topbar: 56px;
+  --context: 48px;
+  --chat: 880px;
+  --rail: 32px;
+}

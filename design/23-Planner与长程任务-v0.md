@@ -3,7 +3,7 @@
 > **状态**：E5 设计 **v0.1**，供评审；**不是实现代码，不改其他文档**。
 > **日期**：2026-11-06
 > **版本**：v0.1（2026-11-06）——按 **用户 2026-11-06 授权 lead 拍板** 写入 Q1/Q2/Q5=A，Q3/Q4 按默认推进；并记录需 18 v0.3 吸收的扩展。
-> **依据**：[`18-SDD流程-v0.md`](18-SDD流程-v0.md) v0.2（SpecCore）、[`19-AgentLoop设计-v0.md`](19-AgentLoop设计-v0.md) v0.1（E1 Loop）、[`20-上下文工程-v0.md`](20-上下文工程-v0.md) v0.2（E2）、[`17-评测设计-v0.md`](17-评测设计-v0.md) v0（E0）、[`10-设计对话记录.md`](10-设计对话记录.md) §27–33；调研见 [`sdd-frameworks-survey.md`](../research/sdd-frameworks-survey.md)、[`adjacent-frameworks.md`](../research/adjacent-frameworks.md)、[`superpowers-mechanisms.md`](../research/superpowers-mechanisms.md)。
+> **依据**：[`18-SDD流程-v0.md`](18-SDD流程-v0.md) v0.2（SpecCore）、[`19-AgentLoop设计-v0.md`](19-AgentLoop设计-v0.md) v0.1（E1 Loop）、[`20-上下文工程-v0.md`](20-上下文工程-v0.md) v0.2（E2）、[`17-评测设计-v0.md`](17-评测设计-v0.md) v0（E0）、[`10-设计对话记录.md`](10-设计对话记录.md) §27–33；调研见 [`sdd-frameworks-survey.md`](../archive/research/sdd-frameworks-survey.md)、[`adjacent-frameworks.md`](../archive/research/adjacent-frameworks.md)、[`superpowers-mechanisms.md`](../archive/research/superpowers-mechanisms.md)。
 > **标记约定**：`【已定·18/19/20/17/10】` = 上游已拍板或已成稿；`【拍板】` = 用户 2026-11-06 授权 lead 拍板；`【建议·本稿】` = 本稿设计建议，可被推翻；`【推断】` = 未验证；`【待对齐】` = 需 18 v0.3 / 19 v0.2 并入，不视为已定。
 > **一句话**：Planner 把 **Spec（要什么）** 拆成 **Plan（怎么做）** 与 **Task（做到哪）** 的可执行 DAG；执行中只做**有边界的重规划**；长任务靠**检查点 + 预算熔断 + 卡死检测 + 证据**不失控；用户只看到对话投影，永远看不到 Spec/Plan/Task。
 
@@ -197,7 +197,7 @@
 
 ### 4.1 先判规模：BMAD 四档（借其思想，改我们的语义）
 
-> 依据：BMAD 的 right-sizing（`research/sdd-frameworks-survey.md` §2.4）与 S3 建议。**四档是路由，不是用户可见流程**；默认取最轻档，信息变多再升级。
+> 依据：BMAD 的 right-sizing（`archive/research/sdd-frameworks-survey.md` §2.4）与 S3 建议。**四档是路由，不是用户可见流程**；默认取最轻档，信息变多再升级。
 
 | 档 | 触发信号（建议默认） | 内部处理 | 产出 | 用户感知 |
 |---|---|---|---|---|

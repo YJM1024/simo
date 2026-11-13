@@ -1,0 +1,11 @@
+﻿{
+    "node":  "v24.21.0",
+    "pnpm":  "11.28.5",
+    "storybook":  "10.6.7",
+    "nodeModulesMB":  319.7,
+    "nodeModulesFiles":  12976,
+    "topLevelDirs":  127,
+    "buildExit":  1,
+    "devExit":  0,
+    "storybookStaticMB":  0
+}

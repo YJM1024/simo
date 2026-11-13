@@ -838,7 +838,7 @@
 - [`docs/m3-contract.md`](m3-contract.md)（已实现记忆地基：memory_items/history/candidates/conflicts/fts、API、无写接口纪律）
 - `backend/internal/modules/memory`（现有 migrations.go/service.go/http.go/module.go）与 `backend/internal/core/memory/memory.go`（Service/Candidate/Search 契约）
 - [`docs/m18-contract.md`](m18-contract.md)（canArchive/acceptanceKeys/boundary）、[`docs/m19-contract.md`](m19-contract.md)（长任务/归档只读/幂等）、[`docs/m20-contract.md`](m20-contract.md)（memory 动作命名空间）
-- `research/memory-first-prior-art.md`（双时态/ADD-only/实体图/失效不删的先行方案证据）
+- `archive/research/memory-first-prior-art.md`（双时态/ADD-only/实体图/失效不删的先行方案证据）
 
 ---
 

@@ -39,8 +39,7 @@ frontend/
 │     ├─ components.css       # 唯一组件样式层
 │     └─ manifest.json        # 组件/变体/状态/owner 清单
 ├─ review/                    # 验收记录（REVIEW.md、COMPONENT-LIBRARY.md）与截图
-├─ prototype/                 # 冻结的静态原型 v2（只读参考）
-└─ prototype-v3/              # 旧原型（历史资产，建议归档，不是当前实现）
+└─ prototype/                 # 冻结的静态原型 v2（只读参考）
 ```
 
 ## 3. 架构与约定
@@ -65,5 +64,5 @@ frontend/
 ## 5. 历史资产
 
 - `prototype/`：静态原型 v2，已冻结，只读参考；
-- `prototype-v3/`：旧 v3 原型（含 review 截图），已被当前 React 壳层取代，**建议归档**，不要在其上继续开发；
+- `../archive/prototypes/prototype-v3/`：旧 v3 原型（含 review 截图），已归档；已被当前 React 壳层取代，不要在其上继续开发；
 - 旧 `web/` 目录已删除，不要引用旧路径或旧 bundle。

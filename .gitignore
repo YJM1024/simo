@@ -33,6 +33,12 @@ __pycache__/
 *.pyc
 *.vhdx
 
+# ---- archived experiments: keep history, ignore generated caches/builds ----
+archive/labs/storybook/node_modules/
+archive/labs/storybook/storybook-static/
+archive/labs/storybook/.cache/
+archive/labs/storybook/.home/
+
 # ---- editor / OS noise ----
 .git/
 .idea/

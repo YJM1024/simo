@@ -1,0 +1,77 @@
+:root {
+  --canvas: #f7f8fa;
+  --surface: #ffffff;
+  --surface-sunken: #f1f3f6;
+  --ink: #0a0c10;
+  --ink-secondary: #313a48;
+  --ink-muted: #5c6675;
+  --border: #e4e7ec;
+  --accent: #2f5bff;
+  --accent-hover: #254be0;
+  --ok: #0f9d6e;
+  --warn: #d97706;
+  --danger: #dc3b45;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --shadow-focus: 0 0 0 3px rgba(47, 91, 255, 0.35);
+  --ff-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--ff-sans);
+  background: var(--canvas);
+  color: var(--ink);
+}
+
+/* Button */
+.simo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.simo-btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.simo-btn--sm { height: 28px; padding: 0 10px; font-size: 13px; }
+.simo-btn--primary { background: var(--ink); color: #fff; }
+.simo-btn--primary:hover { background: var(--ink-secondary); }
+.simo-btn--secondary { background: var(--surface); border-color: var(--border); color: var(--ink-secondary); }
+.simo-btn--secondary:hover { background: var(--surface-sunken); }
+.simo-btn--ghost { background: transparent; color: var(--ink-secondary); }
+.simo-btn--ghost:hover { background: var(--surface-sunken); }
+.simo-btn--danger { background: var(--danger); color: #fff; }
+.simo-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.simo-btn__spinner {
+  width: 12px; height: 12px; border-radius: 50%;
+  border: 2px solid currentColor; border-right-color: transparent;
+  animation: simo-spin 0.8s linear infinite;
+}
+@keyframes simo-spin { to { transform: rotate(360deg); } }
+
+/* StatusDot */
+.simo-status { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-secondary); }
+.simo-status__dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.simo-status--ok    .simo-status__dot { background: var(--ok); }
+.simo-status--warn  .simo-status__dot { background: var(--warn); }
+.simo-status--danger .simo-status__dot { background: var(--danger); }
+.simo-status--idle  .simo-status__dot { background: var(--ink-muted); }
+.simo-status--pulse .simo-status__dot { animation: simo-pulse 1.6s ease-in-out infinite; }
+@keyframes simo-pulse { 50% { opacity: 0.35; } }
+
+/* SectionHeader */
+.simo-section { display: flex; flex-direction: column; gap: 4px; min-width: 320px; }
+.simo-section__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.simo-section__title { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: 0; color: var(--ink); }
+.simo-section__subtitle { margin: 0; font-size: 13px; color: var(--ink-muted); }
+.simo-section__actions { display: inline-flex; gap: 8px; }

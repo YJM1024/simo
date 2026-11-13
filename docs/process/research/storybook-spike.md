@@ -1,7 +1,7 @@
 # Storybook Spike 报告（M35 旁路调研）
 
 > 结论：**条件可行，但本沙箱环境不可完成构建/预览/截图验证**。PoC 代码与依赖安装已完成；构建在 `esbuild` 子进程启动处被 DSH 沙箱以 `spawn EPERM` 拦截（与仓库既有"沙箱禁 spawn 管道"限制同源），Storybook 自身的包管理器探测也因 shell spawn 被拦截而失败。正常 Windows 开发机或 GitHub Actions `windows-latest` 预计可跑通（需按 §6 验证清单复核）。
-> 日期：2026-11-12。范围：只写 `labs/storybook/` 与本文件；未修改 `frontend/`、`backend/`、根配置、未加主线依赖；未使用 Chromatic/外部服务；未触碰 8899 原型服务。
+> 日期：2026-11-12。范围：只写 `archive/labs/storybook/` 与本文件；未修改 `frontend/`、`backend/`、根配置、未加主线依赖；未使用 Chromatic/外部服务；未触碰 8899 原型服务。
 
 ## 1. 环境
 
@@ -12,12 +12,12 @@
 | pnpm | **11.28.5**（无全局 pnpm；用运行时 `...\dependencies\pnpm\bin\pnpm.cjs` + 本地 `.bin\pnpm.cmd` shim） |
 | Storybook | **10.6.7**（`storybook` + `@storybook/react-vite`） |
 | React / Vite / TS | React 19.3.1 / Vite 8.3.8 / TypeScript 7.0.2 |
-| 包管理器配置 | 工作区 store（`toolchain/pnpm-home/store`）+ 本地 cache（`labs/storybook/.cache`），未污染全局 |
+| 包管理器配置 | 工作区 store（`toolchain/pnpm-home/store`）+ 本地 cache（`archive/labs/storybook/.cache`），未污染全局 |
 
-## 2. PoC 内容（已写入 `labs/storybook/`）
+## 2. PoC 内容（已写入 `archive/labs/storybook/`）
 
 ```text
-labs/storybook/
+archive/labs/storybook/
 ├── package.json            # 私有实验包；scripts dev/build/preview
 ├── pnpm-workspace.yaml     # pnpm 11 的 onlyBuiltDependencies（esbuild）
 ├── .bin/pnpm.cmd           # 本地 pnpm shim（无全局 pnpm）
@@ -81,7 +81,7 @@ DEV_EXIT=1
 | 安装耗时（可用的 hoisted 路径） | 约 **36s**（首次含下载）；重装 2.7s（store 命中） |
 | 构建耗时到失败点 | 约 **5.1s**（EPERM 发生在 manager 构建） |
 | `storybook-static` | 0（构建失败） |
-| 全局污染 | 无（store/cache 均在工作区；Storybook 全局 settings 重定向到 `labs/storybook/.home`） |
+| 全局污染 | 无（store/cache 均在工作区；Storybook 全局 settings 重定向到 `archive/labs/storybook/.home`） |
 
 ## 5. 常见坑（按出现顺序）
 
@@ -142,7 +142,37 @@ cd labs\storybook
 
 ## 10. 证据文件
 
-- `labs/storybook/.spike/build.log`：构建失败完整日志（含 `spawn EPERM` 栈）
-- `labs/storybook/.spike/dev.log`：dev 失败日志（包管理器探测失败）
-- `labs/storybook/.spike/versions.json`：Node/pnpm/Storybook 版本、node_modules 体积/文件数
-- `labs/storybook/.spike/debug-storybook-root.log`：Storybook 在仓库根生成的调试日志（已从根移入，避免污染）
+- `archive/labs/storybook/.spike/build.log`：构建失败完整日志（含 `spawn EPERM` 栈）
+- `archive/labs/storybook/.spike/dev.log`：dev 失败日志（包管理器探测失败）
+- `archive/labs/storybook/.spike/versions.json`：Node/pnpm/Storybook 版本、node_modules 体积/文件数
+- `archive/labs/storybook/.spike/debug-storybook-root.log`：Storybook 在仓库根生成的调试日志（已从根移入，避免污染）
+
+## 11. CI 收口（可选、非阻塞，2026-11-13 补充）
+
+**文件**：`.github/workflows/storybook.yml`（新增，独立工作流；未修改主 CI `.github/workflows/ci.yml`）。
+
+| 项 | 内容 |
+|---|---|
+| 触发 | PR / push（`main`/`master`）且路径命中 `archive/labs/storybook/**` 或 `.github/workflows/storybook.yml`；另支持 `workflow_dispatch` 手动触发 |
+| 作业 | `windows-latest` → checkout → Node 24 → pnpm 11 → `pnpm install --frozen-lockfile --ignore-scripts --node-linker=hoisted` → `pnpm exec storybook build -c .storybook -o storybook-static` → 校验 `storybook-static/index.html` → 上传 artifact（保留 7 天） |
+| 不做的 | 不启动 dev server、不接 Chromatic/外部视觉服务、不做视觉回归、不改动主 CI、不发布任何包 |
+| 门禁定位 | **可选、非阻塞**：路径过滤 + 独立 workflow，不设为 required check（建议先观察若干次稳定后再由管理员决定是否提升） |
+
+**为什么本机没有实际运行这个 workflow**：
+
+1. 当前会话**没有 GitHub Actions 执行能力**：工作区有 `.git` 目录，但环境无 `git` 命令、无远程推送/权限，无法提交或触发 CI（符合 Lead 的"若仓库无 workflows 权限则只给本地 workflow 文件"）；文件仅落盘，**未推送、未在 Actions 中启用**。
+2. 即使本地模拟 CI 的步骤，**构建也会被沙箱拦截**：`storybook build` 在 esbuild 启动处 `spawn EPERM`，`storybook dev` 在包管理器探测处失败（详见 §3）；因此 workflow 的"build 成功"路径**未在本机验证**。
+3. 已在本机验证的相关前提：`pnpm install --frozen-lockfile --ignore-scripts --node-linker=hoisted` **exit 0**，且 `@esbuild/win32-x64/esbuild.exe` 存在（postinstall 被忽略也能用）——CI 的安装步骤按此写法。
+
+**启用步骤（有仓库权限的人）**：
+
+```bash
+git add .github/workflows/storybook.yml
+git commit -m "ci: optional path-filtered storybook build (non-blocking)"
+git push
+# 观察首次 Actions 运行；稳定后可（可选）在分支保护里把它设为 required
+```
+
+**预期与风险**：Windows runner 安装 + 构建预计 1–3 分钟（未实测）；pnpm store 首次下载可能较慢；若 runner 上 `pnpm install --frozen-lockfile` 出现 ignored-builds 报错，保持 `--ignore-scripts`（当前写法）即可；如后续升级 Storybook 大版本，需重新验证本 workflow。
+**回滚**：删除该 workflow 文件即可，对主 CI 无影响。
+**与主 CI 的关系**：`ci.yml` 不引用本 workflow；两者独立，Storybook 失败不会阻塞主 CI。

@@ -5,7 +5,7 @@
 > **证据等级**（本机 DSH checkout `E:\dsh\resources\app.asar\dsh` 的读取方式有特殊性，先说明）：
 > - **[R·运行时]**：本会话通过 `cordis_inspect_query` 读到的**活运行时**事实（`Tool.listTools` 的完整 schema、`Config.listConfigs` 的配置 schema）——最硬证据。
 > - **[R·包文档]**：本次用 file-read 直读 `E:\dsh\resources\app.asar\dsh\node_modules\@deepseek-ai\*\README.md` 的原文（注意：`read` 工具能读 asar 内部；`grep`/`pwsh`/`glob` **不能**——已实测 `grep` 报 `os error 3`，这是 asar 的访问边界）。
-> - **[D]**：仓库内既有文档/契约（`docs/m1-contract.md`、`docs/m2-contract.md`、`docs/tech-stack.md`、`backend/README.md`、`design/19`、`design/20`、`harness/harness-map.md`、`research/dsh-mechanisms.md`）。
+> - **[D]**：仓库内既有文档/契约（`docs/m1-contract.md`、`docs/m2-contract.md`、`docs/tech-stack.md`、`backend/README.md`、`design/19`、`design/20`、`harness/harness-map.md`、`archive/research/dsh-mechanisms.md`）。
 > - **[I·推断]**：由上述证据推导、未在运行时直接观测的结论（会逐条标注）。
 >
 > **重要边界**：本次抓到的工具清单来自**当前 profile / 当前会话的 preset（creator 类 preset）**。DSH 的工具面 = **Host 平面工具 + 所选 preset 的贡献**；换 preset 会增减工具（例：`tool-cordis` 只在 creator preset；`tool-web`/`tool-schedule` 由各 preset 自行挂载）。因此下表是"这一套组合"的真实快照，不是"DSH 全量工具的唯一形态"。
@@ -47,7 +47,7 @@
 |---|---|---|---|---|
 | `pwsh` | **一次性** PowerShell 进程执行（Windows 组合的主 shell） | `command`, `description`（要求先写）, `timeoutMs?`, `workdir?`, `run_in_background?`, `sandbox_permissions?`, `justification?` | **R2 进程执行**（最高风险面） | [R·运行时] 参数；[R·包文档] `dsh-tool-pwsh`：每次新进程、`promoteOnTimeout=true`（超时转后台作业）、`[exit code: N]` 标记、非零退出**不是**工具错误；沙箱拒绝显示 `[sandbox: file access denied under <mode> mode]`；受限令牌下 ConstrainedLanguage 与命名管道约束 |
 | `bash`（孪生，本组合**未挂载**） | 同 `pwsh` 的 POSIX 形态 | 同上（`dsh-tool-bash`） | **R2** | [R·包文档] pwsh README 明说两者 call-for-call 对齐；[D] 预设里 `tool-bash` 在 win32 上 `disabled`（只有 `tool-pwsh` 生效），因此本 Windows 组合没有 bash 工具。**包是否存在未验证**：`grep`/`rg` 无法读 asar（实测 IO error），不能据此判定包缺失 |
-| `terminal_open` / `terminal_send` / `terminal_read` / `terminal_signal` / `terminal_close` / `terminal_list` | **持久 PTY** 会话：跨调用的 shell/REPL 状态 | `type`(`shell`), `name?`, `cwd?`；`sessionId`；`text`/`submit?`/`run_in_background?`；`offset`/`count`；`signal`(SIGINT/SIGTERM/SIGKILL/SIGTSTP/SIGHUP，shell 上 SIGKILL 被拒) | **R2**（会话持有状态） | [R·运行时] 完整 schema；[D] `research/dsh-mechanisms.md` §8：owner-scoped、单 send 预留、关闭等进程树静默 |
+| `terminal_open` / `terminal_send` / `terminal_read` / `terminal_signal` / `terminal_close` / `terminal_list` | **持久 PTY** 会话：跨调用的 shell/REPL 状态 | `type`(`shell`), `name?`, `cwd?`；`sessionId`；`text`/`submit?`/`run_in_background?`；`offset`/`count`；`signal`(SIGINT/SIGTERM/SIGKILL/SIGTSTP/SIGHUP，shell 上 SIGKILL 被拒) | **R2**（会话持有状态） | [R·运行时] 完整 schema；[D] `archive/research/dsh-mechanisms.md` §8：owner-scoped、单 send 预留、关闭等进程树静默 |
 | `job_output` / `job_list` / `job_kill` | 后台作业观察与控制 | `job_id`, `wait?`, `timeout_ms?`；`job_id`, `reason?` | **R2 间接**（作业由执行工具产生） | [R·运行时] |
 
 > **关键语义**（M9 必抄）：① 执行工具的**非零退出是正常结果**（`[exit code: N]`），只有 spawn/abort 等基础设施失败才是工具错误；② 前台超时可"升级为后台作业"并把已有输出交给 `job_output`；③ 沙箱拒绝是**结构化 marker + 提权重试提示**，不是一个黑盒错误。
@@ -330,7 +330,7 @@
 
 ### 7.1 长程任务：DSH 机制清单（分"有证据 / 推断"）
 
-#### A. 有证据（`[R·包文档]` 本会话/前期直读 README；汇总见 `research/dsh-mechanisms.md` §8）
+#### A. 有证据（`[R·包文档]` 本会话/前期直读 README；汇总见 `archive/research/dsh-mechanisms.md` §8）
 
 1. **三屏障 fail-closed 检查点**（`dsh-session-checkpoint-policy`）：①**模型请求前** ②**顶层工具副作用前**（`exec.parent === undefined`）③**每步前** flush；失败即**不 continue**（不构造 adapter 流 / 不进 tool body）；嵌套调用复用外层屏障；取消与 flush 竞态只有一个出口（`ABORTED_BEFORE_DISPATCH`）。
 2. **崩溃恢复 = 补配对，不续跑半截 turn**（`dsh-session` / `dsh-agent-loop`）：为未回答的调用合成 `TOOL_OUTCOME_UNKNOWN` / `TOOL_NOT_STARTED` / `ABORTED_BEFORE_DISPATCH`；`interruptedTurnClosers` = 合成 tool/result + `step/end` + `turn/end{interrupted}`；resume **先取写所有权**（单写者），**绝不自动重试有副作用的操作**。
@@ -417,10 +417,10 @@
 | 网络工具参数与上限 | `…\@deepseek-ai\dsh-tool-web\README.md` |
 | fs 围栏/canonicalize/TOCTOU | `…\@deepseek-ai\dsh-fs-sandbox\README.md` |
 | `DSH_*` 环境重建 | `…\@deepseek-ai\dsh-shell-env\README.md` |
-| 工具管线 / 输出治理 / 压缩 | `research/dsh-mechanisms.md`；`harness/harness-map.md` |
+| 工具管线 / 输出治理 / 压缩 | `archive/research/dsh-mechanisms.md`；`harness/harness-map.md` |
 | simo 现状（工具/权限/审批/中和） | `backend/README.md` §M2–M6；`backend/internal/platform/permission/permission.go`；`backend/internal/modules/chat/tools.go`；`docs/m2-contract.md` §6 |
 | simo 路线图（M1–M7） | `design/15-开发路线图-v1.md`（M9/M10 是路线图之后的新增里程碑） |
-| 长程任务/后台作业/恢复/看门狗 | `…\@deepseek-ai\dsh-session-checkpoint-policy\README.md`、`dsh-session\README.md`、`dsh-jobs-local\README.md`、`dsh-tool-jobs\README.md`、`dsh-goal\README.md`、`dsh-goal-round-driver\README.md`、`dsh-schedule\README.md`、`dsh-timeout\README.md`、`dsh-llm-retry\README.md`、`dsh-tool-call-timeout-policy\README.md`；汇总见 `research/dsh-mechanisms.md` §8 |
+| 长程任务/后台作业/恢复/看门狗 | `…\@deepseek-ai\dsh-session-checkpoint-policy\README.md`、`dsh-session\README.md`、`dsh-jobs-local\README.md`、`dsh-tool-jobs\README.md`、`dsh-goal\README.md`、`dsh-goal-round-driver\README.md`、`dsh-schedule\README.md`、`dsh-timeout\README.md`、`dsh-llm-retry\README.md`、`dsh-tool-call-timeout-policy\README.md`；汇总见 `archive/research/dsh-mechanisms.md` §8 |
 | 长程恢复的诚实语义 | `dsh-session-persistence\README.md`（torn-tail 只丢未确认尾）、`dsh-session-projection-cache\README.md`（日志领先/缓存跟随）、`dsh-jobs-local\README.md`（不跨重启） |
 | UI 插件与 Slots | `…\@deepseek-ai\dsh-agent-preset\skills\cordis-plugin-development\references\ui-plugin.md`；`Slots.listSubTree`（本次查询超时，未取到实时树） |
 | 会话检索（查询服务 + FTS5） | `…\@deepseek-ai\dsh-session-query\README.md`、`dsh-session-query-sqlite\README.md` |

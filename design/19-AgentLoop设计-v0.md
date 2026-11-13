@@ -12,10 +12,10 @@
 > - [`18-SDD流程-v0.md`](18-SDD流程-v0.md)（SpecCore **v0.2**：对象、生命周期、门禁、三文件、双裁决、修复环；字段/表名/`canArchive` 对齐见 §13.1b）
 > - [`20-上下文工程-v0.md`](20-上下文工程-v0.md)（E2：上下文组装/压缩；本稿 §9 的接口与不变量交给它落地）
 > - [`17-评测设计-v0.md`](17-评测设计-v0.md)（E1 必须自带判定点清单 + L1/L2 用例）
-> - `research/codex-mechanisms.md`（Thread/Turn/Item、steer/queue、goal、预算）
-> - `research/claude-agent-sdk-mechanisms.md`（五类消息、Result 五态、六步权限、子代理/预算）
-> - `research/dsh-mechanisms.md`（turn/step、五段工具管线、三屏障、三态取消、事件溯源）
-> - `research/superpowers-mechanisms.md`（spec 权威/plan 回链、三文件交接、双裁决、修复环 ≤5）
+> - `archive/research/codex-mechanisms.md`（Thread/Turn/Item、steer/queue、goal、预算）
+> - `archive/research/claude-agent-sdk-mechanisms.md`（五类消息、Result 五态、六步权限、子代理/预算）
+> - `archive/research/dsh-mechanisms.md`（turn/step、五段工具管线、三屏障、三态取消、事件溯源）
+> - `archive/research/superpowers-mechanisms.md`（spec 权威/plan 回链、三文件交接、双裁决、修复环 ≤5）
 >
 > **标记约定**：【拍板】= 上游已由用户确认（含用户 2026-11-06 授权 lead 拍板的 Q1–Q5）；【借鉴】= 从四家机制借鉴、我们改造后使用；【讨论中】= 本稿提出的候选，可推翻；【待核实】= 证据不足或依赖未定；【假设】= 本稿为推进设计而采用的临时前提（会被后续评审替换）。
 >
@@ -1203,10 +1203,10 @@ Task.done（进入 verified） :=  SpecCompliance ✅  ∧  Quality Approved  �
 | Intent Frame | 13 §6.1（本稿加 Spec 绑定/预算/停止策略） |
 | 会话/消息归属/三栏 | 14 §5.1b/§5.9/§5.10；13 §11.7 |
 | 秘书不下场 / 一个秘书 + 专家 | 10 §4/§6；14 §2 |
-| turn/step、管线、三态、三屏障 | 16 D3/D5/D10/D14；research/dsh §1/§8 |
-| 五类消息/Result 五态/权限顺序/子代理边界/预算 | 16 D3/D5/D12/D15；research/claude §1/§7/§8 |
-| steer/queue/Thread-Turn-Item/goal | 16 D2/D3；research/codex §1/§7/§8 |
-| 三文件/双裁决/修复环/Ledger | 18 v0.2 §4–§6；research/superpowers 阶段 4–5 |
+| turn/step、管线、三态、三屏障 | 16 D3/D5/D10/D14；archive/research/dsh §1/§8 |
+| 五类消息/Result 五态/权限顺序/子代理边界/预算 | 16 D3/D5/D12/D15；archive/research/claude §1/§7/§8 |
+| steer/queue/Thread-Turn-Item/goal | 16 D2/D3；archive/research/codex §1/§7/§8 |
+| 三文件/双裁决/修复环/Ledger | 18 v0.2 §4–§6；archive/research/superpowers 阶段 4–5 |
 | E1 判定点/L1/L2 要求 | 17 §7.3；§2.2/§2.3 |
 | V1/P1 与工程默认值 | 14 §9；15 §2.5 |
 

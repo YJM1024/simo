@@ -2,20 +2,20 @@
 
 > 目的：给司墨前端开发框架挑选**专业、严谨、可落地**的规范与 skill，并说明每个来源的许可证、成熟度、优缺点与**采纳建议**。
 > 调研方法：`web_search` + `web_fetch` 实际抓取页面/仓库（下文链接均可追溯）；无法核实的条目会明确标 **未核实**，不编造许可证或版本。
-> 日期：2026-11-12。适用对象：`web/`（React 19 + TS + Tailwind 4）、`frontend/prototype-v3/` 原型与组件画廊、`docs/design-system.md` / `docs/visual-language.md`。
+> 日期：2026-11-12。适用对象：`web/`（React 19 + TS + Tailwind 4）、`archive/prototypes/prototype-v3/` 原型与组件画廊、`docs/design-system.md` / `docs/visual-language.md`。
 
 ## 0. 结论先行（TL;DR）
 
 1. **司墨已有的事实标准**是 `docs/design-system.md`（token + 原子组件）与 `docs/tasks/frontend.md`（F1–F10、组件画廊规范、禁止项）——它事实上已是 Atomic Design + Design Tokens 的"自研落地版"。**不要推翻，做映射与补齐**。
 2. **最值得直接吸收**：① DTCG token 格式（把 CSS 变量变成有 schema 的 token 源）；② WCAG 2.2 AA 的**可测试子集**（键盘/焦点/对比度/名称/错误提示）；③ Playwright `toHaveScreenshot` 的"金基线 + 阈值 + 稳定化"做法；④ Atomic Design 的**词汇表**与"先组件后页面"的顺序。
 3. **不急着重型工具**：Storybook（v10.6）能力完整但引入成本高（pnpm/esbuild 原生依赖、版本演进快）；司墨当前已有"组件画廊 + REVIEW 截图"流程，建议**先做 CSF 风格的组件契约 + 由画廊生成目录**，P1 再评估 Storybook。
-4. **设计先行 skill（`skills/design-first-frontend`）**：工作区仅见 `frontend/prototype-v3/REVIEW.md` 引用其"10 条验收清单"，**工作区内未找到该 skill 的实体文件**（可能在历史环境/其他目录）→ 本文件只能按引用与现有文档归纳，**清单原文未核实**；建议把它正式落库到 `docs/process/` 或 `skills/`。
+4. **设计先行 skill（`skills/design-first-frontend`）**：工作区仅见 `archive/prototypes/prototype-v3/REVIEW.md` 引用其"10 条验收清单"，**工作区内未找到该 skill 的实体文件**（可能在历史环境/其他目录）→ 本文件只能按引用与现有文档归纳，**清单原文未核实**；建议把它正式落库到 `docs/process/` 或 `skills/`。
 
 ## 1. 来源总表
 
 | # | 来源 | 链接 | 组织/作者 | 许可证 | 成熟度 |
 |---|---|---|---|---|---|
-| F1 | design-first-frontend（内部已有） | 工作区引用：`frontend/prototype-v3/REVIEW.md`（未见实体文件） | 司墨内部 | 内部资料（未核实） | 内部草案/引用中 |
+| F1 | design-first-frontend（内部已有） | 工作区引用：`archive/prototypes/prototype-v3/REVIEW.md`（未见实体文件） | 司墨内部 | 内部资料（未核实） | 内部草案/引用中 |
 | F2 | Atomic Design | https://atomicdesign.bradfrost.com/ | Brad Frost（书/站点） | **未核实**：站点为书籍内容；GitHub `bradfrost/atomic-design` 仓库 API 返回 `license: null`（无标准开源许可） | 高（2013 起，行业通用词汇） |
 | F3 | Storybook | https://storybook.js.org/docs/get-started/install | Storybook 团队（storybookjs） | **MIT**（GitHub API 核实） | 高且活跃（站点 v10.6；仓库 91k+ stars，2026-11 仍在更新） |
 | F4 | Design Tokens（DTCG） | https://www.designtokens.org/ · 规范：https://www.designtokens.org/TR/drafts/ | W3C Design Tokens Community Group | **未核实**（社区组报告；页面 © DTCG；具体许可文本未抓取） | 中高：**首个稳定版 2025.10**；格式模块仍在演进 |
@@ -28,7 +28,7 @@
 
 ### F1 design-first-frontend（内部已有）
 
-- **是什么**：司墨内部前端工作方式 skill；据 `frontend/prototype-v3/REVIEW.md`，其核心是**"10 条验收清单"** + 截图/量测证据（本机 Chrome CDP）。
+- **是什么**：司墨内部前端工作方式 skill；据 `archive/prototypes/prototype-v3/REVIEW.md`，其核心是**"10 条验收清单"** + 截图/量测证据（本机 Chrome CDP）。
 - **适用场景**：任何前端/界面/交互改动；与 `docs/design-system.md`、`docs/visual-language.md`、`docs/tasks/frontend.md` 强绑定。
 - **优点**：与司墨"设计先行、视觉唯一来源、组件画廊、禁止页面内联样式"的既有硬约束一致；强调证据（截图/量测）而非口头验收。
 - **缺点/风险**：**实体文件未在工作区找到**（仅引用），版本与内容不可审计；若 skill 在其他环境，存在"文档漂移"。

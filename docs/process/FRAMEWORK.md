@@ -148,7 +148,7 @@ specs/<CHANGE-ID>/
 
 ## 8. 决策记录
 
-- 2026-11-12：**Storybook 采用方案 A** —— 不进主线、不作为验收证据链；保留 `labs/storybook/` PoC，P1 在正常 CI（如 GitHub Actions windows-latest）验证 build/preview/screenshot 后再评估；不接 Chromatic；自研画廊仍是验收门禁。
+- 2026-11-12：**Storybook 采用方案 A** —— 不进主线、不作为验收证据链；保留 `archive/labs/storybook/` PoC，P1 在正常 CI（如 GitHub Actions windows-latest）验证 build/preview/screenshot 后再评估；不接 Chromatic；自研画廊仍是验收门禁。
 
 ## 9. 待确认
 

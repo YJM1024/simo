@@ -5,7 +5,7 @@
 > **版本记录**：
 > - v0（2026-11-06）：首版。按用户拍板「自研 SpecCore、不直接采用 OpenSpec/Superpowers」写成；覆盖 SpecCore 对象、七步流程、门禁、交接、拆分、DB 草案、不照搬清单、冲突点与待拍板问题。
 > - **v0.1（2026-11-06，用户已确认）**：补充「**Spec 不可见原则**」（不出现 Spec/规格/需求文档/验收标准/基线/增量等内部词汇）、**8 条「Spec 操作 → 自然对话」投影映射**、**三类打扰规则**（风险门/真歧义/用户主动要求）；并把「人审 Spec」硬门**正式替换**为「风险触发的对话确认」，同时明确**内部状态机与证据绑定不因此取消**。
-> - **v0.2（2026-11-06）**：并入 `research/adjacent-frameworks.md` 的高优先级机制（**EARS 五句型 + RFC 2119 强度 + Gherkin 可观察输出**；**Temporal 记账纪律：事件历史=真相、LLM 调用=Activity 先落库、恢复靠 replay**；**Shape Up 的 appetite / circuit breaker / Scopes / non-goals**；**ADR 状态语义 + Y-statement**；**变异测试→反向验收、Pact→`canArchive(specId)` 单一入口**；形式化只借"不变量→运行时断言 + 前置/后置"）；同步更新 Requirement schema（JSON Schema，非 markdown+正则）、Spec 字段、七步流程的记账/证据/归档、DB 表（`event_log`/`activities`/`spec_versions`），以及与 `design/12` 的衔接（**Spec = 记忆的一种内部 kind，markdown 导出仅为视图**）。
+> - **v0.2（2026-11-06）**：并入 `archive/research/adjacent-frameworks.md` 的高优先级机制（**EARS 五句型 + RFC 2119 强度 + Gherkin 可观察输出**；**Temporal 记账纪律：事件历史=真相、LLM 调用=Activity 先落库、恢复靠 replay**；**Shape Up 的 appetite / circuit breaker / Scopes / non-goals**；**ADR 状态语义 + Y-statement**；**变异测试→反向验收、Pact→`canArchive(specId)` 单一入口**；形式化只借"不变量→运行时断言 + 前置/后置"）；同步更新 Requirement schema（JSON Schema，非 markdown+正则）、Spec 字段、七步流程的记账/证据/归档、DB 表（`event_log`/`activities`/`spec_versions`），以及与 `design/12` 的衔接（**Spec = 记忆的一种内部 kind，markdown 导出仅为视图**）。
 > - **v0.3（2026-11-06，用户 2026-11-06 授权 lead 拍板）**：吸收 E5（[`23-Planner与长程任务-v0.md`](23-Planner与长程任务-v0.md)）四项扩展——**`planRevision` + `supersedesPlanId`**（局部重规划不升 Spec 版本）、**`Task.dependsOn[]`**（依赖 DAG）、**`acceptanceKeys[]`**（验收键，对齐 E0 grader / `canArchive`）、**`boundary`**（writeScope/readScopes/allowedTools/forbiddenActions，对齐 E3 边界与 E2 角色槽位）；并写入 **E5 的 trivial 档（T0）**：至多一个 Plan/Task、Spec 按需创建；新增「跨文档字段对齐表」（18/21/22/23），差异处标"以 E5 为准"。
 > **依据用户拍板**（原话见 [`10-设计对话记录.md`](10-设计对话记录.md) §30–33）：
 > 1. Spec 是 Agent 的**内部真相层**：用户只提交需求与背景上下文，**不操作、不感知 Spec**；
@@ -20,7 +20,7 @@
 > 10. **Spec 永远不可见（用户 2026-11-06 已确认）**：用户侧**不出现**"Spec / 规格 / 需求文档 / 验收标准 / 基线 / 增量"等内部词汇；所有 Spec 操作**投影为自然对话**；**只有三类情况打扰用户**——风险门、真歧义、用户主动要求。
 > 11. **决策授权（用户 2026-11-06 授权 lead 拍板）**：设计/技术/工程细节由 lead 决定；E5 的四项扩展（planRevision/supersedesPlanId、dependsOn、acceptanceKeys、boundary）与 trivial 档"Spec 按需创建"按此授权采纳（见 §2.4），重大产品方向/不可逆动作/预算仍请用户确认（10 §33）。
 > **标记约定**：【拍板】= 用户已确认；【借鉴】= 从 OpenSpec/Superpowers 借鉴的机制（我们改造后使用）；【讨论中】= 本文提出的候选，可推翻；【待核实】= 证据不足。
-> **上游**：[`10-设计对话记录.md`](10-设计对话记录.md)（拍板）、[`12-记忆模型-候选稿.md`](12-记忆模型-候选稿.md)（记忆）、[`13-交互协议-候选方案.md`](13-交互协议-候选方案.md)（交互）、[`14-总体设计-v1.md`](14-总体设计-v1.md)（总体）、[`15-开发路线图-v1.md`](15-开发路线图-v1.md)（里程碑）、[`17-评测设计-v0.md`](17-评测设计-v0.md)（E0）；外部参照：`research/openspec-mechanisms.md`、`research/superpowers-mechanisms.md`。
+> **上游**：[`10-设计对话记录.md`](10-设计对话记录.md)（拍板）、[`12-记忆模型-候选稿.md`](12-记忆模型-候选稿.md)（记忆）、[`13-交互协议-候选方案.md`](13-交互协议-候选方案.md)（交互）、[`14-总体设计-v1.md`](14-总体设计-v1.md)（总体）、[`15-开发路线图-v1.md`](15-开发路线图-v1.md)（里程碑）、[`17-评测设计-v0.md`](17-评测设计-v0.md)（E0）；外部参照：`archive/research/openspec-mechanisms.md`、`archive/research/superpowers-mechanisms.md`。
 
 ---
 
@@ -126,7 +126,7 @@
 | R9 | 进度 = 文件 checkbox | **进度 = DB `tasks.status`** | 统一 DB；避免双真相；断点可精确恢复 |
 | R10 | 结构校验（markdown 正则） | **JSON Schema 校验 + EARS/RFC2119 字段** | 结构化数据比 markdown 标题可靠；同一 schema 可同时约束 LLM 输出与入库（相邻调研 §1/§3） |
 
-### 2.3 相邻领域借鉴（v0.2 新增，来源 `research/adjacent-frameworks.md`）
+### 2.3 相邻领域借鉴（v0.2 新增，来源 `archive/research/adjacent-frameworks.md`）
 
 > 原则：**借思想不借系统**。只取能落到 SpecCore 数据模型/状态机/证据门的机制；不引入 Temporal/TLA+/Shape Up 的组织仪式/Pact broker 等工具链（见该报告 §9 的 21 条"不该借"）。
 
@@ -228,7 +228,7 @@
 
 ### 3.3 Requirement / Scenario / Acceptance（v0.2：EARS + RFC 2119 + Gherkin）
 
-> 来源：`research/adjacent-frameworks.md` §1。**Spec 结构由 JSON Schema 定义**——同一份 schema 同时约束 LLM 输出与入库（避免 markdown 标题 + 正则的"静默失败"）。
+> 来源：`archive/research/adjacent-frameworks.md` §1。**Spec 结构由 JSON Schema 定义**——同一份 schema 同时约束 LLM 输出与入库（避免 markdown 标题 + 正则的"静默失败"）。
 
 **Requirement 字段（schema 强制）**：
 
