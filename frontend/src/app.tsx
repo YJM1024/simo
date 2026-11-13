@@ -10,6 +10,7 @@ import {
   getPermissions,
   getAllSessionMessages,
   getDeliverables,
+  getMetrics,
   getSpecProjection,
   getStats,
   listMessages,
@@ -19,7 +20,7 @@ import {
   submitCardAction,
 } from './api'
 import type { Card, Message, PermissionState, Session, StatsBucket, StatsTotals } from './types'
-import { Composer, ConversationPanel, EmptyState, ErrorState, Icon, LoadingState, MessageItem, RightPanel, Segmented, Sidebar, StatusBar, TimelineGroups, WorkbenchChart, formatTime, formatTokens } from './components'
+import { Composer, ConversationPanel, EmptyState, ErrorState, Icon, LoadingState, MessageItem, MetricsDashboard, RightPanel, Segmented, Sidebar, StatusBar, TimelineGroups, WorkbenchChart, formatTime, formatTokens } from './components'
 
 type Page = 'chat' | 'workbench'
 
@@ -56,6 +57,8 @@ export default function App(): React.ReactNode {
   const [messages, setMessages] = useState<Message[]>([])
   const [ancestorMessages, setAncestorMessages] = useState<Message[]>([])
   const [ancestorLoading, setAncestorLoading] = useState(false)
+  const ancestorLoadingRef = useRef(false)
+  const ancestorRequestRef = useRef<Promise<void> | null>(null)
   const [ancestorError, setAncestorError] = useState('')
   const [emptyAncestorIds, setEmptyAncestorIds] = useState<Set<string>>(new Set())
   const [activityAt, setActivityAt] = useState<Record<string, number>>({})
@@ -77,6 +80,10 @@ export default function App(): React.ReactNode {
   const [buckets, setBuckets] = useState<StatsBucket[]>([])
   const [workbenchError, setWorkbenchError] = useState('')
   const [workbenchLoading, setWorkbenchLoading] = useState(false)
+  const [metricsRange, setMetricsRange] = useState<'7d' | '30d'>('7d')
+  const [metrics, setMetrics] = useState<import('./api').MetricsPayload | null>(null)
+  const [metricsLoading, setMetricsLoading] = useState(false)
+  const [metricsError, setMetricsError] = useState('')
   const [statsRefresh, setStatsRefresh] = useState(0)
   const scrollerRef = useRef<HTMLDivElement>(null)
   const stickToBottomRef = useRef(true)
@@ -239,6 +246,8 @@ export default function App(): React.ReactNode {
     setAncestorError('')
     setEmptyAncestorIds(new Set())
     setAncestorLoading(false)
+    ancestorLoadingRef.current = false
+    ancestorRequestRef.current = null
     setProjection(null)
     void loadMessages(activeId)
     void loadRight(activeId)
@@ -303,6 +312,18 @@ export default function App(): React.ReactNode {
       .catch((err: unknown) => setWorkbenchError(err instanceof Error ? err.message : '统计加载失败'))
       .finally(() => setWorkbenchLoading(false))
   }, [page, applyStats, statsRefresh])
+
+  useEffect(() => {
+    if (page !== 'workbench') return
+    let cancelled = false
+    setMetricsLoading(true)
+    setMetricsError('')
+    void getMetrics(metricsRange)
+      .then((data) => { if (!cancelled) setMetrics(data) })
+      .catch((err: unknown) => { if (!cancelled) setMetricsError(err instanceof Error ? err.message : '指标加载失败') })
+      .finally(() => { if (!cancelled) setMetricsLoading(false) })
+    return () => { cancelled = true }
+  }, [page, metricsRange])
 
   const jumpToMessage = (index: number): void => {
     const node = document.querySelectorAll<HTMLElement>('.conversation-scroll .msg')[index]
@@ -381,7 +402,10 @@ export default function App(): React.ReactNode {
   }
 
   const loadAncestor = async (): Promise<void> => {
-    if (!nextParent || ancestorLoading) return
+    if (!nextParent) return
+    if (ancestorLoadingRef.current) return ancestorRequestRef.current ?? Promise.resolve()
+    ancestorLoadingRef.current = true
+    ancestorRequestRef.current = (async (): Promise<void> => {
     const scroller = scrollerRef.current
     if (scroller) {
       const top = scroller.getBoundingClientRect().top
@@ -404,10 +428,14 @@ export default function App(): React.ReactNode {
       stickToBottomRef.current = false
     } catch (err) {
       const raw = err instanceof Error ? err.message : '上级消息加载失败'
-      setAncestorError(raw.includes('413') ? '消息过多，暂不能完整加载' : raw)
+      setAncestorError(raw.includes('413') ? '消息过多，暂不能完整加载' : raw.includes('403') ? '无权读取该上级会话' : raw)
     } finally {
+      ancestorLoadingRef.current = false
+      ancestorRequestRef.current = null
       setAncestorLoading(false)
     }
+    })()
+    return ancestorRequestRef.current ?? Promise.resolve()
   }
 
   const locateTask = (task: { title: string; id: string; messageId?: string }): void => {
@@ -546,7 +574,7 @@ export default function App(): React.ReactNode {
                     onScroll={syncTimeline}
                   >
                     <div className="chat-inner">
-                      {nextParent && <div className="message-top"><button className="btn sm" type="button" disabled={ancestorLoading} aria-busy={ancestorLoading} onClick={() => void loadAncestor()}>{ancestorLoading ? '加载中…' : `显示上级会话：${nextParent.title}`}</button></div>}
+                      {nextParent && <div className="message-top"><button className="btn sm" type="button" disabled={ancestorLoading} aria-busy={ancestorLoading} title={nextParent.title} aria-label={`显示上级会话：${nextParent.title}`} onClick={() => void loadAncestor()}>{ancestorLoading ? '加载中…' : '显示上级会话'}</button></div>}
                       {ancestorError && <p className="err-text" role="alert">{ancestorError}</p>}
                       {error && messages.length > 0 && <p className="err-text" role="alert">{error}</p>}
                       {combinedMessages.map((message, index) => {
@@ -567,6 +595,13 @@ export default function App(): React.ReactNode {
           <section className="page-workbench" aria-label="工作台">
             <div className="page"><div className="page-inner">
               <div className="page-head"><h1>工作台</h1><p>用量与最近活动，来自真实 API。</p></div>
+              <MetricsDashboard
+                state={metricsLoading ? 'loading' : metricsError ? 'error' : metrics && (metrics.totals.turns > 0 || metrics.totals.messages > 0 || metrics.totals.tasks > 0) ? 'ready' : 'empty'}
+                windowKind={metricsRange}
+                data={metrics ?? undefined}
+                onWindowChange={(value) => setMetricsRange(value)}
+                onRetry={() => { setMetricsError(''); setMetricsLoading(true); void getMetrics(metricsRange).then(setMetrics).catch((err: unknown) => setMetricsError(err instanceof Error ? err.message : '指标加载失败')).finally(() => setMetricsLoading(false)) }}
+              />
               {workbenchError && <ErrorState title="工作台加载失败" description={workbenchError} onRetry={() => setStatsRefresh((value) => value + 1)} />}
               <div className="section-title"><h2>用量</h2><span>当前实例</span></div>
               {workbenchLoading && !statsTotals && <LoadingState label="统计加载中…" />}

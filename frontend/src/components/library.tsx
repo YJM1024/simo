@@ -681,6 +681,83 @@ export function OverviewPanel({ session, projection, loading, error = '', onRetr
   )
 }
 
+export interface MetricsDashboardData {
+  range: string
+  timezone: string
+  from: number
+  to: number
+  totals: { ttftP50Ms: number | null; ttftP90Ms: number | null; durationP50Ms: number | null; durationP90Ms: number | null; turns: number; messages: number; tasks: number; failures: number; promptTokens: number; completionTokens: number; reasoningTokens: number; totalTokens: number }
+  series: Array<{ date: string; messages: number; turns: number; tasks?: number; totalTokens: number; failures: number }>
+  partialToday?: boolean
+  availability?: Record<string, 'ready' | 'partial' | 'missing'>
+  kpis?: { tokens?: { total: number; prompt: number; completion: number; reasoning: number }; topics?: { newSessions: number; activeSessions: number }; messages?: { total: number; user: number; agent: number }; sessions?: { total: number; active: number; archived: number }; reply?: { p50: number | null; p90: number | null; sample: number }; ttft?: { p50: number | null; p90: number | null; sample: number } }
+  topics?: { newSessions: number; activeSessions: number }
+  sessions?: { total: number; active: number; archived: number }
+  taskQuality?: { completionRate: { value: number | null; numerator: number; denominator: number }; firstPassRate: { value: number | null; numerator: number; denominator: number }; reworkRate: { value: number | null; numerator: number; denominator: number }; response?: { p50: number | null; p90: number | null; sample: number } }
+  tables?: Record<string, Array<Record<string, unknown>>>
+}
+
+export function MetricsDashboard({ state = 'ready', windowKind = '7d', data, onWindowChange, onRetry }: {
+  state?: 'ready' | 'loading' | 'empty' | 'error' | 'partial'
+  windowKind?: '7d' | '30d'
+  data?: MetricsDashboardData
+  onWindowChange?: (value: '7d' | '30d') => void
+  onRetry?: () => void
+}): React.ReactNode {
+  const ms = (value: number | null | undefined): string => value == null ? '—' : `${value}ms`
+  const latency = (key: 'replySpeed' | 'ttft', latencyKey: 'reply' | 'ttft'): { value: string; note: string } => {
+    const avail = data?.availability?.[key]
+    const latencyData = data?.kpis?.[latencyKey]
+    if (avail === 'missing') return { value: '待埋点', note: '埋点缺失' }
+    if (avail === 'partial') return { value: '部分数据', note: '部分样本' }
+    if ((latencyData?.sample ?? 0) === 0) return { value: (data?.totals.turns ?? 0) === 0 && (data?.totals.messages ?? 0) === 0 ? '无数据' : '样本不足', note: '样本不足' }
+    return { value: `${ms(latencyData?.p50)} / ${ms(latencyData?.p90)}`, note: latencyKey === 'reply' ? 'turn duration' : 'first token' }
+  }
+  const reply = latency('replySpeed', 'reply')
+  const ttft = latency('ttft', 'ttft')
+  const fresh = data?.series ?? []
+  return (
+    <section className="metrics-dashboard" aria-label="指标仪表盘">
+      <div className="metrics-head"><div><h3 className="insp-label">指标仪表盘</h3><p className="insp-text">{data ? `${data.range} · ${data.timezone} · ${new Date(data.from).toLocaleDateString('zh-CN')} → ${new Date(data.to).toLocaleString('zh-CN')}${data.partialToday ? ' · 今日未完整' : ''}` : '7/30 天窗口 · 只读聚合'}</p></div><div className="metrics-window" role="group" aria-label="指标窗口"><button type="button" className={windowKind === '7d' ? 'active' : ''} onClick={() => onWindowChange?.('7d')}>7天</button><button type="button" className={windowKind === '30d' ? 'active' : ''} onClick={() => onWindowChange?.('30d')}>30天</button></div></div>
+      {state === 'loading' && <LoadingState label="指标加载中…" />}
+      {state === 'error' && <ErrorState title="指标加载失败" onRetry={onRetry} />}
+      {state === 'empty' && <EmptyState title="窗口内暂无指标" description="有 turn/消息/任务后这里会显示聚合数据。" />}
+      {data?.availability && Object.values(data.availability).some((value) => value === 'missing') && <p className="insp-text">待埋点：{Object.entries(data.availability).filter(([, value]) => value === 'missing').map(([key]) => ({ replySpeed: '回复耗时', ttft: '首字延迟', taskReopen: '任务重开', taskAttempts: '任务尝试', taskCompletion: '任务完成', topics: '话题', sessions: '会话', taskQuality: '任务质量', tokens: 'Token' } as Record<string,string>)[key] ?? key).join('、')}</p>}
+      {data?.availability && Object.values(data.availability).some((value) => value === 'partial') && <p className="insp-text">部分数据：{Object.entries(data.availability).filter(([, value]) => value === 'partial').map(([key]) => ({ replySpeed: '回复耗时', ttft: '首字延迟', taskReopen: '任务重开', taskAttempts: '任务尝试', taskCompletion: '任务完成', sessions: '会话' } as Record<string,string>)[key] ?? key).join('、')}</p>}
+      {(state === 'ready' || state === 'partial') && (
+        <>
+          <div className="metrics-kpis">
+            <div className="metric-card"><span>Token</span><b>{formatTokens(data?.kpis?.tokens?.total ?? data?.totals.totalTokens ?? 0)}</b><small>prompt {formatTokens(data?.kpis?.tokens?.prompt ?? data?.totals.promptTokens ?? 0)} · completion {formatTokens(data?.kpis?.tokens?.completion ?? data?.totals.completionTokens ?? 0)} · reasoning {formatTokens(data?.kpis?.tokens?.reasoning ?? data?.totals.reasoningTokens ?? 0)}</small></div>
+            <div className="metric-card"><span>话题</span><b>{data?.kpis?.topics ? `${data.kpis.topics.newSessions} / ${data.kpis.topics.activeSessions}` : data?.topics ? `${data.topics.newSessions} / ${data.topics.activeSessions}` : '待接入'}</b><small>新增 / 活跃</small></div>
+            <div className="metric-card"><span>消息</span><b>{data?.kpis?.messages?.total ?? data?.totals.messages ?? 0}</b><small>user + agent</small></div>
+            <div className="metric-card"><span>会话</span><b>{data?.kpis?.sessions ? data.kpis.sessions.total : data?.sessions ? data.sessions.total : '待接入'}</b><small>{data?.kpis?.sessions ? `活跃 ${data.kpis.sessions.active} · 归档 ${data.kpis.sessions.archived}${data.availability?.sessions === 'partial' ? ' · 部分数据' : ''}` : data?.sessions ? `活跃 ${data.sessions.active} · 归档 ${data.sessions.archived}` : '数据未接入'}</small></div>
+            <div className="metric-card"><span>回复 p50 / p90</span><b>{reply.value}</b><small>{reply.note}</small></div>
+            <div className="metric-card"><span>TTFT p50 / p90</span><b>{ttft.value}</b><small>{ttft.note}</small></div>
+          </div>
+          <div className="section-title"><h2>每日趋势</h2><span>{fresh.length} 天</span></div>
+          {fresh.length === 0 ? <EmptyState title="暂无趋势数据" /> : <div className="metrics-bars">{fresh.map((day) => { const max = Math.max(1, ...fresh.map((item) => item.messages)); return <div className="metrics-bar" key={day.date}><i style={{ height: `${Math.max(day.messages === 0 ? 1 : 4, Math.round(day.messages / max * 80))}px` }} /><span>{day.date.slice(5)}</span></div> })}</div>}
+          <div className="section-title"><h2>任务质量</h2><span>分母为 0 不计算</span></div>
+          <div className="metrics-rates">
+            <span>完成率 {data?.taskQuality?.completionRate.value == null ? '无数据' : `${(data.taskQuality.completionRate.value * 100).toFixed(1)}% (${data.taskQuality.completionRate.numerator}/${data.taskQuality.completionRate.denominator})`}{data?.availability?.taskCompletion === 'partial' && <em className="metrics-badge">部分数据</em>}{data?.availability?.taskCompletion === 'missing' && <em className="metrics-badge">待埋点</em>}</span>
+            <span>一次完成 {data?.taskQuality?.firstPassRate.value == null ? '无数据' : `${(data.taskQuality.firstPassRate.value * 100).toFixed(1)}% (${data.taskQuality.firstPassRate.numerator}/${data.taskQuality.firstPassRate.denominator})`}{data?.availability?.taskAttempts === 'partial' && <em className="metrics-badge">部分数据</em>}{data?.availability?.taskAttempts === 'missing' && <em className="metrics-badge">待埋点</em>}</span>
+            <span>返工 {data?.taskQuality?.reworkRate.value == null ? '无数据' : `${(data.taskQuality.reworkRate.value * 100).toFixed(1)}% (${data.taskQuality.reworkRate.numerator}/${data.taskQuality.reworkRate.denominator})`}{data?.availability?.taskReopen === 'partial' && <em className="metrics-badge">部分数据</em>}{data?.availability?.taskReopen === 'missing' && <em className="metrics-badge">待埋点</em>}</span>
+            <span>任务 {data?.totals.tasks ?? 0} · 失败 {data?.totals.failures ?? 0}</span><span>任务响应 p50 {data?.taskQuality?.response?.p50 == null ? '—' : `${data.taskQuality.response.p50}ms`} / p90 {data?.taskQuality?.response?.p90 == null ? '—' : `${data.taskQuality.response.p90}ms`}{(data?.taskQuality?.response?.sample ?? 0) < 20 && <em className="metrics-badge">样本不足</em>}</span>
+          </div>
+          <div className="section-title"><h2>明细</h2><span>按日 · 可横向滚动</span></div>
+          <div className="metrics-table-wrap" tabIndex={0} aria-label="指标明细表"><table className="metrics-table"><thead><tr><th>日期</th><th>消息</th><th>轮次</th><th>任务</th><th>失败</th><th>Token</th></tr></thead><tbody>{fresh.map((day) => <tr key={day.date}><td>{day.date}</td><td>{day.messages}</td><td>{day.turns}</td><td>{day.tasks ?? 0}</td><td>{day.failures}</td><td>{formatTokens(day.totalTokens)}</td></tr>)}</tbody></table></div>
+          <div className="metrics-tables">
+            {Object.entries(data?.tables ?? {}).map(([key, rows]) => {
+              const labels: Record<string, string> = { tokensByModel: 'Token 按模型', tokensBySession: 'Token 按会话', messagesByRole: '消息按角色', messagesBySession: '消息按会话', sessions: '会话', tasksBySession: '任务按会话', latencySamples: '延迟分位' }
+              const headers = rows[0] ? Object.keys(rows[0]).filter((field) => !['sessionId', 'internal', 'terminal', 'firstPass', 'reworked'].includes(field)) : []
+              return <details className="metrics-table-details" key={key}><summary>{labels[key] ?? key} <span>{rows.length}</span></summary>{rows.length === 0 ? <p className="insp-text">暂无数据</p> : <div className="metrics-table-wrap" tabIndex={0} aria-label={`${labels[key] ?? key}明细`}><table className="metrics-table"><thead><tr>{headers.map((field) => <th key={field}>{field}</th>)}</tr></thead><tbody>{rows.map((row, index) => <tr key={index}>{headers.map((field) => <td key={field}>{typeof row[field] === 'object' && row[field] !== null ? '—' : String(row[field] ?? '—')}</td>)}</tr>)}</tbody></table></div>}</details>
+            })}
+          </div>
+        </>
+      )}
+    </section>
+  )
+}
+
 export function RightPanel(props: React.ComponentProps<typeof OverviewPanel>): React.ReactNode {
   return <OverviewPanel {...props} />
 }

@@ -8,6 +8,7 @@ import {
   ConversationPanel,
   MessageItem,
   LoadingState,
+  MetricsDashboard,
   Icon,
   List,
   Section,
@@ -124,6 +125,10 @@ export default function ComponentGallery(): React.ReactNode {
         <Timeline messages={sampleMessages} active={1} onJump={() => undefined} />
         <p className="insp-text">时间轴 44px gutter、20×4、gap2；消息组件由 MessageItem 组合。</p>
       </Section>
+      <Section title="MetricsDashboard">
+        <MetricsDashboard windowKind="7d" data={{ range: '7d', timezone: 'Asia/Shanghai', from: Date.now() - 7*86400000, to: Date.now(), totals: { ttftP50Ms: 120, ttftP90Ms: 260, durationP50Ms: 2400, durationP90Ms: 5200, turns: 18, messages: 31, tasks: 5, failures: 1, promptTokens: 50000, completionTokens: 30000, reasoningTokens: 1210, totalTokens: 81210 }, series: [{ date: '2026-11-10', messages: 2, turns: 1, totalTokens: 1000, failures: 0 }, { date: '2026-11-11', messages: 5, turns: 3, totalTokens: 2000, failures: 0 }, { date: '2026-11-12', messages: 9, turns: 6, totalTokens: 3000, failures: 1 }] }} onWindowChange={() => undefined} />
+      </Section>
+      <Section title="MetricsDashboard states"><div className="grid-2"><MetricsDashboard state="loading" /><MetricsDashboard state="empty" /><MetricsDashboard state="error" onRetry={() => undefined} /><MetricsDashboard state="partial" data={{ range: '30d', timezone: 'Asia/Shanghai', from: Date.now() - 30*86400000, to: Date.now(), totals: { ttftP50Ms: null, ttftP90Ms: null, durationP50Ms: null, durationP90Ms: null, turns: 0, messages: 0, tasks: 0, failures: 0, promptTokens: 0, completionTokens: 0, reasoningTokens: 0, totalTokens: 0 }, series: [] }} /></div></Section>
       <Section title="Message categories 四类">
         {(['requirement','clarification','progress','consultation'] as const).map((category, index) => <MessageItem key={category} message={{ id: `cat-${category}`, sessionId: 'main', role: 'agent', text: `分类样例：${category}`, at: Date.now() - index * 1000, status: 'done', agentId: 'simo', category }} onCardAction={async () => undefined} />)}
       </Section>

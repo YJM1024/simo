@@ -793,6 +793,217 @@
 **复用/更新产物**：`component-parity-{1600,375}.png`、`{1600,375}/*-compare.png`、`component-parity.md`、`raw/meta.json`。
 **发布门禁**：`check:sdd` PASS + 本 parity 签字（均满足）；未部署。
 
+### FE-008 指标看板验收预检模板（待实现，**不签字**）
+
+**状态：模板就绪，不签通过。** 依据 `specs/FE-008-metrics-dashboard/spec.md` 与 `docs/product/metrics-dashboard.md`；当前前端无 MetricsDashboard、后端无 `/api/metrics/dashboard`（仅有 `/api/stats`），只能用隔离夹具/契约响应验证，禁止用示例数据冒充。交付固定 build + 聚合接口 + G1–G8 埋点后按本表复验。
+
+**前置**
+- 冻结 build；隔离 `SIMO_HOME`（不碰生产）；mock/真实 provider；固定会话/消息/任务/时间样本；浏览器 1600/1180/375；DPR2；记录 API 响应与 Network/Console。
+- 时间夹具用**本地时区**（默认 Asia/Shanghai）：跨 00:00 边界、当前天 partial、7/30 天起止；p50/p90 样本 n=0/1/19/20/21/100 及含失败样本。
+- 需后端声明分位算法（nearest-rank 或线性插值）；未声明不签。默认验收按 **nearest-rank**：`index = ceil(p*n)-1`（p50/p90 分别 0.5/0.9；排序后取该 index），同一算法全链路一致。
+
+**A1–A12 模板**
+
+| # | 场景 | 操作/观测 | 通过标准 | 证据 |
+|---|---|---|---|---|
+| A1 | 位置 | 工作台内找指标区；检查顶层导航 | 指标区仅工作台内，无新增顶层导航/独立路由；顺序 KPI→趋势→任务质量→表格 | 路由、DOM、截图 |
+| A2 | 7/30 筛选 | 切 7d/30d；记录 from/to/timezone | 所有块同一窗口；`from=本地今天00:00-(N-1)d`、`to=now`；显示窗口/时区/更新时间/partialToday；旧请求被取消 | API 查询参数/响应窗口、截图、请求取消 |
+| A3 | 数据口径 | 对照产品文档逐项核对 Token/话题/消息/会话/任务率 | tokens total 与 prompt/completion/reasoning 不重复；topics new/active 不强行相加；sessions total/active/archived 不强行相加；messages 不含 system/合成；率有 numerator/denominator，分母0→null | 响应 JSON、对照表、tooltip |
+| A4 | 趋势 | 按日 Token/消息/话题；与 KPI 同窗合计 | 趋势日桶与 KPI 合计一致（允许 partialToday 说明）；空桶不画假线；tooltip 含日期/数值/口径 | 日桶数据、KPI 合计、截图 |
+| A5 | 任务质量 | 完成率/一次完成率/返工率/任务响应 p50/p90 | 完成率=done/(done+failed+cancelled)，running 不入分母；一次完成=done且maxAttempt=1 / done；返工去重 taskId；按会话/项目行真实；分子分母可见 | 样本清单、公式复算、表格 |
+| A6 | 延迟 p50/p90 | 由样本独立复算 reply/TTFT/task p50/p90；对照 UI | 定义：reply=`完成agent回复.completedAt - 触发userMessage.createdAt`，TTFT=`firstTokenAt - 触发userMessage.createdAt`，task=`completedAt-createdAt`；只算成功；失败/中止/空回复排除；n<20 标样本不足；n=0 null；UI 与独立复算一致 | 原始样本、独立脚本输出、UI 值、算法声明 |
+| A7 | 空态 | 窗口内 0 数据 home/fixture | 显示空态说明，不显示示例/假 0/假曲线；空态与 missing/error 可区分 | 截图、API total/字段 |
+| A8 | 错误/部分 | 注入 500/超时/缺埋点；重试；检查 availability | 统一错误信封；错误可重试、保留筛选；partial 指标显示“待埋点/数据未接入”，不渲染 0；无旧数据标当前 | 错误响应、截图、availability、重试 |
+| A9 | 区间/时区/边界 | 7/30 起止、23:59/00:00、跨日消息/任务、时区参数、partialToday | 半开区间 `from<=x<to` 正确；日桶本地时区；跨日归属正确；当前天 partial 标注；时区切换数据一致/明确；非法 window/timezone→400 | 边界样本、API from/to/timezone、对照表 |
+| A10 | 与 usage 一致性 | 同窗口/同 scope 对比 dashboard 与 `/api/stats`、侧栏用量；记录口径差异 | Token total/分项一致或不重复（若 stats 无 reasoning/timezone 需显式映射并说明差异）；messages/sessions/tasks 数字一致或差异有据；不得静默不同 | 两接口 JSON、对照表、差异说明 |
+| A11 | 响应式/可访问 | 1600/1180/375；KPI 列数、表格横向滚动、筛选/重试键盘、文本替代 | 无页面横向溢出；KPI 宽屏6/中屏2/375 单列；表格窄屏可滚且可读；筛选/重试键盘可达；图表有文本/表格替代；颜色非唯一编码 | 三档截图 DPR2、DOM、键盘结果 |
+| A12 | 工程/真实性 | tsc/build、console/4xx、无页面定制 CSS/假数据 | 当前 build 通过；console error/4xx 0；无内联 style/页面定制 CSS；网络响应为聚合接口而非前端遍历全量消息 | buildId、console、Network、源码检查 |
+
+**专项计算模板（p50/p90）**
+| 样本 n | 期望（nearest-rank，升序） | 验收 |
+|---|---|---|
+| 0 | p50=null,p90=null；UI “无样本” | 不显示 0 |
+| 1 | p50=p90=唯一值 | 一致 |
+| 19 | p50=第10个、p90=第18个；UI 标“样本不足”（n<20） | 分位可返回但标不足 |
+| 20 | p50=第10个、p90=第18个；允许展示 | 一致 |
+| 21 | p50=第11个、p90=第19个 | 一致 |
+| 100（1..100） | p50=50、p90=90 | 独立脚本一致 |
+| 含失败样本 | 失败/中止/空回复不进入样本 | 样本数减少但仍正确 |
+
+- 若后端采用线性插值，必须提供算法与期望值（如 1..100 → p50=50.5/p90=90.1）；UI 与后端必须同法，禁止前后端算法混用。
+- 单位：回复/TTFT/任务响应统一 ms，UI 可格式化为 s；样本数、单位、算法在 tooltip 明示。
+
+**时区/区间专项**
+- 固定一条 00:00 边界消息、一条 23:59 消息、一条跨日任务；在 Asia/Shanghai 与另一时区（如 UTC+0）下分别核对日桶与 from/to；浏览器时区/接口 timezone 必须一致。
+- 当前天 partial 需在响应与 UI 同时出现；不能把部分天与完整天混算 p50/p90 或合计。
+- 非法 window/timezone/from>to → 400 统一错误信封；无权限/参数错误不静默空白。
+
+**usage 一致性专项**
+- 同一窗口、同一 session scope 下，dashboard tokens 与 `/api/stats?metric=tokens` 对照；total 语义（是否含 reasoning）必须由接口声明，禁止 total 与分项重复相加。
+- messages/sessions/tasks 对照同一窗口的 stats/任务接口；若 stats 只支持日粒度/服务器时区，需在差异表写明，不得声称一致。
+- 侧栏 usage total 与 dashboard 若 scope/window 不同，标“口径不同”，不判一致性通过。
+
+**证据汇总模板**：`buildId / backend contract / window+timezone+from+to / 原始样本清单 / p50-p90 独立脚本输出 / availability / 空态/错误/partial 截图 / usage 对照表 / 1600-1180-375 DPR2 截图 / console+4xx / 未造出原因`。
+**签字规则**：A1–A12 全通过且当前 build/接口/埋点证据齐全；缺埋点项必须标 missing 且不造假；任何示例数据、假 0、分位算法不一致、时区错误均不签。
+
+### FE-008 实机复验（2026-11-13，线上 `mwed4yom-c6nlq`，**不签字**）
+
+**结论：不签字。** 已部署的指标看板只实现简化版 KPI+趋势：API 契约缺少 availability/partialToday/taskQuality/tables、topics/sessions；Token totals=0 与 usage/stats 的 3506 不一致；趋势 bars 全部 0px；p50/p90 无样本/待埋点区分；partial 未接线。虽然 7d/30d、timezone、非法参数 400 已正确，但 A1–A12 多项不通过。
+
+**实际 API（本轮正确参数）**
+- `GET /api/metrics?range=7d&tz=Asia/Shanghai` → 200，`range=7d`、`timezone=Asia/Shanghai`、from/to 正确、series 7 天。
+- `range=30d` → 200、series 30 天；`tz=UTC` → timezone=UTC、from 按 UTC；`range=bad&tz=Bad/Zone` → **400**。
+- 响应键仅 `range/timezone/from/to/totals/series`；**无 availability、partialToday、taskQuality、tables、topics、sessions**。
+- `totals.messages=54`、`tasks=8` 与 series 合计一致；`totals.tokens=0`、`turns=0`、p50/p90=null。
+
+**A1–A12 结果**
+
+| # | 结果 | 证据/失败项 |
+|---|---|---|
+| A1 位置/结构 | **不通过** | 工作台内存在 `.metrics-dashboard`，无新顶层导航；但只有 5 张 KPI + 每日趋势，**无任务质量/明细表/availability**，不是 spec 的 KPI→趋势→任务质量→明细。 |
+| A2 7/30 | 部分通过 | UI 7天/30天切换实测请求 `range=30d&tz=Asia/Shanghai`，header 变 `30d · Asia/Shanghai · 10/15→11/13`；但无 partialToday 显示。 |
+| A3 数据口径 | **不通过** | 无 topics/sessions/taskQuality/tables；Token total 0 与 usage 3.5k/stats tokens3506 矛盾；无法验证 total 与分项口径。 |
+| A4 趋势 | **不通过** | API series 有 messages 数据（7d 合计54），UI `.metrics-bar i` 全部 **height:0px**，页面趋势区只有日期无柱/无可读数据。 |
+| A5 任务质量 | **不通过** | 无完成率/一次完成率/返工率/按会话项目表；仅 `任务/失败 8/0` KPI。 |
+| A6 p50/p90 | **不通过** | `totals.durationP50Ms/ttftP50Ms=null`；UI 显示“样本不足”，但 `turns=0`/无 availability，无法区分“样本不足/待埋点/无数据”；无回复/TTFT 样本与算法声明。 |
+| A7 真实性 | **不通过** | Token 0 与 usage/stats 3506 不一致，属于把缺失显示为 0；p50 null 未标待埋点。 |
+| A8 三态 | **不通过** | 代码有 loading/empty/error 分支；但 API 无 availability，app 不产生 partial；旧请求/空态/partial 未实现可验收。 |
+| A9 区间/时区 | 部分通过 | range 7/30、timezone、非法 range/tz 400 正确；但无 partialToday、无 00:00 边界/当前天标注；无法验证跨日归属。 |
+| A10 响应式 | 部分通过 | 1600/1180/375 截图已保存 `fe-metrics-{1600,1180,375}.png`；图表/卡片无页面横向溢出；但 KPI 为 5 张不是 spec 6 类，缺表格窄屏证据。 |
+| A11 可访问性 | 部分通过 | 7/30 是原生 button；但趋势仅柱状无文本/表格替代，筛选后焦点未验证；颜色不是唯一编码未证。 |
+| A12 工程 | 通过 | build `mwed4yom-c6nlq`；console/4xx **0**；无新增顶层导航。 |
+
+**必须补**
+1. 补齐 API 契约：availability/partialToday/taskQuality/tables/topics/sessions（或明确裁剪 spec 并由 Lead 批准）；Token 与 stats/usage 对账。
+2. 修趋势 bars（当前 0px）和 KPI 结构（6 类/任务质量/明细表）。
+3. p50/p90 必须区分 n=0/样本不足/待埋点，返回值/样本数/算法一致；不得把 missing 显示为样本不足或 0。
+4. partial/空/错误三态真实接线；A2/A9 补 partialToday、00:00 边界。
+5. 未改代码；部署不变。
+
+### FE-008 前端预检（2026-11-13，build `mwf5cacv-zebdq`，**前端通过；API 阻塞未解除**）
+
+**结论：前端预检通过，FE-008 整体仍不签。** 趋势 bars、KPI 6、taskQuality 待接入、明细表、响应式均已修；但 API 仍只有 totals/series，Token=0、topics/sessions/taskQuality/availability 缺字段，不能签完整 FE-008。
+
+| 项 | 结果 | 证据 |
+|---|---|---|
+| 趋势 bars | 通过 | 7d heights `[1,1,1,1,1,80,23]`，30d 同样相对比例；不再 0px；数据来自 series max 比例 |
+| KPI | 通过 | 6 类：Token、话题、消息、会话、回复 p50/p90、TTFT p50/p90 |
+| 缺失字段展示 | 通过（前端） | 话题/会话/taskQuality 显示「待接入/数据未接入」，不伪造 0；p50 null → `— / 样本不足` |
+| taskQuality | 待 API | 完成率/一次完成/返工均为「待接入」；API 返回字段后按 FE-008 模板复核 |
+| 明细表 | 通过 | 7d body 7 行、30d body 30 行（表头+7/30）；列 日期/消息/轮次/任务/失败/Token |
+| 响应式 | 通过 | 1600/1180/375 pageW=innerW；375 表格 wrap `scrollW 520 > clientW 341`、`tabIndex=0` 可横向滚动；KPI 单列 |
+| console/4xx | 通过 | 0/0；build `mwf5cacv-zebdq`；截图 `metrics-dashboard-v2-{1600,1180,375}.png` |
+
+**API 阻塞（整体 FE-008 不签原因）**
+- `/api/metrics` 仍仅 `range/timezone/from/to/totals/series`；无 `availability/partialToday/topics/sessions/taskQuality/tables`。
+- `totals.totalTokens=0` 与 usage 3.5k / `/api/stats` 7d tokens 3506 不一致；前端只能显示 0，不能自行修。
+- p50/p90 无 availability/样本计数，无法区分“待埋点/无样本/样本不足”。
+- loading/empty/error 代码保留，partial 仍无 API availability 可接线；A8 未完成。
+
+**范围**：前端实现预检，不改代码、未部署；API 字段补齐后按 FE-008 A1–A12 复验再签整体。
+
+### FE-008 线上复验（2026-11-13，8787 `mwf5qomv-vt5wp`，**不签字：明细表缺失/partial/标签**）
+
+**结论：线上 API 新契约已生效，但 UI 仍不完整，不能签完整 FE-008。** 8787 已部署 `mwf5qomv-vt5wp`：API 字段完整、KPI6/任务质量/趋势/日表/响应式通过；**UI 未渲染 API `tables` 的 tokensByModel/tokensBySession/messagesByRole/messagesBySession/sessions/tasksBySession/latencySamples**，仅有一张按日表；p50 卡片仍用“样本不足”而非按 availability 区分待埋点；partial 仅全局 banner，未逐块。
+
+**通过**
+- API `range=7d|30d`、`tz=Asia/Shanghai|UTC` 200；非法 range/tz 400；`partialToday=true`，availability 含 ready/partial/missing；KPI/topics/sessions/taskQuality/tables 齐全。
+- KPI6：Token **3.5k**（prompt3.3k/completion169/reasoning86）、话题2/2、消息54、会话2（活跃2/归档0）、reply/TTFT —/—。
+- taskQuality：完成率 **85.7%(6/7)**、一次完成 **100%(6/6)**、返工 **0%(0/7)**、任务响应 p50 **9259ms**/p90 **100000ms**（API ratio0–1→UI×100 正确）。
+- 趋势 bars 7d `[1,1,1,1,1,80,23]`；明细日表 7d body7、30d body30（含表头8/31）；375 `scrollW520>clientW341`、`tabIndex=0`。
+- 1600/1180/375 无页面横向溢出；console/4xx **0**；截图与 build 一致。
+- usage 一致性：metrics tokens **3506** 与 `/api/stats` 7d tokens **3506** 一致（此前0已修）。
+
+**不通过/未签**
+1. **明细表缺失**：API `tables` 7 类齐全，但 UI 只显示“按日 日期/消息/轮次/任务/失败/Token”一张表；没有 tokens 按模型/会话、messages 按角色/会话、sessions、tasks 按会话/项目、latencySamples 表。FE-008 A1/A5/A9 要求每块明细；不签。
+2. **p50/p90 missing 展示不一致**：availability 中 replySpeed/TTFT=missing，但 KPI 卡写“样本不足”而非“待埋点”；全局 banner 有“待埋点：replySpeed、taskReopen、TTFT”，卡片仍可能误导。A6 部分。
+3. **partial 证据**：`partialToday` 和 missing banner 有，但 availability 的 `partial` 项（sessions/taskAttempts/taskCompletion）没有逐块状态说明；A8 partial 未完全接线/未测。
+4. loading/empty/error 本轮未重新注入截图；代码存在但未重新取当前 build 证据。
+
+**A1–A12 线上判定（摘要）**
+
+| # | 结果 | 证据 |
+|---|---|---|
+| A1 结构/位置 | **不通过** | 指标区在工作台、无新顶层导航；但只有 KPI/趋势/任务质量/按日表，缺 API 的 7 类明细表。 |
+| A2 7/30 | 通过 | UI 切换请求 `range=30d&tz=Asia/Shanghai`，header 30d；API 200/30 series；partialToday 显示。 |
+| A3 口径 | 通过（KPI） | Token 3506/prompt3251/completion169/reasoning86；话题2/2；消息54；会话2；total 与分项不重复；但明细表缺失（见 A1/A5）。 |
+| A4 趋势 | 通过 | bars 7d `[1,1,1,1,1,80,23]`，30d相对比例；非假曲线。 |
+| A5 任务质量 | **部分** | 完成率 85.7%(6/7)、一次 100%(6/6)、返工0%(0/7)、任务响应 p50 9259/p90 100000 正确；**无按会话/项目表**。 |
+| A6 p50/p90 | **部分** | reply/TTFT sample0/availability missing；卡片写“样本不足”而非“待埋点”；任务响应分位正常。 |
+| A7 真实性 | 通过（KPI） | token 3506 与 stats 3506 一致；missing 不显示 0；taskQuality 真值；无示例数据。 |
+| A8 三态/partial | **部分** | partialToday「今日未完整」；missing banner 有；availability 的 partial 项未逐块；loading/empty/error 未用当前 build 重注入截图。 |
+| A9 区间/时区 | 通过（参数层） | range/tz/400、from/to、partialToday 正确；00:00 边界未单独夹具。 |
+| A10 响应式 | 通过 | 1600/1180/375 无页面溢出；375 表格 wrap scrollW520>341、tabIndex0。 |
+| A11 可访问 | 部分 | 筛选 button、table tabIndex；bars 无文本替代/表格替代（仅趋势日期）。 |
+| A12 工程 | 通过 | build `mwf5qomv`；console/4xx 0；无新顶层导航。 |
+
+**需补**：渲染 7 类 API 明细表（或由 Lead 明确裁剪并改 spec）、p50 卡片按 availability 显示“待埋点/样本不足/无数据”、partial 逐块说明、补 loading/empty/error 当前 build 截图、A9 00:00 边界夹具；修后按 A1–A12 复验整体。**线上已部署，但整体不签；未改代码。**
+
+### FE-008 复验（2026-11-13，8787 `mwf5u0cz-tlh9u`，**仍不签字：p50/partial 局部**）
+
+**结论：7 类明细表已补齐，但 p50 availability 和 partial 逐块仍不合格。** 线上 8787 已部署 `mwf5u0cz-tlh9u`；API 新契约、KPI6、taskQuality、7 类明细表、375 滚动均通过；p50 卡片仍写“样本不足”、`待埋点` 列表泄露原始 key、partial 仍只有一条全局说明，不签整体。
+
+**通过**
+- 7 类明细表 DOM 全部存在（`details` 7 个，均有 table/rows/tabIndex0）：Token按模型2、Token按会话1、消息按角色2、消息按会话2、会话2、任务按会话1、延迟分位3。
+- 1600/1180/375 无页面横向溢出；375 每个明细表 `scrollW 520/590 > clientW 321`、tabIndex0；日表7行。
+- KPI6/taskQuality/趋势 bars/usage token3506=stats3506；console/4xx 0。
+- 状态截图 `metrics-states-1600.png` 含 loading/empty/error/partial 画廊态（组件级）。
+
+**仍不通过**
+1. **p50 availability 未落到卡片**：reply/TTFT `missing`，但 KPI 卡仍 `— / 样本不足`；`待埋点` 只在全局一段，且实际显示原始 key **`replySpeed`、`taskReopen`**，未本地化为“回复耗时/重开”。A6 仍不合格。
+2. **partial 未逐块**：只有一条 `部分数据：会话、任务尝试、任务完成` 全局说明；sessions/taskAttempts/taskCompletion 三个块没有各自 partial 标识。A8 仍不合格。
+3. **状态证据是画廊组件态**，不是当前 build 的 app 级 loading/empty/error 注入截图；如按 A8 严格要求，需补 app 级状态截图（或 Lead 明确接受组件态）。
+
+**A1–A12 摘要**：A1 通过（7表）；A2/A3/A4/A5/A7/A9/A10/A12 通过；A6/A8 不通过；A11 部分（table tabIndex 通过，bars 有日表替代）。
+
+**需补**：p50 卡按 `availability` 显示“待埋点/样本不足/无数据”、本地化 `replySpeed/taskReopen`；partial 逐块标注；app 级 loading/empty/error 当前 build 截图。修后 A6/A8 复验再签整体。未改代码、未部署。
+
+### FE-008 复验（2026-11-13，8787 `mwf5yivx-3g8sw`，**A6/A8 通过，A5 回退，不签整体**）
+
+**结论：A6/A8 已修，但 A5 任务质量回退：完成率/一次完成显示“部分数据”后不再显示分子/分母；不签整体。**
+
+**通过**
+- p50 卡：replySpeed/ttft missing → **待埋点 / 埋点缺失**；无 raw key；全局 availability 已本地化“回复耗时、任务重开、首字延迟”。
+- partial 逐块：会话卡“活跃2·归档0·部分数据”；完成率“部分数据”、一次完成“部分数据”、返工“待埋点”。
+- 7 类明细表全部存在（Token按模型2/会话1、消息按角色2/会话2、会话2、任务按会话1、延迟分位3）；375 每表 `scrollW520/590 > clientW321`、tabIndex0；1600/1180/375 pageW=innerW。
+- app 级三态截图当前 build：`fe008-loading-1600.png`（指标加载中）、`fe008-empty-1600.png`（窗口内暂无指标）、`fe008-error-1600.png`（指标加载失败+重试）；console/4xx 0。
+- 375 本轮已由验收侧重跑：7 表明细挂载、滚动、无页面溢出均通过（不只 1600）。
+
+**不通过（A5）**
+- API 仍有真实值：完成率 `0.857(6/7)`、一次完成 `1(6/6)`、返工 `0(0/7)`；UI 因 `taskCompletion/taskAttempts=partial` 只显示 **“完成率 部分数据 / 一次完成 部分数据”**，**不再显示 85.7%(6/7)、100%(6/6) 与分子/分母**。FE-008 A5 要求比率带分子/分母；partial 应显示“部分数据 + 数值/分子分母”，不是隐藏数值。
+- 相邻观察：任务响应 `p50 9259ms/p90 100000ms` 的 sample=6，按 §5 分位样本<20 规则应标“样本不足”；当前无标注（A5/A6 边界需确认）。
+
+**A1–A12 摘要**：A1/A2/A3/A4/A6/A7/A8/A9/A10/A11/A12 通过；**A5 不通过**。
+
+**需补**：partial 下继续显示完成率/一次完成的数值与分子分母（可加“部分数据”角标）；任务响应 sample<20 标样本不足（或由 Lead 确认不适用）。修后 A5 复验即可整体签字。未改代码、未部署。
+
+### FE-008 复验签字（2026-11-14，8787 `mwf61jl3-uorgz`，**通过**）
+
+**结论：FE-008 A1–A12 签字通过（线上 build `mwf61jl3-uorgz`）。** A5 回退已修：完成率/一次完成/返工始终显示 value% + 分子/分母，partial/missing 仅追加角标；任务响应 sample<20 追加“样本不足”。
+
+**A5 证据**
+- 完成率 **85.7% (6/7)** + `部分数据` 角标。
+- 一次完成 **100.0% (6/6)** + `部分数据` 角标。
+- 返工 **0.0% (0/7)** + `待埋点` 角标。
+- 任务响应 **p50 9259ms / p90 100000ms + 样本不足**（sample=6）。
+- 回复/TTFT：**待埋点 / 埋点缺失**；availability 本地化无 raw key。
+
+**A1–A12**
+- A1：工作台内指标区，无新顶层导航；KPI6 + 趋势 + 任务质量 + 7 类明细表全渲染。
+- A2：7d/30d 切换/请求正确；header 时间窗/时区/partialToday。
+- A3：Token3506（prompt3251/completion169/reasoning86）、话题2/2、消息54、会话2；total/分项不重复。
+- A4：趋势 bars 相对高度 `[1,1,1,1,1,80,23]`；空桶 1px；日表替代。
+- A5：上述值 + 分子分母 + 角标；7 表明细含任务按会话。
+- A6：reply/TTFT missing→待埋点/埋点缺失；任务响应 sample6→样本不足。
+- A7：无假0/示例；token 3506 与 stats3506 一致。
+- A8：partial 逐块（会话/完成率/一次完成/返工）；app 级 loading/empty/error 截图当前通过；错误重试。
+- A9：range/tz/400、半开窗口、partialToday；7d from 11/8 00:00（本机 11/14）正确。
+- A10：1600/1180/375 无页面横向溢出；375 每表 `scrollW520/590 > clientW321`、tabIndex0。
+- A11：筛选/表格 tabIndex、可键盘横向滚动；趋势有日表替代。
+- A12：build `mwf61jl3`；console/4xx 0。
+
+**证据**：`metrics-tables-live-1600.png`、`fe008-loading/empty/error-1600.png`、`metrics-contract-current-{1600,1180,375}.png`；本机 1600/1180/375 DOM 复测；未改代码、未部署。
+
 ### 检查清单（每轮）
 
 1. 首屏 3 秒能理解产品与下一步；

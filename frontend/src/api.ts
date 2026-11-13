@@ -162,3 +162,14 @@ export function getDeliverables(): Promise<{ deliverables?: UserDeliverable[]; t
 export function getAllSessionMessages(sessionId: string): Promise<{ messages?: Message[]; sessionId?: string; archived?: boolean; pagination?: boolean }> {
   return request(`/api/sessions/${encodeURIComponent(sessionId)}/messages?scope=all`)
 }
+
+export interface MetricsTotals {
+  ttftP50Ms: number | null; ttftP90Ms: number | null; durationP50Ms: number | null; durationP90Ms: number | null
+  turns: number; messages: number; tasks: number; failures: number
+  promptTokens: number; completionTokens: number; reasoningTokens: number; totalTokens: number
+}
+export interface MetricsDay extends MetricsTotals { date: string; start: number; end: number }
+export interface MetricsPayload { range: string; timezone: string; from: number; to: number; totals: MetricsTotals; series: MetricsDay[] }
+export function getMetrics(range: '7d' | '30d', tz = Intl.DateTimeFormat().resolvedOptions().timeZone): Promise<MetricsPayload> {
+  return request(`/api/metrics?range=${range}&tz=${encodeURIComponent(tz)}`)
+}

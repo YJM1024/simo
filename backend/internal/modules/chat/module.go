@@ -180,6 +180,8 @@ func (m *Module) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/sessions/{id}/files", m.handleSessionFiles)
 	mux.HandleFunc("GET /api/agents", m.handleAgents)
 	mux.HandleFunc("GET /api/stats", m.handleStats)
+	mux.HandleFunc("GET /api/metrics", m.handleMetrics)
+	mux.HandleFunc("GET /api/metrics/dashboard", m.handleMetrics)
 	mux.HandleFunc("GET /api/runtime/status", m.handleRuntimeStatus)
 	mux.HandleFunc("GET /api/workflows/{id}/runtime", m.handleWorkflowRuntime)
 	mux.HandleFunc("GET /api/tasks/{id}/runtime", m.handleTaskRuntime)

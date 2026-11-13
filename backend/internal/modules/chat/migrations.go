@@ -3,6 +3,7 @@ package chat
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 
 	"simo/internal/platform/sqlite"
 )
@@ -478,6 +479,115 @@ func migrations() []sqlite.Migration {
 						OR text LIKE '[tool]%' OR text LIKE '[工具]%'
 					)`)
 				return err
+			},
+		},
+		{
+			Version: 20,
+			Name:    "M90 per-turn metrics",
+			Up: func(ctx context.Context, tx *sql.Tx) error {
+				if _, err := tx.ExecContext(ctx, `CREATE TABLE IF NOT EXISTS turn_metrics (
+					turn_id TEXT PRIMARY KEY,
+					session_id TEXT NOT NULL,
+					reply_id TEXT NOT NULL DEFAULT '',
+					status TEXT NOT NULL,
+					started_at INTEGER NOT NULL,
+					first_token_at INTEGER NOT NULL DEFAULT 0,
+					finished_at INTEGER NOT NULL,
+					ttft_ms INTEGER NOT NULL DEFAULT 0,
+					duration_ms INTEGER NOT NULL DEFAULT 0,
+					prompt_tokens INTEGER NOT NULL DEFAULT 0,
+					completion_tokens INTEGER NOT NULL DEFAULT 0,
+					reasoning_tokens INTEGER NOT NULL DEFAULT 0,
+					total_tokens INTEGER NOT NULL DEFAULT 0
+				)`); err != nil {
+					return err
+				}
+				if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS idx_turn_metrics_started
+					ON turn_metrics(started_at)`); err != nil {
+					return err
+				}
+				_, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS idx_turn_metrics_session
+					ON turn_metrics(session_id, started_at)`)
+				return err
+			},
+		},
+		{
+			Version: 21,
+			Name:    "M91 metrics model/source and usage backfill",
+			Up: func(ctx context.Context, tx *sql.Tx) error {
+				for _, stmt := range []string{
+					`ALTER TABLE turn_metrics ADD COLUMN model TEXT NOT NULL DEFAULT ''`,
+					`ALTER TABLE turn_metrics ADD COLUMN source TEXT NOT NULL DEFAULT 'live'`,
+				} {
+					if _, err := tx.ExecContext(ctx, stmt); err != nil {
+						return err
+					}
+				}
+				rows, err := tx.QueryContext(ctx, `SELECT at, payload FROM events WHERE type='usage.recorded' ORDER BY id ASC`)
+				if err != nil {
+					// chat 独立迁移测试没有 eventlog 表；正式启动时 eventlog 已存在，
+					// 此时跳过回填，API 仍以 usage.recorded 为 token 权威。
+					return nil
+				}
+				type usagePayload struct {
+					ReplyID string `json:"replyId"`
+					Usage   struct {
+						PromptTokens     int64  `json:"promptTokens"`
+						CompletionTokens int64  `json:"completionTokens"`
+						ReasoningTokens  int64  `json:"reasoningTokens"`
+						TotalTokens      int64  `json:"totalTokens"`
+						Model            string `json:"model"`
+					} `json:"usage"`
+				}
+				type usageRow struct {
+					at      int64
+					payload usagePayload
+				}
+				usageRows := make([]usageRow, 0, 16)
+				for rows.Next() {
+					var at int64
+					var raw string
+					if err := rows.Scan(&at, &raw); err != nil {
+						continue
+					}
+					var payload usagePayload
+					if json.Unmarshal([]byte(raw), &payload) == nil && payload.ReplyID != "" {
+						usageRows = append(usageRows, usageRow{at: at, payload: payload})
+					}
+				}
+				_ = rows.Close()
+				for _, item := range usageRows {
+					var exists int
+					if err := tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM turn_metrics WHERE reply_id = ?`, item.payload.ReplyID).Scan(&exists); err != nil {
+						return err
+					}
+					if exists > 0 {
+						continue
+					}
+					var sessionID string
+					var messageAt int64
+					lookupErr := tx.QueryRowContext(ctx, `SELECT session_id, at FROM messages WHERE id = ?`, item.payload.ReplyID).Scan(&sessionID, &messageAt)
+					if lookupErr != nil {
+						sessionID = "main"
+						messageAt = item.at
+					}
+					total := item.payload.Usage.TotalTokens
+					sum := item.payload.Usage.PromptTokens + item.payload.Usage.CompletionTokens + item.payload.Usage.ReasoningTokens
+					if total < sum {
+						total = sum
+					}
+					if _, err := tx.ExecContext(ctx, `INSERT OR IGNORE INTO turn_metrics(
+						turn_id, session_id, reply_id, status, started_at, first_token_at, finished_at,
+						ttft_ms, duration_ms, prompt_tokens, completion_tokens, reasoning_tokens, total_tokens,
+						model, source)
+						VALUES (?, ?, ?, 'done', ?, 0, ?, 0, 0, ?, ?, ?, ?, ?, 'backfill')`,
+						"backfill:"+item.payload.ReplyID, sessionID, item.payload.ReplyID, messageAt, messageAt,
+						item.payload.Usage.PromptTokens, item.payload.Usage.CompletionTokens,
+						item.payload.Usage.ReasoningTokens, total, item.payload.Usage.Model); err != nil {
+						return err
+					}
+				}
+				return nil
 			},
 		},
 	}

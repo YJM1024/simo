@@ -413,6 +413,21 @@
       "dependsOn": [
         "TimelineTip"
       ]
+    },
+    {
+      "name": "MetricsDashboard",
+      "variants": [
+        "7d",
+        "30d"
+      ],
+      "states": [
+        "ready",
+        "loading",
+        "empty",
+        "error",
+        "partial"
+      ],
+      "owner": "frontend"
     }
   ],
   "gallery": "/#gallery"

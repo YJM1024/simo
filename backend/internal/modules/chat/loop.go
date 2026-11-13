@@ -68,26 +68,33 @@ const (
 )
 
 type activeTurn struct {
-	ID              string
-	SessionID       string
-	ReplyID         string
-	UserMsgID       string
-	StartedAt       int64
-	cancel          context.CancelFunc
-	ctx             context.Context
-	done            chan struct{}
-	decision        DecisionEnvelope
-	MemoryNote      string
-	RouteNote       string
-	WorkflowNote    string
-	TeamNote        string
-	QuoteContext    string
-	AutoCreatedNote string
-	InternalPrompt  string
-	lastActivity    atomic.Int64
-	timeoutMu       sync.Mutex
-	timeoutReason   string
-	timeoutOnce     sync.Once
+	ID               string
+	SessionID        string
+	ReplyID          string
+	UserMsgID        string
+	StartedAt        int64
+	cancel           context.CancelFunc
+	ctx              context.Context
+	done             chan struct{}
+	decision         DecisionEnvelope
+	MemoryNote       string
+	RouteNote        string
+	WorkflowNote     string
+	TeamNote         string
+	QuoteContext     string
+	AutoCreatedNote  string
+	InternalPrompt   string
+	lastActivity     atomic.Int64
+	firstTokenAt     atomic.Int64
+	promptTokens     atomic.Int64
+	completionTokens atomic.Int64
+	reasoningTokens  atomic.Int64
+	totalTokens      atomic.Int64
+	model            string
+	metricsOnce      sync.Once
+	timeoutMu        sync.Mutex
+	timeoutReason    string
+	timeoutOnce      sync.Once
 }
 
 func (a *activeTurn) touch() {
@@ -996,10 +1003,20 @@ func (m *Module) recordUsage(ctx context.Context, active *activeTurn, usage llm.
 	m.emitInternal(ctx, eventlog.TypeUsageRecorded, map[string]any{
 		"replyId": active.ReplyID, "usage": meterUsage,
 	})
+	active.promptTokens.Add(usage.PromptTokens)
+	active.completionTokens.Add(usage.CompletionTokens)
+	active.reasoningTokens.Add(usage.ReasoningTokens)
+	active.totalTokens.Add(usage.TotalTokens)
+	if strings.TrimSpace(usage.Model) != "" {
+		active.model = usage.Model
+	}
 }
 
 func (m *Module) emitDelta(ctx context.Context, active *activeTurn, delta string) error {
 	active.touch()
+	if delta != "" {
+		active.firstTokenAt.CompareAndSwap(0, time.Now().UnixMilli())
+	}
 	if err := m.appendMessageText(ctx, active.ReplyID, delta); err != nil {
 		return fmt.Errorf("追加回复失败: %w", err)
 	}
@@ -1032,6 +1049,7 @@ func (m *Module) finish(ctx context.Context, active *activeTurn) {
 		m.log.Error("写 message.done 失败", "err", err)
 	}
 	_ = m.endTurn(context.Background(), active.ID, "ended", time.Now().UnixMilli())
+	m.recordTurnMetrics(active, "done")
 }
 
 func (m *Module) fail(ctx context.Context, active *activeTurn, cause error) {
@@ -1052,6 +1070,7 @@ func (m *Module) fail(ctx context.Context, active *activeTurn, cause error) {
 		m.log.Warn("写 message.done 失败", "err", err)
 	}
 	_ = m.endTurn(context.Background(), active.ID, "error", time.Now().UnixMilli())
+	m.recordTurnMetrics(active, "error")
 }
 
 func (m *Module) retract(ctx context.Context, active *activeTurn, reason string) {
@@ -1066,6 +1085,7 @@ func (m *Module) retract(ctx context.Context, active *activeTurn, reason string)
 		m.log.Error("写 reply.retracted 失败", "err", err)
 	}
 	_ = m.endTurn(bg, active.ID, "retracted", time.Now().UnixMilli())
+	m.recordTurnMetrics(active, "retracted")
 }
 
 func (m *Module) finishActive(active *activeTurn) {

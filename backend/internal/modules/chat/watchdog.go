@@ -155,6 +155,7 @@ func (m *Module) failTimedOut(active *activeTurn, reason string) {
 		_, _ = m.events.Append(bg, eventlog.TypeReplyDone, payload)
 		_, _ = m.events.Append(bg, eventlog.TypeMessageDone, payload)
 		_ = m.endTurn(bg, active.ID, "timeout", now)
+		m.recordTurnMetrics(active, "timeout")
 		m.insertRecoveryAction(bg, "message", active.ReplyID, "streaming_timeout", map[string]any{
 			"reason": reason, "text": label,
 		})
