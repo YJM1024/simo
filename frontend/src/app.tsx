@@ -20,6 +20,7 @@ import {
   submitCardAction,
 } from './api'
 import type { Card, Message, PermissionState, Session, StatsBucket, StatsTotals } from './types'
+import { publishTabSync, tabId, useTabSync } from './tabsync'
 import { Composer, ConversationPanel, EmptyState, ErrorState, Icon, LoadingState, MessageItem, MetricsDashboard, RightPanel, Segmented, Sidebar, StatusBar, TimelineGroups, WorkbenchChart, formatTime, formatTokens } from './components'
 
 type Page = 'chat' | 'workbench'
@@ -93,6 +94,13 @@ export default function App(): React.ReactNode {
   const prevMessageCountRef = useRef(0)
   const [atBottom, setAtBottom] = useState(true)
   const [unread, setUnread] = useState(0)
+  const remoteActiveRef = useRef(false)
+  const lastActiveOpRef = useRef<{ at: number; tabId: string }>({ at: 0, tabId: '' })
+  const eventIdsRef = useRef(new Set<string>())
+  const sendingRef = useRef(false)
+  const syncStateRef = useRef({ readCursor: {} as Record<string, number>, lastEventId: '', clientMutationId: '' })
+  const deltaSeqRef = useRef(new Map<string, number>())
+  const remoteAncestorChainRef = useRef<Record<string, string>>({})
   const activeIdRef = useRef(activeId)
   activeIdRef.current = activeId
   const reloadTimer = useRef<number | null>(null)
@@ -158,6 +166,9 @@ export default function App(): React.ReactNode {
     restoreScrollRef.current = null
     setUnread(0)
     setAtBottom(true)
+    const cursor = Math.max(0, ...messages.map((message) => message.at))
+    syncStateRef.current.readCursor[activeIdRef.current] = Math.max(syncStateRef.current.readCursor[activeIdRef.current] ?? 0, cursor)
+    publishTabSync({ type: 'read_cursor_changed', tabId, opId: `${tabId}:${Date.now()}`, at: syncStateRef.current.readCursor[activeIdRef.current], sessionId: activeIdRef.current })
     if (scrollRafRef.current !== null) cancelAnimationFrame(scrollRafRef.current)
     scrollRafRef.current = requestAnimationFrame(() => {
       const scroller = scrollerRef.current
@@ -205,6 +216,44 @@ export default function App(): React.ReactNode {
 
   useEffect(() => () => {
     if (scrollRafRef.current !== null) cancelAnimationFrame(scrollRafRef.current)
+  }, [])
+
+  useEffect(() => {
+    if (remoteActiveRef.current) { remoteActiveRef.current = false; return }
+    lastActiveOpRef.current = { at: Date.now(), tabId }
+    publishTabSync({ type: 'active_session_changed', tabId, opId: `${tabId}:${Date.now()}`, at: lastActiveOpRef.current.at, sessionId: activeId })
+  }, [activeId])
+
+  useTabSync((message) => {
+    if (message.tabId === tabId) return
+    if (message.type === 'active_session_changed') {
+      const newer = message.at > lastActiveOpRef.current.at || (message.at === lastActiveOpRef.current.at && message.tabId > lastActiveOpRef.current.tabId)
+      if (!newer || message.sessionId === activeIdRef.current) return
+      lastActiveOpRef.current = { at: message.at, tabId: message.tabId }
+      remoteActiveRef.current = true
+      setActiveId(message.sessionId)
+      setAncestorMessages([])
+      setEmptyAncestorIds(new Set())
+      return
+    }
+    if (message.type === 'read_cursor_changed' && message.sessionId === activeIdRef.current) { if (message.at >= (syncStateRef.current.readCursor[message.sessionId] ?? 0)) { syncStateRef.current.readCursor[message.sessionId] = message.at; setUnread(0) } }
+    if (message.type === 'ancestor_chain_changed' && message.sessionId === activeIdRef.current) {
+      if (message.chain.length === 0) { setAncestorMessages([]); setEmptyAncestorIds(new Set()); remoteAncestorChainRef.current[message.sessionId] = ''; return }
+      const key = message.chain.join('|')
+      if (remoteAncestorChainRef.current[message.sessionId] === key) return
+      remoteAncestorChainRef.current[message.sessionId] = key
+      void (async () => {
+        const incoming: Message[] = []
+        for (const id of message.chain) {
+          try { const data = await getAllSessionMessages(id); incoming.push(...(data.messages ?? [])) } catch { /* 单块失败不影响其他 */ }
+        }
+        setAncestorMessages((current) => {
+          const map = new Map(current.map((item) => [item.id, item]))
+          for (const item of incoming) map.set(item.id, item)
+          return [...map.values()].sort((a, b) => a.at - b.at)
+        })
+      })()
+    }
   }, [])
 
   const loadRight = useCallback(async (sessionId: string): Promise<void> => {
@@ -256,6 +305,7 @@ export default function App(): React.ReactNode {
   useEffect(() => {
     if (!activeId) return
     const events = connectEvents(activeId, {
+      since: () => syncStateRef.current.lastEventId,
       onStatus: (next) => {
         setConnection(next)
         if (next === 'reconnecting') wasDisconnected.current = true
@@ -264,8 +314,18 @@ export default function App(): React.ReactNode {
           void loadMessages(activeIdRef.current)
         }
       },
-      onDelta: ({ id, delta }) => {
+      onEvent: ({ type, id }) => {
+        const key = `${type}:${id}`
+        if (eventIdsRef.current.has(key)) return
+        eventIdsRef.current.add(key)
+        syncStateRef.current.lastEventId = id
+        if (eventIdsRef.current.size > 500) eventIdsRef.current = new Set([...eventIdsRef.current].slice(-250))
+        if (reloadTimer.current !== null) window.clearTimeout(reloadTimer.current)
+        reloadTimer.current = window.setTimeout(() => { void loadMessages(activeIdRef.current) }, 300)
+      },
+      onDelta: ({ id, delta, seq }) => {
         if (ignoredReplyIds.current.has(id)) return
+        if (typeof seq === 'number') { const prev = deltaSeqRef.current.get(id) ?? -1; if (seq <= prev) return; deltaSeqRef.current.set(id, seq) }
         setMessages((current) => {
           const index = current.findIndex((message) => message.id === id)
           if (index < 0) {
@@ -360,19 +420,24 @@ export default function App(): React.ReactNode {
   }, [messages])
 
   const send = async (text: string): Promise<void> => {
+    if (sendingRef.current) return
+    sendingRef.current = true
     const sessionId = activeIdRef.current
     setError('')
     try {
-      await sendChat(sessionId, text)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '发送失败')
-      throw err
-    }
-    try {
-      await loadMessages(sessionId)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '消息刷新失败')
-    }
+      try {
+        syncStateRef.current.clientMutationId = `${tabId}:${Date.now()}`
+        await sendChat(sessionId, text, syncStateRef.current.clientMutationId)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '发送失败')
+        return
+      }
+      try {
+        await loadMessages(sessionId)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '消息刷新失败')
+      }
+    } finally { sendingRef.current = false }
   }
 
   const handleCardAction = async (card: Card, action: string, payload: Record<string, unknown>): Promise<void> => {
@@ -424,7 +489,11 @@ export default function App(): React.ReactNode {
       const data = await getAllSessionMessages(nextParent.id)
       const incoming = (data.messages ?? []).filter((message) => !messages.some((existing) => existing.id === message.id) && !ancestorMessages.some((existing) => existing.id === message.id))
       if (incoming.length === 0) { setAncestorError('上级没有消息'); setEmptyAncestorIds((current) => new Set(current).add(nextParent.id)) }
-      else setAncestorMessages((current) => [...incoming, ...current].sort((a, b) => a.at - b.at))
+      else {
+        setAncestorMessages((current) => [...incoming, ...current].sort((a, b) => a.at - b.at))
+        const chain = [...new Set([...ancestorMessages.map((message) => message.sessionId), nextParent.id])]
+        publishTabSync({ type: 'ancestor_chain_changed', tabId, opId: `${tabId}:${Date.now()}`, at: Date.now(), sessionId: activeIdRef.current, chain })
+      }
       stickToBottomRef.current = false
     } catch (err) {
       const raw = err instanceof Error ? err.message : '上级消息加载失败'

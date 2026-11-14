@@ -32,8 +32,8 @@ export function listMessages(sessionId: string, limit = 100): Promise<{ messages
   return request(`/api/messages?sessionId=${encodeURIComponent(sessionId)}&limit=${limit}`)
 }
 
-export function sendChat(sessionId: string, text: string): Promise<{ messageId?: string }> {
-  return request('/api/chat', { method: 'POST', body: JSON.stringify({ sessionId, text }) })
+export function sendChat(sessionId: string, text: string, clientMutationId?: string): Promise<{ messageId?: string }> {
+  return request('/api/chat', { method: 'POST', body: JSON.stringify({ sessionId, text, clientMutationId }) })
 }
 
 export function createSessionDraft(parentId: string, title: string): Promise<unknown> {
@@ -78,6 +78,7 @@ export function submitCardAction(cardId: string, actionId: string, payload: Reco
 export interface WsDelta {
   id: string
   delta: string
+  seq?: number
 }
 
 export interface ChatEvents {
@@ -85,7 +86,7 @@ export interface ChatEvents {
   stop: () => void
 }
 
-export function connectEvents(sessionId: string, handlers: { onDelta: (delta: WsDelta) => void; onStatus: (status: string) => void }): ChatEvents {
+export function connectEvents(sessionId: string, handlers: { onDelta: (delta: WsDelta) => void; onStatus: (status: string) => void; onEvent?: (event: { type: string; id: string; seq?: number }) => void; since?: () => string }): ChatEvents {
   let stopped = false
   let socket: WebSocket | null = null
   let retry: number | null = null
@@ -98,14 +99,14 @@ export function connectEvents(sessionId: string, handlers: { onDelta: (delta: Ws
     socket.addEventListener('open', () => {
       retryDelay = 800
       handlers.onStatus('open')
-      socket?.send(JSON.stringify({ type: 'subscribe', data: { sessionId } }))
+      socket?.send(JSON.stringify({ type: 'subscribe', data: { sessionId, since: handlers.since?.() || undefined } }))
     })
     socket.addEventListener('message', (event) => {
       try {
         const frame = JSON.parse(String(event.data)) as { type?: string; data?: unknown }
-        if (frame.type !== 'reply.delta') return
-        const data = frame.data as WsDelta | null
-        if (data && typeof data.id === 'string' && typeof data.delta === 'string') handlers.onDelta(data)
+        const data = frame.data as (WsDelta & { seq?: number }) | null
+        if (frame.type === 'reply.delta') { if (data && typeof data.id === 'string' && typeof data.delta === 'string') handlers.onDelta(data); return }
+        if (data && typeof data.id === 'string' && (frame.type === 'message.created' || frame.type === 'reply.done' || frame.type === 'message.done')) handlers.onEvent?.({ type: frame.type, id: data.id, seq: data.seq })
       } catch {
         // 非 JSON 帧忽略
       }
