@@ -999,3 +999,19 @@ body { overflow: hidden; }
 .metrics-table-details .metrics-table-wrap { margin-top: var(--sp-8); border: 0; }
 
 .metrics-badge { font-style: normal; margin-left: var(--space-4); padding: 0 var(--space-4); border-radius: var(--r-4); background: var(--warn-soft); color: var(--warn-ink); font-size: var(--font-9); }
+
+.composer-hint-icon { width: var(--size-20); height: var(--size-20); padding: 0; margin-right: 0; display: inline-flex; align-items: center; justify-content: flex-end; flex: none; border: 0; border-radius: var(--r-4); background: transparent; color: var(--muted); opacity: 0; transform: translateX(2px); pointer-events: none; transition: opacity .14s ease, transform .14s ease, background .14s ease; }
+.composer-right:hover .composer-hint-icon, .composer-right:focus-within .composer-hint-icon, .composer-box:focus-within .composer-hint-icon { opacity: 1; transform: none; pointer-events: auto; }
+.composer-hint-icon:hover { background: var(--surface-2); color: var(--ink); }
+.composer-hint-icon:focus-visible { outline: 2px solid var(--accent-line); outline-offset: 1px; opacity: 1; pointer-events: auto; }
+.composer-right { min-height: var(--size-20); }
+.composer-hint-group .composer-hint { min-width: 0; }
+@media (max-width: 30em) {
+  .composer-right .composer-hint { display: inline; font-size: var(--font-10); }
+  .composer-left { display: none; }
+  .composer-right { gap: var(--sp-8); width: 100%; justify-content: flex-end; }
+  .composer-hint-icon { opacity: 0; }
+  .composer-box:focus-within .composer-hint-icon { opacity: 1; pointer-events: auto; }
+}
+
+.composer-hint-group { display: inline-flex; align-items: center; gap: var(--sp-2); min-width: 0; }

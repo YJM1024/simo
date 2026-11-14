@@ -133,7 +133,8 @@ export default function ComponentGallery(): React.ReactNode {
         {(['requirement','clarification','progress','consultation'] as const).map((category, index) => <MessageItem key={category} message={{ id: `cat-${category}`, sessionId: 'main', role: 'agent', text: `分类样例：${category}`, at: Date.now() - index * 1000, status: 'done', agentId: 'simo', category }} onCardAction={async () => undefined} />)}
       </Section>
       <Section title="Message Markdown code"><MessageItem message={codeMessage} onCardAction={async () => undefined} /></Section>
-      <Section title="Composer"><Composer disabled={false} streaming={false} onSend={async () => undefined} onStop={() => undefined} sendError="" /></Section>
+      <Section title="Composer"><Composer disabled={false} streaming={false} onSend={async () => undefined} onStop={() => undefined} sendError="" />
+        <Composer disabled={true} streaming={false} onSend={async () => undefined} onStop={() => undefined} sendError="" /></Section>
       <Section title="WorkbenchChart"><WorkbenchChart buckets={[{ label: '2026-11-10', messages: 2, tokens: 0, tasks: 0, start: 0 }, { label: '2026-11-11', messages: 5, tokens: 0, tasks: 0, start: 0 }, { label: '2026-11-12', messages: 9, tokens: 0, tasks: 0, start: 0 }]} /></Section>
       <Section title="CardBlock"><CardBlock card={sampleCard} onSubmit={async () => undefined} /></Section>
       <Section title="StatusBar"><StatusBar connection="open" /></Section>

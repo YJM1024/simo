@@ -510,6 +510,34 @@ export function Composer({ disabled, streaming, onSend, onStop, sendError }: { d
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [localError, setLocalError] = useState('')
+  const [sendMode, setSendMode] = useState<'enter' | 'shift-enter'>(() => {
+    const storageKey = 'simo.composer.sendMode'
+    const legacyKey = 'simo.composer.send-mode'
+    try {
+      const stored = localStorage.getItem(storageKey)
+      if (stored === 'enter' || stored === 'shift-enter') return stored
+      const legacy = localStorage.getItem(legacyKey)
+      const migrated = legacy === 'enter-send' ? 'enter' : legacy === 'enter-newline' ? 'shift-enter' : null
+      if (migrated) { localStorage.setItem(storageKey, migrated); localStorage.removeItem(legacyKey); return migrated }
+    } catch { /* localStorage 不可用时仅内存态 */ }
+    return 'enter'
+  })
+  const composingRef = useRef(false)
+  const compositionEndAtRef = useRef(0)
+  useEffect(() => {
+    const channel = typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel('simo.composer.sendMode.v1')
+    const apply = (value: string | null): void => { if (value === 'enter' || value === 'shift-enter') setSendMode(value) }
+    const onMessage = (event: MessageEvent): void => apply(String(event.data))
+    const onStorage = (event: StorageEvent): void => { if (event.key === 'simo.composer.sendMode') apply(event.newValue) }
+    channel?.addEventListener('message', onMessage)
+    window.addEventListener('storage', onStorage)
+    return () => { channel?.removeEventListener('message', onMessage); channel?.close(); window.removeEventListener('storage', onStorage) }
+  }, [])
+  const setMode = (mode: 'enter' | 'shift-enter'): void => {
+    setSendMode(mode)
+    try { localStorage.setItem('simo.composer.sendMode', mode) } catch { /* localStorage 不可用时仅本标签 */ }
+    try { const channel = new BroadcastChannel('simo.composer.sendMode.v1'); channel.postMessage(mode); channel.close() } catch { /* 无 BroadcastChannel 时退化 */ }
+  }
   async function submit(): Promise<void> {
     const value = text.trim()
     if (!value || disabled || sending) return
@@ -525,16 +553,38 @@ export function Composer({ disabled, streaming, onSend, onStop, sendError }: { d
       setSending(false)
     }
   }
+  const hint = sendMode === 'enter' ? 'Enter 发送，Shift+Enter 换行' : 'Enter 换行，Shift+Enter 发送'
+  const ariaAction = sendMode === 'enter' ? '切换发送方式，当前 Enter 发送；按下后改为 Shift+Enter 发送' : '切换发送方式，当前 Shift+Enter 发送；按下后改为 Enter 发送'
   return (
     <div className="composer">
       <div className="composer-box">
-        <textarea value={text} onChange={(event) => setText(event.target.value)} placeholder="给司墨发消息…" aria-label="消息输入框" onKeyDown={(event) => {
-          if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); void submit() }
-        }} />
+        <textarea value={text} onChange={(event) => setText(event.target.value)} placeholder="给司墨发消息…" aria-label="消息输入框" disabled={disabled}
+          onCompositionStart={() => { composingRef.current = true }}
+          onCompositionEnd={() => { composingRef.current = false; compositionEndAtRef.current = Date.now() }}
+          onKeyDown={(event) => {
+            if (disabled) return
+            if (event.nativeEvent.isComposing || composingRef.current) return
+            if (event.key !== 'Enter') return
+            if (Date.now() - compositionEndAtRef.current < 50) { event.preventDefault(); return }
+            const withModifier = event.metaKey || event.ctrlKey
+            if (withModifier || (sendMode === 'enter' && !event.shiftKey) || (sendMode === 'shift-enter' && event.shiftKey)) {
+              event.preventDefault()
+              void submit()
+            }
+          }} />
         {(localError || sendError) && <p className="composer-error" role="alert">{localError || sendError}</p>}
         <div className="composer-foot">
           <div className="composer-left"><Icon name="file" /> <span>支持 Markdown 格式</span></div>
-          <div className="composer-right"><span className="composer-hint">Enter 发送 · Shift+Enter 换行</span>{streaming && <button className="btn sm composer-stop" type="button" onClick={onStop}>停止</button>}<button className="send" type="button" disabled={disabled || sending || streaming || !text.trim()} onClick={() => void submit()}>{sending ? '发送中…' : '发送'}</button></div>
+          <div className="composer-right">
+            <span className="composer-hint-group">
+              {!disabled && <button className="composer-hint-icon" type="button" aria-pressed={sendMode === 'shift-enter'} aria-label={ariaAction} onClick={() => setMode(sendMode === 'enter' ? 'shift-enter' : 'enter')}>
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3 3v5.2c0 1.2 1 2.1 2.1 2.1H12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /><path d="M9.5 7.5 12 10l-2.5 2.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </button>}
+              <span className="composer-hint composer-send-mode-hint" aria-live="polite">{hint}</span>
+            </span>
+            {streaming && <button className="btn sm composer-stop" type="button" onClick={onStop}>停止</button>}
+            <button className="send" type="button" disabled={disabled || sending || streaming || !text.trim()} onClick={() => void submit()}>{sending ? '发送中…' : '发送'}</button>
+          </div>
         </div>
       </div>
     </div>

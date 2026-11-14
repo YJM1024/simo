@@ -1065,6 +1065,73 @@
 - 未抓三标签逐帧 reply.delta seq 序列，仅完成最终一致性（agent 数/user 文本一致、无 streaming 残留）。
 - 未新增代码；线上已部署 `mwfc8mdr`（8787），部署前后对账通过。
 
+### COMP-composer-send-mode 预检（2026-11-14，build `mwfzrns6-bhiex`，未部署，**不签字**）
+
+**结论：交互主体可用，但与 spec 的持久化 key/值、aria/title、disabled、图标尺寸不一致，不能签 A1–A8。**
+
+**通过/已验**
+- gallery 默认 `enter-send`：hint「Enter 发送，Shift+Enter 换行」；点击切换 `aria-pressed=true`、hint「Enter 换行，Shift+Enter 发送」、localStorage 写入。
+- 20px 槽 + `margin-right:2px`（CSS 实测 icon rect 20×20；右对齐）；hover/focus 截图图标可见；375 聚焦 icon opacity1、hint block、`scrollWidth==innerWidth==375`。
+- gallery 复用 Composer；DPR2 截图 `composer-react-{default,hover,toggled,375}.png` 存在。
+- 键盘/IME 源码有 Enter/Shift/Ctrl/Cmd 分支、`isComposing` + composingRef；用户实测默认/反转/IME 保持（本机 CDP 键盘注入受 char 事件拼接影响，未作为反向证据）。
+
+**不通过（spec 差异）**
+1. **A7 持久化 key/值不符**：spec 要求 key `simo.composer.sendMode`、值仅 `enter`/`shift-enter`；实现使用 `simo.composer.send-mode`、`enter-send`/`enter-newline`。实测 localStorage 为 `simo.composer.send-mode=enter-newline`。其他按 spec 读取的模块/测试无法同步，A7 不通过。
+2. **原生 title 违反 spec**：切换按钮带 `title="切换发送模式"`；spec §7 明确“不显示原生 title”。A5/A6 不通过。
+3. **aria-label 缺动作**：当前仅“切换发送模式。当前：…”；spec 要求说明按下后的动作（如“按下后改为 Shift+Enter 发送”）。A6 部分不合格。
+4. **disabled 未处理**：Composer `disabled` 时切换按钮仍可点击/无 disabled 属性；spec §9 disabled 要求“不显示/不响应切换”。未覆盖。
+5. **图标 13px 而非 spec 16px**：20px 槽内 svg 为 width/height 13（CSS 槽 20）；视觉尺寸偏小，A5 记录偏差。
+6. hint 文案用「，」而 spec 用「·」；中文标点不一致，按 spec 需统一。
+7. IME 浏览器在 compositionend 后补发 Enter 的抑制仅靠 isComposing/ref，源码未见额外补发抑制；用户实测通过，保留风险观察。
+
+**需补**：改用 spec key/值并迁移旧值；删除原生 title；补 aria-label 动作；disabled 时隐藏/禁用切换；图标 16px；统一 hint 标点；补 compositionend 补发 Enter 的真 IME 用例后再签。未改代码、未部署。
+
+### COMP-composer-send-mode 复验（2026-11-14，build `mwfzw1p1-ro7bt`，**A5 间距仍不通过，不签**）
+
+**结论：A6/A7 已修；A5 的图标—提示 2px 间距实际为 0/12px，不签整批。**
+
+**已修复/通过**
+- localStorage：key **`simo.composer.sendMode`**，值 `enter`/`shift-enter`；旧 key `simo.composer.send-mode` 的 `enter-newline` 实测迁移为 `shift-enter` 并删除旧 key（new=shift-enter、old=null）。
+- 原生 `title` 实测 **null**；aria-label 含动作（如“切换发送方式，当前 Enter 发送；按下后改为 Shift+Enter 发送”）。
+- disabled Composer：切换按钮不渲染（disabled icon=false），textarea disabled；键盘返回。
+- 图标 svg **16×16**，槽 **20×20**；375 `scrollWidth==innerWidth`、focus icon opacity1。
+- 默认/反转/键盘/Ctrl/IME 源码与用户实测通过；DPR2 截图 `composer-spec-*` 存在；gallery disabled 样例存在。
+
+**仍不通过（A5）**
+- 计算样式：`.composer-hint-icon` **margin-right = 0px**（CSS 明确 `margin-right: 0`）；`.composer-right` **gap = 12px**。
+- 因此图标与提示实际间距为 **12px**，不是 spec 要求的 **2px**。20px 槽/16px 图标本身正确。
+- 需把 `.composer-hint-icon` margin-right 改为 2px（或该处 gap 改 2px），并确认不影响其它 composer-right 子元素。
+
+**A1–A8 摘要**：A1/A2/A3/A4/A6/A7/A8 通过；**A5 不通过（2px 间距）**。
+
+**需补**：修 2px 间距后复验 A5；其余保持。未改代码、未部署。
+
+### COMP-composer-send-mode 签字（2026-11-14，build `mwfzyf8u-h9f0d`，**A1–A8 通过**）
+
+**结论：A5 间距已修，A1–A8 签字通过（未部署）。**
+
+**A5 实测（1600 focus 图标可见）**
+- `.composer-hint-group { gap: 2px }`；`.composer-hint-icon { margin-right: 0 }`。
+- 图标按钮 rect right **934.422** → hint rect left **936.422**：实际间距 **2px**。
+- 20px 槽、svg **16×16**；`.composer-right` gap12px 仅作用于提示组与发送按钮之间。
+- 375 `scrollWidth==innerWidth`，focus icon opacity1；默认隐藏时 icon `transform: translateX(2px)`，可见（hover/focus）后 transform none，2px 生效。
+- 截图 `composer-spec-{default,hover,toggled,375}.png` 已更新。
+
+**其余**
+- localStorage key `simo.composer.sendMode` / `enter`/`shift-enter`，旧 key 迁移；title null；aria-label 含动作；disabled 隐藏切换/textarea disabled；A1–A4/A6–A8 通过。
+- 未改代码、未部署。
+
+### COMP-composer-send-mode 线上 smoke（2026-11-14，8787 `mwfzyf8u-h9f0d`，**通过，已部署**）
+
+**结论：线上 8787 已部署，A5/A1–A8 smoke 通过。**
+
+- build-id **`mwfzyf8u-h9f0d`**；health **200**；进程 `simo-live-composer.exe` PID 39636。
+- focus/hover：`.composer-hint-group` **gap=2px**；icon right **904.422** → hint left **906.422** = **2px**；icon svg16/槽20，margin0。
+- 点击切换：`aria-pressed=true`、hint「Enter 换行，Shift+Enter 发送」、localStorage **`shift-enter`**；`title=null`；aria-label 含动作。
+- 行为：反转模式 Enter 仅插入换行（value `SMOKE\n`），未发送；刷新后仍 `shift-enter`/pressed true；再点击恢复 `enter`。
+- 375：`scrollWidth==innerWidth==375`，focus icon opacity1、hint block；console error/exception **0**。
+- disabled：线上当前无归档/空 active 会话可直接触发；disabled 已在当前 build gallery（icon=false、textarea disabled）验证，线上未新增禁用样本。
+
 ### 检查清单（每轮）
 
 1. 首屏 3 秒能理解产品与下一步；

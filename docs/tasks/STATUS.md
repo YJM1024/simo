@@ -1,7 +1,7 @@
 # 司墨 · 当前状态
 
 更新时间：2026-11-13
-当前阶段：**P3 visual gate nightly/warning；发布门禁 = check:sdd PASS + parity `mwdsx6vl` 已复签；FE-008 A1–A12 已签；FE-009 `mwfc8mdr` A1–A10 已签并部署 8787（线上 smoke 通过）**
+当前阶段：**P3 visual gate nightly/warning；发布门禁 = check:sdd PASS + parity `mwdsx6vl` 已复签；FE-008 A1–A12 已签；FE-009 已签并部署；COMP-composer-send-mode A1–A8 已签并部署 8787**
 
 ## 仓库/环境
 
@@ -46,6 +46,7 @@
 | 组件级 parity（当前 build 复签） | **已签字通过**（2026-11-13，线上 `mwdsx6vl-4cwln`） | 1600/375 布局/尺寸/位置/边框/间距一致；timeline x358/w44/gap28（y/h 随 Composer 高度既有豁免：+22→panel−22/居中+12）；颜色体系用户已批准豁免；context/右栏/composer padding 为既有批准豁免；产物已按当前 build 重拍；发布门禁满足 |
 | FE-008 指标看板 | **A1–A12 签字通过**（2026-11-14，线上 `mwf61jl3-uorgz`） | A5：完成率85.7%(6/7)+部分数据、一次完成100%(6/6)+部分数据、返工0%(0/7)+待埋点、任务响应9259/100000+样本不足；p50待埋点/埋点缺失、key本地化、partial逐块、7表明细、375滚动/无溢出、app三态、console0；未改代码 |
 | FE-009 Web 多标签 | **A1–A10 签字通过 + 已部署**（2026-11-14，8787 `mwfc8mdr-7n9p9`） | 线上 smoke：build-id/health 200；三标签 52→36→88 祖先同步；375 无溢出；console 0。候选实测：并发/双click/未读/断线 since 均过；限制：后端 since 回放未独立证明、逐帧 delta seq 未抓 |
+| COMP-composer-send-mode | **A1–A8 签字通过 + 已部署**（2026-11-14，8787 `mwfzyf8u-h9f0d`） | 线上 smoke：build/health 200；focus/hover group gap2、icon right904.422→hint left906.422=2px；toggle aria/localStorage shift-enter；刷新保持；Enter 反转模式仅换行；375 无溢出；console0；disabled 以 gallery 当前 build 验收 |
 | Storybook Spike | 条件可行（P1） | `archive/labs/storybook/`；本沙箱 `spawn EPERM` 无法 build，详见 `storybook-spike.md` |
 
 ## 进行中
@@ -58,6 +59,7 @@
 | FE-007 祖先消息 | `memory-researcher`/`schema-drafter` | **视觉+功能已签字通过**（build `mwdnshfe-yu2wp`）：A1–A10 隔离夹具通过；残留 P2：同帧双 click 2 请求（60ms 双击1）、413 为 mock、403 未造出；**未部署** |
 
 | P2 交付物/工作台/右栏验收模板 | `schema-drafter` | **A1–A8 模板已写入 acceptance**：preview/download、工作台 loading/empty/error、右栏任务/概览/交付物；**待前端/后端交付后复验，不签字** |
+
 | Workspace Batch C/D 迁移 | `schema-drafter` | **迁移验收清单已写入 acceptance**：dry-run 零副作用、映射执行、hash/计数、旧数据保留、回滚演练、交付物隔离；Batch C/D 定义以 Lead 确认为准；**待执行，不签字** |
 | Storybook P1 | `harness-scout` | 正常环境/CI 跑通 build/preview/screenshot 后再评估 |
 
@@ -77,6 +79,7 @@
 - **P3 visual gate 转 nightly/warning（Lead 裁决，不阻断发布）**：capture:visual/check:visual 已实现并自测（改像素 fail/恢复 pass）；本机 fresh capture 四档 diff 0.038/0.047/0.051/0.121%、max151，作为 nightly warning；`check` 未串联 capture 列为改进项；不再要求 fresh full-page 0 diff 签字；发布阻断 = check:sdd PASS + 组件 parity 签（均满足）；空态键盘、375 tags/hidden/无溢出、375 任务 N/A、复制成功路径环境限制；
 - **FE-008 线上 `mwf61jl3` A1–A12 已签字通过**：A5 回退已修（完成率85.7%(6/7)+部分数据、一次100%(6/6)+部分数据、返工0%(0/7)+待埋点、任务响应9259/100000+样本不足）；p50 待埋点/埋点缺失、availability 本地化无 raw key、partial 逐块、7表明细、375滚动/无溢出、app三态、console0；未改代码；
 - **FE-009 `mwfc8mdr` A1–A10 已签并部署 8787（线上 smoke 通过）**：build-id/health 200；三标签 52→36→88 祖先同步；375 无溢出；console 0；候选实测并发/双click/未读/断线 since；限制：后端 since 回放未独立证明、逐帧 delta seq 未抓；
+- **COMP-composer-send-mode `mwfzyf8u` A1–A8 已签并部署 8787**：线上 smoke build/health 200；focus/hover gap2px（right904.422→left906.422）；toggle aria/local shift-enter、刷新保持；反转模式 Enter 只换行；375 无溢出；console0；disabled 以 gallery 当前 build 验收；
 - **未闭环**：真实用户交付物打开/preview/download（无样本，需 Lead 决定是否造样本）；409 并发未造出；FE-002–005 整批签字与部署待 Lead 决定；
 - **无视觉 P0 阻塞**：React 视觉对齐已签字（证据见 `acceptance.md`「React 版视觉对齐 · 返工后复验」）；
 - **TimelineGroups 组件（build `mwdmvfow`）已签字通过**：R1 组间距 6px、R2 aria 不含分类、R3 点击/Enter 跳转与 active 切换均已复验；FE-007 已接入并验收；**未部署**；祖先 active opacity:1 已按 Lead 确认，spec 已由 design-scribe 更新；
@@ -101,6 +104,7 @@
 9. P3 visual gate 已按 Lead 裁决转 nightly/warning，不作为发布阻断；工程能力完成；改进项：capture 串联 check/CI、固定动态区域降低夜间噪声；发布阻断门禁 = check:sdd PASS + 组件 parity 签（已满足）；375 任务标 N/A；复制成功路径环境限制。
 10. FE-008 线上 `mwf61jl3` A1–A12 已签字通过：A5 数值+分子分母+角标、任务响应样本不足、p50 availability、7表明细、375滚动、app三态均过；未改代码；部署由 Lead 决定。
 11. FE-009 `mwfc8mdr` A1–A10 已签并部署 8787：线上 smoke 三标签 52→36→88、console0、375 无溢出；候选三标签/祖先/并发/双click/未读/断线 since 均过；限制：后端 since 回放未独立证明、逐帧 delta seq 未抓。
+12. COMP-composer-send-mode `mwfzyf8u` A1–A8 已签并部署 8787：线上 smoke focus/hover 2px、toggle 文案/aria/localStorage、刷新保持、375、console0 通过；disabled 以 gallery 当前 build 验收；待 memory-reconciler 提交。
 
 ## 约束
 
