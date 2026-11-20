@@ -6,8 +6,8 @@
 
 ## 2. 现有文件与职责
 
-- `frontend/src/components/RightPanel.tsx（交付物/任务）`
-- `frontend/src/components/OverviewPanel.tsx（概览交付物）`
+- `frontend/src/components/library.tsx:811`（RightPanel：交付物/任务）
+- `frontend/src/components/library.tsx:684`（OverviewPanel：概览交付物）
 - `frontend/src/app.tsx（工作台交付物与下载）`
 - `frontend/src/api.ts（getArtifactContent 等）`
 

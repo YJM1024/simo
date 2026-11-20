@@ -31,7 +31,7 @@ E:\dsh_home\workspaces\agent\toolchain\go\bin\go.exe test ./... -count=1 -json
 
 ## 3. PRD 覆盖（本包不升级）
 
-| PRD | 名称 | 产品状态 | 已有证据 / 缺口 |
+| PRD | 名称 | 实现状态 | 已有证据 / 缺口 |
 |---|---|---|---|
 | PRD-FILE-001 | 会话文件聚合列表 | 部分 | RightPanel 6/6 展示部分；无列表聚合专项测试。 |
 | PRD-FILE-005 | 工作区目录输出隔离 | 部分 | 无隔离/越界执行证据。 |

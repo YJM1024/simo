@@ -2,18 +2,18 @@
 
 ## 1. 结论
 
-已覆盖会话、消息、Composer、祖先加载与 WS 主路径；多标签、未读/远程访问仍是缺口。不是完整 P1 前端验收。
+主路径已执行：会话、消息、Composer、祖先加载与 WS 主路径有 69 单测和 11 E2E 证据；多标签、未读/远程访问仍是缺口。不是完整 P1 前端验收。
 
 ## 2. 现有文件与职责
 
 - `frontend/src/app.tsx（单页 chat/workbench、三栏、页面切换、会话/消息编排）`
 - `frontend/src/api.ts（REST/WS 客户端）`
 - `frontend/src/tabsync.ts（BroadcastChannel 多标签同步）`
-- `frontend/src/components/Sidebar.tsx（会话树/搜索/归档/重命名）`
-- `frontend/src/components/Composer.tsx（发送、快捷键、IME、发送模式）`
-- `frontend/src/components/MessageItem.tsx（消息渲染/复制/失败/流式）`
-- `frontend/src/components/ConversationPanel.tsx（ready/loading/empty/error）`
-- `frontend/src/components/TimelineGroups.tsx（分组时间轴）`
+- `frontend/src/components/library.tsx:50`（Sidebar：会话树/搜索/归档/重命名）
+- `frontend/src/components/library.tsx:509`（Composer：发送、快捷键、IME、发送模式）
+- `frontend/src/components/library.tsx:176`（MessageItem：消息渲染/复制/失败/流式）
+- `frontend/src/components/library.tsx:666`（ConversationPanel：ready/loading/empty/error）
+- `frontend/src/components/library.tsx:432`（TimelineGroups：分组时间轴）
 
 ## 3. 测试证据
 

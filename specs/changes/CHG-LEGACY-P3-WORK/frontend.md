@@ -7,9 +7,9 @@
 ## 2. 现有文件与职责
 
 - `frontend/src/app.tsx（工作台页面编排）`
-- `frontend/src/components/MetricsDashboard.tsx（指标/趋势/窗口）`
-- `frontend/src/components/WorkbenchChart.tsx（图表）`
-- `frontend/src/components/RightPanel.tsx（交付物/概览）`
+- `frontend/src/components/library.tsx:750`（MetricsDashboard：指标/趋势/窗口）
+- `frontend/src/components/library.tsx:267`（WorkbenchChart：图表）
+- `frontend/src/components/library.tsx:811`（RightPanel：交付物/概览）
 - `frontend/src/components/library.tsx（Segmented/卡片/空态等基础件）`
 
 ## 3. 测试证据

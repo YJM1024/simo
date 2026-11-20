@@ -6,8 +6,8 @@
 
 ## 2. 现有文件与职责
 
-- `frontend/src/components/MetricsDashboard.tsx（窗口/卡片/明细/空错态）`
-- `frontend/src/components/WorkbenchChart.tsx（图表）`
+- `frontend/src/components/library.tsx:750`（MetricsDashboard：窗口/卡片/明细/空错态）
+- `frontend/src/components/library.tsx:267`（WorkbenchChart：图表）
 - `frontend/src/app.tsx（工作台指标区）`
 
 ## 3. 测试证据

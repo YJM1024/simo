@@ -6,7 +6,9 @@ Implements: PRD-FILE-001, PRD-FILE-005, PRD-FILE-002, PRD-FILE-003, PRD-FILE-004
 - Owner：product + frontend + backend
 - 日期：2026-11-20
 - 产品依据：`specs/product/P4-FILE/spec.md`
-- 追溯：6 个 PRD；覆盖仍为 **0 covered / 2 partial / 4 gap**
+- 实现状态：1 个已实现（FILE-003）、5 个部分实现（FILE-001/002/004/005/006）、0 个未实现
+- 追溯状态：**0 covered / 2 partial / 4 gap**（按 `docs/product/TRACEABILITY.md` 当前实际；审计建议 0/5/1 与 TRACE 不一致，未按建议数改写，待统一口径）
+- 追溯：6 个 PRD 均有本 CHANGE 包，但六类产物与完整 AC 证据未闭环
 
 ## 1. 目标
 
@@ -14,7 +16,7 @@ Implements: PRD-FILE-001, PRD-FILE-005, PRD-FILE-002, PRD-FILE-003, PRD-FILE-004
 
 ## 2. 需求与状态
 
-| ID | 需求（产品 spec） | 实现事实 | 产品状态 | 主要证据 |
+| ID | 需求（产品 spec） | 实现事实 | 实现状态 | 主要证据 |
 |---|---|---|---|---|
 | PRD-FILE-001 | 会话文件聚合列表 | 有 artifacts/deliverables/files 路由与会话聚合，但前端列表聚合与分页未验收。 | 部分 | RightPanel 6/6 展示部分；无列表聚合专项测试。 |
 | PRD-FILE-005 | 工作区目录输出隔离 | 交付物写入工作区/SIMO_HOME 相关目录，隔离与越界未形成验收。 | 部分 | 无隔离/越界执行证据。 |

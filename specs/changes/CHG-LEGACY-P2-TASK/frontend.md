@@ -6,8 +6,8 @@
 
 ## 2. 现有文件与职责
 
-- `frontend/src/components/RightPanel.tsx（会话概览/任务/交付物）`
-- `frontend/src/components/OverviewPanel.tsx（概览投影）`
+- `frontend/src/components/library.tsx:811`（RightPanel：会话概览/任务/交付物）
+- `frontend/src/components/library.tsx:684`（OverviewPanel：概览投影）
 - `frontend/src/components/library.tsx（ExecutionGroup/TaskItem/状态点）`
 - `frontend/src/app.tsx（右栏编排与任务定位）`
 

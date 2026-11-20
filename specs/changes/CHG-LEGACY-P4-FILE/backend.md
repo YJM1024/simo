@@ -1,6 +1,6 @@
 # BACKEND · CHG-LEGACY-P4-FILE
 
-- Scope：backend/internal/modules/tasks/{deliverables,http}.go、backend/internal/modules/chat/{files,filegen,delivery,attachments}.go
+- Scope：backend/internal/modules/tasks/{deliverables,http}.go、backend/internal/modules/chat/{files,filegen,delivery,attachments}.go、backend/internal/modules/chat/embed_office.go（嵌入 office_helper.py）
 - 状态：历史归档；无新增实现、无迁移
 - 后端入口：`backend/cmd/simo` 模块注册
 
@@ -14,7 +14,8 @@
 | `backend/internal/modules/chat/filegen.go` | 文件生成 |
 | `backend/internal/modules/chat/delivery.go` | 交付物写入/下载 |
 | `backend/internal/modules/chat/attachments.go` | 附件上传 |
-| `backend/internal/modules/chat/embed_office.py` | Office 生成辅助 |
+| `backend/internal/modules/chat/embed_office.go` | 通过 `//go:embed office_helper.py` 将辅助脚本嵌入二进制 |
+| `backend/internal/modules/chat/office_helper.py` | 被 embed 的 Office 生成辅助脚本（运行时不依赖 cwd/scripts） |
 
 ## 2. API（实际注册）
 

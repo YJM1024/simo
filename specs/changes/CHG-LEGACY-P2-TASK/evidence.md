@@ -31,7 +31,7 @@ E:\dsh_home\workspaces\agent\toolchain\go\bin\go.exe test ./... -count=1 -json
 
 ## 3. PRD 覆盖（本包不升级）
 
-| PRD | 名称 | 产品状态 | 已有证据 / 缺口 |
+| PRD | 名称 | 实现状态 | 已有证据 / 缺口 |
 |---|---|---|---|
 | PRD-TASK-001 | 任务生命周期与执行组 | 部分 | RightPanel.test.tsx 6/6（展示层）；E2E 06 任务定位。 |
 | PRD-TASK-002 | 任务概览与进度 | 部分 | RightPanel.test.tsx 6/6；E2E 06。 |

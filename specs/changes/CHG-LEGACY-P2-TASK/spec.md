@@ -6,7 +6,9 @@ Implements: PRD-TASK-001, PRD-TASK-002, PRD-TASK-003, PRD-TASK-006, PRD-TASK-004
 - Owner：product + frontend + backend
 - 日期：2026-11-20
 - 产品依据：`specs/product/P2-TASK/spec.md`
-- 追溯：6 个 PRD；覆盖仍为 **0 covered / 0 partial / 6 gap**
+- 实现状态：3 个部分实现（TASK-001/002/006）、3 个未实现（TASK-003/004/005）
+- 追溯状态：**0 covered / 0 partial / 6 gap**（按 `docs/product/TRACEABILITY.md` 当前实际；审计建议 0/3/3 与 TRACE 不一致，未按建议数改写，待统一口径）
+- 追溯：6 个 PRD 均有本 CHANGE 包，但六类产物与完整 AC 证据未闭环
 
 ## 1. 目标
 
@@ -14,7 +16,7 @@ Implements: PRD-TASK-001, PRD-TASK-002, PRD-TASK-003, PRD-TASK-006, PRD-TASK-004
 
 ## 2. 需求与状态
 
-| ID | 需求（产品 spec） | 实现事实 | 产品状态 | 主要证据 |
+| ID | 需求（产品 spec） | 实现事实 | 实现状态 | 主要证据 |
 |---|---|---|---|---|
 | PRD-TASK-001 | 任务生命周期与执行组 | tasks 模块提供列表/详情/状态与执行组所需的运行时数据；前端有 OverviewPanel/ExecutionGroup 展示。 | 部分 | RightPanel.test.tsx 6/6（展示层）；E2E 06 任务定位。 |
 | PRD-TASK-002 | 任务概览与进度 | 右栏/会话概览显示任务与状态；进度口径和后端聚合未形成产品 AC。 | 部分 | RightPanel.test.tsx 6/6；E2E 06。 |
