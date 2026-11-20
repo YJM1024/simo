@@ -47,6 +47,14 @@ jobs:
           pnpm check:sdd
           pnpm check:trace
 
+      - name: Build web assets for embed
+        shell: bash
+        run: |
+          cd frontend
+          pnpm build
+          mkdir -p ../backend/internal/webui/dist
+          cp -R dist/. ../backend/internal/webui/dist/
+
       - name: Setup Go
         uses: actions/setup-go@v5
         with:

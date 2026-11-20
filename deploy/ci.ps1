@@ -101,20 +101,7 @@ $pre = Run-Stage 'preflight' {
 }
 if (-not $pre) { Write-Host '[ci] preflight failed'; exit 2 }
 
-# ---------------------------------------------------------------- 2) go vet + test
-if ($SkipGo) {
-  Add-Stage 'go' 'SKIP' 0 '-SkipGo'
-} else {
-  $goOk = Run-Stage 'go' {
-    $vet = Invoke-Go @('vet', './...') (Join-Path $logs 'go-vet.log')
-    if (-not $vet) { throw 'go vet failed (see go-vet.log)' }
-    $test = Invoke-Go @('test', './...') (Join-Path $logs 'go-test.log')
-    if (-not $test) { throw 'go test failed (see go-test.log)' }
-    $true
-  }
-}
-
-# ---------------------------------------------------------------- 3) web (optional)
+# ---------------------------------------------------------------- 2) web (optional)
 if ($SkipWeb) {
   Add-Stage 'frontend' 'SKIP' 0 '-SkipWeb (pnpm/esbuild native toolchain unavailable)'
 } else {
@@ -130,6 +117,19 @@ if ($SkipWeb) {
     if (-not (Test-Path (Join-Path $frontendDist 'index.html'))) { throw 'frontend/dist/index.html not produced' }
     New-Item -ItemType Directory -Force -Path $embedDist | Out-Null
     Copy-Item -Path (Join-Path $frontendDist '*') -Destination $embedDist -Recurse -Force
+    $true
+  }
+}
+
+# ---------------------------------------------------------------- 3) go vet + test
+if ($SkipGo) {
+  Add-Stage 'go' 'SKIP' 0 '-SkipGo'
+} else {
+  $goOk = Run-Stage 'go' {
+    $vet = Invoke-Go @('vet', './...') (Join-Path $logs 'go-vet.log')
+    if (-not $vet) { throw 'go vet failed (see go-vet.log)' }
+    $test = Invoke-Go @('test', './...') (Join-Path $logs 'go-test.log')
+    if (-not $test) { throw 'go test failed (see go-test.log)' }
     $true
   }
 }

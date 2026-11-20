@@ -3,6 +3,7 @@ package workspace
 import (
 	"errors"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -28,7 +29,10 @@ func TestResolveRejectsEscapes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cases := []string{"", "../outside.txt", "a/../../outside.txt", "C:\\Windows\\x", "/etc/passwd"}
+	cases := []string{"", "../outside.txt", "a/../../outside.txt", "/etc/passwd"}
+	if runtime.GOOS == "windows" {
+		cases = append(cases, `C:\Windows\x`)
+	}
 	for _, rel := range cases {
 		if _, err := p.ResolveWorkspace(rel); !errors.Is(err, ErrEscape) {
 			t.Errorf("ResolveWorkspace(%q) err = %v, want ErrEscape", rel, err)
