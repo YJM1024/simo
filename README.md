@@ -7,6 +7,17 @@
 > **目录已拆分**：前端全部在 `frontend/`，可整体交给外部优化；后端全部在 `backend/`。
 > **历史数据自动迁移**：旧路径/旧数据库首次启动自动迁移到 `SIMO_HOME`/`simo.db`，**不删旧数据**。
 
+## 项目记录与续接
+
+> 换机器、换会话或隔一段时间回来，先读 **[`docs/CONTINUITY.md`](docs/CONTINUITY.md)**：项目定位、先读顺序、当前真实状态、下一项工作流程与文档当天落盘规则都在这里；不要依赖聊天记录续接。
+
+| 入口 | 内容 |
+|---|---|
+| [`docs/CONTINUITY.md`](docs/CONTINUITY.md) | **项目完整记录与续接入口**（当前状态、未完成项、工作流程） |
+| [`docs/product/TREE.md`](docs/product/TREE.md) | 产品功能树：P1–P10 能力域、71 个 PRD、状态与 spec/测试链接 |
+| [`specs/README.md`](specs/README.md) | 规格总索引：产品域 / 变更包 / 域测试计划 / COMP / 模板 |
+| [`docs/process/FRAMEWORK.md`](docs/process/FRAMEWORK.md) | SDD 流程：需求 → 规格 → 任务 → 实现 → 测试 → 验收 |
+
 ## 30 秒启动
 
 ```powershell

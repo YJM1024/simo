@@ -1,15 +1,18 @@
 # 司墨文档索引
 
+> **项目记录与续接入口：[`CONTINUITY.md`](CONTINUITY.md)**（项目定位、先读顺序、当前真实状态、下一项工作流程、文档当天落盘规则）。
+> 产品功能树：[`product/TREE.md`](product/TREE.md) · 规格索引：[`../specs/README.md`](../specs/README.md) · SDD 框架：[`process/FRAMEWORK.md`](process/FRAMEWORK.md)。
+>
 > 本目录是产品、设计、流程、任务与契约文档的统一入口；**文档是事实来源，聊天只用于沟通**。
-> 当前阶段与验收状态以 [`tasks/STATUS.md`](tasks/STATUS.md) 为准（最近更新：2026-11-12，TimelineGroups 组件已签字、未接首页/未部署）。
+> 当前阶段与验收状态：先读 [`CONTINUITY.md`](CONTINUITY.md) §4；[`tasks/STATUS.md`](tasks/STATUS.md) 最后更新 2026-11-13，可能滞后，以 CONTINUITY 与实际验收证据为准。
 > 仓库根文件：[`../README.md`](../README.md)（快速开始）、[`../AGENTS.md`](../AGENTS.md)（六维基线）、[`../DESIGN.md`](../DESIGN.md)（视觉唯一事实来源）。
 
 ## 0. 先读（按角色）
 
 | 角色 | 入口 |
 |---|---|
-| 所有人 | [`../README.md`](../README.md) · [`../AGENTS.md`](../AGENTS.md) · [`tasks/STATUS.md`](tasks/STATUS.md) |
-| 产品/设计 | [`product-plan.md`](product-plan.md) · [`design-core.md`](design-core.md) · [`../specs/README.md`](../specs/README.md) |
+| 所有人 | [`../README.md`](../README.md) · [`../AGENTS.md`](../AGENTS.md) · [`CONTINUITY.md`](CONTINUITY.md) · [`tasks/STATUS.md`](tasks/STATUS.md) |
+| 产品/设计 | [`product-plan.md`](product-plan.md) · [`product/TREE.md`](product/TREE.md) · [`design-core.md`](design-core.md) · [`../specs/README.md`](../specs/README.md) |
 | 前端 | [`../frontend/README.md`](../frontend/README.md) · [`frontend-feature-map.md`](frontend-feature-map.md) · [`../DESIGN.md`](../DESIGN.md) |
 | 后端 | [`../backend/README.md`](../backend/README.md) · 契约区（§5） |
 | 流程/协作 | [`process/FRAMEWORK.md`](process/FRAMEWORK.md) · [`ops-policy.md`](ops-policy.md) · [`GITHUB.md`](GITHUB.md) |
@@ -20,6 +23,10 @@
 | 文档 | 内容 |
 |---|---|
 | [`product-plan.md`](product-plan.md) | 产品定位、能力边界、里程碑与优先级 |
+| [`product/TREE.md`](product/TREE.md) | **产品功能树**：10 个能力域 P1–P10、L2/L3 功能点、状态与 spec/测试链接 |
+| [`product/TRACEABILITY.md`](product/TRACEABILITY.md) | **PRD → CHANGE → TEST** 追溯矩阵与覆盖状态 |
+| [`product/ID-SPEC.md`](product/ID-SPEC.md) | ID 规范（PRD/AC/CHG/FE/BE/COMP/TEST/TASK/ACC）与旧编号映射 |
+| [`product/SPEC-GAP.md`](product/SPEC-GAP.md) | 规格缺口审计、当前状态、P0 补课顺序与文件规模估算 |
 | [`user-guide.md`](user-guide.md) | 用户手册：三栏、对话、任务、工作台、权限、记忆/团队/视图、卡片 |
 | [`admin-guide.md`](admin-guide.md) | 管理员指南：配置、Key、低 token、`AGENTD_HOME`/`SIMO_HOME`、迁移、备份、排障 |
 | [`release-notes-v1.md`](release-notes-v1.md) | 发布说明：当前能力、测试证据、默认模型、已知限制与 P1 |
@@ -50,6 +57,7 @@
 |---|---|
 | [`process/FRAMEWORK.md`](process/FRAMEWORK.md) | Simo SDD v0 流程框架（需求→规格→任务→验收） |
 | [`process/SCENARIOS.md`](process/SCENARIOS.md) | 典型协作场景与角色分工 |
+| [`process/standards/README.md`](process/standards/README.md) | 通用规范仓库内快照：spec 工作流 / Agent 开发规范（canonical 在 `$DSH_HOME/rules/`） |
 | [`process/component-system.md`](process/component-system.md) | 组件系统与画廊门禁规则 |
 | [`process/research/`](process/research/) | 产品/前端/后端/组件库/Spec/测试/Storybook 调研（7 份） |
 | [`process/skills/`](process/skills/) | 可复用技能：backend-contract、component-gallery、frontend-implementation、pitch-writing、product-discovery、release-checklist、spec-driven、testing-strategy |

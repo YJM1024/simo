@@ -42,9 +42,13 @@
 - **单一事实来源**：风格/规则写入文档，代码不得绕开。
 - **诚实汇报**：未完成、未验证、有风险，明确说；不夸大。
 
-## SDD 执行约束
+## 规格与流程
 
-- **无 spec 不开工**：任何变更先建/引用 spec（`specs/<CHANGE-ID>/` 或 COMP spec）；没有 spec 不进入设计/实现。
+- **全局规则**：动手前读 `$DSH_HOME/rules/spec-workflow.md`（spec 分层/六类产物/门禁）与 `$DSH_HOME/rules/agent-development.md`（角色/交接/测试/验收）；本文件只做项目索引，不复制细则。
+- **项目事实**：功能树 [`docs/product/TREE.md`](docs/product/TREE.md)；ID 规范 [`docs/product/ID-SPEC.md`](docs/product/ID-SPEC.md)；追溯 [`docs/product/TRACEABILITY.md`](docs/product/TRACEABILITY.md)；缺口 [`docs/product/SPEC-GAP.md`](docs/product/SPEC-GAP.md)。
+- **产品先行**：任何新增/迭代/修复，先改 `specs/product/<域>/spec.md` 的 PRD/AC，再开 `specs/changes/<CHG-ID>/`；无产品 spec 不开工。
+- **六类产物**：产品 spec、前端开发 spec、后端开发 spec、组件 spec（如适用）、任务卡、测试 spec；不涉及写 `N/A + 理由`。
+- **测试同步**：用例加到 `specs/test/<域>/test-plan.md`，不新建“每功能一测试 spec”；证据缺失写 `missing`，不得写“通过”。
 - **按 ROLES 交接**：按 [`docs/process/ROLES.md`](docs/process/ROLES.md) 的 owner/评审/交接物执行，不跨写作用域；实现者不改别人的 scope。
 - **任务四要素**：每个任务必须写清 **owner / scope / AC / 证据**；缺一不可派发。
 - **不得自签**：实现者不得给自己的视觉/功能签字；视觉/功能签字由**验收 Agent** 独立完成。

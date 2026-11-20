@@ -1132,6 +1132,63 @@
 - 375：`scrollWidth==innerWidth==375`，focus icon opacity1、hint block；console error/exception **0**。
 - disabled：线上当前无归档/空 active 会话可直接触发；disabled 已在当前 build gallery（icon=false、textarea disabled）验证，线上未新增禁用样本。
 
+### 任务复杂度模型验收预检模板（C0–C4，待实现，**不签字**）
+
+**状态：模板就绪，不签通过。** 当前无复杂度分类器/任务自动分层实现证据；本模板定义 C0–C4 行为、子会话生命周期、活跃上限/预算、交互循环与无副作用验收。实现后按固定 build + 隔离 home + 固定提示样本复验，禁止用 mock 事件冒充真实分类/事件。
+
+**层级定义（验收口径）**
+> **Lead 口径修正（必须遵守）**：C3/C4 **父级不创建 Task**，一级动作是创建子会话；父级 task 数不增加。子会话内部可有 task，归属各自子会话。只有 C2 断言“当前会话恰好 1 个父级 task”。
+
+| level | 行为 | 副作用/任务会话 |
+|---|---|---|
+| C0 | 不复述、不建任务；直接简短回答/确认 | **无 task 记录**、无子会话、无写操作 |
+| C1 | 先复述目标/约束，再直接执行简单操作 | 默认不建 task（若执行动作需要 task，需在证据中说明）；无子会话 |
+| C2 | 先给方案/确认门；确认后才执行 | 未确认**零副作用**；确认后当前会话恰好 **1 个父级 task**；不自动建子会话 |
+| C3 | 确认后自动创建 **1 个子会话**执行 | **父级 task 数不增加**；子会话恰好 1 个，parent 正确；子会话内部可有 task，归该子会话；无重复 |
+| C4 | 确认后自动创建 **多个子会话**（按方案，≥2） | **父级 task 数不增加**；子会话数量符合方案、彼此隔离；每个子会话内部 task 归属各自会话；无跨会话混写 |
+
+**分类/置信度要求**
+- 记录 `level`、`confidence`、分类器版本/阈值；低置信度必须走 C2 确认或明确询问，不得静默升级 C3/C4。
+- C0 判定必须可解释（无复述/无 task）；C1 复述必须在执行前可见；C2+ 方案/确认必须在任何 task/子会话/写操作之前。
+- 未确认（含拒绝/取消/超时）**无 task、无子会话、无写/执行副作用**；只能有方案/确认消息/只读操作。
+
+**C0–C4 验收矩阵**
+| # | 场景 | 操作 | 通过标准 | 证据 |
+|---|---|---|---|---|
+| C0-1 | C0 简单问答 | 发无需任务的小问题 | 无复述、无 task 记录、无子会话、无写操作；只回答 | level/confidence、task 数、session 数、消息序列 |
+| C0-2 | C0 误分类防护 | 模糊/低置信输入 | 低置信不静默 C3/C4；走 C2 或询问；无未确认副作用 | confidence、确认消息、DB counts |
+| C1-1 | C1 复述+直接执行 | 发明确简单执行请求 | 先复述目标/约束，再执行；顺序正确；无 task/子会话（或说明 task 例外） | 消息序列、执行结果、task 数 |
+| C2-1 | C2 确认前 | 复杂请求，停在方案/确认 | 只有方案/确认，**无 task/子会话/写操作**；拒绝/取消亦无副作用 | 事件时间线、DB counts、截图 |
+| C2-2 | C2 确认后 | 点确认 | 当前会话恰好 **1 个父级 task**（父级 task 数 +1）；不自动建子会话；任务归属当前会话；执行可完成 | task id/session id、parent task count、事件、UI |
+| C3-1 | C3 自动 1 子会话 | 确认 C3 方案 | 恰好 1 个子会话，parent 正确；**父级 task 数不增加（delta=0）**；子会话内 task（若有）归属该子会话；无重复/无越权 | session ids、parent task count before/after、child task ids、事件 |
+| C4-1 | C4 自动多子会话 | 确认 C4 方案 | 子会话数=方案数（≥2），IDs 唯一、互不混写；**父级 task 数不增加（delta=0）**；每个子会话内部 task 归属各自会话；无跨会话 | session ids、parent task count、各 child task ids、方案、事件 |
+| C4-2 | 未确认 | C4 停在确认 | 0 子会话、0 task、无写；确认后才创建 | 前后 counts、确认事件 |
+
+**子会话无限累计/归档/恢复**
+| # | 场景 | 通过标准 | 证据 |
+|---|---|---|---|
+| S1 | 多轮 C3/C4 累计 | 连续 ≥3 轮新增子会话；只增不减、UUID/短 ID 唯一、parent 链不重复；无覆盖/合并 | 轮次、session ids、树 dump、计数单调 |
+| S2 | 活跃上限 | 达上限后新子会话被拒绝/排队，提示明确；不产生半个子会话/task；已有会话不受影响 | 上限配置、拒绝事件、前后 counts |
+| S3 | 归档 | 归档子会话从活跃列表隐藏；历史/消息/任务保留；父树可达；不删除 output | archive 事件、列表、历史查询 |
+| S4 | 恢复 | 恢复同一子会话（原 id/parent/history），不产生副本；可继续执行；归档/恢复循环稳定 | restore 事件、id/parent、前后对比 |
+| S5 | 预算护栏 | token/时间/attempt/并发预算超限时停止或拒绝，明确原因；不静默继续/不半写；审计记录 | budget 配置、超限事件、停止快照 |
+
+**交互循环 / 异步执行 / steer-cancel**
+| # | 场景 | 通过标准 | 证据 |
+|---|---|---|---|
+| I1 | 不阻塞对话 | 执行长任务时用户仍可发消息并收到响应；UI/输入不冻结；执行在后台异步 | 时序、请求并发、截图 |
+| I2 | steer | 用户插话修改目标：在安全点生效（不打断未完成写/工具），消息/事件顺序明确；新方案可追踪 | 消息序列、事件、最终结果 |
+| I3 | cancel | 取消只终止未来工作；已完成/已写产物保留且明确告知；不自动回滚已完成；无后续派发 | cancel 事件、task 状态、产物清单 |
+| I4 | 并发 steer/cancel | 连续插话/取消不重复执行、不丢消息；队列/抢占规则一致；子会话不串线 | 事件时间线、去重、session 隔离 |
+| I5 | 未确认插话 | 确认前 steer/取消只改方案/确认状态，不创建 task/子会话/写 | 前后 counts、确认状态 |
+
+**证据字段（每个 case 必填）**
+`buildId / isolatedHome / level / confidence / classifierVersion+threshold / 输入提示 / messageSequence（role、text摘要、at、顺序）/ parentTaskCountBefore+After / parentTaskId(s) / sessionId(s)+parentId / childSessionIds / childTaskIds（按 session 分组）/ 子会话数与活跃数 / events（task.created、session.created、confirm、steer、cancel、archive、restore、budget.block）/ budget usage / DB counts / 1600+375 DPR2 截图 / console+4xx / 未造出原因`。
+- 断言层级：消息顺序、事件顺序、DB 实体、UI；不能只看回复文本。
+- 隔离：每 case 独立 home；C3/C4 累计用例可连续多轮但每轮记录基线；禁止真实用户数据。
+
+**签字规则**：C0–C4 + S1–S5 + I1–I5 全通过且证据为当前 build；未确认副作用、C0 task 记录、子会话累计/归档/恢复、活跃上限/预算、steer/cancel 任一失败均不签。**C2 当前会话必须恰好 1 个父级 task；C3/C4 父级 task 数必须不增加（delta=0），子会话内 task 必须归属各自子会话；父级 task 增加即失败。** 未实现/未造出项必须列明，不得用 mock 事件替代真实模型/事件证据。
+
 ### 检查清单（每轮）
 
 1. 首屏 3 秒能理解产品与下一步；
