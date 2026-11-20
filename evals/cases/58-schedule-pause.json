@@ -7,9 +7,36 @@
     "prompt": "{{probe}} 暂停测试"
   },
   "steps": [
-    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}" }, "expectStatus": [200, 201], "saveAs": "created" },
-    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
-    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}" }, "pick": "id", "saveAs": "sid" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/sessions",
+      "body": {
+        "title": "{{caseSession}}",
+        "draft": false
+      },
+      "expectStatus": [
+        200,
+        201
+      ],
+      "saveAs": "created"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions",
+      "expectStatus": 200,
+      "saveAs": "sessions"
+    },
+    {
+      "type": "capture",
+      "from": "sessions.json.sessions",
+      "whereContains": {
+        "title": "{{caseSession}}"
+      },
+      "pick": "id",
+      "saveAs": "sid"
+    },
     {
       "type": "http",
       "method": "POST",
@@ -18,16 +45,57 @@
         "sessionId": "{{@sid}}",
         "title": "evals-pause",
         "prompt": "{{prompt}}",
-        "trigger": { "type": "once", "expr": "{{nowPlusIso:4}}" }
+        "trigger": {
+          "type": "once",
+          "expr": "{{nowPlusIso:4}}"
+        }
       },
-      "expectStatus": [200, 201],
+      "expectStatus": [
+        200,
+        201
+      ],
       "saveAs": "createdSch"
     },
-    { "type": "capture", "from": "createdSch.json.schedule", "where": {}, "pick": "id", "saveAs": "schId" },
-    { "type": "http", "method": "PATCH", "path": "/api/schedules/{{@schId}}", "body": { "enabled": false }, "expectStatus": [200], "saveAs": "paused" },
-    { "type": "wait", "ms": 12000 },
-    { "type": "http", "method": "GET", "path": "/api/schedules/{{@schId}}", "expectStatus": 200, "saveAs": "afterWait" },
-    { "type": "http", "method": "POST", "path": "/api/schedules/{{@schId}}/run-now", "body": {}, "expectStatus": [200], "saveAs": "runNow" },
+    {
+      "type": "capture",
+      "from": "createdSch.json.schedule",
+      "where": {},
+      "pick": "id",
+      "saveAs": "schId"
+    },
+    {
+      "type": "http",
+      "method": "PATCH",
+      "path": "/api/schedules/{{@schId}}",
+      "body": {
+        "enabled": false
+      },
+      "expectStatus": [
+        200
+      ],
+      "saveAs": "paused"
+    },
+    {
+      "type": "wait",
+      "ms": 12000
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/schedules/{{@schId}}",
+      "expectStatus": 200,
+      "saveAs": "afterWait"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/schedules/{{@schId}}/run-now",
+      "body": {},
+      "expectStatus": [
+        200
+      ],
+      "saveAs": "runNow"
+    },
     {
       "type": "poll",
       "method": "GET",
@@ -35,9 +103,21 @@
       "saveAs": "afterRunNow",
       "intervalMs": 400,
       "timeoutMs": 60000,
-      "until": { "path": "json.schedule", "matchSome": { "id": "{{@schId}}", "lastStatus": "done" } }
+      "until": {
+        "path": "json.schedule",
+        "matchSome": {
+          "id": "{{@schId}}",
+          "lastStatus": "done"
+        }
+      }
     },
-    { "type": "http", "method": "GET", "path": "/api/schedules/{{@schId}}", "expectStatus": 200, "saveAs": "final" },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/schedules/{{@schId}}",
+      "expectStatus": 200,
+      "saveAs": "final"
+    },
     {
       "type": "poll",
       "method": "GET",
@@ -45,16 +125,54 @@
       "saveAs": "msgs",
       "intervalMs": 300,
       "timeoutMs": 20000,
-      "until": { "path": "json.messages", "matchSome": { "text": "{{prompt}}" } }
+      "until": {
+        "path": "json.messages",
+        "matchSome": {
+          "text": "{{prompt}}"
+        }
+      }
     }
   ],
   "graders": [
-    { "type": "regex", "target": "paused.body", "pattern": "\"enabled\"\\s*:\\s*false" },
-    { "type": "regex", "target": "afterWait.body", "pattern": "\"runCount\"\\s*:\\s*0" },
-    { "type": "forbidden", "target": "afterWait.body", "patterns": ["\"lastStatus\"\\s*:\\s*\"done\""] },
-    { "type": "regex", "target": "runNow.body", "pattern": "\"ok\"\\s*:\\s*true" },
-    { "type": "regex", "target": "final.body", "pattern": "\"lastStatus\"\\s*:\\s*\"done\"" },
-    { "type": "regex", "target": "final.body", "pattern": "\"runCount\"\\s*:\\s*[1-9]" },
-    { "type": "state_delta", "collection": "msgs.json.messages", "where": { "text": "{{prompt}}" }, "atLeast": 1 }
+    {
+      "type": "regex",
+      "target": "paused.body",
+      "pattern": "\"enabled\"\\s*:\\s*false"
+    },
+    {
+      "type": "regex",
+      "target": "afterWait.body",
+      "pattern": "\"runCount\"\\s*:\\s*0"
+    },
+    {
+      "type": "forbidden",
+      "target": "afterWait.body",
+      "patterns": [
+        "\"lastStatus\"\\s*:\\s*\"done\""
+      ]
+    },
+    {
+      "type": "regex",
+      "target": "runNow.body",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    },
+    {
+      "type": "regex",
+      "target": "final.body",
+      "pattern": "\"lastStatus\"\\s*:\\s*\"done\""
+    },
+    {
+      "type": "regex",
+      "target": "final.body",
+      "pattern": "\"runCount\"\\s*:\\s*[1-9]"
+    },
+    {
+      "type": "state_delta",
+      "collection": "msgs.json.messages",
+      "where": {
+        "text": "{{prompt}}"
+      },
+      "atLeast": 1
+    }
   ]
 }

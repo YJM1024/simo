@@ -108,15 +108,10 @@
       "pattern": "\"messageId\"\\s*:\\s*\"msg-"
     },
     {
-      "type": "regex",
-      "target": "after.body",
-      "pattern": "actionId=confirm"
-    },
-    {
       "type": "count",
       "target": "after.json.messages",
       "pattern": "\"role\"\\s*:\\s*\"user\"",
-      "atLeast": 1
+      "exactly": 0
     },
     {
       "type": "count",

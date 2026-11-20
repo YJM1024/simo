@@ -4,7 +4,7 @@
   "tier": "normal",
   "vars": {
     "marker": "evals-artifact-{{runId}}",
-    "tmsg": "{{marker}} 把上面的结论导出成一个 markdown 报告文件。"
+    "tmsg": "mock:make-docx 生成报告 {{marker}}"
   },
   "steps": [
     {
@@ -12,10 +12,53 @@
       "path": "/api/ws",
       "sessionId": "{{caseSession}}",
       "collectAfterText": "{{marker}}",
-      "chat": { "text": "{{tmsg}}" },
+      "chat": {
+        "text": "{{tmsg}}"
+      },
       "saveAs": "stream",
-      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 30000 },
+      "until": {
+        "type": [
+          "reply.done",
+          "message.done"
+        ],
+        "timeoutMs": 30000
+      },
       "drainMs": 4000
+    },
+    {
+      "type": "poll",
+      "method": "GET",
+      "path": "/api/approvals",
+      "saveAs": "approvals",
+      "intervalMs": 200,
+      "timeoutMs": 15000,
+      "until": {
+        "path": "json.approvals",
+        "matchSome": {
+          "tool": "make_docx",
+          "status": "pending"
+        }
+      }
+    },
+    {
+      "type": "capture",
+      "from": "approvals.json.approvals",
+      "where": {
+        "tool": "make_docx",
+        "status": "pending"
+      },
+      "pick": "id",
+      "saveAs": "approvalId"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/approvals/{{@approvalId}}",
+      "body": {
+        "decision": "allow"
+      },
+      "expectStatus": 200,
+      "saveAs": "allowResp"
     },
     {
       "type": "poll",
@@ -24,15 +67,32 @@
       "saveAs": "artifacts",
       "intervalMs": 300,
       "timeoutMs": 20000,
-      "until": { "path": "json.artifacts", "matchSome": {} }
+      "until": {
+        "path": "json.artifacts",
+        "matchSome": {}
+      }
     },
     {
       "type": "capture",
-      "from": ["artifacts.json.artifacts", "artifacts.json.items"],
+      "from": [
+        "artifacts.json.artifacts",
+        "artifacts.json.items"
+      ],
       "mode": "array",
-      "saveAs": "artifactList"
+      "saveAs": "artifactList",
+      "where": {
+        "userDelivery": true
+      }
     },
-    { "type": "capture", "from": "artifactList", "where": {}, "pick": "id", "saveAs": "artifactId" },
+    {
+      "type": "capture",
+      "from": "artifactList",
+      "where": {
+        "userDelivery": true
+      },
+      "pick": "id",
+      "saveAs": "artifactId"
+    },
     {
       "type": "http",
       "method": "GET",
@@ -44,14 +104,36 @@
       "type": "http",
       "method": "GET",
       "path": "/api/artifacts/..%2F..%2Fsecret/content",
-      "expectStatus": [400, 404],
+      "expectStatus": [
+        400,
+        404
+      ],
       "saveAs": "traversal"
     }
   ],
   "graders": [
-    { "type": "state_delta", "collection": "artifactList", "atLeast": 1 },
-    { "type": "regex", "target": "content.headers", "pattern": "(text/|application/(markdown|json))" },
-    { "type": "regex", "target": "content.body", "pattern": "[\\s\\S]{8,}" },
-    { "type": "forbidden", "target": "traversal.body", "patterns": ["root:", "passwd"] }
+    {
+      "type": "state_delta",
+      "collection": "artifactList",
+      "atLeast": 1
+    },
+    {
+      "type": "regex",
+      "target": "content.headers",
+      "pattern": "(text/|application/)"
+    },
+    {
+      "type": "regex",
+      "target": "content.body",
+      "pattern": "[\\s\\S]{8,}"
+    },
+    {
+      "type": "forbidden",
+      "target": "traversal.body",
+      "patterns": [
+        "root:",
+        "passwd"
+      ]
+    }
   ]
 }

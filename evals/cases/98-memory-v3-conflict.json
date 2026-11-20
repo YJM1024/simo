@@ -11,7 +11,8 @@
       "method": "POST",
       "path": "/api/sessions",
       "body": {
-        "title": "{{caseSession}}"
+        "title": "{{caseSession}}",
+        "draft": false
       },
       "expectStatus": [
         200,

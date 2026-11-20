@@ -235,7 +235,9 @@ async function main() {
       continue;
     }
     const uBefore = opts.real ? await usageSnapshot(opts.baseURL) : null;
+    console.error(`▶ CASE ${c.id}`);
     let record = await runCase(c, opts, runId, bag);
+    console.error(`  ${record.pass ? '✓' : '✗'} ${c.id} (${record.ms ?? 0}ms)`);
     if (!record.pass && c.retry && c.retry.max > 0) {
       const failed = record.graders.filter((g) => !g.pass).map((g) => g.name);
       const passed = record.graders.filter((g) => g.pass).map((g) => g.name);

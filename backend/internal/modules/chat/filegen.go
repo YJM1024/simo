@@ -80,6 +80,7 @@ func (m *Module) toolMakePDF(ctx context.Context, sessionID string, args map[str
 		"--no-default-browser-check", "--disable-extensions",
 		"--user-data-dir="+profile, "--print-to-pdf="+target,
 		"file:///"+filepath.ToSlash(htmlPath))
+	hideWindow(cmd)
 	cmd.Env = append(os.Environ(), "TMP="+tmpRoot, "TEMP="+tmpRoot, "TMPDIR="+tmpRoot)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
@@ -137,6 +138,7 @@ func (m *Module) toolMakeOffice(ctx context.Context, sessionID, tool string, arg
 	cmdCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
 	cmd := exec.CommandContext(cmdCtx, python, script)
+	hideWindow(cmd)
 	cmd.Stdin = bytes.NewReader(raw)
 	cmd.Env = append(os.Environ(), "TMP="+tmpRoot, "TEMP="+tmpRoot, "TMPDIR="+tmpRoot)
 	var stdout, stderr bytes.Buffer

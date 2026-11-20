@@ -6,24 +6,80 @@
     "probe": "evals-stall-{{runId}}"
   },
   "steps": [
-    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{caseSession}}" }, "expectStatus": [200, 201], "saveAs": "created" },
-    { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
-    { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{caseSession}}" }, "pick": "id", "saveAs": "sid" },
-
-    { "type": "http", "method": "POST", "path": "/api/debug/runtime/config", "body": { "stallWarnMs": 1000, "stallPauseMs": 2500 }, "expectStatus": [200], "saveAs": "cfg" },
-
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/sessions",
+      "body": {
+        "title": "{{caseSession}}",
+        "draft": false
+      },
+      "expectStatus": [
+        200,
+        201
+      ],
+      "saveAs": "created"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions",
+      "expectStatus": 200,
+      "saveAs": "sessions"
+    },
+    {
+      "type": "capture",
+      "from": "sessions.json.sessions",
+      "whereContains": {
+        "title": "{{caseSession}}"
+      },
+      "pick": "id",
+      "saveAs": "sid"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/debug/runtime/config",
+      "body": {
+        "stallWarnMs": 1000,
+        "stallPauseMs": 2500
+      },
+      "expectStatus": [
+        200
+      ],
+      "saveAs": "cfg"
+    },
     {
       "type": "ws",
       "path": "/api/ws",
       "sessionId": "{{@sid}}",
-      "chat": { "text": "{{probe}} mock:stall" },
+      "chat": {
+        "text": "{{probe}} mock:stall"
+      },
       "saveAs": "stream",
-      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 45000 },
+      "until": {
+        "type": [
+          "reply.done",
+          "message.done"
+        ],
+        "timeoutMs": 45000
+      },
       "drainMs": 400
     },
-    { "type": "http", "method": "GET", "path": "/api/workflows?sessionId={{@sid}}", "expectStatus": 200, "saveAs": "wfList" },
-    { "type": "capture", "from": "wfList.json.workflows", "where": {}, "pick": "id", "saveAs": "workflowId" },
-
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/workflows?sessionId={{@sid}}",
+      "expectStatus": 200,
+      "saveAs": "wfList"
+    },
+    {
+      "type": "capture",
+      "from": "wfList.json.workflows",
+      "where": {},
+      "pick": "id",
+      "saveAs": "workflowId"
+    },
     {
       "type": "poll",
       "method": "GET",
@@ -31,9 +87,20 @@
       "saveAs": "wfRuntime",
       "intervalMs": 500,
       "timeoutMs": 60000,
-      "until": { "path": "json.runtime", "matchSome": { "status": "paused" } }
+      "until": {
+        "path": "json.runtime",
+        "matchSome": {
+          "status": "paused"
+        }
+      }
     },
-    { "type": "http", "method": "GET", "path": "/api/workflows/{{@workflowId}}", "expectStatus": 200, "saveAs": "wfDetail" },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/workflows/{{@workflowId}}",
+      "expectStatus": 200,
+      "saveAs": "wfDetail"
+    },
     {
       "type": "poll",
       "method": "GET",
@@ -41,15 +108,45 @@
       "saveAs": "msgs",
       "intervalMs": 500,
       "timeoutMs": 30000,
-      "until": { "path": "json.messages", "matchSome": { "role": "agent" } }
+      "until": {
+        "path": "json.messages",
+        "matchSome": {
+          "role": "agent"
+        }
+      }
     }
   ],
   "graders": [
-    { "type": "regex", "target": "cfg.body", "pattern": "\"ok\"\\s*:\\s*true" },
-    { "type": "regex", "target": "wfRuntime.body", "pattern": "\"(stallState|stall)\"\\s*:\\s*\"(paused|escalated)\"" },
-    { "type": "regex", "target": "wfDetail.body", "pattern": "\"status\"\\s*:\\s*\"paused\"" },
-    { "type": "regex", "target": "msgs.body", "pattern": "(停滞|卡住|无进展|stall)" },
-    { "type": "regex", "target": "msgs.body", "pattern": "(继续等|改派|人工接手|选项)" },
-    { "type": "count", "target": "msgs.json.messages", "pattern": "\"role\"\\s*:\\s*\"agent\"", "atLeast": 1 }
+    {
+      "type": "regex",
+      "target": "cfg.body",
+      "pattern": "\"ok\"\\s*:\\s*true"
+    },
+    {
+      "type": "regex",
+      "target": "wfRuntime.body",
+      "pattern": "\"(stallState|stall)\"\\s*:\\s*\"(paused|escalated)\""
+    },
+    {
+      "type": "regex",
+      "target": "wfDetail.body",
+      "pattern": "\"status\"\\s*:\\s*\"paused\""
+    },
+    {
+      "type": "regex",
+      "target": "msgs.body",
+      "pattern": "(停滞|卡住|无进展|stall)"
+    },
+    {
+      "type": "regex",
+      "target": "msgs.body",
+      "pattern": "(继续等|改派|人工接手|选项)"
+    },
+    {
+      "type": "count",
+      "target": "msgs.json.messages",
+      "pattern": "\"role\"\\s*:\\s*\"agent\"",
+      "atLeast": 1
+    }
   ]
 }

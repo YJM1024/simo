@@ -87,6 +87,7 @@
     },
     { "type": "http", "method": "GET", "path": "/api/teams/{{@teamId}}/deliverables", "expectStatus": 200, "saveAs": "deliv2" },
     { "type": "http", "method": "GET", "path": "/api/teams/{{@teamId}}/triggers", "expectStatus": 200, "saveAs": "triggers" },
+    { "type": "wait", "ms": 3000 },
     { "type": "http", "method": "GET", "path": "/api/messages?sessionId={{@toSessionId}}", "expectStatus": 200, "saveAs": "msgs" }
   ],
   "graders": [

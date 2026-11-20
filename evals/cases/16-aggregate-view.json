@@ -9,27 +9,70 @@
   },
   "steps": [
     {
-      "type": "ws",
-      "path": "/api/ws",
-      "sessionId": "main",
-      "collectAfterText": "{{marker}}",
-      "chat": { "text": "我想创建一个新的需求：{{marker}} 汇总季度培训记录。" },
-      "saveAs": "createStream",
-      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 20000 },
-      "drainMs": 2000
+      "type": "http",
+      "method": "POST",
+      "path": "/api/sessions",
+      "body": {
+        "parentId": "main",
+        "title": "{{marker}}",
+        "draft": false
+      },
+      "expectStatus": [
+        200,
+        201
+      ],
+      "saveAs": "created"
     },
-    { "type": "http", "method": "GET", "path": "/api/sessions/tree", "expectStatus": 200, "saveAs": "tree" },
-    { "type": "capture", "from": ["tree.json.sessions", "tree.json.tree"], "mode": "array", "saveAs": "allSessions" },
-    { "type": "capture", "from": "allSessions", "where": { "id": "main" }, "pick": "children", "saveAs": "mainChildren" },
-    { "type": "capture", "from": "mainChildren", "whereContains": { "title": "{{marker}}" }, "pick": "id", "saveAs": "childId" },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions/tree",
+      "expectStatus": 200,
+      "saveAs": "tree"
+    },
+    {
+      "type": "capture",
+      "from": [
+        "tree.json.sessions",
+        "tree.json.tree"
+      ],
+      "mode": "array",
+      "saveAs": "allSessions"
+    },
+    {
+      "type": "capture",
+      "from": "allSessions",
+      "where": {
+        "parentId": "main"
+      },
+      "saveAs": "mainChildren",
+      "mode": "array"
+    },
+    {
+      "type": "capture",
+      "from": "mainChildren",
+      "whereContains": {
+        "title": "{{marker}}"
+      },
+      "pick": "id",
+      "saveAs": "childId"
+    },
     {
       "type": "ws",
       "path": "/api/ws",
       "sessionId": "main",
       "collectAfterText": "{{pmsg}}",
-      "chat": { "text": "{{pmsg}}" },
+      "chat": {
+        "text": "{{pmsg}}"
+      },
       "saveAs": "parentStream",
-      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 20000 },
+      "until": {
+        "type": [
+          "reply.done",
+          "message.done"
+        ],
+        "timeoutMs": 20000
+      },
       "drainMs": 800
     },
     {
@@ -37,9 +80,17 @@
       "path": "/api/ws",
       "sessionId": "{{@childId}}",
       "collectAfterText": "{{cmsg}}",
-      "chat": { "text": "{{cmsg}}" },
+      "chat": {
+        "text": "{{cmsg}}"
+      },
       "saveAs": "childStream",
-      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 20000 },
+      "until": {
+        "type": [
+          "reply.done",
+          "message.done"
+        ],
+        "timeoutMs": 20000
+      },
       "drainMs": 800
     },
     {
@@ -58,11 +109,40 @@
     }
   ],
   "graders": [
-    { "type": "regex", "target": "agg.body", "pattern": "{{pmsg}}" },
-    { "type": "regex", "target": "agg.body", "pattern": "{{cmsg}}" },
-    { "type": "state_delta", "collection": "agg.json.messages", "where": { "sessionId": "{{@childId}}" }, "atLeast": 1 },
-    { "type": "regex", "target": "agg.body", "pattern": "{{pmsg}}[\\s\\S]*{{cmsg}}" },
-    { "type": "regex", "target": "onlyMain.body", "pattern": "{{pmsg}}" },
-    { "type": "forbidden", "target": "onlyMain.body", "patterns": ["{{cmsg}}"] }
+    {
+      "type": "regex",
+      "target": "agg.body",
+      "pattern": "{{pmsg}}"
+    },
+    {
+      "type": "regex",
+      "target": "agg.body",
+      "pattern": "{{cmsg}}"
+    },
+    {
+      "type": "state_delta",
+      "collection": "agg.json.messages",
+      "where": {
+        "sessionId": "{{@childId}}"
+      },
+      "atLeast": 1
+    },
+    {
+      "type": "regex",
+      "target": "agg.body",
+      "pattern": "{{pmsg}}[\\s\\S]*{{cmsg}}"
+    },
+    {
+      "type": "regex",
+      "target": "onlyMain.body",
+      "pattern": "{{pmsg}}"
+    },
+    {
+      "type": "forbidden",
+      "target": "onlyMain.body",
+      "patterns": [
+        "{{cmsg}}"
+      ]
+    }
   ]
 }

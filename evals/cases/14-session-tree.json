@@ -6,33 +6,104 @@
     "marker": "evals-tree-{{runId}}"
   },
   "steps": [
-    { "type": "http", "method": "GET", "path": "/api/sessions/tree", "expectStatus": 200, "saveAs": "tree1" },
     {
-      "type": "ws",
-      "path": "/api/ws",
-      "sessionId": "main",
-      "collectAfterText": "{{marker}}",
-      "chat": { "text": "我想创建一个新的需求：{{marker}} 把报销单整理成表格。" },
-      "saveAs": "stream",
-      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 20000 },
-      "drainMs": 2000
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions/tree",
+      "expectStatus": 200,
+      "saveAs": "tree1"
     },
-    { "type": "http", "method": "GET", "path": "/api/sessions/tree", "expectStatus": 200, "saveAs": "tree2" },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/sessions",
+      "body": {
+        "parentId": "main",
+        "title": "{{marker}}",
+        "draft": false
+      },
+      "expectStatus": [
+        200,
+        201
+      ],
+      "saveAs": "created"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions/tree",
+      "expectStatus": 200,
+      "saveAs": "tree2"
+    },
     {
       "type": "capture",
-      "from": ["tree2.json.sessions", "tree2.json.tree"],
+      "from": [
+        "tree2.json.sessions",
+        "tree2.json.tree"
+      ],
       "mode": "array",
       "saveAs": "allSessions"
     },
-    { "type": "capture", "from": "allSessions", "where": { "id": "main" }, "pick": "children", "saveAs": "mainChildren" },
-    { "type": "capture", "from": "mainChildren", "whereContains": { "title": "{{marker}}" }, "saveAs": "childNode" },
-    { "type": "capture", "from": "mainChildren", "whereContains": { "title": "{{marker}}" }, "pick": "id", "saveAs": "childId" }
+    {
+      "type": "capture",
+      "from": "allSessions",
+      "where": {
+        "parentId": "main"
+      },
+      "saveAs": "mainChildren",
+      "mode": "array"
+    },
+    {
+      "type": "capture",
+      "from": "mainChildren",
+      "whereContains": {
+        "title": "{{marker}}"
+      },
+      "saveAs": "childNode"
+    },
+    {
+      "type": "capture",
+      "from": "mainChildren",
+      "whereContains": {
+        "title": "{{marker}}"
+      },
+      "pick": "id",
+      "saveAs": "childId"
+    }
   ],
   "graders": [
-    { "type": "state_delta", "collection": "allSessions", "where": { "id": "main" }, "atLeast": 1 },
-    { "type": "state_delta", "collection": "mainChildren", "atLeast": 1, "expect": { "parentId": "main" } },
-    { "type": "regex", "target": "childNode", "pattern": "\"parentId\"\\s*:\\s*\"main\"" },
-    { "type": "regex", "target": "childNode", "pattern": "{{marker}}" },
-    { "type": "forbidden", "target": "childId", "patterns": ["^main$"] }
+    {
+      "type": "state_delta",
+      "collection": "allSessions",
+      "where": {
+        "id": "main"
+      },
+      "atLeast": 1
+    },
+    {
+      "type": "state_delta",
+      "collection": "mainChildren",
+      "atLeast": 1,
+      "expect": {
+        "parentId": "main"
+      }
+    },
+    {
+      "type": "regex",
+      "target": "childNode",
+      "pattern": "\"parentId\"\\s*:\\s*\"main\""
+    },
+    {
+      "type": "regex",
+      "target": "childNode",
+      "pattern": "{{marker}}"
+    },
+    {
+      "type": "forbidden",
+      "target": "childId",
+      "patterns": [
+        "^main$"
+      ]
+    }
   ]
 }

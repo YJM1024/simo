@@ -1,0 +1,48 @@
+package chat
+
+import (
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"simo/internal/platform/workspace"
+)
+
+// TestResolveToolPathCanonicalizesWorkspaceRoot 验证允许根与候选路径按同一规则规范化。
+// Windows 短路径（8.3）或 symlink 会让 root 与 EvalSymlinks(candidate) 形式不一致；
+// 不做 root 规范化时，合法相对路径会被误判为“不在允许根内”。
+func TestResolveToolPathCanonicalizesWorkspaceRoot(t *testing.T) {
+	base := t.TempDir()
+	realRoot := filepath.Join(base, "real-workspace")
+	if err := os.MkdirAll(realRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	linkRoot := filepath.Join(base, "linked-workspace")
+	if err := os.Symlink(realRoot, linkRoot); err != nil {
+		t.Skipf("symlink unavailable: %v", err)
+	}
+	m := &Module{sandbox: &workspace.Policy{
+		Workspace: linkRoot,
+		Artifacts: filepath.Join(base, "artifacts"),
+	}}
+
+	got, err := m.resolveToolPath("notes.md", sandboxWorkspaceWrite)
+	if err != nil {
+		t.Fatalf("合法相对路径被拒: %v", err)
+	}
+	realNotes, err := filepath.EvalSymlinks(filepath.Join(realRoot, "notes.md"))
+	if err != nil {
+		realNotes = filepath.Join(realRoot, "notes.md")
+	}
+	if filepath.Clean(got) != filepath.Clean(realNotes) {
+		t.Fatalf("resolved = %s, want %s", got, realNotes)
+	}
+
+	if _, err := m.resolveToolPath("../escape.txt", sandboxWorkspaceWrite); err == nil {
+		t.Fatal("越界路径应被拒")
+	}
+	if !strings.Contains(filepath.ToSlash(got), "/real-workspace/") {
+		t.Fatalf("未解析到真实根: %s", got)
+	}
+}

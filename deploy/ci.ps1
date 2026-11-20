@@ -184,6 +184,10 @@ if ($SkipEvals -or -not $buildOk) {
     $ok = Run-Stage $name {
       $env:SIMO_HOME = $blockHome; $env:SIMO_LLM = 'mock'; $env:SIMO_DEBUG = '1'
       $env:SIMO_MODEL = 'mock'
+      # 评估套件共用同一 home；提高并发上限，避免前一条用例的未完成工作流占用槽位，
+      # 使 workflow-advance 的“无依赖并行”断言测的是工作流本身，而不是跨用例排队。
+      $env:SIMO_MAX_CONCURRENCY = '8'
+      $env:SIMO_WORKFLOW_CONCURRENCY = '8'
       $srvOut = Join-Path $logs ('server-b' + $blockIndex + '.out.log')
       $srvErr = Join-Path $logs ('server-b' + $blockIndex + '.err.log')
       $proc = Start-Process -FilePath $exePath -ArgumentList @('serve', '-addr', ("127.0.0.1:" + $port), '-model', 'mock') `

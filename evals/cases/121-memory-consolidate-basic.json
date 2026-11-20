@@ -10,6 +10,7 @@
     { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "项目代号是 Vega（{{p}}），这个说法也要保留。" }, "expectStatus": [200, 202], "saveAs": "c2" },
     { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "我们约定每周五提交一次交付物（{{p}}）。" }, "expectStatus": [200, 202], "saveAs": "c3" },
     { "type": "http", "method": "POST", "path": "/api/chat", "body": { "sessionId": "{{caseSession}}", "text": "今天天气不错，随便聊聊（{{p}}）。" }, "expectStatus": [200, 202], "saveAs": "c4" },
+    { "type": "wait", "ms": 5000 },
     { "type": "http", "method": "POST", "path": "/api/debug/memory/consolidate", "body": { "sessionId": "{{caseSession}}", "agentId": "agent:simo", "maxMessages": 20 }, "expectStatus": 200, "saveAs": "cons" },
     { "type": "http", "method": "GET", "path": "/api/debug/memory/consolidation?sessionId={{caseSession}}", "expectStatus": 200, "saveAs": "status" },
     { "type": "http", "method": "GET", "path": "/api/memory/conflicts", "expectStatus": 200, "saveAs": "conflicts" }

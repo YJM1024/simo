@@ -11,7 +11,8 @@
       "method": "POST",
       "path": "/api/sessions",
       "body": {
-        "title": "{{probe}} S1"
+        "title": "{{probe}} S1",
+        "draft": false
       },
       "expectStatus": [
         200,
@@ -24,7 +25,8 @@
       "method": "POST",
       "path": "/api/sessions",
       "body": {
-        "title": "{{probe}} S2"
+        "title": "{{probe}} S2",
+        "draft": false
       },
       "expectStatus": [
         200,

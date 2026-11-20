@@ -7,34 +7,83 @@
   },
   "steps": [
     {
-      "type": "ws",
-      "path": "/api/ws",
-      "sessionId": "main",
-      "chat": { "text": "我想创建一个新的需求：{{probe}}-child 整理报销单。" },
-      "saveAs": "s1",
-      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 45000 },
-      "drainMs": 1200
+      "type": "http",
+      "method": "POST",
+      "path": "/api/sessions",
+      "body": {
+        "parentId": "main",
+        "title": "{{probe}}-child",
+        "draft": false
+      },
+      "expectStatus": [200, 201],
+      "saveAs": "childCreated"
     },
-    { "type": "http", "method": "GET", "path": "/api/sessions/tree", "expectStatus": 200, "saveAs": "tree1" },
-    { "type": "capture", "from": ["tree1.json.sessions", "tree1.json.tree"], "mode": "array", "saveAs": "allSessions1" },
-    { "type": "capture", "from": "allSessions1", "where": { "id": "main" }, "pick": "children", "saveAs": "mainChildren1" },
-    { "type": "capture", "from": "mainChildren1", "whereContains": { "title": "{{probe}}-child" }, "pick": "id", "saveAs": "childId" },
-
     {
-      "type": "ws",
-      "path": "/api/ws",
-      "sessionId": "{{@childId}}",
-      "chat": { "text": "我想创建一个新的需求：{{probe}}-grand 统计差旅费用。" },
-      "saveAs": "s2",
-      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 45000 },
-      "drainMs": 1200
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions/tree",
+      "expectStatus": 200,
+      "saveAs": "tree1"
     },
-    { "type": "http", "method": "GET", "path": "/api/sessions/tree", "expectStatus": 200, "saveAs": "tree2" },
-    { "type": "capture", "from": ["tree2.json.sessions", "tree2.json.tree"], "mode": "array", "saveAs": "allSessions2" },
-    { "type": "capture", "from": "allSessions2", "where": { "id": "main" }, "pick": "children", "saveAs": "mainChildren2" },
-    { "type": "capture", "from": "mainChildren2", "where": { "id": "{{@childId}}" }, "pick": "children", "saveAs": "grandChildren" },
-    { "type": "capture", "from": "grandChildren", "whereContains": { "title": "{{probe}}-grand" }, "pick": "id", "saveAs": "grandId" },
-
+    {
+      "type": "capture",
+      "from": ["tree1.json.sessions", "tree1.json.tree"],
+      "mode": "array",
+      "saveAs": "allSessions1"
+    },
+    {
+      "type": "capture",
+      "from": "allSessions1",
+      "where": { "id": "main" },
+      "pick": "children",
+      "saveAs": "mainChildren1"
+    },
+    {
+      "type": "capture",
+      "from": "mainChildren1",
+      "whereContains": { "title": "{{probe}}-child" },
+      "pick": "id",
+      "saveAs": "childId"
+    },
+    {
+      "type": "http",
+      "method": "POST",
+      "path": "/api/sessions",
+      "body": {
+        "parentId": "{{@childId}}",
+        "title": "{{probe}}-grand",
+        "draft": false
+      },
+      "expectStatus": [200, 201],
+      "saveAs": "grandCreated"
+    },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions/tree",
+      "expectStatus": 200,
+      "saveAs": "tree2"
+    },
+    {
+      "type": "capture",
+      "from": ["tree2.json.sessions", "tree2.json.tree"],
+      "mode": "array",
+      "saveAs": "allSessions2"
+    },
+    {
+      "type": "capture",
+      "from": "allSessions2",
+      "where": { "id": "main" },
+      "pick": "children",
+      "saveAs": "mainChildren2"
+    },
+    {
+      "type": "capture",
+      "from": "allSessions2",
+      "where": { "parentId": "{{@childId}}" },
+      "pick": "id",
+      "saveAs": "grandId"
+    },
     {
       "type": "ws",
       "path": "/api/ws",
@@ -44,10 +93,35 @@
       "until": { "type": ["reply.done", "message.done"], "timeoutMs": 45000 },
       "drainMs": 800
     },
-    { "type": "http", "method": "GET", "path": "/api/messages?sessionId={{@grandId}}", "expectStatus": 200, "saveAs": "msgs" },
-    { "type": "capture", "from": "msgs.json.messages", "where": { "role": "user" }, "pick": "sessionPath", "saveAs": "pathArr" },
-    { "type": "capture", "from": "pathArr", "where": {}, "pick": "id", "saveAs": "pathFirstId" },
-    { "type": "capture", "from": "pathArr", "last": true, "where": {}, "pick": "id", "saveAs": "pathLastId" }
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/messages?sessionId={{@grandId}}",
+      "expectStatus": 200,
+      "saveAs": "msgs"
+    },
+    {
+      "type": "capture",
+      "from": "msgs.json.messages",
+      "where": { "role": "user" },
+      "pick": "sessionPath",
+      "saveAs": "pathArr"
+    },
+    {
+      "type": "capture",
+      "from": "pathArr",
+      "where": {},
+      "pick": "id",
+      "saveAs": "pathFirstId"
+    },
+    {
+      "type": "capture",
+      "from": "pathArr",
+      "last": true,
+      "where": {},
+      "pick": "id",
+      "saveAs": "pathLastId"
+    }
   ],
   "graders": [
     { "type": "state_delta", "collection": "msgs.json.messages", "where": { "role": "user" }, "atLeast": 1 },

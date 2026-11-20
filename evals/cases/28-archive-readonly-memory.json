@@ -8,7 +8,7 @@
     "tmsg": "记住：{{memo}} 归档会话里的这条不该被记住。"
   },
   "steps": [
-    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{title}}" }, "expectStatus": [200, 201], "saveAs": "created" },
+    { "type": "http", "method": "POST", "path": "/api/sessions", "body": { "title": "{{title}}", "draft": false }, "expectStatus": [200, 201], "saveAs": "created" },
     { "type": "http", "method": "GET", "path": "/api/sessions", "expectStatus": 200, "saveAs": "sessions" },
     { "type": "capture", "from": "sessions.json.sessions", "whereContains": { "title": "{{title}}" }, "pick": "id", "saveAs": "sessionId" },
     { "type": "http", "candidate": [{ "method": "POST", "path": "/api/sessions/{{@sessionId}}/archive", "body": {} }], "expectStatus": [200, 202, 204], "saveAs": "archived" },

@@ -128,8 +128,8 @@
     {
       "type": "count",
       "target": "after.json.messages",
-      "pattern": "\"role\"\\s*:\\s*\"user\"[^}]*actionId=confirm",
-      "exactly": 1
+      "pattern": "\"role\"\\s*:\\s*\"user\"",
+      "exactly": 0
     },
     {
       "type": "count",

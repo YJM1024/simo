@@ -892,7 +892,20 @@ func (m *Module) resolveToolPath(raw, sandbox string) (string, error) {
 	if m.sandbox == nil {
 		return "", errors.New("workspace 未配置")
 	}
-	if !isInsideAny(canonical, []string{m.sandbox.Workspace, m.sandbox.Artifacts}) {
+	// Windows 的 t.TempDir() 可能返回 8.3 短路径；candidate 已被 EvalSymlinks 解析为长路径，
+	// 若 roots 仍保留短路径，会误判为“不在允许根内”。统一按同一 canonical 规则比较。
+	roots := []string{m.sandbox.Workspace, m.sandbox.Artifacts}
+	for i, root := range roots {
+		if root == "" {
+			continue
+		}
+		canonicalRoot, err := canonicalizePath(root)
+		if err != nil {
+			return "", fmt.Errorf("规范化 workspace 失败: %w", err)
+		}
+		roots[i] = canonicalRoot
+	}
+	if !isInsideAny(canonical, roots) {
 		return "", fmt.Errorf("[sandbox: file access denied under %s mode] %s 不在允许根内", sandbox, raw)
 	}
 	return canonical, nil
@@ -980,6 +993,7 @@ func (m *Module) toolPwsh(ctx context.Context, args map[string]any) string {
 	runCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	cmd := exec.CommandContext(runCtx, "powershell.exe", "-NoProfile", "-NonInteractive", "-Command", command)
+	hideWindow(cmd)
 	if m.sandbox != nil {
 		cmd.Dir = m.sandbox.Workspace
 	}
@@ -1090,6 +1104,7 @@ func (m *Module) toolRunPython(ctx context.Context, sessionID string, args map[s
 		argv = append(argv, arg)
 	}
 	cmd := exec.CommandContext(runCtx, python, argv...)
+	hideWindow(cmd)
 	if m.sandbox != nil {
 		cmd.Dir = m.sandbox.Workspace
 	}
@@ -1186,10 +1201,14 @@ func killProcessTree(pid int) {
 		return
 	}
 	if runtime.GOOS == "windows" {
-		_ = exec.Command("taskkill", "/PID", strconv.Itoa(pid), "/T", "/F").Run()
+		cmd := exec.Command("taskkill", "/PID", strconv.Itoa(pid), "/T", "/F")
+		hideWindow(cmd)
+		_ = cmd.Run()
 		return
 	}
-	_ = exec.Command("kill", "-TERM", "-"+strconv.Itoa(pid)).Run()
+	cmd := exec.Command("kill", "-TERM", "-"+strconv.Itoa(pid))
+	hideWindow(cmd)
+	_ = cmd.Run()
 }
 
 func normalizeWorkspaceToolPath(rel string) string {

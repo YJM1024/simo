@@ -9,44 +9,116 @@
   },
   "steps": [
     {
-      "type": "ws",
-      "path": "/api/ws",
-      "sessionId": "main",
-      "collectAfterText": "{{marker}}",
-      "chat": { "text": "我想创建一个新的需求：{{marker}} 整理会议纪要。" },
-      "saveAs": "createStream",
-      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 20000 },
-      "drainMs": 2000
+      "type": "http",
+      "method": "POST",
+      "path": "/api/sessions",
+      "body": {
+        "parentId": "main",
+        "title": "{{marker}}",
+        "draft": false
+      },
+      "expectStatus": [
+        200,
+        201
+      ],
+      "saveAs": "created"
     },
-    { "type": "http", "method": "GET", "path": "/api/sessions/tree", "expectStatus": 200, "saveAs": "tree1" },
-    { "type": "capture", "from": ["tree1.json.sessions", "tree1.json.tree"], "mode": "array", "saveAs": "all1" },
-    { "type": "capture", "from": "all1", "where": { "id": "main" }, "pick": "children", "saveAs": "children1" },
-    { "type": "capture", "from": "children1", "whereContains": { "title": "{{marker}}" }, "pick": "id", "saveAs": "childId" },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions/tree",
+      "expectStatus": 200,
+      "saveAs": "tree1"
+    },
+    {
+      "type": "capture",
+      "from": [
+        "tree1.json.sessions",
+        "tree1.json.tree"
+      ],
+      "mode": "array",
+      "saveAs": "all1"
+    },
+    {
+      "type": "capture",
+      "from": "all1",
+      "where": {
+        "parentId": "main"
+      },
+      "saveAs": "children1",
+      "mode": "array"
+    },
+    {
+      "type": "capture",
+      "from": "children1",
+      "whereContains": {
+        "title": "{{marker}}"
+      },
+      "pick": "id",
+      "saveAs": "childId"
+    },
     {
       "type": "ws",
       "path": "/api/ws",
       "sessionId": "{{@childId}}",
       "collectAfterText": "{{mmsg}}",
-      "chat": { "text": "{{mmsg}}" },
+      "chat": {
+        "text": "{{mmsg}}"
+      },
       "saveAs": "msgStream",
-      "until": { "type": ["reply.done", "message.done"], "timeoutMs": 20000 },
+      "until": {
+        "type": [
+          "reply.done",
+          "message.done"
+        ],
+        "timeoutMs": 20000
+      },
       "drainMs": 800
     },
     {
       "type": "http",
       "method": "PATCH",
       "path": "/api/sessions/{{@childId}}",
-      "body": { "title": "{{newTitle}}" },
-      "expectStatus": [200, 204],
+      "body": {
+        "title": "{{newTitle}}"
+      },
+      "expectStatus": [
+        200,
+        204
+      ],
       "saveAs": "renamed"
     },
-    { "type": "http", "method": "GET", "path": "/api/sessions/tree", "expectStatus": 200, "saveAs": "tree2" },
-    { "type": "capture", "from": ["tree2.json.sessions", "tree2.json.tree"], "mode": "array", "saveAs": "all2" },
-    { "type": "capture", "from": "all2", "where": { "id": "main" }, "pick": "children", "saveAs": "children2" },
+    {
+      "type": "http",
+      "method": "GET",
+      "path": "/api/sessions/tree",
+      "expectStatus": 200,
+      "saveAs": "tree2"
+    },
+    {
+      "type": "capture",
+      "from": [
+        "tree2.json.sessions",
+        "tree2.json.tree"
+      ],
+      "mode": "array",
+      "saveAs": "all2"
+    },
+    {
+      "type": "capture",
+      "from": "all2",
+      "where": {
+        "parentId": "main"
+      },
+      "saveAs": "children2",
+      "mode": "array"
+    },
     {
       "type": "capture",
       "from": "children2",
-      "where": { "id": "{{@childId}}" },
+      "where": {
+        "id": "{{@childId}}"
+      },
       "pick": "title",
       "saveAs": "seenTitle"
     },
@@ -59,9 +131,30 @@
     }
   ],
   "graders": [
-    { "type": "regex", "target": "seenTitle", "pattern": "^{{newTitle}}$" },
-    { "type": "state_delta", "collection": "msgs.json.messages", "where": { "sessionId": "{{@childId}}" }, "atLeast": 1 },
-    { "type": "regex", "target": "msgs.body", "pattern": "{{mmsg}}" },
-    { "type": "forbidden", "target": "children2", "patterns": ["{{marker}}"] }
+    {
+      "type": "regex",
+      "target": "seenTitle",
+      "pattern": "^{{newTitle}}$"
+    },
+    {
+      "type": "state_delta",
+      "collection": "msgs.json.messages",
+      "where": {
+        "sessionId": "{{@childId}}"
+      },
+      "atLeast": 1
+    },
+    {
+      "type": "regex",
+      "target": "msgs.body",
+      "pattern": "{{mmsg}}"
+    },
+    {
+      "type": "forbidden",
+      "target": "children2",
+      "patterns": [
+        "{{marker}}"
+      ]
+    }
   ]
 }

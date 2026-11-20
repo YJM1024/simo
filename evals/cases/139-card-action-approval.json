@@ -11,7 +11,8 @@
       "method": "POST",
       "path": "/api/sessions",
       "body": {
-        "title": "card-approval-{{runId}}"
+        "title": "card-approval-{{runId}}",
+        "draft": false
       },
       "expectStatus": [
         200,

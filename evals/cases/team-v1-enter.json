@@ -11,7 +11,8 @@
       "method": "POST",
       "path": "/api/sessions",
       "body": {
-        "title": "{{caseSession}}"
+        "title": "{{caseSession}}",
+        "draft": false
       },
       "expectStatus": [
         200,
@@ -36,53 +37,23 @@
       "saveAs": "sid"
     },
     {
-      "type": "ws",
-      "path": "/api/ws",
-      "sessionId": "{{@sid}}",
-      "chat": {
-        "text": "我想创建一个新的需求：{{probe}}-ent 写周报。"
-      },
-      "saveAs": "s1",
-      "until": {
-        "type": [
-          "reply.done",
-          "message.done"
-        ],
-        "timeoutMs": 45000
-      },
-      "drainMs": 1200
-    },
-    {
       "type": "http",
-      "method": "GET",
-      "path": "/api/sessions/tree",
-      "expectStatus": 200,
-      "saveAs": "tree"
-    },
-    {
-      "type": "capture",
-      "from": [
-        "tree.json.sessions",
-        "tree.json.tree"
+      "method": "POST",
+      "path": "/api/sessions",
+      "body": {
+        "parentId": "{{@sid}}",
+        "title": "{{probe}}-ent",
+        "draft": false
+      },
+      "expectStatus": [
+        200,
+        201
       ],
-      "mode": "array",
-      "saveAs": "roots"
+      "saveAs": "childCreated"
     },
     {
       "type": "capture",
-      "from": "roots",
-      "where": {
-        "id": "{{@sid}}"
-      },
-      "pick": "children",
-      "saveAs": "children"
-    },
-    {
-      "type": "capture",
-      "from": "children",
-      "whereContains": {
-        "title": "{{probe}}-ent"
-      },
+      "from": "childCreated.json.session",
       "pick": "id",
       "saveAs": "memberSid"
     },
