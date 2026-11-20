@@ -1,10 +1,12 @@
 # P5 · 记忆 测试计划
 
-状态：**active（2026-11-20 后端证据回写；用例 4 pass / 1 partial / 4 missing）** — 覆盖口径见 §1、§4；pass 只表示该用例的断言已执行，不表示 PRD 的 AC 全覆盖。
+状态：**active（2026-11-21 边界契约补充；用例 4 pass / 3 partial / 2 missing）** — 覆盖口径见 §1、§4；pass 只表示该用例的断言已执行，不表示 PRD 的 AC 全覆盖。
 > 产品域 spec：[`../../product/P5-MEM/spec.md`](../../product/P5-MEM/spec.md)；TREE：[`../../../docs/product/TREE.md`](../../../docs/product/TREE.md)；TRACEABILITY：[`../../../docs/product/TRACEABILITY.md`](../../../docs/product/TRACEABILITY.md)。
 
 <!-- EVIDENCE-SUMMARY-20261120 -->
 > **2026-11-20 证据汇总**：本域 9 个用例，**pass 4 / partial 1 / missing 4**；PRD 覆盖仍 **0 covered / 5 partial / 1 gap**。后端 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0；日志 `.tmp/backend-fulltest-20261120.jsonl`）；前端证据不适用于本域或未覆盖本域。
+>
+> **2026-11-21 补充**：新增 `TestP5MemoryEmptyAndUnknownContract`（`backend/cmd/simo/contract_edges_test.go`），覆盖空库列表/V3 列表、非法 `limit` 回退、未知条目 404 统一 JSON、空 scopes；E1、E2 由 missing 升为 partial。该测试只证明 API 边界，不证明前端空/错误态，不升级 PRD covered。
 
 ## 1. 范围与证据口径
 
@@ -111,7 +113,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：空态可见，加载不闪烁；加载结束进入正确状态；不展示假 0。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing** — 无测试落点；记忆域空/加载态无前端 UI 测试。
+- 当前证据：**partial** — 2026-11-21 `go test ./cmd/simo -run TestP5MemoryEmptyAndUnknownContract` PASS（`backend/cmd/simo/contract_edges_test.go`）：空库 `/api/memory/items`、V3 `type=fact` 返回 `ok:true` + 空数组；非法 `limit=abc` 回退默认值；空 `scopes` 返回 200。未覆盖：前端 loading/空态渲染，保持 partial。
 
 <a id="tc-p5-e2"></a>
 #### TC-P5-E2 · 错误/恢复
@@ -121,7 +123,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：错误提示可见，重试/返回可用；失败不写脏数据、不重复提交。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing** — 无测试落点；记忆错误/恢复无 API 级契约测试。
+- 当前证据：**partial** — 2026-11-21 `go test ./cmd/simo -run TestP5MemoryEmptyAndUnknownContract` PASS：未知 `/api/memory/items/does-not-exist` 返回 404 + `ok:false` + `error`；空库读取不返回 500/HTML。未覆盖：超时/数据库失败、前端错误提示与重试，保持 partial。
 
 <a id="tc-p5-e3"></a>
 #### TC-P5-E3 · 响应式/键盘/权限

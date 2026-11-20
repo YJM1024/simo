@@ -1,10 +1,12 @@
 # P7 · 调度 测试计划
 
-状态：**active（2026-11-20 后端证据回写；用例 1 pass / 3 partial / 4 missing）** — 覆盖口径见 §1、§4；pass 只表示该用例的断言已执行，不表示 PRD 的 AC 全覆盖。
+状态：**active（2026-11-21 边界契约补充；用例 1 pass / 5 partial / 2 missing）** — 覆盖口径见 §1、§4；pass 只表示该用例的断言已执行，不表示 PRD 的 AC 全覆盖。
 > 产品域 spec：[`../../product/P7-SCHED/spec.md`](../../product/P7-SCHED/spec.md)；TREE：[`../../../docs/product/TREE.md`](../../../docs/product/TREE.md)；TRACEABILITY：[`../../../docs/product/TRACEABILITY.md`](../../../docs/product/TRACEABILITY.md)。
 
 <!-- EVIDENCE-SUMMARY-20261120 -->
 > **2026-11-20 证据汇总**：本域 8 个用例，**pass 1 / partial 3 / missing 4**；PRD 覆盖仍 **0 covered / 4 partial / 1 gap**。后端 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0；日志 `.tmp/backend-fulltest-20261120.jsonl`）；前端证据不适用于本域或未覆盖本域。
+>
+> **2026-11-21 补充**：新增 `TestP7ScheduleEmptyAndNotFoundContract`（`backend/cmd/simo/contract_edges_test.go`），覆盖空调度列表、未知 id 的 GET/PATCH/DELETE/run-now 404 JSON、非法 JSON 400；E1、E2 由 missing 升为 partial。该测试不覆盖前端空/错误态、不覆盖权限/375，不升级 PRD covered。
 
 ## 1. 范围与证据口径
 
@@ -97,7 +99,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：空态可见，加载不闪烁；加载结束进入正确状态；不展示假 0。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing** — 无测试落点；调度域空/加载态无前端测试。
+- 当前证据：**partial** — 2026-11-21 `go test ./cmd/simo -run TestP7ScheduleEmptyAndNotFoundContract` PASS（`backend/cmd/simo/contract_edges_test.go`）：空调度列表返回 200 + `schedules:[]`，不展示假数据。未覆盖：前端 loading/空态渲染，保持 partial。
 
 <a id="tc-p7-e2"></a>
 #### TC-P7-E2 · 错误/恢复
@@ -107,7 +109,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：错误提示可见，重试/返回可用；失败不写脏数据、不重复提交。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing** — 无测试落点；调度错误/恢复无 API 契约测试。
+- 当前证据：**partial** — 2026-11-21 `go test ./cmd/simo -run TestP7ScheduleEmptyAndNotFoundContract` PASS：未知 id 的 GET/PATCH/DELETE/run-now 均 404 + `ok:false` + `error`；非法 JSON 创建 400 + 统一错误信封；失败不写脏数据。未覆盖：前端错误提示/重试、数据库错误与超时，保持 partial。
 
 <a id="tc-p7-e3"></a>
 #### TC-P7-E3 · 响应式/键盘/权限
