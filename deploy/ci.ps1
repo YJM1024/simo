@@ -78,8 +78,12 @@ function Write-Log([string]$path, [string]$text) { Set-Content -Path $path -Valu
 function Invoke-Go([string[]]$goArgs, [string]$logFile) {
   Push-Location (Join-Path $repo 'backend')
   try {
-    if (Test-Path $goPs1) { $out = & $goPs1 @goArgs 2>&1 | Out-String } elseif (Test-Path $goBin) { $out = & $goBin @goArgs 2>&1 | Out-String } else { $out = & go @goArgs 2>&1 | Out-String }
-    $code = $LASTEXITCODE
+    $oldEap = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+      if (Test-Path $goPs1) { $out = & $goPs1 @goArgs 2>&1 | Out-String } elseif (Test-Path $goBin) { $out = & $goBin @goArgs 2>&1 | Out-String } else { $out = & go @goArgs 2>&1 | Out-String }
+      $code = $LASTEXITCODE
+    } finally { $ErrorActionPreference = $oldEap }
     Write-Log $logFile $out
     if ($code -ne 0) { Write-Host $out; return $false }
     return $true
