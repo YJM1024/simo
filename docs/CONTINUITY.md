@@ -94,11 +94,11 @@
 ### 4.1 产品与规格底座
 
 - 产品域：**10 个**（P1–P10），产品域 spec：**10/10**；域测试计划：**10/10**；E2E 测试计划：**1/1**（[`../specs/test/e2e/README.md`](../specs/test/e2e/README.md)）。
-- L3 功能点：**71 个 PRD**；状态：implemented 17、partial 39、unimplemented 15。
-- 追溯覆盖：**covered 0、partial 22、gap 49**。已有 69 个前端单测 + 11 个 CDP E2E 的执行证据，但证据只覆盖部分 PRD/AC，且多数 PRD 仍缺 change 包与开发 spec，因此覆盖状态不升级；测试计划文件存在不等于覆盖。
+- L3 功能点：**71 个 PRD**；状态：implemented 17、partial 38、unimplemented 16（`PRD-TOOL-003` 按后端无 Skills 实现/测试降级）。
+- 追溯覆盖：**covered 0、partial 48、gap 23**。已有 69 个前端单测 + 11 个 CDP E2E + 223 个后端测试的执行证据，并按 `PRD → CHANGE → TEST` 回写；但证据只覆盖部分 PRD/AC，不能升级 covered；测试计划文件存在不等于覆盖。
 - 历史规格：10 个 FE 变更包 + 5 个 COMP 组件 spec 保留，映射为 `CHG-LEGACY-*` / `COMP-LEGACY-*`，不重命名、不删除。
 
-### 4.2 15 个 `unimplemented` PRD（不得写成已完成）
+### 4.2 16 个 `unimplemented` PRD（不得写成已完成）
 
 | 能力域 | PRD | 功能点 |
 |---|---|---|
@@ -114,6 +114,7 @@
 | P8-SET | `PRD-SET-003` | 外观·主题·语言 |
 | P8-SET | `PRD-SET-005` | 快捷键·关于·版本 |
 | P8-SET | `PRD-SET-006` | 能力管理（MCP/CLI/Skills/目录） |
+| P9-TOOL | `PRD-TOOL-003` | Skills 发现与加载（后端无实现/测试） |
 | P9-TOOL | `PRD-TOOL-004` | MCP 接入 |
 | P9-TOOL | `PRD-TOOL-007` | 能力目录 L0–L3 |
 | P10-METRIC | `PRD-METRIC-006` | 导出·对比·告警 |
@@ -128,15 +129,16 @@
 - **CDP E2E**：**11/11 PASS、exit 0**，同一 runner 连续 5 次均 11/11（`run-iter1..5.log`）；报告与截图在 `frontend/e2e/report/cdp/`。11 个场景覆盖：首屏结构、375 响应式、发送与 WS 流式、Enter/Shift+Enter 与发送模式反转、FE-007 逐级加载/413/403/空上级、消息接口 500 错误重试、右栏任务定位、交付物可见与真实下载。
   - runner：`frontend/e2e/scripts/cdp-runner.mjs`，命令 `cd frontend && npm run test:e2e:cdp`；测试计划见 [`../specs/test/e2e/README.md`](../specs/test/e2e/README.md)。
   - **限制**：CDP runner 不是 Playwright Test；`test:e2e` 的 Playwright 普通路径仍受本机沙箱限制，CI 未实跑；E2E 使用隔离 API 19230 与临时 `SIMO_HOME`，不是 8787 生产实例；未覆盖记忆/团队/调度/设置/工具等域。
+- **后端测试**：`cd backend && go test ./... -count=1 -json` **223/223 PASS、0 FAIL、0 SKIP、exit 0**（2026-11-20，26 package，16 有测试；283.33s；日志 `.tmp/backend-fulltest-20261120.jsonl`）。P5–P9 的用例级证据见各域 test-plan 与 [`testing/BACKEND-EVIDENCE-20261120.md`](testing/BACKEND-EVIDENCE-20261120.md)；223 PASS 不等于产品 AC 全量完成。
 - **覆盖率**：`frontend/coverage/coverage-summary.json` 当前只统计 `frontend/src/components/library.tsx`：lines 85.58%（279/326）、statements 80.25%（374/466）、functions 82.31%（135/164）、branches 80.89%（470/581）；这是组件库单文件覆盖，**不是全仓覆盖率**，不能外推。
 - **发布门禁**：`check:sdd` PASS（15 specs、COMP 5、A 134/134、manifest 33、0 fail 0 warn）；组件 parity 门禁 = Blocking；`check:visual` 整页像素对比 = Nightly/Warning，不作为发布阻断。
-- **最近一次文档同步**：2026-11-20 推送 `YJM1024/simo` main；提交说明固定为 `docs: complete project record, specs and process definitions`。具体 commit SHA 见 GitHub main 历史（本文件不写会过期的自引用 SHA）。
-- **本轮证据回写状态**：2026-11-20 的 CONTINUITY/STATUS/TRACE/SPEC-GAP/test-plan/E2E/EVIDENCE 改动只在本地工作区，尚未推送；提交前必须重新确认 remote head，不得用旧 SHA 强推。
+- **最近一次文档同步**：2026-11-20 推送 `YJM1024/simo` main；测试资产提交 `c1d16b9319a304afc32d0cc9663ebcca7e4f92a0`，文档提交 `beadd280351a2226defb3467e51fb6eaa7270782`。具体以 GitHub main 历史为准。
+- **本轮证据回写状态**：2026-11-20 的后端证据映射（test-plan/TRACE/TREE/STATUS/本文件）已在本地工作区；提交前必须重新确认 remote head，不得用旧 SHA 强推。
 
 ### 4.4 明确未完成 / 不可宣称
 
-- 71 个 PRD 中 **0 个 covered**；22 个 partial 仍缺 change 包、开发 spec 或完整 AC 证据；49 个 gap。
-- 10 份产品域 spec 是骨架；10 份域 test-plan 已开始回写 69 单测/11 E2E 的实际证据，但尚无按域执行的系统测试报告，不能据此升级 covered。
+- 71 个 PRD 中 **0 个 covered**；48 个 partial 仍缺完整 AC/权限/异常/前端证据；23 个 gap（含 16 个 unimplemented）。
+- 10 份产品域 spec 是骨架；10 份域 test-plan 已回写 69 单测/11 E2E/223 后端测试的实际证据，但尚无按域执行的产品 AC 系统测试报告，不能据此升级 covered。
 - 真实模型长程、团队隔离、调度失败、权限 fail-closed、文件上传/预览/PDF/Office 等高风险项仍缺当前 build 证据；CDP E2E 07 只验证了交付物可见与下载，不覆盖预览/上传。
 - `tasks/frontend.md` 仍写“前端只做对话、工作台”，与后端能力面不一致；`docs/frontend-feature-map.md` 是 M67 前旧布局，不能当现状。以 `TREE.md`、产品域 spec 与当前代码为准。
 - 容器/Docker 本机未实测；`deploy/INSTALL.md` 部分步骤未完整实测；不得把未验证能力写成已交付。

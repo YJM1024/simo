@@ -23,7 +23,7 @@
 | S3 | 项目不是独立实体，只是会话映射 | 不存在 project 表/API；会话承担项目语义 | 后端：契约测试 `TestNoProjectEntity`（或文档核对） |
 | S4 | 子会话继承父会话的任务/要求/约束，不继承人格 | 父任务可见；切换负责人不改变父人格 | 后端：`TestSessionInheritanceNoPersona` |
 | S5 | 会话可置顶、归档、恢复；归档=只读可恢复 | 归档后写消息被拒；恢复后可写 | 后端：`TestSessionArchiveReadOnly` |
-| S6 | 空会话不保存；最多一个本地草稿 | 空会话不落库；重复新建返回同一草稿；首条消息后物化 | 后端：`TestM70*`；前端：`check-m70` |
+| S6 | 空会话不保存；最多一个本地草稿 | 空会话不落库；重复新建返回同一草稿；首条消息后物化 | 后端：`TestM70DraftNotPersistedThenMaterialized`、`TestM70RestartCleansEmptySessions`、`TestM70RestartDraftDisappears`；前端：`check-m70` |
 | S7 | 主会话可聚合子会话视图（可选） | 仅本会话/含子会话切换不改变数据归属 | 前端：`check-session-scope` |
 
 ## 2. 消息归属与路由

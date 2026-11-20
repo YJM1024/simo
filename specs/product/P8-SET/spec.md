@@ -36,9 +36,9 @@
 
 - 优先级：P0
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M2](../../../docs/m2-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P8-SET](../../changes/CHG-LEGACY-P8-SET/spec.md)；开发 [M2](../../../docs/m2-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：配置文档存在；前端无设置页，模型切换/只读边界未产品化。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P8-SET/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“设置与系统 / 模型与权限”中提供“模型与 Provider”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-SET-001-01` 主路径：用户能完成“模型与 Provider”并看到一致结果；状态与关联数据不互相矛盾。
@@ -49,9 +49,9 @@
 
 - 优先级：P0
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M9](../../../docs/m9-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P8-SET](../../changes/CHG-LEGACY-P8-SET/spec.md)；开发 [M9](../../../docs/m9-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：权限/审批后端存在；无统一设置入口与 fail-closed 验收。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P8-SET/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“设置与系统 / 模型与权限”中提供“权限·沙盒·审批”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-SET-002-01` 主路径：用户能完成“权限·沙盒·审批”并看到一致结果；状态与关联数据不互相矛盾。
@@ -64,7 +64,7 @@
 
 - 优先级：P2
 - 实现状态：`unimplemented`
-- 关联：CHANGE —；开发 —；组件 —；任务卡 [前端任务](../../../docs/tasks/frontend.md)
+- 关联：CHANGE [CHG-LEGACY-P8-SET](../../changes/CHG-LEGACY-P8-SET/spec.md)；开发 —；组件 —；任务卡 [前端任务](../../../docs/tasks/frontend.md)
 - 落地前差距（历史审计）：未实现；当前只有浅色暖纸基线，无主题/语言设置。
 - 当前剩余缺口：`unimplemented`，无可用实现/无完整验收。
 > **unimplemented**：当前无可用实现/无完整验收；不得对外宣称已完成。
@@ -79,7 +79,7 @@
 
 - 优先级：P2
 - 实现状态：`unimplemented`
-- 关联：CHANGE —；开发 —；组件 —；任务卡 [前端任务](../../../docs/tasks/frontend.md)
+- 关联：CHANGE [CHG-LEGACY-P8-SET](../../changes/CHG-LEGACY-P8-SET/spec.md)；开发 —；组件 —；任务卡 [前端任务](../../../docs/tasks/frontend.md)
 - 落地前差距（历史审计）：未实现；无快捷键帮助/关于页。
 - 当前剩余缺口：`unimplemented`，无可用实现/无完整验收。
 > **unimplemented**：当前无可用实现/无完整验收；不得对外宣称已完成。
@@ -96,9 +96,9 @@
 
 - 优先级：P1
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M1](../../../docs/m1-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P8-SET](../../changes/CHG-LEGACY-P8-SET/spec.md)；开发 [M1](../../../docs/m1-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：部署文档有备份/恢复流程；产品入口与恢复演练未验证。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P8-SET/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“设置与系统 / 数据与能力”中提供“数据目录·备份·恢复”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-SET-004-01` 主路径：用户能完成“数据目录·备份·恢复”并看到一致结果；状态与关联数据不互相矛盾。
@@ -109,7 +109,7 @@
 
 - 优先级：P2
 - 实现状态：`unimplemented`
-- 关联：CHANGE —；开发 [M9](../../../docs/m9-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P8-SET](../../changes/CHG-LEGACY-P8-SET/spec.md)；开发 [M9](../../../docs/m9-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：P2 backlog；无实现、无测试。
 - 当前剩余缺口：`unimplemented`，无可用实现/无完整验收。
 > **unimplemented**：当前无可用实现/无完整验收；不得对外宣称已完成。
@@ -126,9 +126,9 @@
 
 - 优先级：P0
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M1](../../../docs/m1-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P8-SET](../../changes/CHG-LEGACY-P8-SET/spec.md)；开发 [M1](../../../docs/m1-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：本地单用户假设存在；远程/多用户边界未产品化、无安全测试。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P8-SET/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“设置与系统 / 安全与备份”中提供“本地单用户与鉴权边界”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-SYS-001-01` 主路径：用户能完成“本地单用户与鉴权边界”并看到一致结果；状态与关联数据不互相矛盾。
@@ -139,9 +139,9 @@
 
 - 优先级：P1
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M9](../../../docs/m9-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P8-SET](../../changes/CHG-LEGACY-P8-SET/spec.md)；开发 [M9](../../../docs/m9-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：审批/权限后端存在；默认拒绝/异常路径无系统化验收。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P8-SET/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“设置与系统 / 安全与备份”中提供“权限 fail-closed”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-SYS-002-01` 主路径：用户能完成“权限 fail-closed”并看到一致结果；状态与关联数据不互相矛盾。
@@ -152,9 +152,9 @@
 
 - 优先级：P0
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M1](../../../docs/m1-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P8-SET](../../changes/CHG-LEGACY-P8-SET/spec.md)；开发 [M1](../../../docs/m1-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：部署文档有流程；恢复演练/回滚验证未系统化。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P8-SET/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“设置与系统 / 安全与备份”中提供“数据备份·迁移·回滚”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-SYS-004-01` 主路径：用户能完成“数据备份·迁移·回滚”并看到一致结果；状态与关联数据不互相矛盾。
@@ -167,9 +167,9 @@
 
 - 优先级：P1
 - 实现状态：`implemented`
-- 关联：CHANGE —；开发 [M1](../../../docs/m1-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P8-SET](../../changes/CHG-LEGACY-P8-SET/spec.md)；开发 [M1](../../../docs/m1-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：接口存在；无域测试计划。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P8-SET/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“设置与系统 / 运维与安装”中提供“健康检查与运行时状态”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-SYS-003-01` 主路径：用户能完成“健康检查与运行时状态”并看到一致结果；状态与关联数据不互相矛盾。
@@ -180,9 +180,9 @@
 
 - 优先级：P1
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M9](../../../docs/m9-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P8-SET](../../changes/CHG-LEGACY-P8-SET/spec.md)；开发 [M9](../../../docs/m9-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：日志存在；审计事件覆盖/敏感信息脱敏未验收。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P8-SET/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“设置与系统 / 运维与安装”中提供“日志与审计”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-SYS-005-01` 主路径：用户能完成“日志与审计”并看到一致结果；状态与关联数据不互相矛盾。
@@ -193,9 +193,9 @@
 
 - 优先级：P1
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M1](../../../docs/m1-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P8-SET](../../changes/CHG-LEGACY-P8-SET/spec.md)；开发 [M1](../../../docs/m1-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：部署文档/便携包存在；升级回滚/多平台未产品化。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P8-SET/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“设置与系统 / 运维与安装”中提供“安装·升级·便携包”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-SYS-006-01` 主路径：用户能完成“安装·升级·便携包”并看到一致结果；状态与关联数据不互相矛盾。

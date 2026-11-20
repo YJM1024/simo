@@ -4,6 +4,7 @@
 > L0 产品 → L1 能力域 P1–P10 → L2 场景/模块 → L3 功能点（PRD）。
 > ID 规则见 [`ID-SPEC.md`](ID-SPEC.md)；三列追溯见 [`TRACEABILITY.md`](TRACEABILITY.md)；缺口见 [`SPEC-GAP.md`](SPEC-GAP.md)。
 > **诚实口径**：本树区分 `implemented`（有验收/可运行）、`partial`（有能力但不完整/缺证据）、`unimplemented`（无实现或只有设计）。接口存在不等于产品完成。
+> **Backlog**：`unimplemented` 状态列已链接 [`BACKLOG.md`](BACKLOG.md)；backlog 是待办清单，不代表排期、实现或验收。
 
 ## 1. 能力树
 
@@ -73,9 +74,9 @@ mindmap
 | [`P6`](#p6) | 团队与智能体 | `TEAM` | 4 | 6 | 0 | 4 | 2 | [spec](../../specs/product/P6-TEAM/spec.md) | [test](../../specs/test/P6-TEAM/test-plan.md) |
 | [`P7`](#p7) | 调度 | `SCHED` | 4 | 5 | 0 | 4 | 1 | [spec](../../specs/product/P7-SCHED/spec.md) | [test](../../specs/test/P7-SCHED/test-plan.md) |
 | [`P8`](#p8) | 设置与系统 | `SET`/`SYS` | 5 | 12 | 1 | 8 | 3 | [spec](../../specs/product/P8-SET/spec.md) | [test](../../specs/test/P8-SET/test-plan.md) |
-| [`P9`](#p9) | 工具与能力 | `TOOL` | 4 | 7 | 0 | 5 | 2 | [spec](../../specs/product/P9-TOOL/spec.md) | [test](../../specs/test/P9-TOOL/test-plan.md) |
+| [`P9`](#p9) | 工具与能力 | `TOOL` | 4 | 7 | 0 | 4 | 3 | [spec](../../specs/product/P9-TOOL/spec.md) | [test](../../specs/test/P9-TOOL/test-plan.md) |
 | [`P10`](#p10) | 指标 | `METRIC` | 3 | 6 | 3 | 2 | 1 | [spec](../../specs/product/P10-METRIC/spec.md) | [test](../../specs/test/P10-METRIC/test-plan.md) |
-| **合计** | — | 12 个技术域码 | **39** | **71** | **17** | **39** | **15** | **10/10** | **10/10** |
+| **合计** | — | 12 个技术域码 | **39** | **71** | **17** | **38** | **16** | **10/10** | **10/10** |
 
 ## 3. L2 / L3 功能点
 
@@ -114,7 +115,7 @@ mindmap
 | `PRD-SYNC-002` | 多标签 active/ancestor/read cursor | P0 | `implemented` | [spec](../../specs/product/P1-CONV/spec.md#prd-sync-002) | [FE-009](../../specs/FE-009-web-multitab/spec.md) | [FE-009](../../specs/FE-009-web-multitab/spec.md) / [M1](../m1-contract.md) | — | [TC-P1-009](../../specs/test/P1-CONV/test-plan.md#tc-p1-009) |
 | `PRD-SYNC-003` | 发送模式/设置跨标签同步 | P1 | `implemented` | [spec](../../specs/product/P1-CONV/spec.md#prd-sync-003) | [FE-006](../../specs/FE-006-chat-experience/spec.md) / [COMP-composer-send-mode](../../specs/COMP-composer-send-mode/spec.md) | [FE-006](../../specs/FE-006-chat-experience/spec.md) / [M1](../m1-contract.md) | [COMP-composer-send-mode](../../specs/COMP-composer-send-mode/spec.md) | [TC-P1-010](../../specs/test/P1-CONV/test-plan.md#tc-p1-010) |
 | `PRD-SYNC-004` | 未读与已读游标 | P1 | `partial` | [spec](../../specs/product/P1-CONV/spec.md#prd-sync-004) | [FE-003](../../specs/FE-003-chat-capabilities/spec.md) | [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [M1](../m1-contract.md) | — | [TC-P1-011](../../specs/test/P1-CONV/test-plan.md#tc-p1-011) |
-| `PRD-SYNC-005` | 远程访问与通知中心 | P2 | `unimplemented` | [spec](../../specs/product/P1-CONV/spec.md#prd-sync-005) | — | — | — | [TC-P1-012](../../specs/test/P1-CONV/test-plan.md#tc-p1-012) |
+| `PRD-SYNC-005` | 远程访问与通知中心 | P2 | `unimplemented` · [backlog](BACKLOG.md) | [spec](../../specs/product/P1-CONV/spec.md#prd-sync-005) | — | — | — | [TC-P1-012](../../specs/test/P1-CONV/test-plan.md#tc-p1-012) |
 
 ### P2 · 任务与执行
 <a id="p2"></a>
@@ -132,15 +133,15 @@ mindmap
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-TASK-003` | 长任务异步与开始/结束消息 | P0 | `unimplemented` | [spec](../../specs/product/P2-TASK/spec.md#prd-task-003) | — | [M19](../m19-contract.md) | — | [TC-P2-003](../../specs/test/P2-TASK/test-plan.md#tc-p2-003) |
+| `PRD-TASK-003` | 长任务异步与开始/结束消息 | P0 | `unimplemented` · [backlog](BACKLOG.md) | [spec](../../specs/product/P2-TASK/spec.md#prd-task-003) | — | [M19](../m19-contract.md) | — | [TC-P2-003](../../specs/test/P2-TASK/test-plan.md#tc-p2-003) |
 | `PRD-TASK-006` | 取消·重试·预算·恢复 | P1 | `partial` | [spec](../../specs/product/P2-TASK/spec.md#prd-task-006) | — | [M19](../m19-contract.md) | — | [TC-P2-004](../../specs/test/P2-TASK/test-plan.md#tc-p2-004) |
 
 #### L2 · 复杂度与归属
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-TASK-004` | 复杂度分级与确认门禁 | P0 | `unimplemented` | [spec](../../specs/product/P2-TASK/spec.md#prd-task-004) | — | [M10](../m10-contract.md) | — | [TC-P2-005](../../specs/test/P2-TASK/test-plan.md#tc-p2-005) |
-| `PRD-TASK-005` | 子会话与任务归属 | P0 | `unimplemented` | [spec](../../specs/product/P2-TASK/spec.md#prd-task-005) | — | [M1](../m1-contract.md) / [M10](../m10-contract.md) | — | [TC-P2-006](../../specs/test/P2-TASK/test-plan.md#tc-p2-006) |
+| `PRD-TASK-004` | 复杂度分级与确认门禁 | P0 | `unimplemented` · [backlog](BACKLOG.md) | [spec](../../specs/product/P2-TASK/spec.md#prd-task-004) | — | [M10](../m10-contract.md) | — | [TC-P2-005](../../specs/test/P2-TASK/test-plan.md#tc-p2-005) |
+| `PRD-TASK-005` | 子会话与任务归属 | P0 | `unimplemented` · [backlog](BACKLOG.md) | [spec](../../specs/product/P2-TASK/spec.md#prd-task-005) | — | [M1](../m1-contract.md) / [M10](../m10-contract.md) | — | [TC-P2-006](../../specs/test/P2-TASK/test-plan.md#tc-p2-006) |
 
 ### P3 · 工作台与视图
 <a id="p3"></a>
@@ -170,7 +171,7 @@ mindmap
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-WORK-005` | 自定义视图 13 类块 | P1 | `unimplemented` | [spec](../../specs/product/P3-WORK/spec.md#prd-work-005) | — | [M24](../m24-view-contract.md) | — | [TC-P3-005](../../specs/test/P3-WORK/test-plan.md#tc-p3-005) |
+| `PRD-WORK-005` | 自定义视图 13 类块 | P1 | `unimplemented` · [backlog](BACKLOG.md) | [spec](../../specs/product/P3-WORK/spec.md#prd-work-005) | — | [M24](../m24-view-contract.md) | — | [TC-P3-005](../../specs/test/P3-WORK/test-plan.md#tc-p3-005) |
 
 ### P4 · 文件与交付物
 <a id="p4"></a>
@@ -217,22 +218,22 @@ mindmap
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-MEM-001` | 记忆条目·作用域·搜索 | P1 | `partial` | [spec](../../specs/product/P5-MEM/spec.md#prd-mem-001) | — | [M3](../m3-contract.md) / [M21](../m21-memory-contract.md) | — | [TC-P5-001](../../specs/test/P5-MEM/test-plan.md#tc-p5-001) |
-| `PRD-MEM-006` | 记忆迁移与索引 | P2 | `unimplemented` | [spec](../../specs/product/P5-MEM/spec.md#prd-mem-006) | — | [M21](../m21-memory-contract.md) | — | [TC-P5-002](../../specs/test/P5-MEM/test-plan.md#tc-p5-002) |
+| `PRD-MEM-001` | 记忆条目·作用域·搜索 | P1 | `partial` | [spec](../../specs/product/P5-MEM/spec.md#prd-mem-001) | [CHG-LEGACY-P5-MEM](../../specs/changes/CHG-LEGACY-P5-MEM/spec.md) | [M3](../m3-contract.md) / [M21](../m21-memory-contract.md) | — | [TC-P5-001](../../specs/test/P5-MEM/test-plan.md#tc-p5-001) |
+| `PRD-MEM-006` | 记忆迁移与索引 | P2 | `unimplemented` · [backlog](BACKLOG.md) | [spec](../../specs/product/P5-MEM/spec.md#prd-mem-006) | [CHG-LEGACY-P5-MEM](../../specs/changes/CHG-LEGACY-P5-MEM/spec.md) | [M21](../m21-memory-contract.md) | — | [TC-P5-002](../../specs/test/P5-MEM/test-plan.md#tc-p5-002) |
 
 #### L2 · 实体与冲突
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-MEM-002` | 实体·关系·金字塔 | P1 | `partial` | [spec](../../specs/product/P5-MEM/spec.md#prd-mem-002) | — | [M21](../m21-memory-contract.md) | — | [TC-P5-003](../../specs/test/P5-MEM/test-plan.md#tc-p5-003) |
-| `PRD-MEM-003` | 冲突与争议保留 | P1 | `partial` | [spec](../../specs/product/P5-MEM/spec.md#prd-mem-003) | — | [M21](../m21-memory-contract.md) | — | [TC-P5-004](../../specs/test/P5-MEM/test-plan.md#tc-p5-004) |
+| `PRD-MEM-002` | 实体·关系·金字塔 | P1 | `partial` | [spec](../../specs/product/P5-MEM/spec.md#prd-mem-002) | [CHG-LEGACY-P5-MEM](../../specs/changes/CHG-LEGACY-P5-MEM/spec.md) | [M21](../m21-memory-contract.md) | — | [TC-P5-003](../../specs/test/P5-MEM/test-plan.md#tc-p5-003) |
+| `PRD-MEM-003` | 冲突与争议保留 | P1 | `partial` | [spec](../../specs/product/P5-MEM/spec.md#prd-mem-003) | [CHG-LEGACY-P5-MEM](../../specs/changes/CHG-LEGACY-P5-MEM/spec.md) | [M21](../m21-memory-contract.md) | — | [TC-P5-004](../../specs/test/P5-MEM/test-plan.md#tc-p5-004) |
 
 #### L2 · 召回
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-MEM-004` | 召回 R1/R2 | P1 | `partial` | [spec](../../specs/product/P5-MEM/spec.md#prd-mem-004) | — | [M22](../m22-recall-contract.md) | — | [TC-P5-005](../../specs/test/P5-MEM/test-plan.md#tc-p5-005) |
-| `PRD-MEM-005` | 向量召回与巩固 | P2 | `partial` | [spec](../../specs/product/P5-MEM/spec.md#prd-mem-005) | — | [M22](../m22-recall-contract.md) | — | [TC-P5-006](../../specs/test/P5-MEM/test-plan.md#tc-p5-006) |
+| `PRD-MEM-004` | 召回 R1/R2 | P1 | `partial` | [spec](../../specs/product/P5-MEM/spec.md#prd-mem-004) | [CHG-LEGACY-P5-MEM](../../specs/changes/CHG-LEGACY-P5-MEM/spec.md) | [M22](../m22-recall-contract.md) | — | [TC-P5-005](../../specs/test/P5-MEM/test-plan.md#tc-p5-005) |
+| `PRD-MEM-005` | 向量召回与巩固 | P2 | `partial` | [spec](../../specs/product/P5-MEM/spec.md#prd-mem-005) | [CHG-LEGACY-P5-MEM](../../specs/changes/CHG-LEGACY-P5-MEM/spec.md) | [M22](../m22-recall-contract.md) | — | [TC-P5-006](../../specs/test/P5-MEM/test-plan.md#tc-p5-006) |
 
 ### P6 · 团队与智能体
 <a id="p6"></a>
@@ -243,27 +244,27 @@ mindmap
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-TEAM-001` | 智能体 roster 与模型 | P1 | `partial` | [spec](../../specs/product/P6-TEAM/spec.md#prd-team-001) | — | [TEAM](../team-contract.md) | — | [TC-P6-001](../../specs/test/P6-TEAM/test-plan.md#tc-p6-001) |
+| `PRD-TEAM-001` | 智能体 roster 与模型 | P1 | `partial` | [spec](../../specs/product/P6-TEAM/spec.md#prd-team-001) | [CHG-LEGACY-P6-TEAM](../../specs/changes/CHG-LEGACY-P6-TEAM/spec.md) | [TEAM](../team-contract.md) | — | [TC-P6-001](../../specs/test/P6-TEAM/test-plan.md#tc-p6-001) |
 
 #### L2 · 成员与隔离
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-TEAM-002` | 团队成员=子会话+负责人 | P1 | `partial` | [spec](../../specs/product/P6-TEAM/spec.md#prd-team-002) | — | [TEAM](../team-contract.md) | — | [TC-P6-002](../../specs/test/P6-TEAM/test-plan.md#tc-p6-002) |
-| `PRD-TEAM-005` | 团队内部消息隔离 | P0 | `partial` | [spec](../../specs/product/P6-TEAM/spec.md#prd-team-005) | — | [TEAM](../team-contract.md) | — | [TC-P6-003](../../specs/test/P6-TEAM/test-plan.md#tc-p6-003) |
+| `PRD-TEAM-002` | 团队成员=子会话+负责人 | P1 | `partial` | [spec](../../specs/product/P6-TEAM/spec.md#prd-team-002) | [CHG-LEGACY-P6-TEAM](../../specs/changes/CHG-LEGACY-P6-TEAM/spec.md) | [TEAM](../team-contract.md) | — | [TC-P6-002](../../specs/test/P6-TEAM/test-plan.md#tc-p6-002) |
+| `PRD-TEAM-005` | 团队内部消息隔离 | P0 | `partial` | [spec](../../specs/product/P6-TEAM/spec.md#prd-team-005) | [CHG-LEGACY-P6-TEAM](../../specs/changes/CHG-LEGACY-P6-TEAM/spec.md) | [TEAM](../team-contract.md) | — | [TC-P6-003](../../specs/test/P6-TEAM/test-plan.md#tc-p6-003) |
 
 #### L2 · 模板与触发器
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-TEAM-003` | 团队模板·角色·触发器 | P1 | `partial` | [spec](../../specs/product/P6-TEAM/spec.md#prd-team-003) | — | [M10](../m10-contract.md) / [TEAM](../team-contract.md) | — | [TC-P6-004](../../specs/test/P6-TEAM/test-plan.md#tc-p6-004) |
+| `PRD-TEAM-003` | 团队模板·角色·触发器 | P1 | `partial` | [spec](../../specs/product/P6-TEAM/spec.md#prd-team-003) | [CHG-LEGACY-P6-TEAM](../../specs/changes/CHG-LEGACY-P6-TEAM/spec.md) | [M10](../m10-contract.md) / [TEAM](../team-contract.md) | — | [TC-P6-004](../../specs/test/P6-TEAM/test-plan.md#tc-p6-004) |
 
 #### L2 · 投影与任务板
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-TEAM-004` | 团队只读投影与对话创建 | P1 | `unimplemented` | [spec](../../specs/product/P6-TEAM/spec.md#prd-team-004) | — | [TEAM](../team-contract.md) | — | [TC-P6-005](../../specs/test/P6-TEAM/test-plan.md#tc-p6-005) |
-| `PRD-TEAM-006` | 子代理并行与团队任务板 | P2 | `unimplemented` | [spec](../../specs/product/P6-TEAM/spec.md#prd-team-006) | — | [M10](../m10-contract.md) | — | [TC-P6-006](../../specs/test/P6-TEAM/test-plan.md#tc-p6-006) |
+| `PRD-TEAM-004` | 团队只读投影与对话创建 | P1 | `unimplemented` · [backlog](BACKLOG.md) | [spec](../../specs/product/P6-TEAM/spec.md#prd-team-004) | [CHG-LEGACY-P6-TEAM](../../specs/changes/CHG-LEGACY-P6-TEAM/spec.md) | [TEAM](../team-contract.md) | — | [TC-P6-005](../../specs/test/P6-TEAM/test-plan.md#tc-p6-005) |
+| `PRD-TEAM-006` | 子代理并行与团队任务板 | P2 | `unimplemented` · [backlog](BACKLOG.md) | [spec](../../specs/product/P6-TEAM/spec.md#prd-team-006) | [CHG-LEGACY-P6-TEAM](../../specs/changes/CHG-LEGACY-P6-TEAM/spec.md) | [M10](../m10-contract.md) | — | [TC-P6-006](../../specs/test/P6-TEAM/test-plan.md#tc-p6-006) |
 
 ### P7 · 调度
 <a id="p7"></a>
@@ -274,26 +275,26 @@ mindmap
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-SCHED-001` | 定时任务 CRUD | P1 | `partial` | [spec](../../specs/product/P7-SCHED/spec.md#prd-sched-001) | — | [M13](../m13-contract.md) | — | [TC-P7-001](../../specs/test/P7-SCHED/test-plan.md#tc-p7-001) |
-| `PRD-SCHED-002` | 列表与下次运行时间 | P1 | `partial` | [spec](../../specs/product/P7-SCHED/spec.md#prd-sched-002) | — | [M13](../m13-contract.md) | — | [TC-P7-002](../../specs/test/P7-SCHED/test-plan.md#tc-p7-002) |
+| `PRD-SCHED-001` | 定时任务 CRUD | P1 | `partial` | [spec](../../specs/product/P7-SCHED/spec.md#prd-sched-001) | [CHG-LEGACY-P7-SCHED](../../specs/changes/CHG-LEGACY-P7-SCHED/spec.md) | [M13](../m13-contract.md) | — | [TC-P7-001](../../specs/test/P7-SCHED/test-plan.md#tc-p7-001) |
+| `PRD-SCHED-002` | 列表与下次运行时间 | P1 | `partial` | [spec](../../specs/product/P7-SCHED/spec.md#prd-sched-002) | [CHG-LEGACY-P7-SCHED](../../specs/changes/CHG-LEGACY-P7-SCHED/spec.md) | [M13](../m13-contract.md) | — | [TC-P7-002](../../specs/test/P7-SCHED/test-plan.md#tc-p7-002) |
 
 #### L2 · 执行与幂等
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-SCHED-003` | 立即运行与幂等 | P1 | `partial` | [spec](../../specs/product/P7-SCHED/spec.md#prd-sched-003) | — | [M13](../m13-contract.md) | — | [TC-P7-003](../../specs/test/P7-SCHED/test-plan.md#tc-p7-003) |
+| `PRD-SCHED-003` | 立即运行与幂等 | P1 | `partial` | [spec](../../specs/product/P7-SCHED/spec.md#prd-sched-003) | [CHG-LEGACY-P7-SCHED](../../specs/changes/CHG-LEGACY-P7-SCHED/spec.md) | [M13](../m13-contract.md) | — | [TC-P7-003](../../specs/test/P7-SCHED/test-plan.md#tc-p7-003) |
 
 #### L2 · 规则与时区
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-SCHED-004` | 重复规则与时区 | P1 | `partial` | [spec](../../specs/product/P7-SCHED/spec.md#prd-sched-004) | — | [M13](../m13-contract.md) | — | [TC-P7-004](../../specs/test/P7-SCHED/test-plan.md#tc-p7-004) |
+| `PRD-SCHED-004` | 重复规则与时区 | P1 | `partial` | [spec](../../specs/product/P7-SCHED/spec.md#prd-sched-004) | [CHG-LEGACY-P7-SCHED](../../specs/changes/CHG-LEGACY-P7-SCHED/spec.md) | [M13](../m13-contract.md) | — | [TC-P7-004](../../specs/test/P7-SCHED/test-plan.md#tc-p7-004) |
 
 #### L2 · 失败与通知
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-SCHED-005` | 失败·重试·通知 | P2 | `unimplemented` | [spec](../../specs/product/P7-SCHED/spec.md#prd-sched-005) | — | [M13](../m13-contract.md) | — | [TC-P7-005](../../specs/test/P7-SCHED/test-plan.md#tc-p7-005) |
+| `PRD-SCHED-005` | 失败·重试·通知 | P2 | `unimplemented` · [backlog](BACKLOG.md) | [spec](../../specs/product/P7-SCHED/spec.md#prd-sched-005) | [CHG-LEGACY-P7-SCHED](../../specs/changes/CHG-LEGACY-P7-SCHED/spec.md) | [M13](../m13-contract.md) | — | [TC-P7-005](../../specs/test/P7-SCHED/test-plan.md#tc-p7-005) |
 
 ### P8 · 设置与系统
 <a id="p8"></a>
@@ -304,38 +305,38 @@ mindmap
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-SET-001` | 模型与 Provider | P0 | `partial` | [spec](../../specs/product/P8-SET/spec.md#prd-set-001) | — | [M2](../m2-contract.md) | — | [TC-P8-001](../../specs/test/P8-SET/test-plan.md#tc-p8-001) |
-| `PRD-SET-002` | 权限·沙盒·审批 | P0 | `partial` | [spec](../../specs/product/P8-SET/spec.md#prd-set-002) | — | [M9](../m9-contract.md) | — | [TC-P8-002](../../specs/test/P8-SET/test-plan.md#tc-p8-002) |
+| `PRD-SET-001` | 模型与 Provider | P0 | `partial` | [spec](../../specs/product/P8-SET/spec.md#prd-set-001) | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [M2](../m2-contract.md) | — | [TC-P8-001](../../specs/test/P8-SET/test-plan.md#tc-p8-001) |
+| `PRD-SET-002` | 权限·沙盒·审批 | P0 | `partial` | [spec](../../specs/product/P8-SET/spec.md#prd-set-002) | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [M9](../m9-contract.md) | — | [TC-P8-002](../../specs/test/P8-SET/test-plan.md#tc-p8-002) |
 
 #### L2 · 外观与快捷键
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-SET-003` | 外观·主题·语言 | P2 | `unimplemented` | [spec](../../specs/product/P8-SET/spec.md#prd-set-003) | — | — | — | [TC-P8-003](../../specs/test/P8-SET/test-plan.md#tc-p8-003) |
-| `PRD-SET-005` | 快捷键·关于·版本 | P2 | `unimplemented` | [spec](../../specs/product/P8-SET/spec.md#prd-set-005) | — | — | — | [TC-P8-004](../../specs/test/P8-SET/test-plan.md#tc-p8-004) |
+| `PRD-SET-003` | 外观·主题·语言 | P2 | `unimplemented` · [backlog](BACKLOG.md) | [spec](../../specs/product/P8-SET/spec.md#prd-set-003) | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | — | — | [TC-P8-003](../../specs/test/P8-SET/test-plan.md#tc-p8-003) |
+| `PRD-SET-005` | 快捷键·关于·版本 | P2 | `unimplemented` · [backlog](BACKLOG.md) | [spec](../../specs/product/P8-SET/spec.md#prd-set-005) | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | — | — | [TC-P8-004](../../specs/test/P8-SET/test-plan.md#tc-p8-004) |
 
 #### L2 · 数据与能力
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-SET-004` | 数据目录·备份·恢复 | P1 | `partial` | [spec](../../specs/product/P8-SET/spec.md#prd-set-004) | — | [M1](../m1-contract.md) | — | [TC-P8-005](../../specs/test/P8-SET/test-plan.md#tc-p8-005) |
-| `PRD-SET-006` | 能力管理（MCP/CLI/Skills/目录） | P2 | `unimplemented` | [spec](../../specs/product/P8-SET/spec.md#prd-set-006) | — | [M9](../m9-contract.md) | — | [TC-P8-006](../../specs/test/P8-SET/test-plan.md#tc-p8-006) |
+| `PRD-SET-004` | 数据目录·备份·恢复 | P1 | `partial` | [spec](../../specs/product/P8-SET/spec.md#prd-set-004) | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [M1](../m1-contract.md) | — | [TC-P8-005](../../specs/test/P8-SET/test-plan.md#tc-p8-005) |
+| `PRD-SET-006` | 能力管理（MCP/CLI/Skills/目录） | P2 | `unimplemented` · [backlog](BACKLOG.md) | [spec](../../specs/product/P8-SET/spec.md#prd-set-006) | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [M9](../m9-contract.md) | — | [TC-P8-006](../../specs/test/P8-SET/test-plan.md#tc-p8-006) |
 
 #### L2 · 安全与备份
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-SYS-001` | 本地单用户与鉴权边界 | P0 | `partial` | [spec](../../specs/product/P8-SET/spec.md#prd-sys-001) | — | [M1](../m1-contract.md) | — | [TC-P8-007](../../specs/test/P8-SET/test-plan.md#tc-p8-007) |
-| `PRD-SYS-002` | 权限 fail-closed | P1 | `partial` | [spec](../../specs/product/P8-SET/spec.md#prd-sys-002) | — | [M9](../m9-contract.md) | — | [TC-P8-008](../../specs/test/P8-SET/test-plan.md#tc-p8-008) |
-| `PRD-SYS-004` | 数据备份·迁移·回滚 | P0 | `partial` | [spec](../../specs/product/P8-SET/spec.md#prd-sys-004) | — | [M1](../m1-contract.md) | — | [TC-P8-009](../../specs/test/P8-SET/test-plan.md#tc-p8-009) |
+| `PRD-SYS-001` | 本地单用户与鉴权边界 | P0 | `partial` | [spec](../../specs/product/P8-SET/spec.md#prd-sys-001) | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [M1](../m1-contract.md) | — | [TC-P8-007](../../specs/test/P8-SET/test-plan.md#tc-p8-007) |
+| `PRD-SYS-002` | 权限 fail-closed | P1 | `partial` | [spec](../../specs/product/P8-SET/spec.md#prd-sys-002) | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [M9](../m9-contract.md) | — | [TC-P8-008](../../specs/test/P8-SET/test-plan.md#tc-p8-008) |
+| `PRD-SYS-004` | 数据备份·迁移·回滚 | P0 | `partial` | [spec](../../specs/product/P8-SET/spec.md#prd-sys-004) | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [M1](../m1-contract.md) | — | [TC-P8-009](../../specs/test/P8-SET/test-plan.md#tc-p8-009) |
 
 #### L2 · 运维与安装
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-SYS-003` | 健康检查与运行时状态 | P1 | `implemented` | [spec](../../specs/product/P8-SET/spec.md#prd-sys-003) | — | [M1](../m1-contract.md) | — | [TC-P8-010](../../specs/test/P8-SET/test-plan.md#tc-p8-010) |
-| `PRD-SYS-005` | 日志与审计 | P1 | `partial` | [spec](../../specs/product/P8-SET/spec.md#prd-sys-005) | — | [M9](../m9-contract.md) | — | [TC-P8-011](../../specs/test/P8-SET/test-plan.md#tc-p8-011) |
-| `PRD-SYS-006` | 安装·升级·便携包 | P1 | `partial` | [spec](../../specs/product/P8-SET/spec.md#prd-sys-006) | — | [M1](../m1-contract.md) | — | [TC-P8-012](../../specs/test/P8-SET/test-plan.md#tc-p8-012) |
+| `PRD-SYS-003` | 健康检查与运行时状态 | P1 | `implemented` | [spec](../../specs/product/P8-SET/spec.md#prd-sys-003) | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [M1](../m1-contract.md) | — | [TC-P8-010](../../specs/test/P8-SET/test-plan.md#tc-p8-010) |
+| `PRD-SYS-005` | 日志与审计 | P1 | `partial` | [spec](../../specs/product/P8-SET/spec.md#prd-sys-005) | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [M9](../m9-contract.md) | — | [TC-P8-011](../../specs/test/P8-SET/test-plan.md#tc-p8-011) |
+| `PRD-SYS-006` | 安装·升级·便携包 | P1 | `partial` | [spec](../../specs/product/P8-SET/spec.md#prd-sys-006) | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [M1](../m1-contract.md) | — | [TC-P8-012](../../specs/test/P8-SET/test-plan.md#tc-p8-012) |
 
 ### P9 · 工具与能力
 <a id="p9"></a>
@@ -346,28 +347,28 @@ mindmap
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-TOOL-001` | 工具注册·执行·审计 | P0 | `partial` | [spec](../../specs/product/P9-TOOL/spec.md#prd-tool-001) | — | [M9](../m9-contract.md) / [M20](../m20-contract.md) | — | [TC-P9-001](../../specs/test/P9-TOOL/test-plan.md#tc-p9-001) |
-| `PRD-TOOL-002` | 权限·审批·沙盒 | P0 | `partial` | [spec](../../specs/product/P9-TOOL/spec.md#prd-tool-002) | — | [M9](../m9-contract.md) | — | [TC-P9-002](../../specs/test/P9-TOOL/test-plan.md#tc-p9-002) |
+| `PRD-TOOL-001` | 工具注册·执行·审计 | P0 | `partial` | [spec](../../specs/product/P9-TOOL/spec.md#prd-tool-001) | [CHG-LEGACY-P9-TOOL](../../specs/changes/CHG-LEGACY-P9-TOOL/spec.md) | [M9](../m9-contract.md) / [M20](../m20-contract.md) | — | [TC-P9-001](../../specs/test/P9-TOOL/test-plan.md#tc-p9-001) |
+| `PRD-TOOL-002` | 权限·审批·沙盒 | P0 | `partial` | [spec](../../specs/product/P9-TOOL/spec.md#prd-tool-002) | [CHG-LEGACY-P9-TOOL](../../specs/changes/CHG-LEGACY-P9-TOOL/spec.md) | [M9](../m9-contract.md) | — | [TC-P9-002](../../specs/test/P9-TOOL/test-plan.md#tc-p9-002) |
 
 #### L2 · Skills 与 CLI
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-TOOL-003` | Skills 发现与加载 | P1 | `partial` | [spec](../../specs/product/P9-TOOL/spec.md#prd-tool-003) | — | [M20](../m20-contract.md) | — | [TC-P9-003](../../specs/test/P9-TOOL/test-plan.md#tc-p9-003) |
-| `PRD-TOOL-005` | CLI 工具白名单 | P1 | `partial` | [spec](../../specs/product/P9-TOOL/spec.md#prd-tool-005) | — | [M20](../m20-contract.md) | — | [TC-P9-004](../../specs/test/P9-TOOL/test-plan.md#tc-p9-004) |
+| `PRD-TOOL-003` | Skills 发现与加载 | P1 | `unimplemented` · [backlog](BACKLOG.md) | [spec](../../specs/product/P9-TOOL/spec.md#prd-tool-003) | [CHG-LEGACY-P9-TOOL](../../specs/changes/CHG-LEGACY-P9-TOOL/spec.md) | [M20](../m20-contract.md) | — | [TC-P9-003](../../specs/test/P9-TOOL/test-plan.md#tc-p9-003) |
+| `PRD-TOOL-005` | CLI 工具白名单 | P1 | `partial` | [spec](../../specs/product/P9-TOOL/spec.md#prd-tool-005) | [CHG-LEGACY-P9-TOOL](../../specs/changes/CHG-LEGACY-P9-TOOL/spec.md) | [M20](../m20-contract.md) | — | [TC-P9-004](../../specs/test/P9-TOOL/test-plan.md#tc-p9-004) |
 
 #### L2 · 外部能力
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-TOOL-004` | MCP 接入 | P2 | `unimplemented` | [spec](../../specs/product/P9-TOOL/spec.md#prd-tool-004) | — | — | — | [TC-P9-005](../../specs/test/P9-TOOL/test-plan.md#tc-p9-005) |
-| `PRD-TOOL-006` | 联网搜索与抓取 | P1 | `partial` | [spec](../../specs/product/P9-TOOL/spec.md#prd-tool-006) | — | [M12](../m12-contract.md) | — | [TC-P9-006](../../specs/test/P9-TOOL/test-plan.md#tc-p9-006) |
+| `PRD-TOOL-004` | MCP 接入 | P2 | `unimplemented` · [backlog](BACKLOG.md) | [spec](../../specs/product/P9-TOOL/spec.md#prd-tool-004) | [CHG-LEGACY-P9-TOOL](../../specs/changes/CHG-LEGACY-P9-TOOL/spec.md) | — | — | [TC-P9-005](../../specs/test/P9-TOOL/test-plan.md#tc-p9-005) |
+| `PRD-TOOL-006` | 联网搜索与抓取 | P1 | `partial` | [spec](../../specs/product/P9-TOOL/spec.md#prd-tool-006) | [CHG-LEGACY-P9-TOOL](../../specs/changes/CHG-LEGACY-P9-TOOL/spec.md) | [M12](../m12-contract.md) | — | [TC-P9-006](../../specs/test/P9-TOOL/test-plan.md#tc-p9-006) |
 
 #### L2 · 能力目录
 
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
-| `PRD-TOOL-007` | 能力目录 L0–L3 | P2 | `unimplemented` | [spec](../../specs/product/P9-TOOL/spec.md#prd-tool-007) | — | — | — | [TC-P9-007](../../specs/test/P9-TOOL/test-plan.md#tc-p9-007) |
+| `PRD-TOOL-007` | 能力目录 L0–L3 | P2 | `unimplemented` · [backlog](BACKLOG.md) | [spec](../../specs/product/P9-TOOL/spec.md#prd-tool-007) | [CHG-LEGACY-P9-TOOL](../../specs/changes/CHG-LEGACY-P9-TOOL/spec.md) | — | — | [TC-P9-007](../../specs/test/P9-TOOL/test-plan.md#tc-p9-007) |
 
 ### P10 · 指标
 <a id="p10"></a>
@@ -393,7 +394,7 @@ mindmap
 | PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|
 | `PRD-METRIC-005` | 明细表与口径说明 | P1 | `implemented` | [spec](../../specs/product/P10-METRIC/spec.md#prd-metric-005) | [FE-008](../../specs/FE-008-metrics-dashboard/spec.md) | [FE-008](../../specs/FE-008-metrics-dashboard/spec.md) / [M1](../m1-contract.md) | — | [TC-P10-005](../../specs/test/P10-METRIC/test-plan.md#tc-p10-005) |
-| `PRD-METRIC-006` | 导出·对比·告警 | P2 | `unimplemented` | [spec](../../specs/product/P10-METRIC/spec.md#prd-metric-006) | — | — | — | [TC-P10-006](../../specs/test/P10-METRIC/test-plan.md#tc-p10-006) |
+| `PRD-METRIC-006` | 导出·对比·告警 | P2 | `unimplemented` · [backlog](BACKLOG.md) | [spec](../../specs/product/P10-METRIC/spec.md#prd-metric-006) | — | — | — | [TC-P10-006](../../specs/test/P10-METRIC/test-plan.md#tc-p10-006) |
 
 
 ## 4. 域边界

@@ -1,7 +1,10 @@
 # P1 · 会话与消息 测试计划
 
-状态：**active（部分用例有执行证据；覆盖未升级）** — 本文件定义用例与证据口径，不代表已经通过。
+状态：**active（2026-11-20 执行证据回写；用例 6 pass / 6 partial / 3 missing）** — 覆盖口径见 §1、§4；pass 只表示该用例的断言已执行，不表示 PRD 的 AC 全覆盖。
 > 产品域 spec：[`../../product/P1-CONV/spec.md`](../../product/P1-CONV/spec.md)；TREE：[`../../../docs/product/TREE.md`](../../../docs/product/TREE.md)；TRACEABILITY：[`../../../docs/product/TRACEABILITY.md`](../../../docs/product/TRACEABILITY.md)。
+
+<!-- EVIDENCE-SUMMARY-20261120 -->
+> **2026-11-20 证据汇总**：本域 15 个用例，**pass 6 / partial 6 / missing 3**；PRD 覆盖仍 **0 covered / 11 partial / 1 gap**。前端 `cd frontend && npm test`（**69/69 PASS**）、CDP `npm run test:e2e:cdp`（**11/11**，5 次）与后端 **223/223 PASS** 的交集；命令/环境见 [EVIDENCE](../../../docs/testing/EVIDENCE-20261120.md) 与 [BACKEND-EVIDENCE](../../../docs/testing/BACKEND-EVIDENCE-20261120.md)。
 
 ## 1. 范围与证据口径
 
@@ -24,7 +27,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-CONV-001-01` 主路径通过；`AC-CONV-001-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-001/FE-003 用例）
-- 当前证据：2026-11-20 `Sidebar.test.tsx` **9/9 PASS**：树/active/连接/配额、点击与 Enter 选择、双击重命名（Enter/Escape）、归档显示/恢复、空/加载/错误重试；真实后端生命周期未覆盖。覆盖状态仍 **partial**。
+- 当前证据：**pass** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/Sidebar.test.tsx`（9/9）；直接覆盖该用例的主路径。未覆盖：真实后端创建/归档持久化、权限与 409 映射未由前端测试验证；PRD 覆盖仍 partial。
 - 实现状态：`implemented`
 
 <a id="tc-p1-002"></a>
@@ -38,7 +41,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-CONV-002-01` 主路径通过；`AC-CONV-002-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-001/FE-003/FE-004 用例）
-- 当前证据：2026-11-20 `Sidebar.test.tsx` **9/9 PASS** 中创建/刷新/归档/选择相关用例；真实后端创建/删除/归属/归档持久化未覆盖。覆盖状态仍 **partial**。
+- 当前证据：**pass** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/Sidebar.test.tsx`（9/9）；直接覆盖该用例的主路径。未覆盖：真实后端生命周期、归属迁移与归档持久化未覆盖；PRD 覆盖仍 partial。
 - 实现状态：`implemented`
 
 <a id="tc-p1-003"></a>
@@ -52,7 +55,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-CONV-003-01` 主路径通过；`AC-CONV-003-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-003 用例）
-- 当前证据：2026-11-20 `Sidebar.test.tsx` **9/9 PASS** 中搜索过滤/服务端 ids/搜索中/无匹配/空态；未读游标未覆盖。覆盖状态仍 **partial**。
+- 当前证据：**partial** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/Sidebar.test.tsx`（9/9）；只覆盖展示/局部路径。未覆盖：搜索过滤/服务端 ids/搜索中/无匹配已测；未读游标与后端错误映射未覆盖；保持 partial。
 - 实现状态：`partial`
 
 <a id="tc-p1-004"></a>
@@ -66,7 +69,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-CONV-004-01` 主路径通过；`AC-CONV-004-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-001/FE-003 用例）
-- 当前证据：2026-11-20 `MessageItem.test.tsx` **18/18** + `LibraryUtilities` 日期 **1/1** + CDP E2E **01a**：渲染/分类/复制/卡片/流式 caret/长文本；真实模型长消息未覆盖。
+- 当前证据：**pass** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/MessageItem.test.tsx`（18/18） + `npm run test:e2e:cdp` 01a（首屏结构）；直接覆盖该用例的主路径。未覆盖：Markdown 子集/分类/复制/流式/失败态已测；真实历史分页未覆盖；PRD 覆盖仍 partial。
 - 实现状态：`implemented`
 
 <a id="tc-p1-005"></a>
@@ -80,7 +83,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-CONV-007-01` 主路径通过；`AC-CONV-007-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-007 用例）
-- 当前证据：2026-11-20 `App.integration` 祖先 3 项（逐级加载、413/403/空上级、切换清理）+ CDP E2E **04a–04d 4/4**：整级加载/错误/锚定；跨会话深链未覆盖。
+- 当前证据：**pass** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/App.integration.test.tsx`（7/7）；并以 `npm run test:e2e:cdp` 04a–04d（逐级加载/413/403/空上级）；直接覆盖该用例的主路径。未覆盖：真实祖先链后端分页与权限矩阵未覆盖；PRD 覆盖仍 partial。
 - 实现状态：`implemented`
 
 <a id="tc-p1-006"></a>
@@ -94,7 +97,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-CONV-005-01` 主路径通过；`AC-CONV-005-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-002 用例）
-- 当前证据：2026-11-20 `Composer` **10/10** + E2E **02/05**：Enter 发送、失败恢复与重试、发送中防重复、流式停止、500 错误重试；断线重连专项未覆盖。
+- 当前证据：**pass** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/Composer.test.tsx`（10/10） + `npm run test:e2e:cdp` 02/05（发送、流式、500 恢复）；直接覆盖该用例的主路径。未覆盖：真实 WS 断线重连与发送幂等未覆盖；PRD 覆盖仍 partial。
 - 实现状态：`implemented`
 
 <a id="tc-p1-007"></a>
@@ -108,7 +111,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-CONV-006-01` 主路径通过；`AC-CONV-006-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-006 用例）
-- 当前证据：2026-11-20 `Composer` **10/10** + E2E **02/03**：Enter/Shift+Enter、IME、Ctrl/Meta+Enter、发送模式持久化与反转；跨标签 BroadcastChannel 未覆盖。
+- 当前证据：**pass** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/Composer.test.tsx`（10/10） + `npm run test:e2e:cdp` 03（Enter/Shift+Enter/反转模式）；直接覆盖该用例的主路径。未覆盖：跨浏览器 IME 差异未覆盖；PRD 覆盖仍 partial。
 - 实现状态：`implemented`
 
 <a id="tc-p1-008"></a>
@@ -122,7 +125,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-SYNC-001-01` 主路径通过；`AC-SYNC-001-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-002 用例）
-- 当前证据：2026-11-20 `App.integration` WebSocket 增量去重 1 项 + E2E **02** 流式；重连退避/since 断线专项未覆盖。
+- 当前证据：**partial** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/App.integration.test.tsx`（7/7）；并以 `npm run test:e2e:cdp` 02 补充发送/流式展示；只覆盖展示/局部路径。未覆盖：WS 推送/去重已测；重连、since、replay、多会话隔离未覆盖；保持 partial。
 - 实现状态：`implemented`
 
 <a id="tc-p1-009"></a>
@@ -136,7 +139,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-SYNC-002-01` 主路径通过；`AC-SYNC-002-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-009 用例）
-- 当前证据：`FE-009/test-plan.md` 存在；执行结果：**missing**（未运行）
+- 当前证据：**missing** — 无测试落点；web-multitab 旧测试计划存在但未执行。
 - 实现状态：`implemented`
 
 <a id="tc-p1-010"></a>
@@ -150,7 +153,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-SYNC-003-01` 主路径通过；`AC-SYNC-003-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-006 用例）
-- 当前证据：2026-11-20 `Composer` **10/10** 覆盖 sendMode 切换/持久化 + E2E **03** 反转；跨标签 BroadcastChannel 同步未覆盖。
+- 当前证据：**partial** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/Composer.test.tsx`（10/10） + `npm run test:e2e:cdp` 03；只覆盖展示/局部路径。未覆盖：sendMode 持久化/迁移已测；BroadcastChannel 跨标签同步未覆盖；保持 partial。
 - 实现状态：`implemented`
 
 <a id="tc-p1-011"></a>
@@ -164,7 +167,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-SYNC-004-01` 主路径通过；`AC-SYNC-004-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-003 用例）
-- 当前证据：`FE-003/test-plan.md` 存在；执行结果：**missing**（未运行）
+- 当前证据：**missing** — 无测试落点；该路径缺少前端/后端测试。
 - 实现状态：`partial`
 
 <a id="tc-p1-012"></a>
@@ -178,7 +181,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-SYNC-005-01` 主路径通过；`AC-SYNC-005-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**missing** — 无测试落点；该路径缺少前端/后端测试。
 - 实现状态：`unimplemented`（unimplemented，不得当通过）
 
 
@@ -192,7 +195,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：空态可见，加载不闪烁；加载结束进入正确状态；不展示假 0。
 - 自动化层级：component/integration（待接线）
-- 当前证据：**missing**
+- 当前证据：**partial** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/Sidebar.test.tsx`（9/9） + MetricsDashboard/RightPanel 相关空态；只覆盖展示/局部路径。未覆盖：空/加载覆盖 Sidebar、RightPanel、Metrics 局部；会话域全状态矩阵未覆盖；保持 partial。
 
 <a id="tc-p1-e2"></a>
 #### TC-P1-E2 · 错误/恢复
@@ -202,7 +205,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：错误提示可见，重试/返回可用；失败不写脏数据、不重复提交。
 - 自动化层级：component/integration（待接线）
-- 当前证据：**missing**
+- 当前证据：**partial** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/Sidebar.test.tsx`（9/9） + RightPanel/Metrics 错误态；只覆盖展示/局部路径。未覆盖：错误/重试覆盖 Sidebar、RightPanel、Metrics 局部；超时/权限错误未覆盖；保持 partial。
 
 <a id="tc-p1-e3"></a>
 #### TC-P1-E3 · 响应式/键盘/权限
@@ -212,7 +215,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：无横向溢出；键盘可完成主路径；越权被默认拒绝。
 - 自动化层级：component/integration（待接线）
-- 当前证据：**missing**
+- 当前证据：**partial** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/TimelineGroups.test.tsx`（8/8） + `npm run test:e2e:cdp` 01b/03；只覆盖展示/局部路径。未覆盖：375/键盘有 E2E 01b、03；点击目标/焦点闭环与权限拒绝未覆盖；保持 partial。
 
 
 ## 3. 验收映射（A1–A8）
@@ -231,9 +234,12 @@
 ## 4. 未实现与缺口
 
 - **unimplemented**：`PRD-SYNC-005` 远程访问与通知中心。
-- **证据现状**：12 个主用例中 9 个已有部分执行证据（69 单测/11 E2E 的交集），但 009/011/012 仍 `missing`；证据不足以升级任何 PRD 为 covered。
-- **自动化现状**：Vitest 与 CDP runner 已存在；CI 尚未接线；Playwright Test 普通路径受沙箱限制，未实跑。
-- **不得宣称**：在上述证据补齐前，本域不能标记为 `covered`，也不能对外说“测试通过”。
+- **用例级证据**：15 个用例 **pass 6 / partial 6 / missing 3**；pass 只表示该用例的断言已执行，不等于 PRD 覆盖。
+- **PRD 覆盖**：**0 covered / 11 partial / 1 gap**；本轮没有因局部证据升级任何 PRD 为 covered。
+- **未覆盖**：`TC-P1-009`（未读/多标签）、`TC-P1-011`、`TC-P1-012` 仍 missing；`TC-P1-003` 未读游标、`TC-P1-008` 重连/replay、`TC-P1-010` 跨标签同步、权限/375 边界仅 partial。
+- **证据命令/入口**：前端 `cd frontend && npm test`（**69/69 PASS**）、CDP `npm run test:e2e:cdp`（**11/11**，5 次）与后端 **223/223 PASS** 的交集；命令/环境见 [EVIDENCE](../../../docs/testing/EVIDENCE-20261120.md) 与 [BACKEND-EVIDENCE](../../../docs/testing/BACKEND-EVIDENCE-20261120.md)。
+- **限制**：本域 E2E/前端证据只覆盖既有 UI 路径；后端 223 PASS 只证明既有测试通过，不证明产品 AC 完成。Playwright Test 普通路径受沙箱限制，CI 未实跑。
+- **不得宣称**：在 AC 全量、权限/异常/真实数据补齐前，不能标记 `covered`，也不能对外说“测试通过”。
 
 ## 5. 执行后的回写
 

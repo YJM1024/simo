@@ -1,7 +1,10 @@
 # P5 · 记忆 测试计划
 
-状态：**active（骨架；未执行）** — 本文件定义用例与证据口径，不代表已经通过。
+状态：**active（2026-11-20 后端证据回写；用例 4 pass / 1 partial / 4 missing）** — 覆盖口径见 §1、§4；pass 只表示该用例的断言已执行，不表示 PRD 的 AC 全覆盖。
 > 产品域 spec：[`../../product/P5-MEM/spec.md`](../../product/P5-MEM/spec.md)；TREE：[`../../../docs/product/TREE.md`](../../../docs/product/TREE.md)；TRACEABILITY：[`../../../docs/product/TRACEABILITY.md`](../../../docs/product/TRACEABILITY.md)。
+
+<!-- EVIDENCE-SUMMARY-20261120 -->
+> **2026-11-20 证据汇总**：本域 9 个用例，**pass 4 / partial 1 / missing 4**；PRD 覆盖仍 **0 covered / 5 partial / 1 gap**。后端 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0；日志 `.tmp/backend-fulltest-20261120.jsonl`）；前端证据不适用于本域或未覆盖本域。
 
 ## 1. 范围与证据口径
 
@@ -24,7 +27,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-MEM-001-01` 主路径通过；`AC-MEM-001-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**pass** — 2026-11-20 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0；日志 `.tmp/backend-fulltest-20261120.jsonl`）中的 `TestM3RememberVisibilityAndFTS`、`TestM3ConflictVisibleAndItemsShape`、`TestM3MemoryInjectionIntoChat`、`TestM3RestartPersistence`、`TestSearchChineseTrigramAndShortLike`、`TestScopeIsolationAndTaskDoneCandidate`；直接覆盖主路径。未覆盖：无 HTTP 层、前端记忆页、召回质量/性能矩阵；不能证明产品 AC 全量。PRD 覆盖仍 partial。
 - 实现状态：`partial`
 
 <a id="tc-p5-002"></a>
@@ -38,7 +41,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-MEM-006-01` 主路径通过；`AC-MEM-006-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**missing** — `PRD-MEM-006` 未实现，仅 v1–v6 migration 代码；无生产/测试。
 - 实现状态：`unimplemented`（unimplemented，不得当通过）
 
 <a id="tc-p5-003"></a>
@@ -52,7 +55,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-MEM-002-01` 主路径通过；`AC-MEM-002-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**partial** — 2026-11-20 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0）中的 `TestM21MemoryV3Pipeline`；仅覆盖部分路径。未覆盖：实体/图谱/金字塔 HTTP、权限与失败路径未覆盖；保持 partial。
 - 实现状态：`partial`
 
 <a id="tc-p5-004"></a>
@@ -66,7 +69,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-MEM-003-01` 主路径通过；`AC-MEM-003-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**pass** — 2026-11-20 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0；日志 `.tmp/backend-fulltest-20261120.jsonl`）中的 `TestM22RecallR1`、`TestM27RecallR2DefaultOn`、`TestM27RecallR2SwitchAndVectorDegrade`、`TestM27RecallR2TwoHopAndAgentic`；直接覆盖主路径。未覆盖：无真实数据质量/延迟、前端展示与权限矩阵。PRD 覆盖仍 partial。
 - 实现状态：`partial`
 
 <a id="tc-p5-005"></a>
@@ -80,7 +83,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-MEM-004-01` 主路径通过；`AC-MEM-004-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**pass** — 2026-11-20 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0；日志 `.tmp/backend-fulltest-20261120.jsonl`）中的 `TestM30ConsolidationCandidatesMergeAndIdempotency`、`TestM30ConsolidationDefaultEnabled`、`TestM30FactKeyExtraction`、`TestM32LocalVectorRecallAndFusion`、`TestM32VectorDefaultOff`、`TestM31RecallEntityBindingNoSelfLock`；直接覆盖主路径。未覆盖：无前端、无跨进程/重启后的端到端验证。PRD 覆盖仍 partial。
 - 实现状态：`partial`
 
 <a id="tc-p5-006"></a>
@@ -94,7 +97,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-MEM-005-01` 主路径通过；`AC-MEM-005-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**pass** — 2026-11-20 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0；日志 `.tmp/backend-fulltest-20261120.jsonl`）中的 `TestM3MemoryInjectionIntoChat`、`TestM3RestartPersistence`、`TestScopeIsolationAndTaskDoneCandidate`、`TestM3RememberVisibilityAndFTS`；直接覆盖主路径。未覆盖：无 HTTP 删除/权限/失败路径。PRD 覆盖仍 partial。
 - 实现状态：`partial`
 
 
@@ -108,7 +111,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：空态可见，加载不闪烁；加载结束进入正确状态；不展示假 0。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**
+- 当前证据：**missing** — 无测试落点；记忆域空/加载态无前端 UI 测试。
 
 <a id="tc-p5-e2"></a>
 #### TC-P5-E2 · 错误/恢复
@@ -118,7 +121,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：错误提示可见，重试/返回可用；失败不写脏数据、不重复提交。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**
+- 当前证据：**missing** — 无测试落点；记忆错误/恢复无 API 级契约测试。
 
 <a id="tc-p5-e3"></a>
 #### TC-P5-E3 · 响应式/键盘/权限
@@ -128,14 +131,14 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：无横向溢出；键盘可完成主路径；越权被默认拒绝。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**
+- 当前证据：**missing** — 无测试落点；记忆域权限/375/键盘无测试。
 
 
 ## 3. 验收映射（A1–A8）
 
 | A | 覆盖用例 | 说明 |
 |---|---|---|
-| A1 | 每个 PRD 的 `TC-P5-NNN` | P0 主路径逐项执行；当前证据均 missing |
+| A1 | 每个 PRD 的 `TC-P5-NNN` | P0 主路径逐项执行；证据见各用例“当前证据” |
 | A2 | `TC-P5-E1` / `TC-P5-E2` | 空/加载/错误/权限反馈 |
 | A3 | `TC-P5-E3` | 键盘/焦点；纯后端域 N/A |
 | A4 | `TC-P5-E3` | 375px；纯后端域 N/A |
@@ -147,9 +150,12 @@
 ## 4. 未实现与缺口
 
 - **unimplemented**：`PRD-MEM-006` 记忆迁移与索引。
-- **证据缺失**：本文件所有主用例当前均为 `missing`；已有 FE/COMP test-plan 只算“文件存在”，未执行。
-- **自动化未接线**：无 Playwright/E2E runner；component/integration 需要后续接入 `npm test` 与 CI。
-- **不得宣称**：在上述证据补齐前，本域不能标记为 `covered`，也不能对外说“测试通过”。
+- **用例级证据**：9 个用例 **pass 4 / partial 1 / missing 4**；pass 只表示该用例的断言已执行，不等于 PRD 覆盖。
+- **PRD 覆盖**：**0 covered / 5 partial / 1 gap**；本轮没有因局部证据升级任何 PRD 为 covered。
+- **未覆盖**：`TC-P5-002`（MEM-006）与 E1–E3 仍 missing；新增/更新/删除/冲突的 HTTP 路径、前端记忆视图、权限/375 无测试。
+- **证据命令/入口**：后端 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0；日志 `.tmp/backend-fulltest-20261120.jsonl`）；前端证据不适用于本域或未覆盖本域。
+- **限制**：本域 E2E/前端证据只覆盖既有 UI 路径；后端 223 PASS 只证明既有测试通过，不证明产品 AC 完成。Playwright Test 普通路径受沙箱限制，CI 未实跑。
+- **不得宣称**：在 AC 全量、权限/异常/真实数据补齐前，不能标记 `covered`，也不能对外说“测试通过”。
 
 ## 5. 执行后的回写
 

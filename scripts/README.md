@@ -63,3 +63,41 @@ node scripts/check-sdd.mjs --json
 - 新增 spec 时：先补「状态/目标/需求/验收/非目标」，再在 `test-plan.md` 或 `evidence.md` 为每个 A 编号写映射；
 - 新增组件时：必须登记 `manifest.json` 的 `name/variants/states`；
 - 脚本只读；不要把它改成自动修文档/写文件的工具。
+
+## check-trace.mjs
+
+产品需求追溯结构门禁：只检查 **PRD → TRACEABILITY → TEST 锚点 / 产品 spec / change 包** 的链接与结构完整性，不判断 PRD 是否 `covered`，也不把 `missing` 证据算通过。
+
+```bash
+# 在仓库根执行
+node scripts/check-trace.mjs
+
+# 在 frontend 中通过 pnpm 执行（CI 使用）
+pnpm check:trace
+
+# 指定仓库根 / 机器可读
+node scripts/check-trace.mjs --root .
+node scripts/check-trace.mjs --json
+```
+
+### 检查项
+
+1. `docs/product/TREE.md` 的 PRD 行数与 `TREE.md`、`TRACEABILITY.md` 的「合计」一致（当前 **71**）；
+2. TREE 的每个 PRD 都出现在 `TRACEABILITY.md`，且 TRACEABILITY 不出现 TREE 中不存在的 PRD；
+3. TREE 与 TRACEABILITY 中每个 PRD 的 TEST 链接：
+   - 指向 `specs/test/<域>/test-plan.md`；
+   - 文件存在；
+   - `#tc-...` 锚点在该文件中存在（显式 `id="..."`）。
+4. TREE 的每个 PRD 在其产品 spec（`specs/product/<域>/spec.md`）中有声明；产品 spec 不应出现 TREE 外 PRD；
+5. `specs/changes/**/spec.md` 必须含 `Implements: PRD-...`（同行、多行或 Markdown 列表均可），引用的 PRD 必须存在；
+6. `specs/test/e2e/README.md` 必须存在。
+
+### 输出与退出码
+
+- 默认输出：PRD 总数 / 缺失 / 坏锚点 / 缺失 TEST 计划 / change 包数 / 失败明细 / `RESULT: PASS|FAIL`；
+- `--json` 输出 `{ok, root, stats, failures, warnings}`；
+- **exit 0**：结构通过；**exit 1**：存在失败项。注意：通过只代表“追溯结构完整”，不代表需求已覆盖或测试已执行。
+
+### CI
+
+`.github/workflows/ci.yml` 的 `quality` job 在 Ubuntu + Node 22 + pnpm 上执行 `pnpm check:trace`。E2E 不在该 job 运行（需要 Windows/Chrome/CDP），不能把未执行的 E2E 写成通过。

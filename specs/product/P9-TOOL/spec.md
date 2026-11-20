@@ -8,7 +8,7 @@
 
 把“工具与能力”从零散接口/旧 FE 规格收敛成可验收的产品能力：明确场景、行为、AC 与实现状态；**未实现的能力标 `unimplemented`，不得写成已完成**。
 
-本域覆盖 7 个 L3 功能点：implemented 0、partial 5、unimplemented 2。
+本域覆盖 7 个 L3 功能点：implemented 0、partial 4、unimplemented 3。
 
 ## 2. 非目标
 
@@ -35,9 +35,9 @@
 
 - 优先级：P0
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M9](../../../docs/m9-contract.md) / [M20](../../../docs/m20-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P9-TOOL](../../changes/CHG-LEGACY-P9-TOOL/spec.md)；开发 [M9](../../../docs/m9-contract.md) / [M20](../../../docs/m20-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：工具运行时/审计后端存在；无前端能力视图。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P9-TOOL/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“工具与能力 / 工具运行时”中提供“工具注册·执行·审计”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-TOOL-001-01` 主路径：用户能完成“工具注册·执行·审计”并看到一致结果；状态与关联数据不互相矛盾。
@@ -48,9 +48,9 @@
 
 - 优先级：P0
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M9](../../../docs/m9-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P9-TOOL](../../changes/CHG-LEGACY-P9-TOOL/spec.md)；开发 [M9](../../../docs/m9-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：后端有权限/审批；越权/拒绝路径无系统化测试。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P9-TOOL/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“工具与能力 / 工具运行时”中提供“权限·审批·沙盒”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-TOOL-002-01` 主路径：用户能完成“权限·审批·沙盒”并看到一致结果；状态与关联数据不互相矛盾。
@@ -62,10 +62,11 @@
 <a id="prd-tool-003"></a>
 
 - 优先级：P1
-- 实现状态：`partial`
-- 关联：CHANGE —；开发 [M20](../../../docs/m20-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 实现状态：`unimplemented`
+- 关联：CHANGE [CHG-LEGACY-P9-TOOL](../../changes/CHG-LEGACY-P9-TOOL/spec.md)；开发 [M20](../../../docs/m20-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：只有 docs/process/skills 文档；运行时发现/加载未实现。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：后端无 skills 代码/测试；产品 spec 原 `partial` 为文档不一致，按 backend 口径降级为 `unimplemented`；无可用实现/无完整验收。
+> **unimplemented**：当前无可用实现/无测试；不得对外宣称已完成。
 - 目标行为：系统在“工具与能力 / Skills 与 CLI”中提供“Skills 发现与加载”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-TOOL-003-01` 主路径：用户能完成“Skills 发现与加载”并看到一致结果；状态与关联数据不互相矛盾。
@@ -76,9 +77,9 @@
 
 - 优先级：P1
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M20](../../../docs/m20-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P9-TOOL](../../changes/CHG-LEGACY-P9-TOOL/spec.md)；开发 [M20](../../../docs/m20-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：CLI 运行时存在；白名单/命令注入/超时无系统测试。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P9-TOOL/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“工具与能力 / Skills 与 CLI”中提供“CLI 工具白名单”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-TOOL-005-01` 主路径：用户能完成“CLI 工具白名单”并看到一致结果；状态与关联数据不互相矛盾。
@@ -91,7 +92,7 @@
 
 - 优先级：P2
 - 实现状态：`unimplemented`
-- 关联：CHANGE —；开发 —；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P9-TOOL](../../changes/CHG-LEGACY-P9-TOOL/spec.md)；开发 —；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：未实现；无协议/安全验收。
 - 当前剩余缺口：`unimplemented`，无可用实现/无完整验收。
 > **unimplemented**：当前无可用实现/无完整验收；不得对外宣称已完成。
@@ -106,9 +107,9 @@
 
 - 优先级：P1
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M12](../../../docs/m12-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P9-TOOL](../../changes/CHG-LEGACY-P9-TOOL/spec.md)；开发 [M12](../../../docs/m12-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：SSRF/审批契约存在；真实网络失败/限流/引用无产品验收。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P9-TOOL/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“工具与能力 / 外部能力”中提供“联网搜索与抓取”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-TOOL-006-01` 主路径：用户能完成“联网搜索与抓取”并看到一致结果；状态与关联数据不互相矛盾。
@@ -121,7 +122,7 @@
 
 - 优先级：P2
 - 实现状态：`unimplemented`
-- 关联：CHANGE —；开发 —；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P9-TOOL](../../changes/CHG-LEGACY-P9-TOOL/spec.md)；开发 —；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：docs/product/capability-catalog 只有目录草案；无实现、无测试。
 - 当前剩余缺口：`unimplemented`，无可用实现/无完整验收。
 > **unimplemented**：当前无可用实现/无完整验收；不得对外宣称已完成。
@@ -151,13 +152,13 @@
 |---|---|---|---|
 | `PRD-TOOL-001` | 工具注册·执行·审计 | `partial` | 部分；工具运行时/审计后端存在；无前端能力视图。 |
 | `PRD-TOOL-002` | 权限·审批·沙盒 | `partial` | 部分；后端有权限/审批；越权/拒绝路径无系统化测试。 |
-| `PRD-TOOL-003` | Skills 发现与加载 | `partial` | 部分；只有 docs/process/skills 文档；运行时发现/加载未实现。 |
-| `PRD-TOOL-005` | CLI 工具白名单 | `partial` | 部分；CLI 运行时存在；白名单/命令注入/超时无系统测试。 |
+| `PRD-TOOL-003` | Skills 发现与加载 | `unimplemented` | 后端无 skills 实现/测试；按 backend 口径降级。 |
 | `PRD-TOOL-004` | MCP 接入 | `unimplemented` | 规划；未实现；无协议/安全验收。 |
+| `PRD-TOOL-005` | CLI 工具白名单 | `partial` | 部分；CLI 运行时存在；白名单/命令注入/超时无系统测试。 |
 | `PRD-TOOL-006` | 联网搜索与抓取 | `partial` | 部分；SSRF/审批契约存在；真实网络失败/限流/引用无产品验收。 |
 | `PRD-TOOL-007` | 能力目录 L0–L3 | `unimplemented` | 设计；docs/product/capability-catalog 只有目录草案；无实现、无测试。 |
 
-**未实现项（unimplemented）**：`PRD-TOOL-004` MCP 接入、`PRD-TOOL-007` 能力目录 L0–L3。
+**未实现项（unimplemented）**：`PRD-TOOL-003` Skills 发现与加载、`PRD-TOOL-004` MCP 接入、`PRD-TOOL-007` 能力目录 L0–L3。
 
 > 说明：`implemented` 只表示“有验收/可运行实现”的现状摘要；不等于本 spec 的 AC 已全部重跑。所有执行证据见测试计划的“当前证据”列。
 

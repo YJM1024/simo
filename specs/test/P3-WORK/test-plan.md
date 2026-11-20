@@ -1,7 +1,10 @@
 # P3 · 工作台与视图 测试计划
 
-状态：**active（部分用例有执行证据；覆盖未升级）** — 本文件定义用例与证据口径，不代表已经通过。
+状态：**active（2026-11-20 执行证据回写；用例 1 pass / 6 partial / 1 missing）** — 覆盖口径见 §1、§4；pass 只表示该用例的断言已执行，不表示 PRD 的 AC 全覆盖。
 > 产品域 spec：[`../../product/P3-WORK/spec.md`](../../product/P3-WORK/spec.md)；TREE：[`../../../docs/product/TREE.md`](../../../docs/product/TREE.md)；TRACEABILITY：[`../../../docs/product/TRACEABILITY.md`](../../../docs/product/TRACEABILITY.md)。
+
+<!-- EVIDENCE-SUMMARY-20261120 -->
+> **2026-11-20 证据汇总**：本域 8 个用例，**pass 1 / partial 6 / missing 1**；PRD 覆盖仍 **0 covered / 4 partial / 1 gap**。前端 `cd frontend && npm test`（**69/69 PASS**）、CDP `npm run test:e2e:cdp`（**11/11**，5 次）与后端 **223/223 PASS** 的交集；命令/环境见 [EVIDENCE](../../../docs/testing/EVIDENCE-20261120.md) 与 [BACKEND-EVIDENCE](../../../docs/testing/BACKEND-EVIDENCE-20261120.md)。
 
 ## 1. 范围与证据口径
 
@@ -24,7 +27,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-WORK-001-01` 主路径通过；`AC-WORK-001-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-001/FE-005 用例）
-- 当前证据：2026-11-20 `LibraryUtilities` **2/2**（页面 tab/active 切换）+ E2E **01a/01b**（对话/工作台、375 无溢出）；工作台内容级入口未全覆盖。
+- 当前证据：**pass** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/LibraryUtilities.test.tsx`（2/2） + `npm run test:e2e:cdp` 01a/01b；直接覆盖该用例的主路径。未覆盖：真实后端 tab 持久化/路由未覆盖；视觉验收由 E2E 01a/01b 补充；PRD 覆盖仍 partial。
 - 实现状态：`implemented`
 
 <a id="tc-p3-002"></a>
@@ -38,7 +41,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-WORK-002-01` 主路径通过；`AC-WORK-002-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-005 用例）
-- 当前证据：2026-11-20 `App.integration` 7/7 中工作台 metrics/7d30d/empty + E2E **01a**；usage 卡真实数据未覆盖。
+- 当前证据：**partial** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/App.integration.test.tsx`（7/7）；并以 `npm run test:e2e:cdp` 01a 补充首屏结构；只覆盖展示/局部路径。未覆盖：工作台指标展示已测；真实任务/用量数据未覆盖；保持 partial。
 - 实现状态：`implemented`
 
 <a id="tc-p3-003"></a>
@@ -52,7 +55,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-WORK-003-01` 主路径通过；`AC-WORK-003-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-005 用例）
-- 当前证据：2026-11-20 `App.integration` 工作台 metrics + `MetricsDashboard` **9/9** 仅覆盖趋势/明细展示；最近活动与每日聚合未覆盖。
+- 当前证据：**partial** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/MetricsDashboard.test.tsx`（9/9）；并以 `npm run test:e2e:cdp` 01a 补充首屏结构；只覆盖展示/局部路径。未覆盖：统计展示/窗口切换已测；真实统计口径未覆盖；保持 partial。
 - 实现状态：`implemented`
 
 <a id="tc-p3-004"></a>
@@ -66,7 +69,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-WORK-004-01` 主路径通过；`AC-WORK-004-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-004/FE-005 用例）
-- 当前证据：2026-11-20 `RightPanel` **6/6** + E2E **07**：交付物右栏/工作台可见与下载；三态中的 loading/error 注入未覆盖。
+- 当前证据：**partial** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/RightPanel.test.tsx`（6/6） + `npm run test:e2e:cdp` 07；只覆盖展示/局部路径。未覆盖：交付物入口/可见性已测；加载/错误/空态与权限未覆盖；保持 partial。
 - 实现状态：`partial`
 
 <a id="tc-p3-005"></a>
@@ -80,7 +83,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-WORK-005-01` 主路径通过；`AC-WORK-005-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**missing** — 无测试落点；自定义视图未实现/未测试。
 - 实现状态：`unimplemented`（unimplemented，不得当通过）
 
 
@@ -94,7 +97,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：空态可见，加载不闪烁；加载结束进入正确状态；不展示假 0。
 - 自动化层级：component/integration（待接线）
-- 当前证据：**missing**
+- 当前证据：**partial** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/MetricsDashboard.test.tsx`（9/9）；只覆盖展示/局部路径。未覆盖：指标空/加载已测；工作台全域空态未覆盖；保持 partial。
 
 <a id="tc-p3-e2"></a>
 #### TC-P3-E2 · 错误/恢复
@@ -104,7 +107,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：错误提示可见，重试/返回可用；失败不写脏数据、不重复提交。
 - 自动化层级：component/integration（待接线）
-- 当前证据：**missing**
+- 当前证据：**partial** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/MetricsDashboard.test.tsx`（9/9）；只覆盖展示/局部路径。未覆盖：错误/重试已测；工作台接口失败/超时未覆盖；保持 partial。
 
 <a id="tc-p3-e3"></a>
 #### TC-P3-E3 · 响应式/键盘/权限
@@ -114,7 +117,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：无横向溢出；键盘可完成主路径；越权被默认拒绝。
 - 自动化层级：component/integration（待接线）
-- 当前证据：**missing**
+- 当前证据：**partial** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/TimelineGroups.test.tsx`（8/8） + `npm run test:e2e:cdp` 01b/03；只覆盖展示/局部路径。未覆盖：375 由 E2E 01b 覆盖；键盘/拖拽/权限未覆盖；保持 partial。
 
 
 ## 3. 验收映射（A1–A8）
@@ -132,10 +135,13 @@
 
 ## 4. 未实现与缺口
 
-- **unimplemented**：`PRD-WORK-005` 自定义视图 13 类块。
-- **证据现状**：001–004 有部分执行证据（LibraryUtilities/App.integration/RightPanel + E2E 01a/01b/07）；WORK-005 自定义视图仍 `unimplemented`/`missing`，覆盖状态仍 4 partial / 1 gap。
-- **自动化现状**：Vitest 与 CDP runner 已存在；CI 尚未接线；工作台真实 usage/最近活动仍无专项断言。
-- **不得宣称**：在上述证据补齐前，本域不能标记为 `covered`，也不能对外说“测试通过”。
+- **unimplemented**：`PRD-WORK-005` 自定义视图。
+- **用例级证据**：8 个用例 **pass 1 / partial 6 / missing 1**；pass 只表示该用例的断言已执行，不等于 PRD 覆盖。
+- **PRD 覆盖**：**0 covered / 4 partial / 1 gap**；本轮没有因局部证据升级任何 PRD 为 covered。
+- **未覆盖**：`PRD-WORK-005` 与 `TC-P3-005` 仍 missing；真实统计、任务/交付物、权限与键盘边界仅 partial。
+- **证据命令/入口**：前端 `cd frontend && npm test`（**69/69 PASS**）、CDP `npm run test:e2e:cdp`（**11/11**，5 次）与后端 **223/223 PASS** 的交集；命令/环境见 [EVIDENCE](../../../docs/testing/EVIDENCE-20261120.md) 与 [BACKEND-EVIDENCE](../../../docs/testing/BACKEND-EVIDENCE-20261120.md)。
+- **限制**：本域 E2E/前端证据只覆盖既有 UI 路径；后端 223 PASS 只证明既有测试通过，不证明产品 AC 完成。Playwright Test 普通路径受沙箱限制，CI 未实跑。
+- **不得宣称**：在 AC 全量、权限/异常/真实数据补齐前，不能标记 `covered`，也不能对外说“测试通过”。
 
 ## 5. 执行后的回写
 

@@ -1374,3 +1374,120 @@ SUMMARY: PASS（失败 0，警告 0）
 4. 覆盖率配置仅 include `src/components/library.tsx`，不是全 `src/` 覆盖率；TEST-REPORT 已明示该限制。
 5. 8787 未部署本次测试构建；本次未改服务与数据。
 
+## 2026-11-20 SDD/测试收口独立验收
+
+范围：只读审计 SDD 门禁、test-plan 证据、5 个 CHG-LEGACY 变更包、后端 223 测试计数、TREE/TRACE/BACKLOG 自洽性，以及 STATUS/CONTINUITY 的完成声明。未改代码/specs/测试；只改本文件。
+
+### 1. 门禁复跑
+
+| 命令 | 结果 |
+|---|---|
+| `node scripts/check-trace.mjs` | **EXIT=0，RESULT: PASS**；TREE 71、TRACE 声明 71、实际 71；缺失 0、坏 TEST 锚点 0、缺失 TEST 计划 0、非法 TEST 链接 0；change 包 5、问题 0；提示项 1（35 个 PRD 未被 change 引用） |
+| `node scripts/check-sdd.mjs` | **EXIT=0，SUMMARY: PASS（失败 0，警告 0）**；specs 15（COMP 5）、A 编号 134/已映射 134、manifest 33 |
+
+### 2. 变更包与后端证据
+
+- 5 个 `specs/changes/CHG-LEGACY-P5-MEM`…`P9-TOOL` 均具备 7 个文件：`proposal.md`、`spec.md`、`backend.md`、`frontend.md`、`tasks.md`、`test-plan.md`、`evidence.md`；共 35 个文档，**无 `.go/.ts/.tsx/.js/.mjs/.css/.html` 代码文件**。
+- 5 个 `spec.md` 首段均存在 `Implements:`，`check-trace` 报告 change 问题 0。
+- 后端日志 `.tmp/backend-fulltest-20261120.jsonl` 实读：**223 个 test pass 事件、0 fail、0 skip、26 个 package**，与 `docs/testing/BACKEND-EVIDENCE-20261120.md` 的 223/223、0 fail、0 skip、26 package 一致。
+- 从 test-plan 的 pass 证据中抽取的 33 个精确 `Test*` 名称，全部能在 `backend/**/*_test.go` 找到（`func <name>(`）；未发现把 `partial`/`missing` 用例直接虚报为 `pass` 的计数异常。
+
+### 3. 计数与状态自洽性
+
+- 10 个域 test-plan：**101 用例**，实际统计 **pass 21 / partial 43 / missing 37**，与背景声称一致。
+- `docs/product/TREE.md`：71 个 PRD 行，**implemented 17 / partial 38 / unimplemented 16**。
+- `docs/product/TRACEABILITY.md`：71 个 PRD 行，**covered 0 / partial 48 / gap 23**。
+- `docs/product/BACKLOG.md`：16 项，全部为 `unimplemented`/“是否本轮实现：否”，未写成完成。
+- `STATUS.md` 与 `CONTINUITY.md` 当前状态块均明确写 CI 未实跑、E2E 为隔离 mock、223 PASS 不等于产品 AC 完成；未发现“CI 通过/全部完成”的虚假完成声明。
+
+### 4. 问题清单（阻断签字）
+
+1. **P1 test-plan 证据路径错误**：`specs/test/P1-CONV/test-plan.md:86` 的 pass 证据引用 `frontend/src/components/App.integration.test.tsx`，该路径不存在；实际文件是 `frontend/src/App.integration.test.tsx`。pass 证据因此不可按所写路径复现。
+2. **P1 test-plan 证据不精确**：`specs/test/P8-SET/test-plan.md:44` 使用 `permission 3 tests`、`TestM9*` 6；同文件 `:128` 使用 `TestM9*`；`specs/test/P9-TOOL/test-plan.md:44` 使用 `TestM9*` 6、`TestM5*` 2、`permission 3`。这不符合“精确测试名/命令/文件”的要求，应列出具体测试名。
+3. **活跃证据文档计数失真**：`docs/testing/EVIDENCE-20261120.md:5` 与 `:112` 仍写 `partial 22 / gap 49`，与当前 TREE/TRACE 的 `partial 48 / gap 23` 不一致；`:70` 写 E2E 时间 `2026-11-20T07:29:32.051Z`，实际报告 `summary.md` 为 `2026-11-20T07:31:56.785Z`；`:103` 写 15 个 unimplemented，当前为 16（含 `PRD-TOOL-003`）；`:96-100` 写 P5–P9“全部 missing”，与当前 test-plan 已回写的 pass/partial 证据矛盾。
+4. **BACKEND-EVIDENCE 过期陈述**：`docs/testing/BACKEND-EVIDENCE-20261120.md:196` 仍称 `specs/test/P5-MEM` … `P9-TOOL/test-plan.md` 是 `missing` 骨架、本次未修改；当前这些 test-plan 已有 21 个 pass 用例及 partial/missing 证据，该陈述已过期。
+
+> 说明：`docs/product/SPEC-GAP.md:25` 的 22/49 出现在明确标注“历史快照”的 §1，且 §0 已写当前 0/48/23，未计入问题。
+
+### 5. 签字结论
+
+**不通过（不签字，退回修正）。**
+
+核心门禁、5 个变更包 7 件套、223 后端测试计数、TREE/TRACE/BACKLOG 计数本身通过；但 test-plan 的 pass 证据存在不可复现路径/不精确测试名，且活跃 EVIDENCE 与 BACKEND-EVIDENCE 留有与当前计数、时间、用例状态矛盾的陈述，未达到“可复核、无虚假声明”的收口标准。
+
+### 6. 未完成/未验证（不得宣称）
+
+- CI quality job **未在 GitHub Actions 实跑**，不得写“CI 通过”。
+- CDP E2E 使用隔离 mock 后端，未在 8787 真实模型数据下重验全链路。
+- 69 个前端单测不是全应用覆盖；覆盖率仅 `src/components/library.tsx` 单文件。
+- 16 项 backlog 全部仍未完成；35 个 PRD 未被 change 包引用；真实模型长程、团队隔离、调度失败、权限 fail-closed、文件上传/预览/PDF/Office 未重验。
+- 本机无 `git` CLI，无法用本地 git 复核 STATUS 中的 commit SHA 与“未改代码”的提交边界；只能确认变更包目录本身是 docs-only。
+- Playwright Test 普通路径、容器/部署、真实模型全链路均未由本次审计覆盖。
+
+### 7. 2026-11-20 复审（修正后）
+
+复审命令：
+- `node scripts/check-trace.mjs`：EXIT=0，PASS；TREE 71、TRACE 71/71；缺失0、坏锚点0、缺失TEST计划0、非法链接0；change 5、问题0；仅提示35 PRD无change。
+- `node scripts/check-sdd.mjs`：EXIT=0，PASS；15 specs（COMP5）、A 134/134、manifest33、0 fail 0 warn。
+
+已确认修正真实：
+- `specs/test/P1-CONV/test-plan.md:86,128` 与 `specs/test/P3-WORK/test-plan.md:44` 已改为实际路径 `frontend/src/App.integration.test.tsx`。
+- `specs/test/P8-SET/test-plan.md:44,128,208,218`、`specs/test/P9-TOOL/test-plan.md:44,148` 已无 `TestM9*`/`TestM5*`/`permission 3 tests`；从 P8/P9 test-plan 抽取的 20 个精确 `Test*` 名均在 backend 代码中找到 `func` 定义。
+- `docs/testing/EVIDENCE-20261120.md` 已无 22/49、07:29、15 unimplemented、“P5–P9 全部 missing”；`:5,112` 为 0/48/23，`:103` 为 16 个 unimplemented。
+- `docs/testing/BACKEND-EVIDENCE-20261120.md:196` 已改为“已回写部分用例”；`docs/product/SPEC-GAP.md:25` 为 0/48/23（22/49 仅保留为历史快照说明）。
+- TREE 合计仍 `17/38/16`，TRACE 合计仍 `0/48/23`，BACKLOG 仍 16 项（16 行均“是否本轮实现：否”）。
+
+仍阻断（残留通配/模糊证据）：
+1. `specs/changes/CHG-LEGACY-P8-SET/tasks.md:26` 仍是 `TestM7*`。
+2. `specs/changes/CHG-LEGACY-P9-TOOL/tasks.md:26` 仍是 `TestM12*`、`TestM17*`。
+3. `specs/changes/CHG-LEGACY-P9-TOOL/test-plan.md:29` 的 PASS 证据仍写 `permission 3`；同文件 `:31` 仍写 `M17 四个`。这些属于“P8/P9 change 包同类模糊描述”，未全部展开为精确测试名。
+4. 若按同一精确性口径，`specs/changes/CHG-LEGACY-P8-SET/test-plan.md:28,31,32,33` 仍有 `config 9 个测试`、`httpserver 3`、`migrate 3`、`sqlite 3` 等聚合计数；至少应补精确测试名或明确这些只是汇总、精确名在别处可查。
+
+历史结论：当时**不通过（不签字）**；其中 P8/P9 `tasks.md`/`test-plan.md` 残留已在第二批修正关闭。最终结论见 §9：**通过/签字**。
+
+### 8. 2026-11-20 第三轮复审（第二批修正后）
+
+> §7 记录的 P8/P9 `tasks.md`/`test-plan.md` 残留已在第二批修正；本节为当前结论。
+
+复审命令仍为：
+- `node scripts/check-trace.mjs`：EXIT=0，PASS；TREE 71、TRACE 71/71；缺失0、坏锚点0、缺失TEST计划0、非法链接0；change 5、问题0；仅提示35 PRD无change。
+- `node scripts/check-sdd.mjs`：EXIT=0，PASS；15 specs（COMP5）、A 134/134、manifest33、0 fail 0 warn。
+
+第二批修正核验：
+- P8/P9 的 `tasks.md`、`test-plan.md`、`backend.md`、`evidence.md` 已无 `TestM7*`/`TestM12*`/`TestM17*`/`permission 3`/`M17 四个` 等聚合 PASS 证据；P8/P9 change 包中抽取的 52 个精确 `Test*` 名称均能在 backend 代码中找到 `func` 定义。
+- `config（共 9 个，精确名如下）`、`migrate/…（精确名如下）`、`eventlog（共 4 个，精确名如下）` 等组标题后均跟具体测试名，不再单独作为证据；`config 12` 已拆为 `config 9 + migrate 3`。
+- P8 test-plan 仍为 `pass 3 / partial 8 / missing 4`，P9 test-plan 仍为 `pass 2 / partial 3 / missing 5`；TREE 仍 `17/38/16`、TRACE 仍 `0/48/23`、BACKLOG 仍 16 行且均未完成。
+- `docs/testing` 已无 22/49、07:29、15 unimplemented、P5–P9 全部 missing 等旧值。
+
+仍阻断（1 处）：
+- `specs/changes/CHG-LEGACY-P5-MEM/spec.md:21` 仍写 `` `TestM27RecallR2*` ``，未展开为精确测试名。后端实际存在 `TestM27RecallR2DefaultOn`、`TestM27RecallR2SwitchAndVectorDegrade`、`TestM27RecallR2TwoHopAndAgentic` 三个测试；同包 `backend.md:76`、`evidence.md:35` 已使用精确名，仅 `spec.md:21` 漏改。这仍属于 lead 声称已清理的“P5 同类通配”残留。
+
+历史结论：当时**不通过（不签字）**；P5 `spec.md:21` 的 1 行通配已在第四批修正关闭。最终结论见 §9：**通过/签字**。
+
+### 9. 2026-11-20 最终复审（第四批修正后，签字）
+
+> §7/§8 为历史复审记录；其“不通过”对应的阻断项已全部关闭。本节为最终结论。
+
+复核结果：
+- `node scripts/check-trace.mjs`：EXIT=0，PASS；TREE 71、TRACE 71/71；缺失0、坏锚点0、缺失TEST计划0、非法链接0；change 5、问题0；提示35 PRD无change。
+- `node scripts/check-sdd.mjs`：EXIT=0，PASS；15 specs（COMP5）、A 134/134、manifest 33、0 fail 0 warn。
+- `specs/changes/CHG-LEGACY-P5-MEM/spec.md:21` 已展开为 `TestM27RecallR2DefaultOn`、`TestM27RecallR2SwitchAndVectorDegrade`、`TestM27RecallR2TwoHopAndAgentic`，与 backend 实际 `func` 名一致。
+- P8/P9 的 tasks/test-plan/backend/evidence/spec/proposal 聚合证据已展开；抽取的 52 个精确 `Test*` 全部能在 backend 找到 `func` 定义；P8/P9 用例状态未变：P8 为 3 pass / 8 partial / 4 missing，P9 为 2 pass / 3 partial / 5 missing。
+- `specs` + `docs` 全量（排除本 `acceptance.md` 的历史审计文字）扫描：无 `Test*` 通配；无 `config 9/12`、`httpserver 3`、`migrate 3`、`sqlite 3`、`permission 3`（聚合用法）、`workspace-migrate 3`、`eventlog 4`、`M13 四个/五个`、`M17 四个` 等**单独作为证据的聚合行**；保留的 `config（共9个，精确名如下）` 等组标题后均列精确测试名。
+- 计数未变：TREE 合计 `17/38/16`；TRACE 合计 `0/48/23`；BACKLOG 16 项（16 行均“是否本轮实现：否”）。
+
+### 签字
+
+**通过（SDD/测试/CI 文档收口独立验收签字）。**
+
+签字范围仅限：SDD 门禁、test-plan/change 包证据可复核性、后端 223 测试计数、TREE/TRACE/BACKLOG 文档自洽性。**不签产品功能、视觉、部署或真实模型整体验收。**
+
+### 仍不得宣称的限制
+
+1. **CI 未跑**：quality job 未在 GitHub Actions 实跑，不得写“CI 通过”。
+2. **E2E 为隔离 mock**：CDP E2E 使用 mock 后端，未在 8787 真实模型数据下重跑全链路；普通 Playwright Test 也未在本机实跑。
+3. **69 单测不是全应用**：8 files/69 tests 仅覆盖现有组件/集成；覆盖率仅 include `src/components/library.tsx` 单文件，不代表全仓覆盖率。
+4. **16 项 backlog 全部未完成**；35 个 PRD 未被任何 change 包引用。
+5. **真实模型能力未重验**：长程会话、团队隔离、调度失败/通知、权限 fail-closed 矩阵、文件上传/预览/PDF/Office 生成等未重验；223 PASS 不等于产品 AC 完成，TRACE 仍为 covered 0 / partial 48 / gap 23。
+6. 本机无 `git` CLI，无法复核 STATUS 中的 commit SHA 与提交边界；本次只确认文档/变更包内容，未改代码/specs（仅改本 `acceptance.md`）。
+

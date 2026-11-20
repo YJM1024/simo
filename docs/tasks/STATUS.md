@@ -7,9 +7,10 @@
 - **8787**：2026-11-20 15:26 由 Lead 用 `backend/simo-live-composer.exe serve -addr 127.0.0.1:8787 -model real` 启动（`SIMO_HOME=data`），进程 PID 42660；`GET /api/health` **200**（db ok、modules sessions/chat/tasks/memory）；首页 build-id **`mwfzyf8u-h9f0d`**；modelMode **real**；日志 `.tmp/simo-8787-20261120.log`。
 - **前端单测**：**69/69 PASS、0 failed**（8 个测试文件，2026-11-20）：App.integration 7、Composer 10、LibraryUtilities 2、MessageItem 18、MetricsDashboard 9、RightPanel 6、Sidebar 9、TimelineGroups 8。
 - **CDP E2E**：**11/11 PASS、exit 0**，连续 5 次均 11/11；报告 `frontend/e2e/report/cdp/`，测试计划 `specs/test/e2e/README.md`。Playwright Test 普通路径仍受沙箱限制，CI 未实跑；E2E 使用隔离 API 19230 与临时 `SIMO_HOME`，不是 8787 生产实例。
-- **spec 底座**：产品域 spec **10/10**、域 test-plan **10/10**、E2E 计划 **1/1**；71 个 PRD，**covered 0 / partial 22 / gap 49**，unimplemented **15**；已有测试证据不改变该保守计数。
-- **发布门禁**：`check:sdd` PASS（15 specs、COMP 5、A 134/134、manifest 33）；组件 parity = Blocking；`check:visual` = Nightly/Warning。
-- **Git/文档**：最近一次文档提交 `beadd280351a2226defb3467e51fb6eaa7270782`（docs/specs/AGENTS/README，152 个文档，远程缺失 0）；本轮测试证据回写只改 docs/specs，不改代码，不编辑 `acceptance.md`。
+- **spec 底座**：产品域 spec **10/10**、域 test-plan **10/10**、E2E 计划 **1/1**；71 个 PRD，**covered 0 / partial 48 / gap 23**，unimplemented **16**（含 P9 `PRD-TOOL-003` 按后端无实现口径降级）。
+- **后端测试**：`cd backend && go test ./... -count=1 -json` **223/223 PASS、0 FAIL、0 SKIP、exit 0**（26 package，16 有测试，283.33s；日志 `.tmp/backend-fulltest-20261120.jsonl`）；P5–P9 已有 change 包与证据映射。
+- **发布门禁**：`check:sdd` PASS（15 specs、COMP 5、A 134/134、manifest 33）；`check:trace` PASS（71 PRD、5 change 包、0 失败）；组件 parity = Blocking；`check:visual` = Nightly/Warning。
+- **Git/文档**：测试资产提交 `c1d16b9319a304afc32d0cc9663ebcca7e4f92a0`（parent `beadd280351a2226defb3467e51fb6eaa7270782`；208 文件范围内 69 变更、139 复用，远程缺失 0/hash 不匹配 0）；本轮证据映射只改 docs/specs，不改代码。
 
 > **以下为 2026-11-13 历史快照，不代表当前状态；当前以本节顶部 2026-11-20 状态块为准。**
 

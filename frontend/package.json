@@ -14,6 +14,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "check:sdd": "node ../scripts/check-sdd.mjs",
+    "check:trace": "node ../scripts/check-trace.mjs",
     "check:visual": "node scripts/check-visual-baseline.mjs",
     "check": "npm run typecheck && npm run check:sdd && npm run capture:visual && npm run check:visual",
     "capture:visual": "node scripts/capture-visual.mjs"

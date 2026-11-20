@@ -34,9 +34,9 @@
 
 - 优先级：P1
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M3](../../../docs/m3-contract.md) / [M21](../../../docs/m21-memory-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P5-MEM](../../changes/CHG-LEGACY-P5-MEM/spec.md)；开发 [M3](../../../docs/m3-contract.md) / [M21](../../../docs/m21-memory-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：后端 API 存在，前端无记忆页；无产品 spec 与域测试。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P5-MEM/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“记忆 / 条目与作用域”中提供“记忆条目·作用域·搜索”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-MEM-001-01` 主路径：用户能完成“记忆条目·作用域·搜索”并看到一致结果；状态与关联数据不互相矛盾。
@@ -47,7 +47,7 @@
 
 - 优先级：P2
 - 实现状态：`unimplemented`
-- 关联：CHANGE —；开发 [M21](../../../docs/m21-memory-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P5-MEM](../../changes/CHG-LEGACY-P5-MEM/spec.md)；开发 [M21](../../../docs/m21-memory-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：迁移/索引只有契约；无迁移回滚与兼容性测试。
 - 当前剩余缺口：`unimplemented`，无可用实现/无完整验收。
 > **unimplemented**：当前无可用实现/无完整验收；不得对外宣称已完成。
@@ -64,9 +64,9 @@
 
 - 优先级：P1
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M21](../../../docs/m21-memory-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P5-MEM](../../changes/CHG-LEGACY-P5-MEM/spec.md)；开发 [M21](../../../docs/m21-memory-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：后端实体/关系/canonical/金字塔 API 存在；无产品行为与可见入口。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P5-MEM/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“记忆 / 实体与冲突”中提供“实体·关系·金字塔”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-MEM-002-01` 主路径：用户能完成“实体·关系·金字塔”并看到一致结果；状态与关联数据不互相矛盾。
@@ -77,9 +77,9 @@
 
 - 优先级：P1
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M21](../../../docs/m21-memory-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P5-MEM](../../changes/CHG-LEGACY-P5-MEM/spec.md)；开发 [M21](../../../docs/m21-memory-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：冲突 API 存在；无冲突解决产品规则、无测试。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P5-MEM/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“记忆 / 实体与冲突”中提供“冲突与争议保留”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-MEM-003-01` 主路径：用户能完成“冲突与争议保留”并看到一致结果；状态与关联数据不互相矛盾。
@@ -92,9 +92,9 @@
 
 - 优先级：P1
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M22](../../../docs/m22-recall-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P5-MEM](../../changes/CHG-LEGACY-P5-MEM/spec.md)；开发 [M22](../../../docs/m22-recall-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：R1/R2 后端存在；召回质量/失败降级无产品验收。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P5-MEM/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“记忆 / 召回”中提供“召回 R1/R2”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-MEM-004-01` 主路径：用户能完成“召回 R1/R2”并看到一致结果；状态与关联数据不互相矛盾。
@@ -105,9 +105,9 @@
 
 - 优先级：P2
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M22](../../../docs/m22-recall-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P5-MEM](../../changes/CHG-LEGACY-P5-MEM/spec.md)；开发 [M22](../../../docs/m22-recall-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：向量/巩固为实验能力；无 UI、无稳定测试。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P5-MEM/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“记忆 / 召回”中提供“向量召回与巩固”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-MEM-005-01` 主路径：用户能完成“向量召回与巩固”并看到一致结果；状态与关联数据不互相矛盾。

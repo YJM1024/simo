@@ -1,7 +1,10 @@
 # P9 · 工具与能力 测试计划
 
-状态：**active（骨架；未执行）** — 本文件定义用例与证据口径，不代表已经通过。
+状态：**active（2026-11-20 后端证据回写；用例 2 pass / 3 partial / 5 missing）** — 覆盖口径见 §1、§4；pass 只表示该用例的断言已执行，不表示 PRD 的 AC 全覆盖。
 > 产品域 spec：[`../../product/P9-TOOL/spec.md`](../../product/P9-TOOL/spec.md)；TREE：[`../../../docs/product/TREE.md`](../../../docs/product/TREE.md)；TRACEABILITY：[`../../../docs/product/TRACEABILITY.md`](../../../docs/product/TRACEABILITY.md)。
+
+<!-- EVIDENCE-SUMMARY-20261120 -->
+> **2026-11-20 证据汇总**：本域 10 个用例，**pass 2 / partial 3 / missing 5**；PRD 覆盖仍 **0 covered / 4 partial / 3 gap**。后端 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0；日志 `.tmp/backend-fulltest-20261120.jsonl`）；前端证据不适用于本域或未覆盖本域。
 
 ## 1. 范围与证据口径
 
@@ -24,7 +27,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-TOOL-001-01` 主路径通过；`AC-TOOL-001-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**pass** — 2026-11-20 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0；日志 `.tmp/backend-fulltest-20261120.jsonl`）中的 `TestM20ActionRegistryAndExecute`、`TestM20NativeActionTools`、`TestM20ToolNamesValidForProvider` + M17/M12；直接覆盖主路径。未覆盖：无前端能力目录、schema 校验/恶意参数矩阵。PRD 覆盖仍 partial。
 - 实现状态：`partial`
 
 <a id="tc-p9-002"></a>
@@ -38,7 +41,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-TOOL-002-01` 主路径通过；`AC-TOOL-002-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**pass** — 2026-11-20 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0；日志 `.tmp/backend-fulltest-20261120.jsonl`）中的 `TestDefaultPolicy`、`TestCanUseToolOnlyWhenNotAutoApproved`、`TestHookDenyAndAskRule`、`TestM5MockWriteDeletePermissionFlow`、`TestM5WriteAskApprovalExecutes`、`TestM9PermissionsDefaultAndFullConfirmation`、`TestM9PwshApprovalAndExitCode`、`TestM9EscalationWritesOutsideAndNeverRejects`、`TestM9AllowSessionGrant`、`TestM9ApprovalResultReportMessage`、`TestM9PwshEnvTimeoutAndSpill`；直接覆盖主路径。未覆盖：无真实外部工具越权、无并发审批。PRD 覆盖仍 partial。
 - 实现状态：`partial`
 
 <a id="tc-p9-003"></a>
@@ -52,8 +55,8 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-TOOL-003-01` 主路径通过；`AC-TOOL-003-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
-- 实现状态：`partial`
+- 当前证据：**missing** — 后端无 skills 代码/测试；产品 spec 原 partial 为文档不一致，按 backend 口径为 unimplemented。
+- 实现状态：`unimplemented`
 
 <a id="tc-p9-004"></a>
 #### TC-P9-004 · PRD-TOOL-005 CLI 工具白名单
@@ -66,7 +69,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-TOOL-005-01` 主路径通过；`AC-TOOL-005-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**partial** — 2026-11-20 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0）中的 `TestM9PwshApprovalAndExitCode`、`TestM9PwshEnvTimeoutAndSpill`；仅覆盖部分路径。未覆盖：只测 blocklist，不是白名单；无路径/参数注入矩阵；保持 partial。
 - 实现状态：`partial`
 
 <a id="tc-p9-005"></a>
@@ -80,7 +83,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-TOOL-004-01` 主路径通过；`AC-TOOL-004-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**missing** — `PRD-TOOL-004` MCP 接入未实现；无测试。
 - 实现状态：`unimplemented`（unimplemented，不得当通过）
 
 <a id="tc-p9-006"></a>
@@ -94,7 +97,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-TOOL-006-01` 主路径通过；`AC-TOOL-006-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**partial** — 2026-11-20 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0）中的 `TestM12WebSearchAndFetchMock`、`TestM12WebFetchSSRFDenied`；仅覆盖部分路径。未覆盖：真实网络、配额、超时、内容安全未测；保持 partial。
 - 实现状态：`partial`
 
 <a id="tc-p9-007"></a>
@@ -108,7 +111,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-TOOL-007-01` 主路径通过；`AC-TOOL-007-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**missing** — `PRD-TOOL-007` 能力目录未实现；无测试。
 - 实现状态：`unimplemented`（unimplemented，不得当通过）
 
 
@@ -122,7 +125,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：空态可见，加载不闪烁；加载结束进入正确状态；不展示假 0。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**
+- 当前证据：**missing** — 无测试落点；工具域空/加载态无前端测试。
 
 <a id="tc-p9-e2"></a>
 #### TC-P9-E2 · 错误/恢复
@@ -132,7 +135,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：错误提示可见，重试/返回可用；失败不写脏数据、不重复提交。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**
+- 当前证据：**missing** — 无测试落点；工具域错误/恢复无统一契约测试。
 
 <a id="tc-p9-e3"></a>
 #### TC-P9-E3 · 响应式/键盘/权限
@@ -142,14 +145,14 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：无横向溢出；键盘可完成主路径；越权被默认拒绝。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**
+- 当前证据：**partial** — 2026-11-20 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0）中的 `TestM9PermissionsDefaultAndFullConfirmation`、`TestM9PwshApprovalAndExitCode`、`TestM9EscalationWritesOutsideAndNeverRejects`、`TestM9AllowSessionGrant`、`TestM9ApprovalResultReportMessage`、`TestM9PwshEnvTimeoutAndSpill`、`TestDefaultPolicy`、`TestCanUseToolOnlyWhenNotAutoApproved`、`TestHookDenyAndAskRule`；仅覆盖部分路径。未覆盖：无前端权限提示、无 375/键盘；仅后端默认拒绝路径；保持 partial。
 
 
 ## 3. 验收映射（A1–A8）
 
 | A | 覆盖用例 | 说明 |
 |---|---|---|
-| A1 | 每个 PRD 的 `TC-P9-NNN` | P0 主路径逐项执行；当前证据均 missing |
+| A1 | 每个 PRD 的 `TC-P9-NNN` | P0 主路径逐项执行；证据见各用例“当前证据” |
 | A2 | `TC-P9-E1` / `TC-P9-E2` | 空/加载/错误/权限反馈 |
 | A3 | `TC-P9-E3` | 键盘/焦点；纯后端域 N/A |
 | A4 | `TC-P9-E3` | 375px；纯后端域 N/A |
@@ -160,10 +163,13 @@
 
 ## 4. 未实现与缺口
 
-- **unimplemented**：`PRD-TOOL-004` MCP 接入、`PRD-TOOL-007` 能力目录 L0–L3。
-- **证据缺失**：本文件所有主用例当前均为 `missing`；已有 FE/COMP test-plan 只算“文件存在”，未执行。
-- **自动化未接线**：无 Playwright/E2E runner；component/integration 需要后续接入 `npm test` 与 CI。
-- **不得宣称**：在上述证据补齐前，本域不能标记为 `covered`，也不能对外说“测试通过”。
+- **unimplemented**：`PRD-TOOL-003` Skills/CLI、`PRD-TOOL-004` MCP 接入、`PRD-TOOL-007` 能力目录 L0–L3。
+- **用例级证据**：10 个用例 **pass 2 / partial 3 / missing 5**；pass 只表示该用例的断言已执行，不等于 PRD 覆盖。
+- **PRD 覆盖**：**0 covered / 4 partial / 3 gap**；本轮没有因局部证据升级任何 PRD 为 covered。
+- **未覆盖**：`TC-P9-003/005/007` 与 E1/E2 仍 missing；Skills、MCP、能力目录、白名单、真实网络与权限边界只部分覆盖；TOOL-003 后端口径为 unimplemented。
+- **证据命令/入口**：后端 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0；日志 `.tmp/backend-fulltest-20261120.jsonl`）；前端证据不适用于本域或未覆盖本域。
+- **限制**：本域 E2E/前端证据只覆盖既有 UI 路径；后端 223 PASS 只证明既有测试通过，不证明产品 AC 完成。Playwright Test 普通路径受沙箱限制，CI 未实跑。
+- **不得宣称**：在 AC 全量、权限/异常/真实数据补齐前，不能标记 `covered`，也不能对外说“测试通过”。
 
 ## 5. 执行后的回写
 

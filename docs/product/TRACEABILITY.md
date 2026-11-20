@@ -1,6 +1,6 @@
 # 司墨产品追溯矩阵（TRACEABILITY）
 
-> 状态：**active**（2026-11-20，产品域 spec 与首轮测试证据回写后）
+> 状态：**active**（2026-11-20，产品域 spec + 前端 69 单测/11 E2E + 后端 223 测试证据回写后）
 > 核心三列：**PRD → CHANGE → TEST**；另附覆盖状态与缺口，避免“有链接=已覆盖”。
 > 产品树：[`TREE.md`](TREE.md)；ID 规则：[`ID-SPEC.md`](ID-SPEC.md)；缺口：[`SPEC-GAP.md`](SPEC-GAP.md)。
 
@@ -21,19 +21,19 @@
 | [`P2`](#p2) | 6 | 0 | 0 | 6 | [spec](../../specs/product/P2-TASK/spec.md) | [test](../../specs/test/P2-TASK/test-plan.md) |
 | [`P3`](#p3) | 5 | 0 | 4 | 1 | [spec](../../specs/product/P3-WORK/spec.md) | [test](../../specs/test/P3-WORK/test-plan.md) |
 | [`P4`](#p4) | 6 | 0 | 2 | 4 | [spec](../../specs/product/P4-FILE/spec.md) | [test](../../specs/test/P4-FILE/test-plan.md) |
-| [`P5`](#p5) | 6 | 0 | 0 | 6 | [spec](../../specs/product/P5-MEM/spec.md) | [test](../../specs/test/P5-MEM/test-plan.md) |
-| [`P6`](#p6) | 6 | 0 | 0 | 6 | [spec](../../specs/product/P6-TEAM/spec.md) | [test](../../specs/test/P6-TEAM/test-plan.md) |
-| [`P7`](#p7) | 5 | 0 | 0 | 5 | [spec](../../specs/product/P7-SCHED/spec.md) | [test](../../specs/test/P7-SCHED/test-plan.md) |
-| [`P8`](#p8) | 12 | 0 | 0 | 12 | [spec](../../specs/product/P8-SET/spec.md) | [test](../../specs/test/P8-SET/test-plan.md) |
-| [`P9`](#p9) | 7 | 0 | 0 | 7 | [spec](../../specs/product/P9-TOOL/spec.md) | [test](../../specs/test/P9-TOOL/test-plan.md) |
+| [`P5`](#p5) | 6 | 0 | 5 | 1 | [spec](../../specs/product/P5-MEM/spec.md) | [test](../../specs/test/P5-MEM/test-plan.md) |
+| [`P6`](#p6) | 6 | 0 | 4 | 2 | [spec](../../specs/product/P6-TEAM/spec.md) | [test](../../specs/test/P6-TEAM/test-plan.md) |
+| [`P7`](#p7) | 5 | 0 | 4 | 1 | [spec](../../specs/product/P7-SCHED/spec.md) | [test](../../specs/test/P7-SCHED/test-plan.md) |
+| [`P8`](#p8) | 12 | 0 | 9 | 3 | [spec](../../specs/product/P8-SET/spec.md) | [test](../../specs/test/P8-SET/test-plan.md) |
+| [`P9`](#p9) | 7 | 0 | 4 | 3 | [spec](../../specs/product/P9-TOOL/spec.md) | [test](../../specs/test/P9-TOOL/test-plan.md) |
 | [`P10`](#p10) | 6 | 0 | 5 | 1 | [spec](../../specs/product/P10-METRIC/spec.md) | [test](../../specs/test/P10-METRIC/test-plan.md) |
-| **合计** | **71** | **0** | **22** | **49** | **10/10** | **10/10** |
+| **合计** | **71** | **0** | **48** | **23** | **10/10** | **10/10** |
 
-> 说明：10 份 test-plan 原为骨架；2026-11-20 已回写 69 个前端单测与 11 个 CDP E2E 的**部分执行证据**（见 §2.1）。覆盖状态仍按 **0 covered / 22 partial / 49 gap** 记录：没有任何 PRD 同时具备产品 spec + change 包 + 前后端开发 spec + 任务卡 + TEST + 完整 AC 证据，不能因“用例跑过一部分”升级。
+> 说明：10 份 test-plan 原为骨架；2026-11-20 已回写 69 个前端单测、11 个 CDP E2E 与 223 个后端测试的**部分执行证据**（见 §2.1）。覆盖状态按 **0 covered / 48 partial / 23 gap** 记录：没有任何 PRD 同时具备产品 spec + change 包 + 前后端开发 spec + 任务卡 + TEST + 完整 AC 证据，不能因“用例跑过一部分”升级。
 
 ## 2.1 2026-11-20 执行证据（不升级 covered）
 
-证据详情：[`../testing/EVIDENCE-20261120.md`](../testing/EVIDENCE-20261120.md)；E2E 计划：[`../../specs/test/e2e/README.md`](../../specs/test/e2e/README.md)。
+证据详情：前端 [`../testing/EVIDENCE-20261120.md`](../testing/EVIDENCE-20261120.md)；后端 [`../testing/BACKEND-EVIDENCE-20261120.md`](../testing/BACKEND-EVIDENCE-20261120.md)；E2E 计划：[`../../specs/test/e2e/README.md`](../../specs/test/e2e/README.md)。
 
 | 域 | 已回写的部分证据 | 覆盖判定 | 不能升级的原因 |
 |---|---|---|---|
@@ -41,11 +41,11 @@
 | P2 任务与执行 | RightPanel 6 展示层、E2E 06 定位 | 仍 0/0/6 | 后端生命周期/取消/重试/复杂度/子会话均无执行证据 |
 | P3 工作台与视图 | LibraryUtilities 2、App 工作台指标、RightPanel/E2E 07 | 仍 0/4/1 | WORK-005 未实现；真实 usage/每日聚合/最近活动未覆盖 |
 | P4 文件与交付物 | RightPanel 交付物、E2E 07 下载 | 仍 0/2/4 | 上传/隔离/预览/PDF/Office 未覆盖 |
-| P5–P9 | 无 | 保持 gap | 本轮无对应测试执行 |
+| P5–P9 | 后端 223/223 PASS（26 package，16 有测试）；P5 记忆、P6 团队、P7 调度、P8 设置/系统、P9 工具均有直接测试；见 BACKEND-EVIDENCE | 仍 0/26/10 | 产品 AC/change 包/前端/权限/异常未齐；223 PASS 只证明既有测试通过 |
 | P10 指标 | MetricsDashboard 9、App 工作台指标 | 仍 0/5/1 | 006 导出/对比/告警未实现；真实后端聚合未覆盖 |
-| **合计** | 69 单测 + 11 E2E | **0/22/49** | 证据只到“部分用例”，未到 PRD 覆盖 |
+| **合计** | 69 单测 + 11 E2E + 223 后端测试 | **0/48/23** | 证据只到“部分用例”，未到 PRD 覆盖 |
 
-> 结论：本轮把“没有任何执行证据”推进为“部分用例有证据”，但没有改变 covered/partial/gap 的判定；后续必须按 change 包补齐六类产物，才允许逐项升级。
+> 结论：本轮把“没有任何执行证据”推进为“前端、E2E 与 P5–P9 后端均有用例级证据”，但没有改变 covered/partial/gap 的判定；后续必须按 change 包补齐六类产物，才允许逐项升级。
 
 ## 3. PRD → CHANGE → TEST
 
@@ -103,62 +103,62 @@
 
 | PRD | 名称 | CHANGE | TEST | 覆盖 | 缺口 |
 |---|---|---|---|---|---|
-| `PRD-MEM-001` | 记忆条目·作用域·搜索 | — | [TC-P5-001](../../specs/test/P5-MEM/test-plan.md#tc-p5-001) | `gap` | 后端 API 存在，前端无记忆页；无产品 spec 与域测试。 |
-| `PRD-MEM-006` | 记忆迁移与索引 | — | [TC-P5-002](../../specs/test/P5-MEM/test-plan.md#tc-p5-002) | `gap` | 迁移/索引只有契约；无迁移回滚与兼容性测试。 |
-| `PRD-MEM-002` | 实体·关系·金字塔 | — | [TC-P5-003](../../specs/test/P5-MEM/test-plan.md#tc-p5-003) | `gap` | 后端实体/关系/canonical/金字塔 API 存在；无产品行为与可见入口。 |
-| `PRD-MEM-003` | 冲突与争议保留 | — | [TC-P5-004](../../specs/test/P5-MEM/test-plan.md#tc-p5-004) | `gap` | 冲突 API 存在；无冲突解决产品规则、无测试。 |
-| `PRD-MEM-004` | 召回 R1/R2 | — | [TC-P5-005](../../specs/test/P5-MEM/test-plan.md#tc-p5-005) | `gap` | R1/R2 后端存在；召回质量/失败降级无产品验收。 |
-| `PRD-MEM-005` | 向量召回与巩固 | — | [TC-P5-006](../../specs/test/P5-MEM/test-plan.md#tc-p5-006) | `gap` | 向量/巩固为实验能力；无 UI、无稳定测试。 |
+| `PRD-MEM-001` | 记忆条目·作用域·搜索 | [CHG-LEGACY-P5-MEM](../../specs/changes/CHG-LEGACY-P5-MEM/spec.md) | [TC-P5-001](../../specs/test/P5-MEM/test-plan.md#tc-p5-001) | `partial` | 后端 6 项记忆测试 pass（可见性/FTS/注入/重启/中文搜索/隔离）；无 HTTP 层、无前端记忆页、无召回质量/性能矩阵。 |
+| `PRD-MEM-006` | 记忆迁移与索引 | [CHG-LEGACY-P5-MEM](../../specs/changes/CHG-LEGACY-P5-MEM/spec.md) | [TC-P5-002](../../specs/test/P5-MEM/test-plan.md#tc-p5-002) | `gap` | 未实现（仅 v1–v6 migration 代码）；无迁移/回滚测试。 |
+| `PRD-MEM-002` | 实体·关系·金字塔 | [CHG-LEGACY-P5-MEM](../../specs/changes/CHG-LEGACY-P5-MEM/spec.md) | [TC-P5-003](../../specs/test/P5-MEM/test-plan.md#tc-p5-003) | `partial` | V3 pipeline 测试 pass；实体/图谱/金字塔 HTTP 与失败路径未测。 |
+| `PRD-MEM-003` | 冲突与争议保留 | [CHG-LEGACY-P5-MEM](../../specs/changes/CHG-LEGACY-P5-MEM/spec.md) | [TC-P5-004](../../specs/test/P5-MEM/test-plan.md#tc-p5-004) | `partial` | 冲突/偏好/canonical 测试 pass；冲突产品规则/UI 未测。 |
+| `PRD-MEM-004` | 召回 R1/R2 | [CHG-LEGACY-P5-MEM](../../specs/changes/CHG-LEGACY-P5-MEM/spec.md) | [TC-P5-005](../../specs/test/P5-MEM/test-plan.md#tc-p5-005) | `partial` | R1/R2 测试 pass；真实质量/延迟/降级矩阵未测。 |
+| `PRD-MEM-005` | 向量召回与巩固 | [CHG-LEGACY-P5-MEM](../../specs/changes/CHG-LEGACY-P5-MEM/spec.md) | [TC-P5-006](../../specs/test/P5-MEM/test-plan.md#tc-p5-006) | `partial` | 巩固/向量 6 测试 pass；无 UI/端到端。 |
 ### P6 · 团队与智能体
 <a id="p6"></a>
 
 | PRD | 名称 | CHANGE | TEST | 覆盖 | 缺口 |
 |---|---|---|---|---|---|
-| `PRD-TEAM-001` | 智能体 roster 与模型 | — | [TC-P6-001](../../specs/test/P6-TEAM/test-plan.md#tc-p6-001) | `gap` | 后端 roster/模型信息存在；前端无入口、 |
-| `PRD-TEAM-002` | 团队成员=子会话+负责人 | — | [TC-P6-002](../../specs/test/P6-TEAM/test-plan.md#tc-p6-002) | `gap` | 团队/成员后端存在；成员边界与负责人规则未产品化。 |
-| `PRD-TEAM-005` | 团队内部消息隔离 | — | [TC-P6-003](../../specs/test/P6-TEAM/test-plan.md#tc-p6-003) | `gap` | 后端有隔离约束；无产品 AC、无越权/泄漏测试。 |
-| `PRD-TEAM-003` | 团队模板·角色·触发器 | — | [TC-P6-004](../../specs/test/P6-TEAM/test-plan.md#tc-p6-004) | `gap` | 模板/触发器仅后端契约；无 UI。 |
-| `PRD-TEAM-004` | 团队只读投影与对话创建 | — | [TC-P6-005](../../specs/test/P6-TEAM/test-plan.md#tc-p6-005) | `gap` | 只读投影/通过对话创建仍为设计；无验收。 |
-| `PRD-TEAM-006` | 子代理并行与团队任务板 | — | [TC-P6-006](../../specs/test/P6-TEAM/test-plan.md#tc-p6-006) | `gap` | 子代理并行/任务板未实现；只有流程文档与契约。 |
+| `PRD-TEAM-001` | 智能体 roster 与模型 | [CHG-LEGACY-P6-TEAM](../../specs/changes/CHG-LEGACY-P6-TEAM/spec.md) | [TC-P6-001](../../specs/test/P6-TEAM/test-plan.md#tc-p6-001) | `partial` | V0 view 测试 pass；无前端/成员分页/权限。 |
+| `PRD-TEAM-002` | 团队成员=子会话+负责人 | [CHG-LEGACY-P6-TEAM](../../specs/changes/CHG-LEGACY-P6-TEAM/spec.md) | [TC-P6-002](../../specs/test/P6-TEAM/test-plan.md#tc-p6-002) | `partial` | 内部路由测试 pass；无跨会话越权 E2E。 |
+| `PRD-TEAM-005` | 团队内部消息隔离 | [CHG-LEGACY-P6-TEAM](../../specs/changes/CHG-LEGACY-P6-TEAM/spec.md) | [TC-P6-003](../../specs/test/P6-TEAM/test-plan.md#tc-p6-003) | `partial` | 隔离/WS 广播测试 pass；无泄漏/重连测试。 |
+| `PRD-TEAM-003` | 团队模板·角色·触发器 | [CHG-LEGACY-P6-TEAM](../../specs/changes/CHG-LEGACY-P6-TEAM/spec.md) | [TC-P6-004](../../specs/test/P6-TEAM/test-plan.md#tc-p6-004) | `partial` | 模板/触发器测试 pass；无前端管理。 |
+| `PRD-TEAM-004` | 团队只读投影与对话创建 | [CHG-LEGACY-P6-TEAM](../../specs/changes/CHG-LEGACY-P6-TEAM/spec.md) | [TC-P6-005](../../specs/test/P6-TEAM/test-plan.md#tc-p6-005) | `gap` | 只读投影未实现；无测试。 |
+| `PRD-TEAM-006` | 子代理并行与团队任务板 | [CHG-LEGACY-P6-TEAM](../../specs/changes/CHG-LEGACY-P6-TEAM/spec.md) | [TC-P6-006](../../specs/test/P6-TEAM/test-plan.md#tc-p6-006) | `gap` | 子代理并行/任务板未实现；无测试。 |
 ### P7 · 调度
 <a id="p7"></a>
 
 | PRD | 名称 | CHANGE | TEST | 覆盖 | 缺口 |
 |---|---|---|---|---|---|
-| `PRD-SCHED-001` | 定时任务 CRUD | — | [TC-P7-001](../../specs/test/P7-SCHED/test-plan.md#tc-p7-001) | `gap` | 后端 CRUD 存在，前端无调度页； |
-| `PRD-SCHED-002` | 列表与下次运行时间 | — | [TC-P7-002](../../specs/test/P7-SCHED/test-plan.md#tc-p7-002) | `gap` | 仅后端返回；时区/下次运行口径未产品化。 |
-| `PRD-SCHED-003` | 立即运行与幂等 | — | [TC-P7-003](../../specs/test/P7-SCHED/test-plan.md#tc-p7-003) | `gap` | run-now 后端存在；重复触发/并发幂等未验收。 |
-| `PRD-SCHED-004` | 重复规则与时区 | — | [TC-P7-004](../../specs/test/P7-SCHED/test-plan.md#tc-p7-004) | `gap` | 规则解析存在；DST/非法规则/边界无测试。 |
-| `PRD-SCHED-005` | 失败·重试·通知 | — | [TC-P7-005](../../specs/test/P7-SCHED/test-plan.md#tc-p7-005) | `gap` | 失败重试/通知未实现；无产品规则。 |
+| `PRD-SCHED-001` | 定时任务 CRUD | [CHG-LEGACY-P7-SCHED](../../specs/changes/CHG-LEGACY-P7-SCHED/spec.md) | [TC-P7-001](../../specs/test/P7-SCHED/test-plan.md#tc-p7-001) | `partial` | once/pause/run-now 测试 pass；完整 CRUD/分页/权限未测。 |
+| `PRD-SCHED-002` | 列表与下次运行时间 | [CHG-LEGACY-P7-SCHED](../../specs/changes/CHG-LEGACY-P7-SCHED/spec.md) | [TC-P7-002](../../specs/test/P7-SCHED/test-plan.md#tc-p7-002) | `partial` | next-run 测试 pass；时区口径未产品化。 |
+| `PRD-SCHED-003` | 立即运行与幂等 | [CHG-LEGACY-P7-SCHED](../../specs/changes/CHG-LEGACY-P7-SCHED/spec.md) | [TC-P7-003](../../specs/test/P7-SCHED/test-plan.md#tc-p7-003) | `partial` | run-now/事件测试 pass；幂等/并发未测。 |
+| `PRD-SCHED-004` | 重复规则与时区 | [CHG-LEGACY-P7-SCHED](../../specs/changes/CHG-LEGACY-P7-SCHED/spec.md) | [TC-P7-004](../../specs/test/P7-SCHED/test-plan.md#tc-p7-004) | `partial` | 非法 cron/next-run 测试 pass；DST/时区未测。 |
+| `PRD-SCHED-005` | 失败·重试·通知 | [CHG-LEGACY-P7-SCHED](../../specs/changes/CHG-LEGACY-P7-SCHED/spec.md) | [TC-P7-005](../../specs/test/P7-SCHED/test-plan.md#tc-p7-005) | `gap` | 失败重试/通知未实现；无测试。 |
 ### P8 · 设置与系统
 <a id="p8"></a>
 
 | PRD | 名称 | CHANGE | TEST | 覆盖 | 缺口 |
 |---|---|---|---|---|---|
-| `PRD-SET-001` | 模型与 Provider | — | [TC-P8-001](../../specs/test/P8-SET/test-plan.md#tc-p8-001) | `gap` | 配置文档存在；前端无设置页，模型切换/只读边界未产品化。 |
-| `PRD-SET-002` | 权限·沙盒·审批 | — | [TC-P8-002](../../specs/test/P8-SET/test-plan.md#tc-p8-002) | `gap` | 权限/审批后端存在；无统一设置入口与 fail-closed 验收。 |
-| `PRD-SET-003` | 外观·主题·语言 | — | [TC-P8-003](../../specs/test/P8-SET/test-plan.md#tc-p8-003) | `gap` | 未实现；当前只有浅色暖纸基线，无主题/语言设置。 |
-| `PRD-SET-005` | 快捷键·关于·版本 | — | [TC-P8-004](../../specs/test/P8-SET/test-plan.md#tc-p8-004) | `gap` | 未实现；无快捷键帮助/关于页。 |
-| `PRD-SET-004` | 数据目录·备份·恢复 | — | [TC-P8-005](../../specs/test/P8-SET/test-plan.md#tc-p8-005) | `gap` | 部署文档有备份/恢复流程；产品入口与恢复演练未验证。 |
-| `PRD-SET-006` | 能力管理（MCP/CLI/Skills/目录） | — | [TC-P8-006](../../specs/test/P8-SET/test-plan.md#tc-p8-006) | `gap` | P2 backlog；无实现、无测试。 |
-| `PRD-SYS-001` | 本地单用户与鉴权边界 | — | [TC-P8-007](../../specs/test/P8-SET/test-plan.md#tc-p8-007) | `gap` | 本地单用户假设存在；远程/多用户边界未产品化、无安全测试。 |
-| `PRD-SYS-002` | 权限 fail-closed | — | [TC-P8-008](../../specs/test/P8-SET/test-plan.md#tc-p8-008) | `gap` | 审批/权限后端存在；默认拒绝/异常路径无系统化验收。 |
-| `PRD-SYS-004` | 数据备份·迁移·回滚 | — | [TC-P8-009](../../specs/test/P8-SET/test-plan.md#tc-p8-009) | `gap` | 部署文档有流程；恢复演练/回滚验证未系统化。 |
-| `PRD-SYS-003` | 健康检查与运行时状态 | — | [TC-P8-010](../../specs/test/P8-SET/test-plan.md#tc-p8-010) | `gap` | 接口存在；无域测试计划。 |
-| `PRD-SYS-005` | 日志与审计 | — | [TC-P8-011](../../specs/test/P8-SET/test-plan.md#tc-p8-011) | `gap` | 日志存在；审计事件覆盖/敏感信息脱敏未验收。 |
-| `PRD-SYS-006` | 安装·升级·便携包 | — | [TC-P8-012](../../specs/test/P8-SET/test-plan.md#tc-p8-012) | `gap` | 部署文档/便携包存在；升级回滚/多平台未产品化。 |
+| `PRD-SET-001` | 模型与 Provider | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [TC-P8-001](../../specs/test/P8-SET/test-plan.md#tc-p8-001) | `partial` | config、migrate 的精确测试 pass（见 CHG-LEGACY-P8-SET evidence）；无设置页/热更新。 |
+| `PRD-SET-002` | 权限·沙盒·审批 | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [TC-P8-002](../../specs/test/P8-SET/test-plan.md#tc-p8-002) | `partial` | 权限/审批测试 pass；无前端权限矩阵/真实越权。 |
+| `PRD-SET-003` | 外观·主题·语言 | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [TC-P8-003](../../specs/test/P8-SET/test-plan.md#tc-p8-003) | `gap` | 未实现；无主题/语言测试。 |
+| `PRD-SET-005` | 快捷键·关于·版本 | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [TC-P8-004](../../specs/test/P8-SET/test-plan.md#tc-p8-004) | `gap` | 未实现；无快捷键/关于页测试。 |
+| `PRD-SET-004` | 数据目录·备份·恢复 | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [TC-P8-005](../../specs/test/P8-SET/test-plan.md#tc-p8-005) | `partial` | config migration/workspace-migrate 测试 pass；备份/恢复/回滚演练未做。 |
+| `PRD-SET-006` | 能力管理（MCP/CLI/Skills/目录） | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [TC-P8-006](../../specs/test/P8-SET/test-plan.md#tc-p8-006) | `gap` | 未实现；无能力管理测试。 |
+| `PRD-SYS-001` | 本地单用户与鉴权边界 | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [TC-P8-007](../../specs/test/P8-SET/test-plan.md#tc-p8-007) | `partial` | health/404 测试 pass；无认证/远程/多用户安全测试。 |
+| `PRD-SYS-002` | 权限 fail-closed | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [TC-P8-008](../../specs/test/P8-SET/test-plan.md#tc-p8-008) | `partial` | default policy/approval/hook 测试 pass；无并发/组合策略。 |
+| `PRD-SYS-004` | 数据备份·迁移·回滚 | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [TC-P8-009](../../specs/test/P8-SET/test-plan.md#tc-p8-009) | `partial` | workspace-migrate 测试 pass；无正式备份/恢复演练。 |
+| `PRD-SYS-003` | 健康检查与运行时状态 | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [TC-P8-010](../../specs/test/P8-SET/test-plan.md#tc-p8-010) | `partial` | health/readiness/error envelope 测试 pass；无进程/依赖故障演练。 |
+| `PRD-SYS-005` | 日志与审计 | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [TC-P8-011](../../specs/test/P8-SET/test-plan.md#tc-p8-011) | `partial` | error envelope 测试 pass；审计查询/脱敏未测。 |
+| `PRD-SYS-006` | 安装·升级·便携包 | [CHG-LEGACY-P8-SET](../../specs/changes/CHG-LEGACY-P8-SET/spec.md) | [TC-P8-012](../../specs/test/P8-SET/test-plan.md#tc-p8-012) | `partial` | config path 测试 pass；安装/升级/卸载未测。 |
 ### P9 · 工具与能力
 <a id="p9"></a>
 
 | PRD | 名称 | CHANGE | TEST | 覆盖 | 缺口 |
 |---|---|---|---|---|---|
-| `PRD-TOOL-001` | 工具注册·执行·审计 | — | [TC-P9-001](../../specs/test/P9-TOOL/test-plan.md#tc-p9-001) | `gap` | 工具运行时/审计后端存在；无前端能力视图。 |
-| `PRD-TOOL-002` | 权限·审批·沙盒 | — | [TC-P9-002](../../specs/test/P9-TOOL/test-plan.md#tc-p9-002) | `gap` | 后端有权限/审批；越权/拒绝路径无系统化测试。 |
-| `PRD-TOOL-003` | Skills 发现与加载 | — | [TC-P9-003](../../specs/test/P9-TOOL/test-plan.md#tc-p9-003) | `gap` | 只有 docs/process/skills 文档；运行时发现/加载未实现。 |
-| `PRD-TOOL-005` | CLI 工具白名单 | — | [TC-P9-004](../../specs/test/P9-TOOL/test-plan.md#tc-p9-004) | `gap` | CLI 运行时存在；白名单/命令注入/超时无系统测试。 |
-| `PRD-TOOL-004` | MCP 接入 | — | [TC-P9-005](../../specs/test/P9-TOOL/test-plan.md#tc-p9-005) | `gap` | 未实现；无协议/安全验收。 |
-| `PRD-TOOL-006` | 联网搜索与抓取 | — | [TC-P9-006](../../specs/test/P9-TOOL/test-plan.md#tc-p9-006) | `gap` | SSRF/审批契约存在；真实网络失败/限流/引用无产品验收。 |
-| `PRD-TOOL-007` | 能力目录 L0–L3 | — | [TC-P9-007](../../specs/test/P9-TOOL/test-plan.md#tc-p9-007) | `gap` | docs/product/capability-catalog 只有目录草案；无实现、无测试。 |
+| `PRD-TOOL-001` | 工具注册·执行·审计 | [CHG-LEGACY-P9-TOOL](../../specs/changes/CHG-LEGACY-P9-TOOL/spec.md) | [TC-P9-001](../../specs/test/P9-TOOL/test-plan.md#tc-p9-001) | `partial` | action registry/native tools 测试 pass；无前端能力视图。 |
+| `PRD-TOOL-002` | 权限·审批·沙盒 | [CHG-LEGACY-P9-TOOL](../../specs/changes/CHG-LEGACY-P9-TOOL/spec.md) | [TC-P9-002](../../specs/test/P9-TOOL/test-plan.md#tc-p9-002) | `partial` | 权限/审批测试 pass；无真实越权/并发。 |
+| `PRD-TOOL-003` | Skills 发现与加载 | [CHG-LEGACY-P9-TOOL](../../specs/changes/CHG-LEGACY-P9-TOOL/spec.md) | [TC-P9-003](../../specs/test/P9-TOOL/test-plan.md#tc-p9-003) | `gap` | backend 无 skills 实现/测试；产品 spec 原 partial 为文档不一致，按 backend 口径 unimplemented。 |
+| `PRD-TOOL-005` | CLI 工具白名单 | [CHG-LEGACY-P9-TOOL](../../specs/changes/CHG-LEGACY-P9-TOOL/spec.md) | [TC-P9-004](../../specs/test/P9-TOOL/test-plan.md#tc-p9-004) | `partial` | Pwsh approval/exit code/env timeout 测试 pass（blocklist）；白名单/注入未测。 |
+| `PRD-TOOL-004` | MCP 接入 | [CHG-LEGACY-P9-TOOL](../../specs/changes/CHG-LEGACY-P9-TOOL/spec.md) | [TC-P9-005](../../specs/test/P9-TOOL/test-plan.md#tc-p9-005) | `gap` | MCP 未实现；无协议/安全测试。 |
+| `PRD-TOOL-006` | 联网搜索与抓取 | [CHG-LEGACY-P9-TOOL](../../specs/changes/CHG-LEGACY-P9-TOOL/spec.md) | [TC-P9-006](../../specs/test/P9-TOOL/test-plan.md#tc-p9-006) | `partial` | mock search/fetch/SSRF 测试 pass；真实网络/限流/引用未测。 |
+| `PRD-TOOL-007` | 能力目录 L0–L3 | [CHG-LEGACY-P9-TOOL](../../specs/changes/CHG-LEGACY-P9-TOOL/spec.md) | [TC-P9-007](../../specs/test/P9-TOOL/test-plan.md#tc-p9-007) | `gap` | 能力目录未实现；无测试。 |
 ### P10 · 指标
 <a id="p10"></a>
 
@@ -201,12 +201,12 @@
 - **P6 团队与智能体**：`PRD-TEAM-001`（partial）、`PRD-TEAM-002`（partial）、`PRD-TEAM-005`（partial）、`PRD-TEAM-003`（partial）、`PRD-TEAM-004`（unimplemented）、`PRD-TEAM-006`（unimplemented）
 - **P7 调度**：`PRD-SCHED-001`（partial）、`PRD-SCHED-002`（partial）、`PRD-SCHED-003`（partial）、`PRD-SCHED-004`（partial）、`PRD-SCHED-005`（unimplemented）
 - **P8 设置与系统**：`PRD-SET-001`（partial）、`PRD-SET-002`（partial）、`PRD-SET-003`（unimplemented）、`PRD-SET-005`（unimplemented）、`PRD-SET-004`（partial）、`PRD-SET-006`（unimplemented）、`PRD-SYS-001`（partial）、`PRD-SYS-002`（partial）、`PRD-SYS-004`（partial）、`PRD-SYS-003`（implemented）、`PRD-SYS-005`（partial）、`PRD-SYS-006`（partial）
-- **P9 工具与能力**：`PRD-TOOL-001`（partial）、`PRD-TOOL-002`（partial）、`PRD-TOOL-003`（partial）、`PRD-TOOL-005`（partial）、`PRD-TOOL-004`（unimplemented）、`PRD-TOOL-006`（partial）、`PRD-TOOL-007`（unimplemented）
+- **P9 工具与能力**：`PRD-TOOL-001`（partial）、`PRD-TOOL-002`（partial）、`PRD-TOOL-003`（gap/unimplemented）、`PRD-TOOL-005`（partial）、`PRD-TOOL-004`（unimplemented）、`PRD-TOOL-006`（partial）、`PRD-TOOL-007`（unimplemented）
 - **P10 指标**：`PRD-METRIC-006`（unimplemented）
 
 ## 6. 维护规则
 
 - 每次变更完成：更新对应 PRD 行、CHANGE、TEST、覆盖与证据。
-- 状态只降不升；发现不实立即降级并写原因。
+- 状态只按真实证据调整，不得无证据升级；发现不实立即降级并写原因。
 - 产品 spec 已建，链接必须是真实锚点；TEST 链接必须指向具体用例锚点。
 - 每季度清一次 gap；连续两个季度未补的升级到项目风险清单。

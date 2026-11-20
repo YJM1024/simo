@@ -1,7 +1,10 @@
 # P2 · 任务与执行 测试计划
 
-状态：**active（部分用例有执行证据；覆盖未升级）** — 本文件定义用例与证据口径，不代表已经通过。
+状态：**active（2026-11-20 执行证据回写；用例 0 pass / 4 partial / 5 missing）** — 覆盖口径见 §1、§4；pass 只表示该用例的断言已执行，不表示 PRD 的 AC 全覆盖。
 > 产品域 spec：[`../../product/P2-TASK/spec.md`](../../product/P2-TASK/spec.md)；TREE：[`../../../docs/product/TREE.md`](../../../docs/product/TREE.md)；TRACEABILITY：[`../../../docs/product/TRACEABILITY.md`](../../../docs/product/TRACEABILITY.md)。
+
+<!-- EVIDENCE-SUMMARY-20261120 -->
+> **2026-11-20 证据汇总**：本域 9 个用例，**pass 0 / partial 4 / missing 5**；PRD 覆盖仍 **0 covered / 0 partial / 6 gap**。前端 `cd frontend && npm test`（**69/69 PASS**）、CDP `npm run test:e2e:cdp`（**11/11**，5 次）与后端 **223/223 PASS** 的交集；命令/环境见 [EVIDENCE](../../../docs/testing/EVIDENCE-20261120.md) 与 [BACKEND-EVIDENCE](../../../docs/testing/BACKEND-EVIDENCE-20261120.md)。
 
 ## 1. 范围与证据口径
 
@@ -24,7 +27,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-TASK-001-01` 主路径通过；`AC-TASK-001-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：2026-11-20 `RightPanel.test.tsx` **6/6** 覆盖任务分组/状态/展开/空态；后端生命周期与执行组实时更新未覆盖。覆盖状态仍 **gap**。
+- 当前证据：**partial** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/RightPanel.test.tsx`（6/6） + `npm run test:e2e:cdp` 06；只覆盖展示/局部路径。未覆盖：任务列表分组/状态/折叠/空态已测；真实任务 API 与状态机未覆盖；保持 partial。
 - 实现状态：`partial`
 
 <a id="tc-p2-002"></a>
@@ -38,7 +41,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-TASK-002-01` 主路径通过；`AC-TASK-002-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：2026-11-20 `RightPanel` **6/6** + E2E **06**：任务点击定位/高亮、分组展开；真实执行进度未覆盖；仅展示层证据，覆盖状态仍 **gap**。
+- 当前证据：**partial** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/RightPanel.test.tsx`（6/6） + `npm run test:e2e:cdp` 06；只覆盖展示/局部路径。未覆盖：右栏任务点击定位高亮已测；长任务进度/取消/重试未覆盖；保持 partial。
 - 实现状态：`partial`
 
 <a id="tc-p2-003"></a>
@@ -52,7 +55,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-TASK-003-01` 主路径通过；`AC-TASK-003-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**missing** — 无测试落点；长任务/异步执行缺少后端或前端测试。
 - 实现状态：`unimplemented`（unimplemented，不得当通过）
 
 <a id="tc-p2-004"></a>
@@ -66,7 +69,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-TASK-006-01` 主路径通过；`AC-TASK-006-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**missing** — 无测试落点；取消/重试/恢复缺少测试。
 - 实现状态：`partial`
 
 <a id="tc-p2-005"></a>
@@ -80,7 +83,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-TASK-004-01` 主路径通过；`AC-TASK-004-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**missing** — 无测试落点；复杂度归属与子会话模型缺少测试。
 - 实现状态：`unimplemented`（unimplemented，不得当通过）
 
 <a id="tc-p2-006"></a>
@@ -94,7 +97,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-TASK-005-01` 主路径通过；`AC-TASK-005-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**missing** — 无测试落点；任务权限/隔离缺少测试。
 - 实现状态：`unimplemented`（unimplemented，不得当通过）
 
 
@@ -108,7 +111,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：空态可见，加载不闪烁；加载结束进入正确状态；不展示假 0。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**
+- 当前证据：**partial** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/RightPanel.test.tsx`（6/6）；只覆盖展示/局部路径。未覆盖：右栏 loading/空任务已测；任务域全状态矩阵未覆盖；保持 partial。
 
 <a id="tc-p2-e2"></a>
 #### TC-P2-E2 · 错误/恢复
@@ -118,7 +121,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：错误提示可见，重试/返回可用；失败不写脏数据、不重复提交。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**
+- 当前证据：**partial** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/RightPanel.test.tsx`（6/6）；只覆盖展示/局部路径。未覆盖：右栏错误/重试已测；任务 API 失败/超时/权限未覆盖；保持 partial。
 
 <a id="tc-p2-e3"></a>
 #### TC-P2-E3 · 响应式/键盘/权限
@@ -128,7 +131,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：无横向溢出；键盘可完成主路径；越权被默认拒绝。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**
+- 当前证据：**missing** — 无测试落点；任务域键盘/375/权限边界未覆盖。
 
 
 ## 3. 验收映射（A1–A8）
@@ -146,10 +149,13 @@
 
 ## 4. 未实现与缺口
 
-- **unimplemented**：`PRD-TASK-003` 长任务异步与开始/结束消息、`PRD-TASK-004` 复杂度分级与确认门禁、`PRD-TASK-005` 子会话与任务归属。
-- **证据现状**：仅 001/002 有展示层部分证据（RightPanel 6/6 + E2E 06）；003–006（长任务、取消/重试、复杂度、子会话）仍 `missing`，覆盖状态仍 **gap**。
-- **自动化现状**：Vitest 与 CDP runner 已存在；CI 尚未接线；后端生命周期/执行组实时更新没有测试落点。
-- **不得宣称**：在上述证据补齐前，本域不能标记为 `covered`，也不能对外说“测试通过”。
+- **unimplemented**：`PRD-TASK-003`、`PRD-TASK-004`、`PRD-TASK-005`。
+- **用例级证据**：9 个用例 **pass 0 / partial 4 / missing 5**；pass 只表示该用例的断言已执行，不等于 PRD 覆盖。
+- **PRD 覆盖**：**0 covered / 0 partial / 6 gap**；本轮没有因局部证据升级任何 PRD 为 covered。
+- **未覆盖**：主用例 003–006 与 E3 仍 missing；任务 API、长任务进度、取消/重试、复杂度归属、权限与 375 无测试。
+- **证据命令/入口**：前端 `cd frontend && npm test`（**69/69 PASS**）、CDP `npm run test:e2e:cdp`（**11/11**，5 次）与后端 **223/223 PASS** 的交集；命令/环境见 [EVIDENCE](../../../docs/testing/EVIDENCE-20261120.md) 与 [BACKEND-EVIDENCE](../../../docs/testing/BACKEND-EVIDENCE-20261120.md)。
+- **限制**：本域 E2E/前端证据只覆盖既有 UI 路径；后端 223 PASS 只证明既有测试通过，不证明产品 AC 完成。Playwright Test 普通路径受沙箱限制，CI 未实跑。
+- **不得宣称**：在 AC 全量、权限/异常/真实数据补齐前，不能标记 `covered`，也不能对外说“测试通过”。
 
 ## 5. 执行后的回写
 

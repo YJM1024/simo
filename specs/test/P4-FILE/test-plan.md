@@ -1,7 +1,10 @@
 # P4 · 文件与交付物 测试计划
 
-状态：**active（部分用例有执行证据；覆盖未升级）** — 本文件定义用例与证据口径，不代表已经通过。
+状态：**active（2026-11-20 执行证据回写；用例 0 pass / 4 partial / 5 missing）** — 覆盖口径见 §1、§4；pass 只表示该用例的断言已执行，不表示 PRD 的 AC 全覆盖。
 > 产品域 spec：[`../../product/P4-FILE/spec.md`](../../product/P4-FILE/spec.md)；TREE：[`../../../docs/product/TREE.md`](../../../docs/product/TREE.md)；TRACEABILITY：[`../../../docs/product/TRACEABILITY.md`](../../../docs/product/TRACEABILITY.md)。
+
+<!-- EVIDENCE-SUMMARY-20261120 -->
+> **2026-11-20 证据汇总**：本域 9 个用例，**pass 0 / partial 4 / missing 5**；PRD 覆盖仍 **0 covered / 2 partial / 4 gap**。前端 `cd frontend && npm test`（**69/69 PASS**）、CDP `npm run test:e2e:cdp`（**11/11**，5 次）与后端 **223/223 PASS** 的交集；命令/环境见 [EVIDENCE](../../../docs/testing/EVIDENCE-20261120.md) 与 [BACKEND-EVIDENCE](../../../docs/testing/BACKEND-EVIDENCE-20261120.md)。
 
 ## 1. 范围与证据口径
 
@@ -24,7 +27,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-FILE-001-01` 主路径通过；`AC-FILE-001-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**missing** — 无测试落点；上传/附件缺少测试。
 - 实现状态：`partial`
 
 <a id="tc-p4-002"></a>
@@ -38,7 +41,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-FILE-005-01` 主路径通过；`AC-FILE-005-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**missing** — 无测试落点；文件聚合/归属缺少测试。
 - 实现状态：`partial`
 
 <a id="tc-p4-003"></a>
@@ -52,7 +55,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-FILE-002-01` 主路径通过；`AC-FILE-002-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**missing** — 无测试落点；交付物卡片状态/权限缺少测试。
 - 实现状态：`partial`
 
 <a id="tc-p4-004"></a>
@@ -66,7 +69,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-FILE-003-01` 主路径通过；`AC-FILE-003-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-003/FE-005 用例）
-- 当前证据：2026-11-20 `RightPanel` **6/6** 交付物列表/打开/缺失 projection + E2E **07** 交付物可见；未覆盖完整卡片状态。
+- 当前证据：**partial** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/RightPanel.test.tsx`（6/6） + `npm run test:e2e:cdp` 07；只覆盖展示/局部路径。未覆盖：交付物可见/状态已测；卡片状态、权限、真实产物未覆盖；保持 partial。
 - 实现状态：`implemented`
 
 <a id="tc-p4-005"></a>
@@ -80,7 +83,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-FILE-004-01` 主路径通过；`AC-FILE-004-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-005 用例）
-- 当前证据：2026-11-20 E2E **07** 真实下载 1/1；预览、PDF/Office/图片未覆盖。
+- 当前证据：**partial** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/RightPanel.test.tsx`（6/6） + `npm run test:e2e:cdp` 07；只覆盖展示/局部路径。未覆盖：真实下载由 E2E 07 覆盖；预览、PDF/Office 渲染、取消未覆盖；保持 partial。
 - 实现状态：`partial`
 
 <a id="tc-p4-006"></a>
@@ -94,7 +97,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-FILE-006-01` 主路径通过；`AC-FILE-006-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing**（无测试落点）
+- 当前证据：**missing** — 无测试落点；文件生成/产物登记缺少测试。
 - 实现状态：`partial`
 
 
@@ -108,7 +111,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：空态可见，加载不闪烁；加载结束进入正确状态；不展示假 0。
 - 自动化层级：component/integration（待接线）
-- 当前证据：**missing**
+- 当前证据：**partial** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/RightPanel.test.tsx`（6/6）；只覆盖展示/局部路径。未覆盖：右栏交付物空/加载已测；文件域全状态未覆盖；保持 partial。
 
 <a id="tc-p4-e2"></a>
 #### TC-P4-E2 · 错误/恢复
@@ -118,7 +121,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：错误提示可见，重试/返回可用；失败不写脏数据、不重复提交。
 - 自动化层级：component/integration（待接线）
-- 当前证据：**missing**
+- 当前证据：**partial** — 2026-11-20 `cd frontend && npm test`（**69/69 PASS**）的 `frontend/src/components/RightPanel.test.tsx`（6/6）；只覆盖展示/局部路径。未覆盖：右栏错误/重试已测；上传/下载失败未覆盖；保持 partial。
 
 <a id="tc-p4-e3"></a>
 #### TC-P4-E3 · 响应式/键盘/权限
@@ -128,7 +131,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：无横向溢出；键盘可完成主路径；越权被默认拒绝。
 - 自动化层级：component/integration（待接线）
-- 当前证据：**missing**
+- 当前证据：**missing** — 无测试落点；文件域键盘/375/权限边界未覆盖。
 
 
 ## 3. 验收映射（A1–A8）
@@ -146,10 +149,13 @@
 
 ## 4. 未实现与缺口
 
-- **unimplemented**：无。
-- **证据现状**：仅 004/005 有部分证据（RightPanel 6/6 + E2E 07 下载）；上传、工作区隔离、预览/PDF/Office/图片仍 `missing`，覆盖状态仍 2 partial / 4 gap。
-- **自动化现状**：Vitest 与 CDP runner 已存在；CI 尚未接线；上传/预览/文件生成没有测试落点。
-- **不得宣称**：在上述证据补齐前，本域不能标记为 `covered`，也不能对外说“测试通过”。
+- **unimplemented**：无（本域产品 spec 未标 unimplemented；上传/预览/生成仍 partial）。
+- **用例级证据**：9 个用例 **pass 0 / partial 4 / missing 5**；pass 只表示该用例的断言已执行，不等于 PRD 覆盖。
+- **PRD 覆盖**：**0 covered / 2 partial / 4 gap**；本轮没有因局部证据升级任何 PRD 为 covered。
+- **未覆盖**：主用例 001/002/003/006 与 E3 仍 missing；上传、附件、预览、文件生成、隔离无测试。
+- **证据命令/入口**：前端 `cd frontend && npm test`（**69/69 PASS**）、CDP `npm run test:e2e:cdp`（**11/11**，5 次）与后端 **223/223 PASS** 的交集；命令/环境见 [EVIDENCE](../../../docs/testing/EVIDENCE-20261120.md) 与 [BACKEND-EVIDENCE](../../../docs/testing/BACKEND-EVIDENCE-20261120.md)。
+- **限制**：本域 E2E/前端证据只覆盖既有 UI 路径；后端 223 PASS 只证明既有测试通过，不证明产品 AC 完成。Playwright Test 普通路径受沙箱限制，CI 未实跑。
+- **不得宣称**：在 AC 全量、权限/异常/真实数据补齐前，不能标记 `covered`，也不能对外说“测试通过”。
 
 ## 5. 执行后的回写
 

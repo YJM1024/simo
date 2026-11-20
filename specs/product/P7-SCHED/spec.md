@@ -35,9 +35,9 @@
 
 - 优先级：P1
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M13](../../../docs/m13-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P7-SCHED](../../changes/CHG-LEGACY-P7-SCHED/spec.md)；开发 [M13](../../../docs/m13-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：后端 CRUD 存在，前端无调度页；
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P7-SCHED/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“调度 / 任务与列表”中提供“定时任务 CRUD”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-SCHED-001-01` 主路径：用户能完成“定时任务 CRUD”并看到一致结果；状态与关联数据不互相矛盾。
@@ -48,9 +48,9 @@
 
 - 优先级：P1
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M13](../../../docs/m13-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P7-SCHED](../../changes/CHG-LEGACY-P7-SCHED/spec.md)；开发 [M13](../../../docs/m13-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：仅后端返回；时区/下次运行口径未产品化。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P7-SCHED/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“调度 / 任务与列表”中提供“列表与下次运行时间”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-SCHED-002-01` 主路径：用户能完成“列表与下次运行时间”并看到一致结果；状态与关联数据不互相矛盾。
@@ -63,9 +63,9 @@
 
 - 优先级：P1
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M13](../../../docs/m13-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P7-SCHED](../../changes/CHG-LEGACY-P7-SCHED/spec.md)；开发 [M13](../../../docs/m13-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：run-now 后端存在；重复触发/并发幂等未验收。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P7-SCHED/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“调度 / 执行与幂等”中提供“立即运行与幂等”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-SCHED-003-01` 主路径：用户能完成“立即运行与幂等”并看到一致结果；状态与关联数据不互相矛盾。
@@ -78,9 +78,9 @@
 
 - 优先级：P1
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M13](../../../docs/m13-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P7-SCHED](../../changes/CHG-LEGACY-P7-SCHED/spec.md)；开发 [M13](../../../docs/m13-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：规则解析存在；DST/非法规则/边界无测试。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P7-SCHED/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“调度 / 规则与时区”中提供“重复规则与时区”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-SCHED-004-01` 主路径：用户能完成“重复规则与时区”并看到一致结果；状态与关联数据不互相矛盾。
@@ -93,7 +93,7 @@
 
 - 优先级：P2
 - 实现状态：`unimplemented`
-- 关联：CHANGE —；开发 [M13](../../../docs/m13-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P7-SCHED](../../changes/CHG-LEGACY-P7-SCHED/spec.md)；开发 [M13](../../../docs/m13-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：失败重试/通知未实现；无产品规则。
 - 当前剩余缺口：`unimplemented`，无可用实现/无完整验收。
 > **unimplemented**：当前无可用实现/无完整验收；不得对外宣称已完成。

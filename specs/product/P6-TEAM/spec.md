@@ -35,9 +35,9 @@
 
 - 优先级：P1
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [TEAM](../../../docs/team-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P6-TEAM](../../changes/CHG-LEGACY-P6-TEAM/spec.md)；开发 [TEAM](../../../docs/team-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：后端 roster/模型信息存在；前端无入口、
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P6-TEAM/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“团队与智能体 / 智能体 roster”中提供“智能体 roster 与模型”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-TEAM-001-01` 主路径：用户能完成“智能体 roster 与模型”并看到一致结果；状态与关联数据不互相矛盾。
@@ -50,9 +50,9 @@
 
 - 优先级：P1
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [TEAM](../../../docs/team-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P6-TEAM](../../changes/CHG-LEGACY-P6-TEAM/spec.md)；开发 [TEAM](../../../docs/team-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：团队/成员后端存在；成员边界与负责人规则未产品化。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P6-TEAM/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“团队与智能体 / 成员与隔离”中提供“团队成员=子会话+负责人”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-TEAM-002-01` 主路径：用户能完成“团队成员=子会话+负责人”并看到一致结果；状态与关联数据不互相矛盾。
@@ -63,9 +63,9 @@
 
 - 优先级：P0
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [TEAM](../../../docs/team-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P6-TEAM](../../changes/CHG-LEGACY-P6-TEAM/spec.md)；开发 [TEAM](../../../docs/team-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：后端有隔离约束；无产品 AC、无越权/泄漏测试。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P6-TEAM/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“团队与智能体 / 成员与隔离”中提供“团队内部消息隔离”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-TEAM-005-01` 主路径：用户能完成“团队内部消息隔离”并看到一致结果；状态与关联数据不互相矛盾。
@@ -78,9 +78,9 @@
 
 - 优先级：P1
 - 实现状态：`partial`
-- 关联：CHANGE —；开发 [M10](../../../docs/m10-contract.md) / [TEAM](../../../docs/team-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P6-TEAM](../../changes/CHG-LEGACY-P6-TEAM/spec.md)；开发 [M10](../../../docs/m10-contract.md) / [TEAM](../../../docs/team-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：模板/触发器仅后端契约；无 UI。
-- 当前剩余缺口：域级执行证据仍为 missing；测试计划骨架已建、未运行；部分项仍缺产品确认。
+- 当前剩余缺口：已有部分测试证据（见 [test-plan](../../test/P6-TEAM/test-plan.md) 的 pass/partial）；产品 AC 全量、异常/权限/真实数据未齐；部分项仍缺产品确认。
 - 目标行为：系统在“团队与智能体 / 模板与触发器”中提供“团队模板·角色·触发器”的完整路径；入口可见、状态可辨、失败可恢复，空/加载/错误/权限不足不得静默或展示假数据。
 - AC：
   - `AC-TEAM-003-01` 主路径：用户能完成“团队模板·角色·触发器”并看到一致结果；状态与关联数据不互相矛盾。
@@ -93,7 +93,7 @@
 
 - 优先级：P1
 - 实现状态：`unimplemented`
-- 关联：CHANGE —；开发 [TEAM](../../../docs/team-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P6-TEAM](../../changes/CHG-LEGACY-P6-TEAM/spec.md)；开发 [TEAM](../../../docs/team-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：只读投影/通过对话创建仍为设计；无验收。
 - 当前剩余缺口：`unimplemented`，无可用实现/无完整验收。
 > **unimplemented**：当前无可用实现/无完整验收；不得对外宣称已完成。
@@ -108,7 +108,7 @@
 
 - 优先级：P2
 - 实现状态：`unimplemented`
-- 关联：CHANGE —；开发 [M10](../../../docs/m10-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
+- 关联：CHANGE [CHG-LEGACY-P6-TEAM](../../changes/CHG-LEGACY-P6-TEAM/spec.md)；开发 [M10](../../../docs/m10-contract.md)；组件 —；任务卡 [后端任务](../../../docs/tasks/backend.md)
 - 落地前差距（历史审计）：子代理并行/任务板未实现；只有流程文档与契约。
 - 当前剩余缺口：`unimplemented`，无可用实现/无完整验收。
 > **unimplemented**：当前无可用实现/无完整验收；不得对外宣称已完成。

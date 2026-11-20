@@ -1,0 +1,63 @@
+# SPEC · CHG-LEGACY-P7-SCHED
+
+Implements: PRD-SCHED-001, PRD-SCHED-002, PRD-SCHED-003, PRD-SCHED-004, PRD-SCHED-005
+
+- 状态：historical / partial（归档，不代表产品完成）
+- Owner：backend
+- 日期：2026-11-20
+- 产品依据：`specs/product/P7-SCHED/spec.md`
+
+## 1. 目标
+
+归档 P7 的定时任务后端契约、调度语义、持久化与测试证据，并明确通知/重试/UI 缺口。
+
+## 2. 需求与状态
+
+| ID | 需求 | 后端事实 | 状态 | 主要证据 |
+|---|---|---|---|---|
+| R1 | SCHED-001 CRUD | `GET/POST /api/schedules`、`GET/PATCH/DELETE /api/schedules/{id}`；创建 201；未知 404；非法 400 | partial | `TestM13OnceScheduleFires`、`TestM13PauseAndRunNow`、`TestM13InvalidCronAndNextRun` |
+| R2 | SCHED-002 list/next-run | 列表返回 `schedules:[]`；创建/更新计算 `nextRunAt`；once 完成后禁用 | partial | `TestM13InvalidCronAndNextRun`、`TestM13PauseAndRunNow` |
+| R3 | SCHED-003 run-now/idempotency | `POST /api/schedules/{id}/run-now`；`schedule_fires(schedule_id,due_at)` 主键；run-now due=now | partial | `TestM13PauseAndRunNow`、`TestM13OnceScheduleFires` |
+| R4 | SCHED-004 recurrence/timezone | once/interval/daily/weekly/cron；daily 支持 timezone；cron 5 段；无 DST 专项测试 | partial | `TestM13InvalidCronAndNextRun`、`TestM13OnceScheduleFires` |
+| R5 | SCHED-005 failure/retry/notification | 触发失败会记录 failed 并有内部 startTurn 重试；**无用户通知渠道、无手动重试 API、无 UI** | unimplemented（产品级） | `TestM13ApprovalPausesSchedule` 只覆盖审批暂停，不覆盖通知 |
+
+## 3. 验收标准（本包）
+
+- **AC-P7-01**：once 到点后触发一次，`runCount=1`、`lastRunAt` 非零、`lastStatus=done`。证据：`TestM13OnceScheduleFires`。
+- **AC-P7-02**：非法 cron 返回 400；daily `09:30` + `Asia/Shanghai` 创建成功且 `nextRunAt > now`；interval 创建成功。证据：`TestM13InvalidCronAndNextRun`。
+- **AC-P7-03**：run-now 可用，触发后 `runCount` 增加。证据：`TestM13PauseAndRunNow`。
+- **AC-P7-04**：暂停后 `enabled=false`、`nextRunAt=0`，不再自动触发。证据：`TestM13PauseAndRunNow`。
+- **AC-P7-05**：重启后补偿 missed run，至少执行一次。证据：`TestM13RestartAndMissedCompensation`。
+- **AC-P7-06**：触发命中审批且无人应答时，任务标 failed 并暂停，消息包含“审批/暂停”。证据：`TestM13ApprovalPausesSchedule`。
+- **AC-P7-07**：通知、手动重试、失败告警无产品实现，SCHED-005 记 `unimplemented`。
+- **AC-P7-08**：无 P7 UI，所有用户可见 AC 不判定通过。
+
+## 4. 状态、错误与边界
+
+- 创建成功 201，body `{ok:true,schedule}`；列表/详情/PATCH/DELETE/run-now 200。
+- 未知 ID → 404 `定时任务不存在`；非法 JSON → 400 `JSON 非法`；非法 trigger/cron/timezone → 400（`writeScheduleError`）。
+- 支持 `trigger:{type,expr,timezone}` 或扁平 `triggerType/triggerExpr/timezone`。
+- 调度 tick 5s；`schedule_fires` 主键保证同一 due 不重复执行。
+- 启动 `recoverSchedules` 只补偿最近一次 missed run，然后重算 next；不是全量补跑。
+- `deliverSchedule` 对 `startTurn` 最多重试 2 次（500ms 间隔），45s 截止；审批 pending 会标 failed 并禁用。
+- 无通知渠道、无用户 retry 按钮/API、无 UI。
+- 时区只做 IANA `LoadLocation` 与本地时间计算；无 DST、跨日、闰秒测试。
+
+## 5. 接口与数据（归档）
+
+路由：`GET/POST /api/schedules`；`GET/PATCH/DELETE /api/schedules/{id}`；`POST /api/schedules/{id}/run-now`。
+
+`Schedule`：`id/sessionId/title/trigger{type,expr,timezone}/triggerType/triggerExpr/prompt/enabled/nextRunAt/lastRunAt/lastStatus/runCount/createdAt/updatedAt`。
+
+表（chat 迁移 v9）：`schedules(id,session_id,title,trigger_type,trigger_expr,timezone,prompt,enabled,next_run_at,last_run_at,last_status,run_count,created_at,updated_at)`，索引 `idx_schedules_due(enabled,next_run_at)`；`schedule_fires(schedule_id,due_at,created_at, PRIMARY KEY(schedule_id,due_at))`。
+
+## 6. 待确认
+
+- 启动补偿是否允许只补最近一次，还是必须补所有 missed？
+- 失败通知的产品渠道（消息/桌面/邮件）与重试上限？
+- cron 是否要求秒级/6 段，是否要求完整 DST 语义？
+
+## 7. 链接
+
+- [proposal.md](proposal.md) · [backend.md](backend.md) · [frontend.md](frontend.md) · [tasks.md](tasks.md) · [test-plan.md](test-plan.md) · [evidence.md](evidence.md)
+- 全量证据：[`docs/testing/BACKEND-EVIDENCE-20261120.md`](../../../docs/testing/BACKEND-EVIDENCE-20261120.md)

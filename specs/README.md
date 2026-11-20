@@ -24,14 +24,14 @@
 | P2 | 任务与执行 | TASK | [spec](product/P2-TASK/spec.md) | [test-plan](test/P2-TASK/test-plan.md) | 6 | 0 covered / 0 partial / 6 gap |
 | P3 | 工作台与视图 | WORK | [spec](product/P3-WORK/spec.md) | [test-plan](test/P3-WORK/test-plan.md) | 5 | 0 covered / 4 partial / 1 gap |
 | P4 | 文件与交付物 | FILE | [spec](product/P4-FILE/spec.md) | [test-plan](test/P4-FILE/test-plan.md) | 6 | 0 covered / 2 partial / 4 gap |
-| P5 | 记忆 | MEM | [spec](product/P5-MEM/spec.md) | [test-plan](test/P5-MEM/test-plan.md) | 6 | 0 covered / 0 partial / 6 gap |
-| P6 | 团队与智能体 | TEAM | [spec](product/P6-TEAM/spec.md) | [test-plan](test/P6-TEAM/test-plan.md) | 6 | 0 covered / 0 partial / 6 gap |
-| P7 | 调度 | SCHED | [spec](product/P7-SCHED/spec.md) | [test-plan](test/P7-SCHED/test-plan.md) | 5 | 0 covered / 0 partial / 5 gap |
-| P8 | 设置与系统 | SET/SYS | [spec](product/P8-SET/spec.md) | [test-plan](test/P8-SET/test-plan.md) | 12 | 0 covered / 0 partial / 12 gap |
-| P9 | 工具与能力 | TOOL | [spec](product/P9-TOOL/spec.md) | [test-plan](test/P9-TOOL/test-plan.md) | 7 | 0 covered / 0 partial / 7 gap |
+| P5 | 记忆 | MEM | [spec](product/P5-MEM/spec.md) | [test-plan](test/P5-MEM/test-plan.md) | 6 | 0 covered / 5 partial / 1 gap |
+| P6 | 团队与智能体 | TEAM | [spec](product/P6-TEAM/spec.md) | [test-plan](test/P6-TEAM/test-plan.md) | 6 | 0 covered / 4 partial / 2 gap |
+| P7 | 调度 | SCHED | [spec](product/P7-SCHED/spec.md) | [test-plan](test/P7-SCHED/test-plan.md) | 5 | 0 covered / 4 partial / 1 gap |
+| P8 | 设置与系统 | SET/SYS | [spec](product/P8-SET/spec.md) | [test-plan](test/P8-SET/test-plan.md) | 12 | 0 covered / 9 partial / 3 gap |
+| P9 | 工具与能力 | TOOL | [spec](product/P9-TOOL/spec.md) | [test-plan](test/P9-TOOL/test-plan.md) | 7 | 0 covered / 4 partial / 3 gap |
 | P10 | 指标 | METRIC | [spec](product/P10-METRIC/spec.md) | [test-plan](test/P10-METRIC/test-plan.md) | 6 | 0 covered / 5 partial / 1 gap |
 
-> 覆盖状态来自 [`../docs/product/TRACEABILITY.md`](../docs/product/TRACEABILITY.md)；10 份域 test-plan 与 [E2E 计划](test/e2e/README.md) 已回写 69 单测/11 E2E 的部分证据，但没有任何 PRD 达到 covered，因此不因“用例跑过一部分”升级。
+> 覆盖状态来自 [`../docs/product/TRACEABILITY.md`](../docs/product/TRACEABILITY.md)；10 份域 test-plan 与 [E2E 计划](test/e2e/README.md) 已回写 69 单测/11 E2E/223 后端测试的部分证据，但没有任何 PRD 达到 covered，因此不因“用例跑过一部分”升级。
 
 ## 3. 历史 FE（已归类为 change legacy，不删除；勿新增 FE-xxx）
 
