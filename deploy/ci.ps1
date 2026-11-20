@@ -202,9 +202,20 @@ if ($SkipEvals -or -not $buildOk) {
         }
         if (-not $ready) { throw ("server not ready on port " + $port) }
         $env:SIMO_HOME = $blockHome
-        $out = & $node (Join-Path $repo 'evals\run.mjs') --base-url ('http://127.0.0.1:' + $port) --cli $exePath --only ($ids -join ',') 2>&1 | Out-String
+        # eval runner writes per-case progress to stderr. Windows PowerShell 5.1
+        # promotes merged native stderr to a terminating error when
+        # $ErrorActionPreference is Stop, which used to abort at "CASE health"
+        # before the first case ran. Keep native stderr as data, then restore.
+        $oldEap = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        try {
+          $out = & $node (Join-Path $repo 'evals\run.mjs') --base-url ('http://127.0.0.1:' + $port) --cli $exePath --only ($ids -join ',') 2>&1 | Out-String
+          $evalCode = $LASTEXITCODE
+        } finally {
+          $ErrorActionPreference = $oldEap
+        }
         Write-Log $log $out
-        if ($LASTEXITCODE -ne 0) { Write-Host ($out -split "`n" | Select-Object -Last 15 | Out-String); throw ("evals failed: " + $block.Name + " (see " + $log + ")") }
+        if ($evalCode -ne 0) { Write-Host ($out -split "`n" | Select-Object -Last 15 | Out-String); throw ("evals failed: " + $block.Name + " (see " + $log + ")") }
         Write-Host ('       ' + $block.Name + ': ' + (($out -split "`n" | Where-Object { $_ -match 'WITH ' } | Select-Object -Last 1)))
         $true
       } finally {

@@ -34,7 +34,10 @@ function Add-Check([string]$name, [bool]$ok, [string]$note) {
 }
 
 $repo = Split-Path -Parent $PSScriptRoot
-if (-not $OldExe) { $OldExe = Join-Path $repo 'toolchain\tmp\simo-m13.exe' }
+if (-not $OldExe) {
+  $preM14 = Join-Path $repo 'toolchain\tmp\simo-eval.exe'
+  $OldExe = if (Test-Path $preM14) { $preM14 } else { Join-Path $repo 'toolchain\tmp\simo-m13.exe' }
+}
 if (-not $NewExe) { $NewExe = Join-Path $repo 'backend\simo.exe' }
 if (-not (Test-Path $OldExe)) { Write-Host "FAIL: old (pre-M14) exe not found: $OldExe"; exit 2 }
 if (-not (Test-Path $NewExe)) { Write-Host "FAIL: current exe not found: $NewExe"; exit 2 }
@@ -53,6 +56,11 @@ Write-Host ''
 $env:SIMO_HOME = $homeDir
 $env:SIMO_LLM = 'mock'
 $env:SIMO_DEBUG = '1'
+# 早于 rename 的 M13 二进制仍使用 AGENTD_* 环境变量和 agentd.db；同时设置，
+# 让同一脚本既能跑旧 simo-m13.exe，也能跑现存 toolchain/tmp/simo-eval.exe。
+$env:AGENTD_HOME = $homeDir
+$env:AGENTD_LLM = 'mock'
+$env:AGENTD_DEBUG = '1'
 
 function Start-Backend([string]$exe, [string]$label) {
   $l = Join-Path $work ($label + '.log')
@@ -100,6 +108,15 @@ Stop-Backend $old
 
 # sanity: db file exists for the upgrade
 $dbPath = Join-Path $homeDir 'simo.db'
+# 旧 agentd 命名会生成 agentd.db；迁移的是同一 SQLite schema，复制到新文件名后
+# 由当前二进制执行 chat v10 迁移。若旧二进制本就写 simo.db，则不需要这一步。
+$legacyDb = Join-Path $homeDir 'agentd.db'
+if ((Test-Path $legacyDb) -and -not (Test-Path $dbPath)) {
+  Copy-Item $legacyDb $dbPath -Force
+  foreach ($ext in @('-wal', '-shm')) {
+    if (Test-Path ($legacyDb + $ext)) { Copy-Item ($legacyDb + $ext) ($dbPath + $ext) -Force }
+  }
+}
 Add-Check 'SIMO_HOME db file exists before upgrade' (Test-Path $dbPath) $dbPath
 if (-not (Test-Path $dbPath)) { Write-Host 'aborted'; exit 1 }
 
