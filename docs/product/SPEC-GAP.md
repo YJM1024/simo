@@ -9,14 +9,15 @@
 > 本节是**当前状态**；§1–§7 是落地前的历史审计，保留不改，因此其中“0/12”等数字是历史快照，不是现状。
 
 - 产品域 spec：**10/10**（P1–P10），路径 `specs/product/<P*-*>/spec.md`；每域 L3 全列，未实现项标 `unimplemented`。
-- 域测试计划：**10/10**，路径 `specs/test/<P*-*>/test-plan.md`；2026-11-20 已回写 69 个前端单测、11 个 CDP E2E 与 223 个后端测试的**部分执行证据**，覆盖 P1–P10；未覆盖用例仍标 `missing`，P5–P9 的 CHANGE 已指向 5 个 legacy 包。
+- 域测试计划：**10/10**，路径 `specs/test/<P*-*>/test-plan.md`；2026-11-20 已回写 69 个前端单测、11 个 CDP E2E 与 223 个后端测试的**部分执行证据**，覆盖 P1–P10；未覆盖用例仍标 `missing`。
+- 域级变更包：**10/10**（`CHG-LEGACY-P1-CONV`…`CHG-LEGACY-P10-METRIC`，P1–P10 各 1 包，每包 7 件套）；P1–P4/P10 为 2026-11-20 补齐的 legacy 归档包，只登记真实实现/证据/缺口，不升级 covered。
 - E2E 测试计划：**1/1**（[`../../specs/test/e2e/README.md`](../../specs/test/e2e/README.md)）；CDP runner 11/11 PASS、连续 5 次，Playwright Test/CI 仍未接通。
 - 覆盖：**covered 0、partial 48、gap 23**（共 71）。测试计划文件存在或局部用例跑过，不足以升级覆盖；必须六类产物 + 完整 AC 证据。
 - 未实现项（`unimplemented`）：16 个（含 `PRD-TOOL-003`，按后端无实现/测试口径）；逐项见各域 spec 的“当前实现状态”与 TREE。
 - 历史 FE/COMP：10 个 FE + 5 个 COMP，已映射为 `CHG-LEGACY-*` / `COMP-LEGACY-*`，不重命名、不删除。
 - 文件规模：10 产品 spec + 10 域测试计划 + 1 E2E 计划 + 5 COMP + 10 历史 FE + 模板；不按 71 个功能点各建文件。
 
-> 结论：底座已从“0 产品 spec”推进到“10 域骨架 + 部分执行证据”；但**没有人可以据此宣称功能已覆盖/测试已全部通过**。下一步是按域补 change 包与 AC 证据、把 `unimplemented` 开变更包，而不是继续扩写规则。
+> 结论：底座已从“0 产品 spec”推进到“10 域骨架 + 10 个 legacy 域包 + 部分执行证据”；但**没有人可以据此宣称功能已覆盖/测试已全部通过**。下一步是补齐六类产物与完整 AC 证据、把 `unimplemented` 开实现型变更包，而不是继续扩写规则或把 legacy 归档包当完成。
 
 ## 1. 结论先行（历史快照，落地前）
 

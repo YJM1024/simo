@@ -29,7 +29,9 @@
 | [`P10`](#p10) | 6 | 0 | 5 | 1 | [spec](../../specs/product/P10-METRIC/spec.md) | [test](../../specs/test/P10-METRIC/test-plan.md) |
 | **合计** | **71** | **0** | **48** | **23** | **10/10** | **10/10** |
 
-> 说明：10 份 test-plan 原为骨架；2026-11-20 已回写 69 个前端单测、11 个 CDP E2E 与 223 个后端测试的**部分执行证据**（见 §2.1）。覆盖状态按 **0 covered / 48 partial / 23 gap** 记录：没有任何 PRD 同时具备产品 spec + change 包 + 前后端开发 spec + 任务卡 + TEST + 完整 AC 证据，不能因“用例跑过一部分”升级。
+> 说明：10 份 test-plan 原为骨架；2026-11-20 已回写 69 个前端单测、11 个 CDP E2E 与 223 个后端测试的**部分执行证据**（见 §2.1）。覆盖状态按 **0 covered / 48 partial / 23 gap** 记录：没有任何 PRD 同时具备产品 spec + 完整的前后端开发 spec + 任务卡 + TEST + 完整 AC 证据，不能因“用例跑过一部分”升级。
+>
+> 2026-11-20 补充：P1–P4、P10 的 35 个 PRD 已建立域级 legacy 归档包 `CHG-LEGACY-P1-CONV`、`CHG-LEGACY-P2-TASK`、`CHG-LEGACY-P3-WORK`、`CHG-LEGACY-P4-FILE`、`CHG-LEGACY-P10-METRIC`；CHANGE 列保留原 FE/COMP 映射并追加包链接。legacy 包只表示“可追溯归档”，不改变 covered/partial/gap，也不代表六类产物闭环。
 
 ## 2.1 2026-11-20 执行证据（不升级 covered）
 
@@ -37,7 +39,7 @@
 
 | 域 | 已回写的部分证据 | 覆盖判定 | 不能升级的原因 |
 |---|---|---|---|
-| P1 会话与消息 | Sidebar 9、MessageItem 18、Composer 10、App 祖先/WS、E2E 01a/02/03/04a–d/05 | 仍 0/11/1 | 009 多标签、011 未读、012 远程访问无证据；无 change 包/完整 AC |
+| P1 会话与消息 | Sidebar 9、MessageItem 18、Composer 10、App 祖先/WS、E2E 01a/02/03/04a–d/05 | 仍 0/11/1 | legacy 包仅归档；009 多标签、011 未读、012 远程访问无证据；六类产物未闭环 |
 | P2 任务与执行 | RightPanel 6 展示层、E2E 06 定位 | 仍 0/0/6 | 后端生命周期/取消/重试/复杂度/子会话均无执行证据 |
 | P3 工作台与视图 | LibraryUtilities 2、App 工作台指标、RightPanel/E2E 07 | 仍 0/4/1 | WORK-005 未实现；真实 usage/每日聚合/最近活动未覆盖 |
 | P4 文件与交付物 | RightPanel 交付物、E2E 07 下载 | 仍 0/2/4 | 上传/隔离/预览/PDF/Office 未覆盖 |
@@ -54,50 +56,50 @@
 
 | PRD | 名称 | CHANGE | TEST | 覆盖 | 缺口 |
 |---|---|---|---|---|---|
-| `PRD-CONV-001` | 会话树与主会话 | [FE-003](../../specs/FE-003-chat-capabilities/spec.md) | [TC-P1-001](../../specs/test/P1-CONV/test-plan.md#tc-p1-001) | `partial` | FE-003 已签但无域级测试计划；主会话不可归档的边界未单列 AC。 |
-| `PRD-CONV-002` | 会话生命周期 | [FE-001](../../specs/FE-001-frontend-rebuild/spec.md) / [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [FE-004](../../specs/FE-004-first-run-empty/spec.md) | [TC-P1-002](../../specs/test/P1-CONV/test-plan.md#tc-p1-002) | `partial` | 创建/重命名/归档/恢复分散在多个 FE，缺统一状态机。 |
-| `PRD-CONV-003` | 会话搜索与未读 | [FE-003](../../specs/FE-003-chat-capabilities/spec.md) | [TC-P1-003](../../specs/test/P1-CONV/test-plan.md#tc-p1-003) | `partial` | 搜索已实现；未读计数/已读游标只有零散实现，无域级 AC 与测试。 |
-| `PRD-CONV-004` | 消息流与渲染 | [FE-001](../../specs/FE-001-frontend-rebuild/spec.md) / [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [COMP-message-colors](../../specs/COMP-message-colors/spec.md) | [TC-P1-004](../../specs/test/P1-CONV/test-plan.md#tc-p1-004) | `partial` | 消息纯度（无 system/静默噪音）无独立验收项。 |
-| `PRD-CONV-007` | 祖先消息整级加载 | [FE-007](../../specs/FE-007-ancestor-messages/spec.md) / [COMP-timeline-groups](../../specs/COMP-timeline-groups/spec.md) / [COMP-timeline-tip](../../specs/COMP-timeline-tip/spec.md) | [TC-P1-005](../../specs/test/P1-CONV/test-plan.md#tc-p1-005) | `partial` | 已签但未部署，生产可用性未证明；时间轴点击目标尺寸未单列。 |
-| `PRD-CONV-005` | 发送·流式·断线重连 | [FE-002](../../specs/FE-002-chat-robustness/spec.md) | [TC-P1-006](../../specs/test/P1-CONV/test-plan.md#tc-p1-006) | `partial` | 断线重连无重复已验证，但“停止/失败恢复”未纳入同一 AC。 |
-| `PRD-CONV-006` | Composer 输入与快捷键 | [FE-006](../../specs/FE-006-chat-experience/spec.md) / [COMP-composer-send-mode](../../specs/COMP-composer-send-mode/spec.md) | [TC-P1-007](../../specs/test/P1-CONV/test-plan.md#tc-p1-007) | `partial` | IME/发送模式/跨标签同步已有组件级契约，缺产品级 AC。 |
-| `PRD-SYNC-001` | WS 连接与重连 | [FE-002](../../specs/FE-002-chat-robustness/spec.md) | [TC-P1-008](../../specs/test/P1-CONV/test-plan.md#tc-p1-008) | `partial` | 重连/回放/事件去重无域测试。 |
-| `PRD-SYNC-002` | 多标签 active/ancestor/read cursor | [FE-009](../../specs/FE-009-web-multitab/spec.md) | [TC-P1-009](../../specs/test/P1-CONV/test-plan.md#tc-p1-009) | `partial` | FE-009-web-multitab 已签部署，但无域测试。 |
-| `PRD-SYNC-003` | 发送模式/设置跨标签同步 | [FE-006](../../specs/FE-006-chat-experience/spec.md) / [COMP-composer-send-mode](../../specs/COMP-composer-send-mode/spec.md) | [TC-P1-010](../../specs/test/P1-CONV/test-plan.md#tc-p1-010) | `partial` | 仅组件级测试。 |
-| `PRD-SYNC-004` | 未读与已读游标 | [FE-003](../../specs/FE-003-chat-capabilities/spec.md) | [TC-P1-011](../../specs/test/P1-CONV/test-plan.md#tc-p1-011) | `partial` | 零散实现；无统一未读口径与跨标签 AC。 |
-| `PRD-SYNC-005` | 远程访问与通知中心 | — | [TC-P1-012](../../specs/test/P1-CONV/test-plan.md#tc-p1-012) | `gap` | 未实现；无远程鉴权/通知产品 spec。 |
+| `PRD-CONV-001` | 会话树与主会话 | [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-001](../../specs/test/P1-CONV/test-plan.md#tc-p1-001) | `partial` | 域级测试计划已建；主会话不可归档的边界未单列 AC，缺完整 AC 证据。 |
+| `PRD-CONV-002` | 会话生命周期 | [FE-001](../../specs/FE-001-frontend-rebuild/spec.md) / [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [FE-004](../../specs/FE-004-first-run-empty/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-002](../../specs/test/P1-CONV/test-plan.md#tc-p1-002) | `partial` | 创建/重命名/归档/恢复分散在多个 FE，缺统一状态机。 |
+| `PRD-CONV-003` | 会话搜索与未读 | [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-003](../../specs/test/P1-CONV/test-plan.md#tc-p1-003) | `partial` | 搜索已实现；未读计数/已读游标只有零散实现，无域级 AC 与测试。 |
+| `PRD-CONV-004` | 消息流与渲染 | [FE-001](../../specs/FE-001-frontend-rebuild/spec.md) / [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [COMP-message-colors](../../specs/COMP-message-colors/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-004](../../specs/test/P1-CONV/test-plan.md#tc-p1-004) | `partial` | 消息纯度（无 system/静默噪音）无独立验收项。 |
+| `PRD-CONV-007` | 祖先消息整级加载 | [FE-007](../../specs/FE-007-ancestor-messages/spec.md) / [COMP-timeline-groups](../../specs/COMP-timeline-groups/spec.md) / [COMP-timeline-tip](../../specs/COMP-timeline-tip/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-005](../../specs/test/P1-CONV/test-plan.md#tc-p1-005) | `partial` | 已签但未部署，生产可用性未证明；时间轴点击目标尺寸未单列。 |
+| `PRD-CONV-005` | 发送·流式·断线重连 | [FE-002](../../specs/FE-002-chat-robustness/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-006](../../specs/test/P1-CONV/test-plan.md#tc-p1-006) | `partial` | 断线重连无重复已验证，但“停止/失败恢复”未纳入同一 AC。 |
+| `PRD-CONV-006` | Composer 输入与快捷键 | [FE-006](../../specs/FE-006-chat-experience/spec.md) / [COMP-composer-send-mode](../../specs/COMP-composer-send-mode/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-007](../../specs/test/P1-CONV/test-plan.md#tc-p1-007) | `partial` | IME/发送模式/跨标签同步已有组件级契约，缺产品级 AC。 |
+| `PRD-SYNC-001` | WS 连接与重连 | [FE-002](../../specs/FE-002-chat-robustness/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-008](../../specs/test/P1-CONV/test-plan.md#tc-p1-008) | `partial` | 重连/回放/事件去重无域测试。 |
+| `PRD-SYNC-002` | 多标签 active/ancestor/read cursor | [FE-009](../../specs/FE-009-web-multitab/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-009](../../specs/test/P1-CONV/test-plan.md#tc-p1-009) | `partial` | FE-009-web-multitab 已签部署，但无域测试。 |
+| `PRD-SYNC-003` | 发送模式/设置跨标签同步 | [FE-006](../../specs/FE-006-chat-experience/spec.md) / [COMP-composer-send-mode](../../specs/COMP-composer-send-mode/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-010](../../specs/test/P1-CONV/test-plan.md#tc-p1-010) | `partial` | 仅组件级测试。 |
+| `PRD-SYNC-004` | 未读与已读游标 | [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-011](../../specs/test/P1-CONV/test-plan.md#tc-p1-011) | `partial` | 零散实现；无统一未读口径与跨标签 AC。 |
+| `PRD-SYNC-005` | 远程访问与通知中心 | [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-012](../../specs/test/P1-CONV/test-plan.md#tc-p1-012) | `gap` | 未实现；无远程鉴权/通知产品 spec。 |
 ### P2 · 任务与执行
 <a id="p2"></a>
 
 | PRD | 名称 | CHANGE | TEST | 覆盖 | 缺口 |
 |---|---|---|---|---|---|
-| `PRD-TASK-001` | 任务生命周期与执行组 | — | [TC-P2-001](../../specs/test/P2-TASK/test-plan.md#tc-p2-001) | `gap` | 后端 tasks 路由存在，但无前端执行组完整契约、无域测试计划。 |
-| `PRD-TASK-002` | 任务概览与进度 | — | [TC-P2-002](../../specs/test/P2-TASK/test-plan.md#tc-p2-002) | `gap` | 右栏/概览已有部分展示；无 PRD、无 AC、无进度口径与测试。 |
-| `PRD-TASK-003` | 长任务异步与开始/结束消息 | — | [TC-P2-003](../../specs/test/P2-TASK/test-plan.md#tc-p2-003) | `gap` | 仅有 m19 契约；异步开始/结束消息、解耦与恢复未实现验收。 |
-| `PRD-TASK-006` | 取消·重试·预算·恢复 | — | [TC-P2-004](../../specs/test/P2-TASK/test-plan.md#tc-p2-004) | `gap` | 后端有 cancel/retry/runtime；预算/并发/恢复缺产品 spec 与前端入口。 |
-| `PRD-TASK-004` | 复杂度分级与确认门禁 | — | [TC-P2-005](../../specs/test/P2-TASK/test-plan.md#tc-p2-005) | `gap` | C0–C4 已写入 docs/task-complexity.md，但无实现、无测试。 |
-| `PRD-TASK-005` | 子会话与任务归属 | — | [TC-P2-006](../../specs/test/P2-TASK/test-plan.md#tc-p2-006) | `gap` | 父会话只维护 childSessionIds、子会话内建 Task 的规则已定，但未实现/未验证。 |
+| `PRD-TASK-001` | 任务生命周期与执行组 | [CHG-LEGACY-P2-TASK](../../specs/changes/CHG-LEGACY-P2-TASK/spec.md) | [TC-P2-001](../../specs/test/P2-TASK/test-plan.md#tc-p2-001) | `gap` | 后端 tasks 路由存在，但无前端执行组完整契约、无域测试计划。 |
+| `PRD-TASK-002` | 任务概览与进度 | [CHG-LEGACY-P2-TASK](../../specs/changes/CHG-LEGACY-P2-TASK/spec.md) | [TC-P2-002](../../specs/test/P2-TASK/test-plan.md#tc-p2-002) | `gap` | 右栏/概览已有部分展示；无 PRD、无 AC、无进度口径与测试。 |
+| `PRD-TASK-003` | 长任务异步与开始/结束消息 | [CHG-LEGACY-P2-TASK](../../specs/changes/CHG-LEGACY-P2-TASK/spec.md) | [TC-P2-003](../../specs/test/P2-TASK/test-plan.md#tc-p2-003) | `gap` | 仅有 m19 契约；异步开始/结束消息、解耦与恢复未实现验收。 |
+| `PRD-TASK-006` | 取消·重试·预算·恢复 | [CHG-LEGACY-P2-TASK](../../specs/changes/CHG-LEGACY-P2-TASK/spec.md) | [TC-P2-004](../../specs/test/P2-TASK/test-plan.md#tc-p2-004) | `gap` | 后端有 cancel/retry/runtime；预算/并发/恢复缺产品 spec 与前端入口。 |
+| `PRD-TASK-004` | 复杂度分级与确认门禁 | [CHG-LEGACY-P2-TASK](../../specs/changes/CHG-LEGACY-P2-TASK/spec.md) | [TC-P2-005](../../specs/test/P2-TASK/test-plan.md#tc-p2-005) | `gap` | C0–C4 已写入 docs/task-complexity.md，但无实现、无测试。 |
+| `PRD-TASK-005` | 子会话与任务归属 | [CHG-LEGACY-P2-TASK](../../specs/changes/CHG-LEGACY-P2-TASK/spec.md) | [TC-P2-006](../../specs/test/P2-TASK/test-plan.md#tc-p2-006) | `gap` | 父会话只维护 childSessionIds、子会话内建 Task 的规则已定，但未实现/未验证。 |
 ### P3 · 工作台与视图
 <a id="p3"></a>
 
 | PRD | 名称 | CHANGE | TEST | 覆盖 | 缺口 |
 |---|---|---|---|---|---|
-| `PRD-WORK-001` | 双页导航与工作台入口 | [FE-001](../../specs/FE-001-frontend-rebuild/spec.md) / [FE-005](../../specs/FE-005-workbench/spec.md) | [TC-P3-001](../../specs/test/P3-WORK/test-plan.md#tc-p3-001) | `partial` | FE-001 总签字仍待补测，导航仅两页。 |
-| `PRD-WORK-002` | 用量与统计卡 | [FE-005](../../specs/FE-005-workbench/spec.md) | [TC-P3-002](../../specs/test/P3-WORK/test-plan.md#tc-p3-002) | `partial` | 统计口径/空值/错误态未统一为 PRD AC。 |
-| `PRD-WORK-003` | 每日趋势与最近活动 | [FE-005](../../specs/FE-005-workbench/spec.md) | [TC-P3-003](../../specs/test/P3-WORK/test-plan.md#tc-p3-003) | `partial` | 趋势口径与时区未写产品级定义。 |
-| `PRD-WORK-004` | 工作台交付物与三态 | [FE-004](../../specs/FE-004-first-run-empty/spec.md) / [FE-005](../../specs/FE-005-workbench/spec.md) | [TC-P3-004](../../specs/test/P3-WORK/test-plan.md#tc-p3-004) | `partial` | 空/错误态通过；loading 未捕获，打开/预览未验证；产品 spec 待建。 |
-| `PRD-WORK-005` | 自定义视图 13 类块 | — | [TC-P3-005](../../specs/test/P3-WORK/test-plan.md#tc-p3-005) | `gap` | 只有视图 Schema/渲染契约，无前端页面、无测试。 |
+| `PRD-WORK-001` | 双页导航与工作台入口 | [FE-001](../../specs/FE-001-frontend-rebuild/spec.md) / [FE-005](../../specs/FE-005-workbench/spec.md) / [CHG-LEGACY-P3-WORK](../../specs/changes/CHG-LEGACY-P3-WORK/spec.md) | [TC-P3-001](../../specs/test/P3-WORK/test-plan.md#tc-p3-001) | `partial` | FE-001 总签字仍待补测，导航仅两页。 |
+| `PRD-WORK-002` | 用量与统计卡 | [FE-005](../../specs/FE-005-workbench/spec.md) / [CHG-LEGACY-P3-WORK](../../specs/changes/CHG-LEGACY-P3-WORK/spec.md) | [TC-P3-002](../../specs/test/P3-WORK/test-plan.md#tc-p3-002) | `partial` | 统计口径/空值/错误态未统一为 PRD AC。 |
+| `PRD-WORK-003` | 每日趋势与最近活动 | [FE-005](../../specs/FE-005-workbench/spec.md) / [CHG-LEGACY-P3-WORK](../../specs/changes/CHG-LEGACY-P3-WORK/spec.md) | [TC-P3-003](../../specs/test/P3-WORK/test-plan.md#tc-p3-003) | `partial` | 趋势口径与时区未写产品级定义。 |
+| `PRD-WORK-004` | 工作台交付物与三态 | [FE-004](../../specs/FE-004-first-run-empty/spec.md) / [FE-005](../../specs/FE-005-workbench/spec.md) / [CHG-LEGACY-P3-WORK](../../specs/changes/CHG-LEGACY-P3-WORK/spec.md) | [TC-P3-004](../../specs/test/P3-WORK/test-plan.md#tc-p3-004) | `partial` | 空/错误态通过；loading 未捕获，打开/预览未验证；产品 spec 待建。 |
+| `PRD-WORK-005` | 自定义视图 13 类块 | [CHG-LEGACY-P3-WORK](../../specs/changes/CHG-LEGACY-P3-WORK/spec.md) | [TC-P3-005](../../specs/test/P3-WORK/test-plan.md#tc-p3-005) | `gap` | 只有视图 Schema/渲染契约，无前端页面、无测试。 |
 ### P4 · 文件与交付物
 <a id="p4"></a>
 
 | PRD | 名称 | CHANGE | TEST | 覆盖 | 缺口 |
 |---|---|---|---|---|---|
-| `PRD-FILE-001` | 会话文件聚合与列表 | — | [TC-P4-001](../../specs/test/P4-FILE/test-plan.md#tc-p4-001) | `gap` | 后端聚合/分页存在，前端无文件页；无域级测试与证据。 |
-| `PRD-FILE-005` | 工作区目录与输出隔离 | — | [TC-P4-002](../../specs/test/P4-FILE/test-plan.md#tc-p4-002) | `gap` | 仅 docs/workspace-layout 约定；无隔离/越权测试。 |
-| `PRD-FILE-002` | 上传与附件 | — | [TC-P4-003](../../specs/test/P4-FILE/test-plan.md#tc-p4-003) | `gap` | 上传后端存在，前端无附件入口；缺大小/类型/失败路径 AC。 |
-| `PRD-FILE-003` | 交付物卡片与列表 | [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [FE-005](../../specs/FE-005-workbench/spec.md) | [TC-P4-004](../../specs/test/P4-FILE/test-plan.md#tc-p4-004) | `partial` | 卡片状态与可操作性未统一。 |
-| `PRD-FILE-004` | 预览与下载 | [FE-005](../../specs/FE-005-workbench/spec.md) | [TC-P4-005](../../specs/test/P4-FILE/test-plan.md#tc-p4-005) | `partial` | 打开/预览未验证；Markdown/代码/图片/PDF 无分类型验收。 |
-| `PRD-FILE-006` | 文件生成（PDF/Office/图片） | — | [TC-P4-006](../../specs/test/P4-FILE/test-plan.md#tc-p4-006) | `gap` | 后端文件生成契约存在；无统一产品 AC、无生成失败/回滚测试。 |
+| `PRD-FILE-001` | 会话文件聚合与列表 | [CHG-LEGACY-P4-FILE](../../specs/changes/CHG-LEGACY-P4-FILE/spec.md) | [TC-P4-001](../../specs/test/P4-FILE/test-plan.md#tc-p4-001) | `gap` | 后端聚合/分页存在，前端无文件页；无域级测试与证据。 |
+| `PRD-FILE-005` | 工作区目录与输出隔离 | [CHG-LEGACY-P4-FILE](../../specs/changes/CHG-LEGACY-P4-FILE/spec.md) | [TC-P4-002](../../specs/test/P4-FILE/test-plan.md#tc-p4-002) | `gap` | 仅 docs/workspace-layout 约定；无隔离/越权测试。 |
+| `PRD-FILE-002` | 上传与附件 | [CHG-LEGACY-P4-FILE](../../specs/changes/CHG-LEGACY-P4-FILE/spec.md) | [TC-P4-003](../../specs/test/P4-FILE/test-plan.md#tc-p4-003) | `gap` | 上传后端存在，前端无附件入口；缺大小/类型/失败路径 AC。 |
+| `PRD-FILE-003` | 交付物卡片与列表 | [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [FE-005](../../specs/FE-005-workbench/spec.md) / [CHG-LEGACY-P4-FILE](../../specs/changes/CHG-LEGACY-P4-FILE/spec.md) | [TC-P4-004](../../specs/test/P4-FILE/test-plan.md#tc-p4-004) | `partial` | 卡片状态与可操作性未统一。 |
+| `PRD-FILE-004` | 预览与下载 | [FE-005](../../specs/FE-005-workbench/spec.md) / [CHG-LEGACY-P4-FILE](../../specs/changes/CHG-LEGACY-P4-FILE/spec.md) | [TC-P4-005](../../specs/test/P4-FILE/test-plan.md#tc-p4-005) | `partial` | 打开/预览未验证；Markdown/代码/图片/PDF 无分类型验收。 |
+| `PRD-FILE-006` | 文件生成（PDF/Office/图片） | [CHG-LEGACY-P4-FILE](../../specs/changes/CHG-LEGACY-P4-FILE/spec.md) | [TC-P4-006](../../specs/test/P4-FILE/test-plan.md#tc-p4-006) | `gap` | 后端文件生成契约存在；无统一产品 AC、无生成失败/回滚测试。 |
 ### P5 · 记忆
 <a id="p5"></a>
 
@@ -164,12 +166,12 @@
 
 | PRD | 名称 | CHANGE | TEST | 覆盖 | 缺口 |
 |---|---|---|---|---|---|
-| `PRD-METRIC-001` | 系统性能指标 | [FE-008](../../specs/FE-008-metrics-dashboard/spec.md) | [TC-P10-001](../../specs/test/P10-METRIC/test-plan.md#tc-p10-001) | `partial` | 指标口径只存在于仪表盘文档。 |
-| `PRD-METRIC-002` | 任务质量指标 | [FE-008](../../specs/FE-008-metrics-dashboard/spec.md) | [TC-P10-002](../../specs/test/P10-METRIC/test-plan.md#tc-p10-002) | `partial` | 完成率/一次完成/返工数据不全；无产品 AC。 |
-| `PRD-METRIC-003` | 延迟 p50/p90 | [FE-008](../../specs/FE-008-metrics-dashboard/spec.md) | [TC-P10-003](../../specs/test/P10-METRIC/test-plan.md#tc-p10-003) | `partial` | TTFT/耗时分位数未完整采集；无延迟口径测试。 |
-| `PRD-METRIC-004` | 7/30 天窗口与 partial | [FE-008](../../specs/FE-008-metrics-dashboard/spec.md) | [TC-P10-004](../../specs/test/P10-METRIC/test-plan.md#tc-p10-004) | `partial` | 时区/今日未完整已有实现但无产品级 AC。 |
-| `PRD-METRIC-005` | 明细表与口径说明 | [FE-008](../../specs/FE-008-metrics-dashboard/spec.md) | [TC-P10-005](../../specs/test/P10-METRIC/test-plan.md#tc-p10-005) | `partial` | 口径变更流程未定义。 |
-| `PRD-METRIC-006` | 导出·对比·告警 | — | [TC-P10-006](../../specs/test/P10-METRIC/test-plan.md#tc-p10-006) | `gap` | 未实现；无导出/告警测试。 |
+| `PRD-METRIC-001` | 系统性能指标 | [FE-008](../../specs/FE-008-metrics-dashboard/spec.md) / [CHG-LEGACY-P10-METRIC](../../specs/changes/CHG-LEGACY-P10-METRIC/spec.md) | [TC-P10-001](../../specs/test/P10-METRIC/test-plan.md#tc-p10-001) | `partial` | 指标口径只存在于仪表盘文档。 |
+| `PRD-METRIC-002` | 任务质量指标 | [FE-008](../../specs/FE-008-metrics-dashboard/spec.md) / [CHG-LEGACY-P10-METRIC](../../specs/changes/CHG-LEGACY-P10-METRIC/spec.md) | [TC-P10-002](../../specs/test/P10-METRIC/test-plan.md#tc-p10-002) | `partial` | 完成率/一次完成/返工数据不全；无产品 AC。 |
+| `PRD-METRIC-003` | 延迟 p50/p90 | [FE-008](../../specs/FE-008-metrics-dashboard/spec.md) / [CHG-LEGACY-P10-METRIC](../../specs/changes/CHG-LEGACY-P10-METRIC/spec.md) | [TC-P10-003](../../specs/test/P10-METRIC/test-plan.md#tc-p10-003) | `partial` | TTFT/耗时分位数未完整采集；无延迟口径测试。 |
+| `PRD-METRIC-004` | 7/30 天窗口与 partial | [FE-008](../../specs/FE-008-metrics-dashboard/spec.md) / [CHG-LEGACY-P10-METRIC](../../specs/changes/CHG-LEGACY-P10-METRIC/spec.md) | [TC-P10-004](../../specs/test/P10-METRIC/test-plan.md#tc-p10-004) | `partial` | 时区/今日未完整已有实现但无产品级 AC。 |
+| `PRD-METRIC-005` | 明细表与口径说明 | [FE-008](../../specs/FE-008-metrics-dashboard/spec.md) / [CHG-LEGACY-P10-METRIC](../../specs/changes/CHG-LEGACY-P10-METRIC/spec.md) | [TC-P10-005](../../specs/test/P10-METRIC/test-plan.md#tc-p10-005) | `partial` | 口径变更流程未定义。 |
+| `PRD-METRIC-006` | 导出·对比·告警 | [CHG-LEGACY-P10-METRIC](../../specs/changes/CHG-LEGACY-P10-METRIC/spec.md) | [TC-P10-006](../../specs/test/P10-METRIC/test-plan.md#tc-p10-006) | `gap` | 未实现；无导出/告警测试。 |
 
 ## 4. 历史 FE/COMP 变更映射
 

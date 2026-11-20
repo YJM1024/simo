@@ -12,7 +12,7 @@
 | 产品域 spec | `specs/product/<P*-*>/spec.md` | 一能力域一份，PRD 作为章节；长期产品事实 | 10 |
 | 域测试计划 | `specs/test/<P*-*>/test-plan.md` | 一能力域一份；用例按 PRD 分节 | 10 |
 | E2E 测试计划 | `specs/test/e2e/README.md` | 跨域 L4 关键路径；CDP runner 与限制 | 1 |
-| 变更包 | `specs/changes/<CHG-ID>/` | proposal/spec/design/frontend/backend/tasks/test-plan/evidence | 0 新建（10 历史 FE 映射为 legacy） |
+| 变更包 | `specs/changes/<CHG-ID>/` | proposal/spec/design/frontend/backend/tasks/test-plan/evidence | 10 个 legacy domain 包（P1–P10）+ 10 历史 FE 映射（概念） |
 | 组件 spec | `specs/COMP-*/spec.md` | 组件公共契约；不按页面拆 | 5 |
 | 模板 | `specs/templates/*.md` | 产品/测试/变更包模板 | 3 |
 
