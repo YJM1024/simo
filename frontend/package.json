@@ -7,6 +7,12 @@
     "typecheck": "tsc --noEmit",
     "build": "node build.mjs",
     "dev": "node dev-server.mjs",
+    "test": "vitest run",
+    "test:e2e": "node e2e/node_modules/@playwright/test/cli.js test --config=e2e/playwright.config.ts",
+    "test:e2e:cdp": "node e2e/scripts/cdp-runner.mjs",
+    "test:e2e:preflight": "node e2e/scripts/preflight.mjs",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "check:sdd": "node ../scripts/check-sdd.mjs",
     "check:visual": "node scripts/check-visual-baseline.mjs",
     "check": "npm run typecheck && npm run check:sdd && npm run capture:visual && npm run check:visual",
@@ -19,10 +25,18 @@
   },
   "devDependencies": {
     "@tailwindcss/cli": "4.3.5",
+    "@testing-library/jest-dom": "^8.0.0",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.13",
+    "@types/node": "26.6.0",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "@vitest/coverage-v8": "^5.1.1",
     "esbuild": "0.28.2",
+    "jsdom": "^31.0.1",
+    "msw": "^3.0.7",
     "tailwindcss": "4.3.5",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "^5.1.1"
   }
 }

@@ -1,12 +1,12 @@
 # P3 · 工作台与视图 测试计划
 
-状态：**active（骨架；未执行）** — 本文件定义用例与证据口径，不代表已经通过。
+状态：**active（部分用例有执行证据；覆盖未升级）** — 本文件定义用例与证据口径，不代表已经通过。
 > 产品域 spec：[`../../product/P3-WORK/spec.md`](../../product/P3-WORK/spec.md)；TREE：[`../../../docs/product/TREE.md`](../../../docs/product/TREE.md)；TRACEABILITY：[`../../../docs/product/TRACEABILITY.md`](../../../docs/product/TRACEABILITY.md)。
 
 ## 1. 范围与证据口径
 
 - 覆盖本域 5 个 PRD；每个 PRD 至少一个主用例，另设空/错误/权限 3 个域级用例。
-- 自动化层级：component / integration / E2E；当前仅登记目标层级，**尚未接线到 CI**。
+- 自动化层级：component / integration / E2E；已有 Vitest 与 CDP E2E 执行，**CI 仍未接线**。
 - 证据：没有实际执行记录就写 `missing`；存在旧测试计划只能写“文件存在，未执行”，不得写“通过”。
 - 数据：隔离 fixture + mock；不读取生产数据库/真实用户文件。
 - 不跳过：标 `skip` 的用例必须在“当前证据”说明原因与 owner；无原因视为未覆盖。
@@ -24,7 +24,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-WORK-001-01` 主路径通过；`AC-WORK-001-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-001/FE-005 用例）
-- 当前证据：`FE-001/test-plan.md`、`FE-005/test-plan.md` 存在；执行结果：**missing**（未运行）
+- 当前证据：2026-11-20 `LibraryUtilities` **2/2**（页面 tab/active 切换）+ E2E **01a/01b**（对话/工作台、375 无溢出）；工作台内容级入口未全覆盖。
 - 实现状态：`implemented`
 
 <a id="tc-p3-002"></a>
@@ -38,7 +38,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-WORK-002-01` 主路径通过；`AC-WORK-002-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-005 用例）
-- 当前证据：`FE-005/test-plan.md` 存在；执行结果：**missing**（未运行）
+- 当前证据：2026-11-20 `App.integration` 7/7 中工作台 metrics/7d30d/empty + E2E **01a**；usage 卡真实数据未覆盖。
 - 实现状态：`implemented`
 
 <a id="tc-p3-003"></a>
@@ -52,7 +52,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-WORK-003-01` 主路径通过；`AC-WORK-003-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-005 用例）
-- 当前证据：`FE-005/test-plan.md` 存在；执行结果：**missing**（未运行）
+- 当前证据：2026-11-20 `App.integration` 工作台 metrics + `MetricsDashboard` **9/9** 仅覆盖趋势/明细展示；最近活动与每日聚合未覆盖。
 - 实现状态：`implemented`
 
 <a id="tc-p3-004"></a>
@@ -66,7 +66,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-WORK-004-01` 主路径通过；`AC-WORK-004-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-004/FE-005 用例）
-- 当前证据：`FE-004/test-plan.md`、`FE-005/test-plan.md` 存在；执行结果：**missing**（未运行）
+- 当前证据：2026-11-20 `RightPanel` **6/6** + E2E **07**：交付物右栏/工作台可见与下载；三态中的 loading/error 注入未覆盖。
 - 实现状态：`partial`
 
 <a id="tc-p3-005"></a>
@@ -121,7 +121,7 @@
 
 | A | 覆盖用例 | 说明 |
 |---|---|---|
-| A1 | 每个 PRD 的 `TC-P3-NNN` | P0 主路径逐项执行；当前证据均 missing |
+| A1 | 每个 PRD 的 `TC-P3-NNN` | P0 主路径逐项执行；证据见各用例“当前证据”，未覆盖项仍 missing |
 | A2 | `TC-P3-E1` / `TC-P3-E2` | 空/加载/错误/权限反馈 |
 | A3 | `TC-P3-E3` | 键盘/焦点；纯后端域 N/A |
 | A4 | `TC-P3-E3` | 375px；纯后端域 N/A |
@@ -133,8 +133,8 @@
 ## 4. 未实现与缺口
 
 - **unimplemented**：`PRD-WORK-005` 自定义视图 13 类块。
-- **证据缺失**：本文件所有主用例当前均为 `missing`；已有 FE/COMP test-plan 只算“文件存在”，未执行。
-- **自动化未接线**：无 Playwright/E2E runner；component/integration 需要后续接入 `npm test` 与 CI。
+- **证据现状**：001–004 有部分执行证据（LibraryUtilities/App.integration/RightPanel + E2E 01a/01b/07）；WORK-005 自定义视图仍 `unimplemented`/`missing`，覆盖状态仍 4 partial / 1 gap。
+- **自动化现状**：Vitest 与 CDP runner 已存在；CI 尚未接线；工作台真实 usage/最近活动仍无专项断言。
 - **不得宣称**：在上述证据补齐前，本域不能标记为 `covered`，也不能对外说“测试通过”。
 
 ## 5. 执行后的回写

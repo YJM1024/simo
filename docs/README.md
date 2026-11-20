@@ -4,7 +4,7 @@
 > 产品功能树：[`product/TREE.md`](product/TREE.md) · 规格索引：[`../specs/README.md`](../specs/README.md) · SDD 框架：[`process/FRAMEWORK.md`](process/FRAMEWORK.md)。
 >
 > 本目录是产品、设计、流程、任务与契约文档的统一入口；**文档是事实来源，聊天只用于沟通**。
-> 当前阶段与验收状态：先读 [`CONTINUITY.md`](CONTINUITY.md) §4；[`tasks/STATUS.md`](tasks/STATUS.md) 最后更新 2026-11-13，可能滞后，以 CONTINUITY 与实际验收证据为准。
+> 当前阶段与验收状态：先读 [`CONTINUITY.md`](CONTINUITY.md) §4；[`tasks/STATUS.md`](tasks/STATUS.md) 最后更新 2026-11-20，以 CONTINUITY 与执行证据为准。
 > 仓库根文件：[`../README.md`](../README.md)（快速开始）、[`../AGENTS.md`](../AGENTS.md)（六维基线）、[`../DESIGN.md`](../DESIGN.md)（视觉唯一事实来源）。
 
 ## 0. 先读（按角色）
@@ -99,6 +99,7 @@
 | [`m24-view-contract.md`](m24-view-contract.md) | 视图 Schema（13 块/版本/校验/渲染） |
 | [`m41-card-contract.md`](m41-card-contract.md) | 交互卡片（Schema/路由/版本/WS/fallback） |
 | [`team-contract.md`](team-contract.md) | 团队 V0/V1/V2 实现契约 |
+| [`testing/EVIDENCE-20261120.md`](testing/EVIDENCE-20261120.md) | 2026-11-20 测试证据：69 单测、11 CDP E2E、覆盖率与 8787 健康检查 |
 
 > FE/COMP 规格见 [`../specs/README.md`](../specs/README.md)；评测见 [`../evals/README.md`](../evals/README.md)；安装/升级见 [`../deploy/INSTALL.md`](../deploy/INSTALL.md)。
 

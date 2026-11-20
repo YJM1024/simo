@@ -1,0 +1,19 @@
+{
+  "name": "simo-e2e",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "simo 前端端到端测试（Playwright + 系统 Chrome，独立于单测）",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:cdp": "node scripts/cdp-runner.mjs",
+    "test:e2e:preflight": "node scripts/preflight.mjs",
+    "report": "playwright show-report report/html",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "@types/node": "^24.10.0",
+    "typescript": "5.9.3"
+  }
+}

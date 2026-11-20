@@ -1,12 +1,12 @@
 # P10 · 指标 测试计划
 
-状态：**active（骨架；未执行）** — 本文件定义用例与证据口径，不代表已经通过。
+状态：**active（部分用例有执行证据；覆盖未升级）** — 本文件定义用例与证据口径，不代表已经通过。
 > 产品域 spec：[`../../product/P10-METRIC/spec.md`](../../product/P10-METRIC/spec.md)；TREE：[`../../../docs/product/TREE.md`](../../../docs/product/TREE.md)；TRACEABILITY：[`../../../docs/product/TRACEABILITY.md`](../../../docs/product/TRACEABILITY.md)。
 
 ## 1. 范围与证据口径
 
 - 覆盖本域 6 个 PRD；每个 PRD 至少一个主用例，另设空/错误/权限 3 个域级用例。
-- 自动化层级：component / integration / E2E；当前仅登记目标层级，**尚未接线到 CI**。
+- 自动化层级：component / integration / E2E；已有 Vitest 与 CDP E2E 执行，**CI 仍未接线**。
 - 证据：没有实际执行记录就写 `missing`；存在旧测试计划只能写“文件存在，未执行”，不得写“通过”。
 - 数据：隔离 fixture + mock；不读取生产数据库/真实用户文件。
 - 不跳过：标 `skip` 的用例必须在“当前证据”说明原因与 owner；无原因视为未覆盖。
@@ -24,7 +24,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-METRIC-001-01` 主路径通过；`AC-METRIC-001-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-008 用例）
-- 当前证据：`FE-008/test-plan.md` 存在；执行结果：**missing**（未运行）
+- 当前证据：2026-11-20 `MetricsDashboard` **9/9** + `App.integration` 工作台 metrics：KPI/延迟/趋势/明细；真实后端数据未覆盖。
 - 实现状态：`implemented`
 
 <a id="tc-p10-002"></a>
@@ -38,7 +38,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-METRIC-002-01` 主路径通过；`AC-METRIC-002-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-008 用例）
-- 当前证据：`FE-008/test-plan.md` 存在；执行结果：**missing**（未运行）
+- 当前证据：2026-11-20 `MetricsDashboard` **9/9** 覆盖任务质量 KPI/延迟/趋势/明细；真实任务质量数据未覆盖。
 - 实现状态：`partial`
 
 <a id="tc-p10-003"></a>
@@ -52,7 +52,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-METRIC-003-01` 主路径通过；`AC-METRIC-003-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-008 用例）
-- 当前证据：`FE-008/test-plan.md` 存在；执行结果：**missing**（未运行）
+- 当前证据：2026-11-20 `MetricsDashboard` 延迟 p50/p90、每桶一柱、空图安全用例；真实采样未覆盖。
 - 实现状态：`partial`
 
 <a id="tc-p10-004"></a>
@@ -66,7 +66,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-METRIC-004-01` 主路径通过；`AC-METRIC-004-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-008 用例）
-- 当前证据：`FE-008/test-plan.md` 存在；执行结果：**missing**（未运行）
+- 当前证据：2026-11-20 `MetricsDashboard` 7d/30d 切换 + `App.integration` 7d/30d/empty + partial/missing telemetry 不造假 0；真实窗口数据未覆盖。
 - 实现状态：`implemented`
 
 <a id="tc-p10-005"></a>
@@ -80,7 +80,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-METRIC-005-01` 主路径通过；`AC-METRIC-005-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-008 用例）
-- 当前证据：`FE-008/test-plan.md` 存在；执行结果：**missing**（未运行）
+- 当前证据：2026-11-20 `MetricsDashboard` **9/9** 明细表/空表/no-data/口径说明用例；真实口径与后端聚合未覆盖。
 - 实现状态：`implemented`
 
 <a id="tc-p10-006"></a>
@@ -135,7 +135,7 @@
 
 | A | 覆盖用例 | 说明 |
 |---|---|---|
-| A1 | 每个 PRD 的 `TC-P10-NNN` | P0 主路径逐项执行；当前证据均 missing |
+| A1 | 每个 PRD 的 `TC-P10-NNN` | P0 主路径逐项执行；证据见各用例“当前证据”，未覆盖项仍 missing |
 | A2 | `TC-P10-E1` / `TC-P10-E2` | 空/加载/错误/权限反馈 |
 | A3 | `TC-P10-E3` | 键盘/焦点；纯后端域 N/A |
 | A4 | `TC-P10-E3` | 375px；纯后端域 N/A |
@@ -147,8 +147,8 @@
 ## 4. 未实现与缺口
 
 - **unimplemented**：`PRD-METRIC-006` 导出·对比·告警。
-- **证据缺失**：本文件所有主用例当前均为 `missing`；已有 FE/COMP test-plan 只算“文件存在”，未执行。
-- **自动化未接线**：无 Playwright/E2E runner；component/integration 需要后续接入 `npm test` 与 CI。
+- **证据现状**：001–005 有组件/集成部分证据（MetricsDashboard 9/9 + App.integration）；006 导出/对比/告警仍 `unimplemented`/`missing`，覆盖状态仍 5 partial / 1 gap。
+- **自动化现状**：Vitest 已执行；CI 尚未接线；指标数据仍以 fixture 为主，未接真实后端。
 - **不得宣称**：在上述证据补齐前，本域不能标记为 `covered`，也不能对外说“测试通过”。
 
 ## 5. 执行后的回写

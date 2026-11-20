@@ -1,0 +1,133 @@
+{
+  "config": {
+    "argv": [
+      "E:\\dsh_home\\dsh-runtimes\\dsh-primary-runtime\\dependencies\\node\\bin\\node.exe",
+      "E:\\dsh_home\\workspaces\\agent\\frontend\\e2e\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--grep=__never__"
+    ],
+    "configFile": "E:\\dsh_home\\workspaces\\agent\\frontend\\e2e\\playwright.config.ts",
+    "rootDir": "E:/dsh_home/workspaces/agent/frontend/e2e/specs",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "E:\\dsh_home\\workspaces\\agent\\frontend\\e2e\\support\\global-setup.ts",
+    "globalTeardown": "E:\\dsh_home\\workspaces\\agent\\frontend\\e2e\\support\\global-teardown.ts",
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "E:/dsh_home/workspaces/agent/frontend/e2e/report/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "system-chrome",
+        "name": "system-chrome",
+        "testDir": "E:/dsh_home/workspaces/agent/frontend/e2e/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "E:\\dsh_home\\workspaces\\agent\\frontend\\e2e\\report\\test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "name": "system-chrome",
+        "testDir": "E:\\dsh_home\\workspaces\\agent\\frontend\\e2e\\specs",
+        "snapshotDir": "E:\\dsh_home\\workspaces\\agent\\frontend\\e2e\\specs",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 60000,
+        "use": {
+          "baseURL": "http://127.0.0.1:19201",
+          "headless": true,
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "screenshot": "only-on-failure",
+          "trace": "retain-on-failure",
+          "video": "off",
+          "launchOptions": {
+            "executablePath": "C:/Program Files/Google/Chrome/Application/chrome.exe",
+            "args": [
+              "--no-sandbox",
+              "--disable-dev-shm-usage",
+              "--disable-crash-reporter",
+              "--disable-breakpad"
+            ]
+          },
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/159.0.8154.6 Safari/537.36",
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "system-chrome"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "html",
+        {
+          "outputFolder": "report/html",
+          "open": "never"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "report/results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.65.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [],
+  "errors": [
+    {
+      "message": "Error: No tests found",
+      "stack": "Error: No tests found"
+    }
+  ],
+  "stats": {
+    "startTime": "2026-11-20T07:00:41.111Z",
+    "duration": 1200.101,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,468 @@
+{
+  "config": {
+    "argv": [
+      "E:\\dsh_home\\dsh-runtimes\\dsh-primary-runtime\\dependencies\\node\\bin\\node.exe",
+      "E:\\dsh_home\\workspaces\\agent\\frontend\\e2e\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--list"
+    ],
+    "configFile": "E:\\dsh_home\\workspaces\\agent\\frontend\\e2e\\playwright.config.ts",
+    "rootDir": "E:/dsh_home/workspaces/agent/frontend/e2e/specs",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "E:\\dsh_home\\workspaces\\agent\\frontend\\e2e\\support\\global-setup.ts",
+    "globalTeardown": "E:\\dsh_home\\workspaces\\agent\\frontend\\e2e\\support\\global-teardown.ts",
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "E:/dsh_home/workspaces/agent/frontend/e2e/report/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "system-chrome",
+        "name": "system-chrome",
+        "testDir": "E:/dsh_home/workspaces/agent/frontend/e2e/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "E:\\dsh_home\\workspaces\\agent\\frontend\\e2e\\report\\test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "name": "system-chrome",
+        "testDir": "E:\\dsh_home\\workspaces\\agent\\frontend\\e2e\\specs",
+        "snapshotDir": "E:\\dsh_home\\workspaces\\agent\\frontend\\e2e\\specs",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 60000,
+        "use": {
+          "baseURL": "http://127.0.0.1:19201",
+          "headless": true,
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "screenshot": "only-on-failure",
+          "trace": "retain-on-failure",
+          "video": "off",
+          "launchOptions": {
+            "executablePath": "C:/Program Files/Google/Chrome/Application/chrome.exe",
+            "args": [
+              "--no-sandbox",
+              "--disable-dev-shm-usage",
+              "--disable-crash-reporter",
+              "--disable-breakpad"
+            ]
+          },
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/159.0.8154.6 Safari/537.36",
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "system-chrome"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "html",
+        {
+          "outputFolder": "report/html",
+          "open": "never"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "report/results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.65.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "01-session-load.spec.ts",
+      "file": "01-session-load.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "E2E-SHELL-001 / E2E-RESP-001 首屏与响应式",
+          "file": "01-session-load.spec.ts",
+          "line": 5,
+          "column": 6,
+          "specs": [
+            {
+              "title": "加载会话后显示消息、时间轴与右栏",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "system-chrome",
+                  "projectName": "system-chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "860e65d8bad1da712126-7363a63272057c8fe2db",
+              "file": "01-session-load.spec.ts",
+              "line": 6,
+              "column": 3
+            },
+            {
+              "title": "375 宽度下消息卡与 Composer 不横向溢出，时间轴隐藏",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "system-chrome",
+                  "projectName": "system-chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "860e65d8bad1da712126-87919da7d9e45d532222",
+              "file": "01-session-load.spec.ts",
+              "line": 23,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "02-chat-stream.spec.ts",
+      "file": "02-chat-stream.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "E2E-CHAT-001 发送消息与 mock 流式回复",
+          "file": "02-chat-stream.spec.ts",
+          "line": 10,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Enter 发送后收到 reply.delta / reply.done 并渲染 agent 消息",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "system-chrome",
+                  "projectName": "system-chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "f1cc0326fccb3074bcaf-e6628a37277e258ae7bc",
+              "file": "02-chat-stream.spec.ts",
+              "line": 11,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "03-composer-keyboard.spec.ts",
+      "file": "03-composer-keyboard.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "E2E-COMPOSER-001 键盘发送与换行",
+          "file": "03-composer-keyboard.spec.ts",
+          "line": 5,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Enter 发送、Shift+Enter 换行；反转模式行为互换",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "system-chrome",
+                  "projectName": "system-chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "270643efe97fdee9397e-c040a7c9943dbf72f25d",
+              "file": "03-composer-keyboard.spec.ts",
+              "line": 6,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "04-fe007-ancestor.spec.ts",
+      "file": "04-fe007-ancestor.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "E2E-ANCESTOR-001 FE-007 加载上级会话",
+          "file": "04-fe007-ancestor.spec.ts",
+          "line": 29,
+          "column": 6,
+          "specs": [
+            {
+              "title": "逐级加载、时间轴增长、prepend 锚定、切会话清链",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "system-chrome",
+                  "projectName": "system-chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "a9087f35b6559b4b711b-45ab17f2bd239a7b011d",
+              "file": "04-fe007-ancestor.spec.ts",
+              "line": 30,
+              "column": 3
+            },
+            {
+              "title": "413 时显示“消息过多，暂不能完整加载”且不插入祖先消息",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "system-chrome",
+                  "projectName": "system-chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "a9087f35b6559b4b711b-df7e3b5a0b241c561974",
+              "file": "04-fe007-ancestor.spec.ts",
+              "line": 94,
+              "column": 3
+            },
+            {
+              "title": "403 时显示“无权读取该上级会话”",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "system-chrome",
+                  "projectName": "system-chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "a9087f35b6559b4b711b-e09a3d7e71d24fd480ba",
+              "file": "04-fe007-ancestor.spec.ts",
+              "line": 110,
+              "column": 3
+            },
+            {
+              "title": "空上级显示“上级没有消息”并允许继续向上",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "system-chrome",
+                  "projectName": "system-chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "a9087f35b6559b4b711b-0ab8da2fd2fa1a106a1c",
+              "file": "04-fe007-ancestor.spec.ts",
+              "line": 124,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "05-error-retry.spec.ts",
+      "file": "05-error-retry.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "E2E-ERROR-001 加载失败与重试",
+          "file": "05-error-retry.spec.ts",
+          "line": 5,
+          "column": 6,
+          "specs": [
+            {
+              "title": "消息接口首次 500 显示错误态，重试后恢复",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "system-chrome",
+                  "projectName": "system-chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "e5a7a9d7d5ba504d5f36-1a7099a0ac9e35a0921c",
+              "file": "05-error-retry.spec.ts",
+              "line": 6,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "06-task-locate.spec.ts",
+      "file": "06-task-locate.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "E2E-OVERVIEW-001 任务定位",
+          "file": "06-task-locate.spec.ts",
+          "line": 5,
+          "column": 6,
+          "specs": [
+            {
+              "title": "右栏任务点击后定位并高亮对话消息",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "system-chrome",
+                  "projectName": "system-chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "afd78a5236e427cb208b-54b908c198ab3160ce4d",
+              "file": "06-task-locate.spec.ts",
+              "line": 6,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "07-download.spec.ts",
+      "file": "07-download.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "E2E-DELIVERABLE-001 交付物下载",
+          "file": "07-download.spec.ts",
+          "line": 6,
+          "column": 6,
+          "specs": [
+            {
+              "title": "右栏与工作台可见交付物，下载文件名为 mock-write.txt 且内容为 TODO",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "system-chrome",
+                  "projectName": "system-chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "5dc55e451955ffa42804-1be81fab584ba0fbeece",
+              "file": "07-download.spec.ts",
+              "line": 7,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-20T07:29:38.545Z",
+    "duration": 213.71899999999994,
+    "expected": 0,
+    "skipped": 11,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

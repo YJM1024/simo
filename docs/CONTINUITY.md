@@ -89,13 +89,13 @@
 
 ## 4. 当前真实状态（2026-11-20）
 
-> 本节是**当前状态**；`tasks/STATUS.md` 最后更新 2026-11-13，部分 build 与进行中项已滞后，不得用旧 STATUS 覆盖本节。
+> 本节是**当前状态**；`tasks/STATUS.md` 顶部已加 2026-11-20 状态块，旧条目保留为历史，不得用旧条目覆盖本节。
 
 ### 4.1 产品与规格底座
 
-- 产品域：**10 个**（P1–P10），产品域 spec：**10/10**；域测试计划：**10/10**；E2E 测试计划：**0/1**（待建）。
+- 产品域：**10 个**（P1–P10），产品域 spec：**10/10**；域测试计划：**10/10**；E2E 测试计划：**1/1**（[`../specs/test/e2e/README.md`](../specs/test/e2e/README.md)）。
 - L3 功能点：**71 个 PRD**；状态：implemented 17、partial 39、unimplemented 15。
-- 追溯覆盖：**covered 0、partial 22、gap 49**。测试计划文件存在不等于覆盖；所有域测试证据当前为 `missing`/未执行。
+- 追溯覆盖：**covered 0、partial 22、gap 49**。已有 69 个前端单测 + 11 个 CDP E2E 的执行证据，但证据只覆盖部分 PRD/AC，且多数 PRD 仍缺 change 包与开发 spec，因此覆盖状态不升级；测试计划文件存在不等于覆盖。
 - 历史规格：10 个 FE 变更包 + 5 个 COMP 组件 spec 保留，映射为 `CHG-LEGACY-*` / `COMP-LEGACY-*`，不重命名、不删除。
 
 ### 4.2 15 个 `unimplemented` PRD（不得写成已完成）
@@ -120,19 +120,24 @@
 
 ### 4.3 测试与线上状态
 
-- **前端测试**：69 项测试已签（Lead 2026-11-20 口径）；测试文件在 `frontend/src/**/*.test.tsx`，配置为 Vitest + Testing Library + jsdom。
-- **E2E**：**未全绿/未闭环**。当前仓库没有可运行的 Playwright/E2E runner，`specs/test/e2e/` 尚未建立；L4/E2E 仅有 FE-009 定义与域测试计划骨架，不能据此宣称端到端通过。
-- **8787 当前版本**：最近有记录并签字的线上部署为 **`mwfzyf8u-h9f0d`**（2026-11-14 COMP-composer-send-mode 线上 smoke，health 200）；同日 FE-009 为 `mwfc8mdr-7n9p9`。
-  - 2026-11-20 15:08 复核时本机 `127.0.0.1:8787` **未监听**，`/`、`/api/health` 均无法连接，因此无法在线复核 build-id；`tasks/STATUS.md` 第 9 行仍写旧 `mwdqyg05-famq9`，**不是当前值**。
-  - 恢复服务后校准方法：`GET /` 读取 `<meta name="build-id">`，并请求 `GET /api/health`；以实际返回为准，再回写本节与 STATUS。
+- **8787 当前实例**：2026-11-20 15:26 由 Lead 重启，`backend/simo-live-composer.exe serve -addr 127.0.0.1:8787 -model real`，进程 PID 42660，启动参数含 `-model real`，启动记录使用 `SIMO_HOME=data`。
+  - `GET /api/health` → **200**，`{"ok":true,"ready":true,"checks":{"db":"ok","modules":["sessions","chat","tasks","memory"]}}`。
+  - `GET /` 的 `<meta name="build-id">` = **`mwfzyf8u-h9f0d`**；modelMode = **real**（由 `-model real` 启动参数与当前进程命令行确认）。
+  - 日志：`.tmp/simo-8787-20261120.log`。本节写的是**当前实例**，不是历史 STATUS 中的 `mwdqyg05-famq9`。
+- **前端单测**：**69/69 PASS、0 failed**（2026-11-20 执行，8 个测试文件）：App.integration 7、Composer 10、LibraryUtilities 2、MessageItem 18、MetricsDashboard 9、RightPanel 6、Sidebar 9、TimelineGroups 8；配置为 Vitest + Testing Library + jsdom。
+- **CDP E2E**：**11/11 PASS、exit 0**，同一 runner 连续 5 次均 11/11（`run-iter1..5.log`）；报告与截图在 `frontend/e2e/report/cdp/`。11 个场景覆盖：首屏结构、375 响应式、发送与 WS 流式、Enter/Shift+Enter 与发送模式反转、FE-007 逐级加载/413/403/空上级、消息接口 500 错误重试、右栏任务定位、交付物可见与真实下载。
+  - runner：`frontend/e2e/scripts/cdp-runner.mjs`，命令 `cd frontend && npm run test:e2e:cdp`；测试计划见 [`../specs/test/e2e/README.md`](../specs/test/e2e/README.md)。
+  - **限制**：CDP runner 不是 Playwright Test；`test:e2e` 的 Playwright 普通路径仍受本机沙箱限制，CI 未实跑；E2E 使用隔离 API 19230 与临时 `SIMO_HOME`，不是 8787 生产实例；未覆盖记忆/团队/调度/设置/工具等域。
+- **覆盖率**：`frontend/coverage/coverage-summary.json` 当前只统计 `frontend/src/components/library.tsx`：lines 85.58%（279/326）、statements 80.25%（374/466）、functions 82.31%（135/164）、branches 80.89%（470/581）；这是组件库单文件覆盖，**不是全仓覆盖率**，不能外推。
 - **发布门禁**：`check:sdd` PASS（15 specs、COMP 5、A 134/134、manifest 33、0 fail 0 warn）；组件 parity 门禁 = Blocking；`check:visual` 整页像素对比 = Nightly/Warning，不作为发布阻断。
 - **最近一次文档同步**：2026-11-20 推送 `YJM1024/simo` main；提交说明固定为 `docs: complete project record, specs and process definitions`。具体 commit SHA 见 GitHub main 历史（本文件不写会过期的自引用 SHA）。
+- **本轮证据回写状态**：2026-11-20 的 CONTINUITY/STATUS/TRACE/SPEC-GAP/test-plan/E2E/EVIDENCE 改动只在本地工作区，尚未推送；提交前必须重新确认 remote head，不得用旧 SHA 强推。
 
 ### 4.4 明确未完成 / 不可宣称
 
-- 71 个 PRD 中 **0 个 covered**；22 个 partial 仍缺执行证据；49 个 gap。
-- 10 份产品域 spec 是骨架，测试计划是骨架；没有按域执行的系统测试报告。
-- E2E、真实模型长程、团队隔离、调度失败、权限 fail-closed、文件预览/下载等高风险项仍缺当前 build 证据。
+- 71 个 PRD 中 **0 个 covered**；22 个 partial 仍缺 change 包、开发 spec 或完整 AC 证据；49 个 gap。
+- 10 份产品域 spec 是骨架；10 份域 test-plan 已开始回写 69 单测/11 E2E 的实际证据，但尚无按域执行的系统测试报告，不能据此升级 covered。
+- 真实模型长程、团队隔离、调度失败、权限 fail-closed、文件上传/预览/PDF/Office 等高风险项仍缺当前 build 证据；CDP E2E 07 只验证了交付物可见与下载，不覆盖预览/上传。
 - `tasks/frontend.md` 仍写“前端只做对话、工作台”，与后端能力面不一致；`docs/frontend-feature-map.md` 是 M67 前旧布局，不能当现状。以 `TREE.md`、产品域 spec 与当前代码为准。
 - 容器/Docker 本机未实测；`deploy/INSTALL.md` 部分步骤未完整实测；不得把未验证能力写成已交付。
 

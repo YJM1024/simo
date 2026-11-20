@@ -1,6 +1,6 @@
 # 司墨产品追溯矩阵（TRACEABILITY）
 
-> 状态：**active**（2026-11-20，产品域 spec 落地后）
+> 状态：**active**（2026-11-20，产品域 spec 与首轮测试证据回写后）
 > 核心三列：**PRD → CHANGE → TEST**；另附覆盖状态与缺口，避免“有链接=已覆盖”。
 > 产品树：[`TREE.md`](TREE.md)；ID 规则：[`ID-SPEC.md`](ID-SPEC.md)；缺口：[`SPEC-GAP.md`](SPEC-GAP.md)。
 
@@ -29,7 +29,23 @@
 | [`P10`](#p10) | 6 | 0 | 5 | 1 | [spec](../../specs/product/P10-METRIC/spec.md) | [test](../../specs/test/P10-METRIC/test-plan.md) |
 | **合计** | **71** | **0** | **22** | **49** | **10/10** | **10/10** |
 
-> 说明：10 份 test-plan 是**骨架**，当前所有用例证据为 `missing`；因此覆盖状态仍按 0 covered / 22 partial / 49 gap 记录，不因“文件已建”升级。
+> 说明：10 份 test-plan 原为骨架；2026-11-20 已回写 69 个前端单测与 11 个 CDP E2E 的**部分执行证据**（见 §2.1）。覆盖状态仍按 **0 covered / 22 partial / 49 gap** 记录：没有任何 PRD 同时具备产品 spec + change 包 + 前后端开发 spec + 任务卡 + TEST + 完整 AC 证据，不能因“用例跑过一部分”升级。
+
+## 2.1 2026-11-20 执行证据（不升级 covered）
+
+证据详情：[`../testing/EVIDENCE-20261120.md`](../testing/EVIDENCE-20261120.md)；E2E 计划：[`../../specs/test/e2e/README.md`](../../specs/test/e2e/README.md)。
+
+| 域 | 已回写的部分证据 | 覆盖判定 | 不能升级的原因 |
+|---|---|---|---|
+| P1 会话与消息 | Sidebar 9、MessageItem 18、Composer 10、App 祖先/WS、E2E 01a/02/03/04a–d/05 | 仍 0/11/1 | 009 多标签、011 未读、012 远程访问无证据；无 change 包/完整 AC |
+| P2 任务与执行 | RightPanel 6 展示层、E2E 06 定位 | 仍 0/0/6 | 后端生命周期/取消/重试/复杂度/子会话均无执行证据 |
+| P3 工作台与视图 | LibraryUtilities 2、App 工作台指标、RightPanel/E2E 07 | 仍 0/4/1 | WORK-005 未实现；真实 usage/每日聚合/最近活动未覆盖 |
+| P4 文件与交付物 | RightPanel 交付物、E2E 07 下载 | 仍 0/2/4 | 上传/隔离/预览/PDF/Office 未覆盖 |
+| P5–P9 | 无 | 保持 gap | 本轮无对应测试执行 |
+| P10 指标 | MetricsDashboard 9、App 工作台指标 | 仍 0/5/1 | 006 导出/对比/告警未实现；真实后端聚合未覆盖 |
+| **合计** | 69 单测 + 11 E2E | **0/22/49** | 证据只到“部分用例”，未到 PRD 覆盖 |
+
+> 结论：本轮把“没有任何执行证据”推进为“部分用例有证据”，但没有改变 covered/partial/gap 的判定；后续必须按 change 包补齐六类产物，才允许逐项升级。
 
 ## 3. PRD → CHANGE → TEST
 

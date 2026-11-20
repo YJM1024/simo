@@ -1,5 +1,20 @@
 # 司墨 · 当前状态
 
+更新时间：2026-11-20
+
+## 2026-11-20 当前状态（以此为准）
+
+- **8787**：2026-11-20 15:26 由 Lead 用 `backend/simo-live-composer.exe serve -addr 127.0.0.1:8787 -model real` 启动（`SIMO_HOME=data`），进程 PID 42660；`GET /api/health` **200**（db ok、modules sessions/chat/tasks/memory）；首页 build-id **`mwfzyf8u-h9f0d`**；modelMode **real**；日志 `.tmp/simo-8787-20261120.log`。
+- **前端单测**：**69/69 PASS、0 failed**（8 个测试文件，2026-11-20）：App.integration 7、Composer 10、LibraryUtilities 2、MessageItem 18、MetricsDashboard 9、RightPanel 6、Sidebar 9、TimelineGroups 8。
+- **CDP E2E**：**11/11 PASS、exit 0**，连续 5 次均 11/11；报告 `frontend/e2e/report/cdp/`，测试计划 `specs/test/e2e/README.md`。Playwright Test 普通路径仍受沙箱限制，CI 未实跑；E2E 使用隔离 API 19230 与临时 `SIMO_HOME`，不是 8787 生产实例。
+- **spec 底座**：产品域 spec **10/10**、域 test-plan **10/10**、E2E 计划 **1/1**；71 个 PRD，**covered 0 / partial 22 / gap 49**，unimplemented **15**；已有测试证据不改变该保守计数。
+- **发布门禁**：`check:sdd` PASS（15 specs、COMP 5、A 134/134、manifest 33）；组件 parity = Blocking；`check:visual` = Nightly/Warning。
+- **Git/文档**：最近一次文档提交 `beadd280351a2226defb3467e51fb6eaa7270782`（docs/specs/AGENTS/README，152 个文档，远程缺失 0）；本轮测试证据回写只改 docs/specs，不改代码，不编辑 `acceptance.md`。
+
+> **以下为 2026-11-13 历史快照，不代表当前状态；当前以本节顶部 2026-11-20 状态块为准。**
+
+## 2026-11-13 历史快照
+
 更新时间：2026-11-13
 当前阶段：**P3 visual gate nightly/warning；发布门禁 = check:sdd PASS + parity `mwdsx6vl` 已复签；FE-008 A1–A12 已签；FE-009 已签并部署；COMP-composer-send-mode A1–A8 已签并部署 8787**
 

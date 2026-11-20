@@ -1282,3 +1282,95 @@
 - 8787 React 版：**视觉验收未通过**（左栏控件/密度、上下文条、右栏空态与结构、卡片按钮文案仍有差异）；
 - 只能称为"功能预览"，不是验收版。
 
+## 最终验收（2026-11-20）
+
+范围：前端单测/集成 + CDP E2E + 工程门禁。只读复跑，不改业务代码/测试配置，不重启、不改写 8787。
+
+### 1. CDP E2E
+
+执行（`frontend/`，PATH 注入 bundled node）：
+
+```powershell
+$nodeDir='E:\dsh_home\dsh-runtimes\dsh-primary-runtime\dependencies\node\bin'
+$env:PATH="$nodeDir;$env:PATH"
+$node="$nodeDir\node.exe"
+$pnpm='E:\dsh_home\dsh-runtimes\dsh-primary-runtime\dependencies\pnpm\bin\pnpm.mjs'
+& $node $pnpm test:e2e:cdp
+```
+
+结果：**EXIT=0，11/11 passed，0 failed**。
+
+- CDP：`http://127.0.0.1:9223`（Chrome 157.0.8103.50）。
+- API：`http://127.0.0.1:19230`；由 cdp-runner 启动的隔离 mock 后端，不是 8787。
+- 报告时间：`2026-11-20T07:31:56.785Z`。
+- 场景：01a、01b、02、03、04a、04b、04c、04d、05、06、07 全部 PASS。
+- 一致性：`summary.md` 与 `results.json` 均为 11 场景、11 passed、0 failed；场景名与耗时逐项一致（`results.total=11`、`passed=11`、`failed=0`、`results.length=11`）。
+
+证据：
+
+- `frontend/e2e/report/cdp/summary.md`
+- `frontend/e2e/report/cdp/results.json`
+
+### 2. 类型检查、单测与覆盖率
+
+在 `frontend/` 执行：
+
+```powershell
+& $node $pnpm typecheck
+& $node $pnpm test
+& $node $pnpm test:coverage
+```
+
+结果：
+
+| 命令 | exit code | 结果 |
+|---|---:|---|
+| `pnpm typecheck` | 0 | 无类型错误 |
+| `pnpm test` | 0 | 8 files / 69 tests passed |
+| `pnpm test:coverage` | 0 | 8 files / 69 tests passed；四项阈值通过 |
+
+覆盖率实测：**Statements 80.25% / Branches 80.89% / Functions 82.31% / Lines 85.58%**；配置阈值四项均为 **80**。测试输出未出现 MSW/WS 未处理警告，未出现 `act(...)` 警告，无 skip。
+
+证据：
+
+- `frontend/coverage/index.html`
+- `frontend/coverage/coverage-summary.json`
+- `frontend/review/TEST-REPORT.md`
+
+### 3. 8787 现状复核（只读，未改服务）
+
+- `GET http://127.0.0.1:8787/api/health` → **200**，`ok=true`，`ready=true`，`db=ok`，modules=`sessions,chat,tasks,memory`。
+- `GET http://127.0.0.1:8787/` → **200**，`build-id=mwfzyf8u-h9f0d`。
+- 进程命令行：`"E:\dsh_home\workspaces\agent\backend\simo-live-composer.exe" serve -addr 127.0.0.1:8787 -model real`，确认 `model=real`。
+
+### 4. SDD 门禁
+
+在 `frontend/` 执行 `& $node $pnpm check:sdd`：
+
+```text
+SDD check — root: E:\dsh_home\workspaces\agent
+specs: 15（COMP 5）；A 编号: 134，已映射: 134；manifest 组件: 33
+SUMMARY: PASS（失败 0，警告 0）
+```
+
+结果：**EXIT=0，PASS**。
+
+### 5. 结论
+
+**前端单测/集成 + CDP E2E 通过。**
+
+本次结论仅覆盖上述前端单测/集成、CDP E2E（隔离 mock 后端）、类型检查、覆盖率与 SDD 检查。以下均**未声称**：
+
+- 71 个 PRD 功能点全部 covered；
+- 15 个 unimplemented 项已完成；
+- 8787 真实模型数据下的完整端到端验收；
+- 产品/视觉/上线整体验收。
+
+### 6. 尚存限制
+
+1. 普通 Playwright Test 路径 `pnpm test:e2e` 未在本机实跑；本机执行的是 fork-free 的 `pnpm test:e2e:cdp`，最终仍需在可正常 fork 的 Windows/CI 环境补跑。
+2. CI 未运行。
+3. CDP E2E 使用隔离 mock 后端（端口 19230），未验证真实模型；8787 仅复核 health、build-id、model=real，未用真实数据跑完整 E2E。
+4. 覆盖率配置仅 include `src/components/library.tsx`，不是全 `src/` 覆盖率；TEST-REPORT 已明示该限制。
+5. 8787 未部署本次测试构建；本次未改服务与数据。
+

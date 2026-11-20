@@ -1,12 +1,12 @@
 # P1 · 会话与消息 测试计划
 
-状态：**active（骨架；未执行）** — 本文件定义用例与证据口径，不代表已经通过。
+状态：**active（部分用例有执行证据；覆盖未升级）** — 本文件定义用例与证据口径，不代表已经通过。
 > 产品域 spec：[`../../product/P1-CONV/spec.md`](../../product/P1-CONV/spec.md)；TREE：[`../../../docs/product/TREE.md`](../../../docs/product/TREE.md)；TRACEABILITY：[`../../../docs/product/TRACEABILITY.md`](../../../docs/product/TRACEABILITY.md)。
 
 ## 1. 范围与证据口径
 
 - 覆盖本域 12 个 PRD；每个 PRD 至少一个主用例，另设空/错误/权限 3 个域级用例。
-- 自动化层级：component / integration / E2E；当前仅登记目标层级，**尚未接线到 CI**。
+- 自动化层级：component / integration / E2E；已有 Vitest 与 CDP E2E 执行，**CI 仍未接线**。
 - 证据：没有实际执行记录就写 `missing`；存在旧测试计划只能写“文件存在，未执行”，不得写“通过”。
 - 数据：隔离 fixture + mock；不读取生产数据库/真实用户文件。
 - 不跳过：标 `skip` 的用例必须在“当前证据”说明原因与 owner；无原因视为未覆盖。
@@ -24,7 +24,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-CONV-001-01` 主路径通过；`AC-CONV-001-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-001/FE-003 用例）
-- 当前证据：`FE-003/test-plan.md` 存在；执行结果：**missing**（未运行）
+- 当前证据：2026-11-20 `Sidebar.test.tsx` **9/9 PASS**：树/active/连接/配额、点击与 Enter 选择、双击重命名（Enter/Escape）、归档显示/恢复、空/加载/错误重试；真实后端生命周期未覆盖。覆盖状态仍 **partial**。
 - 实现状态：`implemented`
 
 <a id="tc-p1-002"></a>
@@ -38,7 +38,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-CONV-002-01` 主路径通过；`AC-CONV-002-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-001/FE-003/FE-004 用例）
-- 当前证据：`FE-001/test-plan.md`、`FE-003/test-plan.md`、`FE-004/test-plan.md` 存在；执行结果：**missing**（未运行）
+- 当前证据：2026-11-20 `Sidebar.test.tsx` **9/9 PASS** 中创建/刷新/归档/选择相关用例；真实后端创建/删除/归属/归档持久化未覆盖。覆盖状态仍 **partial**。
 - 实现状态：`implemented`
 
 <a id="tc-p1-003"></a>
@@ -52,7 +52,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-CONV-003-01` 主路径通过；`AC-CONV-003-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-003 用例）
-- 当前证据：`FE-003/test-plan.md` 存在；执行结果：**missing**（未运行）
+- 当前证据：2026-11-20 `Sidebar.test.tsx` **9/9 PASS** 中搜索过滤/服务端 ids/搜索中/无匹配/空态；未读游标未覆盖。覆盖状态仍 **partial**。
 - 实现状态：`partial`
 
 <a id="tc-p1-004"></a>
@@ -66,7 +66,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-CONV-004-01` 主路径通过；`AC-CONV-004-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-001/FE-003 用例）
-- 当前证据：`FE-001/test-plan.md`、`FE-003/test-plan.md` 存在；执行结果：**missing**（未运行）
+- 当前证据：2026-11-20 `MessageItem.test.tsx` **18/18** + `LibraryUtilities` 日期 **1/1** + CDP E2E **01a**：渲染/分类/复制/卡片/流式 caret/长文本；真实模型长消息未覆盖。
 - 实现状态：`implemented`
 
 <a id="tc-p1-005"></a>
@@ -80,7 +80,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-CONV-007-01` 主路径通过；`AC-CONV-007-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-007 用例）
-- 当前证据：`FE-007/test-plan.md` 存在；执行结果：**missing**（未运行）
+- 当前证据：2026-11-20 `App.integration` 祖先 3 项（逐级加载、413/403/空上级、切换清理）+ CDP E2E **04a–04d 4/4**：整级加载/错误/锚定；跨会话深链未覆盖。
 - 实现状态：`implemented`
 
 <a id="tc-p1-006"></a>
@@ -94,7 +94,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-CONV-005-01` 主路径通过；`AC-CONV-005-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-002 用例）
-- 当前证据：`FE-002/test-plan.md` 存在；执行结果：**missing**（未运行）
+- 当前证据：2026-11-20 `Composer` **10/10** + E2E **02/05**：Enter 发送、失败恢复与重试、发送中防重复、流式停止、500 错误重试；断线重连专项未覆盖。
 - 实现状态：`implemented`
 
 <a id="tc-p1-007"></a>
@@ -108,7 +108,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-CONV-006-01` 主路径通过；`AC-CONV-006-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-006 用例）
-- 当前证据：`FE-006/test-plan.md` 存在；执行结果：**missing**（未运行）
+- 当前证据：2026-11-20 `Composer` **10/10** + E2E **02/03**：Enter/Shift+Enter、IME、Ctrl/Meta+Enter、发送模式持久化与反转；跨标签 BroadcastChannel 未覆盖。
 - 实现状态：`implemented`
 
 <a id="tc-p1-008"></a>
@@ -122,7 +122,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-SYNC-001-01` 主路径通过；`AC-SYNC-001-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-002 用例）
-- 当前证据：`FE-002/test-plan.md` 存在；执行结果：**missing**（未运行）
+- 当前证据：2026-11-20 `App.integration` WebSocket 增量去重 1 项 + E2E **02** 流式；重连退避/since 断线专项未覆盖。
 - 实现状态：`implemented`
 
 <a id="tc-p1-009"></a>
@@ -150,7 +150,7 @@
   3. 触发空/错误/返回，确认恢复、无重复提交、无脏数据。
 - 断言：`AC-SYNC-003-01` 主路径通过；`AC-SYNC-003-02` 空/错误/边界有可见反馈；状态与关联数据一致。
 - 自动化层级：component/integration（待接线；复用 FE-006 用例）
-- 当前证据：`FE-006/test-plan.md` 存在；执行结果：**missing**（未运行）
+- 当前证据：2026-11-20 `Composer` **10/10** 覆盖 sendMode 切换/持久化 + E2E **03** 反转；跨标签 BroadcastChannel 同步未覆盖。
 - 实现状态：`implemented`
 
 <a id="tc-p1-011"></a>
@@ -219,7 +219,7 @@
 
 | A | 覆盖用例 | 说明 |
 |---|---|---|
-| A1 | 每个 PRD 的 `TC-P1-NNN` | P0 主路径逐项执行；当前证据均 missing |
+| A1 | 每个 PRD 的 `TC-P1-NNN` | P0 主路径逐项执行；证据见各用例“当前证据”，未覆盖项仍 missing |
 | A2 | `TC-P1-E1` / `TC-P1-E2` | 空/加载/错误/权限反馈 |
 | A3 | `TC-P1-E3` | 键盘/焦点；纯后端域 N/A |
 | A4 | `TC-P1-E3` | 375px；纯后端域 N/A |
@@ -231,8 +231,8 @@
 ## 4. 未实现与缺口
 
 - **unimplemented**：`PRD-SYNC-005` 远程访问与通知中心。
-- **证据缺失**：本文件所有主用例当前均为 `missing`；已有 FE/COMP test-plan 只算“文件存在”，未执行。
-- **自动化未接线**：无 Playwright/E2E runner；component/integration 需要后续接入 `npm test` 与 CI。
+- **证据现状**：12 个主用例中 9 个已有部分执行证据（69 单测/11 E2E 的交集），但 009/011/012 仍 `missing`；证据不足以升级任何 PRD 为 covered。
+- **自动化现状**：Vitest 与 CDP runner 已存在；CI 尚未接线；Playwright Test 普通路径受沙箱限制，未实跑。
 - **不得宣称**：在上述证据补齐前，本域不能标记为 `covered`，也不能对外说“测试通过”。
 
 ## 5. 执行后的回写
