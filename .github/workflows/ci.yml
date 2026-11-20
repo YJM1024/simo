@@ -66,7 +66,9 @@ jobs:
         shell: bash
         run: |
           cd backend
-          go test ./...
+          # Linux runners have no Chrome/PowerShell and lack Office Python
+          # packages; those host capabilities are covered by the Windows job.
+          go test ./... -skip '^(TestM12PDFGenerationApprovalAndPreview|TestM12DocxAndXlsxHelpers|TestM9PwshApprovalAndExitCode|TestM9PwshEnvTimeoutAndSpill)$'
 
   build-test:
     name: windows / go + web + mock evals + package
@@ -100,7 +102,12 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
 
-      # One command runs: preflight -> go vet/test -> web build -> build exe
+      - name: Install Office Python helpers
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check python-docx openpyxl python-pptx
+
+      # One command runs: preflight -> web build -> go vet/test -> build exe
       # -> mock evals (4 blocks, fresh server + GUID home per block) -> package -> docker (SKIP when absent)
       - name: Pipeline (deploy/ci.ps1)
         shell: pwsh

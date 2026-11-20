@@ -2,8 +2,8 @@
 #
 # Stages (each timed; any failure -> non-zero exit):
 #   1) preflight   : tools / repo checks
-#   2) go          : go vet + go test ./...  (simo)
-#   3) web         : node frontend/build.mjs (tsc + tailwind + esbuild)  [skip with -SkipWeb]
+#   2) web         : node frontend/build.mjs (tsc + tailwind + esbuild)  [skip with -SkipWeb]
+#   3) go          : go vet + go test ./...  (requires dist for //go:embed)
 #   4) build       : build simo.exe into .tmp\ci-<GUID>\simo.exe
 #   5) evals       : mock evals in 4 blocks, fresh server + fresh GUID home per block
 #   6) package     : deploy/package.ps1 -SkipBuild -> deploy\dist\simo-<ver>-win-x64.zip
@@ -108,8 +108,10 @@ if ($SkipWeb) {
   $null = Run-Stage 'frontend' {
     $buildScript = Join-Path $repo 'frontend\build.mjs'
     if (-not (Test-Path $buildScript)) { throw 'frontend/build.mjs not found' }
+    $oldEap = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
     Push-Location (Join-Path $repo 'frontend')
-    try { $out = & $node 'build.mjs' 2>&1 | Out-String; $code = $LASTEXITCODE } finally { Pop-Location }
+    try { $out = & $node 'build.mjs' 2>&1 | Out-String; $code = $LASTEXITCODE } finally { Pop-Location; $ErrorActionPreference = $oldEap }
     Write-Log (Join-Path $logs 'web-build.log') $out
     if ($code -ne 0) { Write-Host $out; throw "web build failed (exit $code)" }
     $frontendDist = Join-Path $repo 'frontend\dist'
