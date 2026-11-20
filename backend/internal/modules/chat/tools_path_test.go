@@ -31,12 +31,15 @@ func TestResolveToolPathCanonicalizesWorkspaceRoot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("合法相对路径被拒: %v", err)
 	}
-	realNotes, err := filepath.EvalSymlinks(filepath.Join(realRoot, "notes.md"))
+	canonicalRealRoot, err := filepath.EvalSymlinks(realRoot)
 	if err != nil {
-		realNotes = filepath.Join(realRoot, "notes.md")
+		canonicalRealRoot = realRoot
 	}
-	if filepath.Clean(got) != filepath.Clean(realNotes) {
-		t.Fatalf("resolved = %s, want %s", got, realNotes)
+	// Windows 上 t.TempDir() 可能是 8.3 短路径，而解析结果使用长路径；
+	// 期望值必须同样规范化，否则测试会误报（产品路径逻辑本身已统一 canonical）。
+	wantNotes := filepath.Join(canonicalRealRoot, "notes.md")
+	if filepath.Clean(got) != filepath.Clean(wantNotes) {
+		t.Fatalf("resolved = %s, want %s", got, wantNotes)
 	}
 
 	if _, err := m.resolveToolPath("../escape.txt", sandboxWorkspaceWrite); err == nil {
