@@ -411,7 +411,6 @@ func (m *Module) deliverSchedule(s Schedule, due int64, manual bool) {
 	for time.Now().Before(deadline) {
 		// 无人应答的审批：暂停 schedule 并汇报（fail-closed）。
 		if id := m.pendingApprovalForSession(s.SessionID, startedAt); id != "" {
-			m.finishSchedule(s.ID, "failed", "需要审批但无人应答，已暂停该定时任务。")
 			m.pauseScheduleAfterApproval(s, id)
 			return
 		}
@@ -425,26 +424,32 @@ func (m *Module) deliverSchedule(s Schedule, due int64, manual bool) {
 }
 
 func (m *Module) finishSchedule(id, status, report string) {
-	_ = m.store.Write(context.Background(), func(tx *sql.Tx) error {
-		_, err := tx.ExecContext(context.Background(), `UPDATE schedules SET last_status = ?, updated_at = ? WHERE id = ?`,
-			status, time.Now().UnixMilli(), id)
-		return err
-	})
+	// 先落汇报消息，再更新状态：调用方/测试以 status=failed 作为“本轮已结束”的
+	// 观察点，若先写状态再 append 消息，会在两者之间看到“任务失败但没有汇报”的
+	// 瞬时窗口（CI 上已复现）。
 	if report != "" {
 		s, err := m.getSchedule(context.Background(), id)
 		if err == nil {
 			m.appendScheduleMessage(s.SessionID, report)
 		}
 	}
+	_ = m.store.Write(context.Background(), func(tx *sql.Tx) error {
+		_, err := tx.ExecContext(context.Background(), `UPDATE schedules SET last_status = ?, updated_at = ? WHERE id = ?`,
+			status, time.Now().UnixMilli(), id)
+		return err
+	})
 }
 
 func (m *Module) pauseScheduleAfterApproval(s Schedule, approvalID string) {
+	// 先写汇报消息，再用一条 UPDATE 同时落 enabled/nextRun/status。
+	// 这样当调用方观察到 last_status=failed 时，汇报已经存在且 enabled 已为 0，
+	// 不会出现“失败但未暂停/无汇报”的中间态。
+	m.appendScheduleMessage(s.SessionID, fmt.Sprintf("定时任务「%s」需要审批（approvalId=%s），当前无人应答，已自动暂停；处理后可在定时任务中重新启用或立即运行。", s.Title, approvalID))
 	_ = m.store.Write(context.Background(), func(tx *sql.Tx) error {
 		_, err := tx.ExecContext(context.Background(), `UPDATE schedules SET enabled = 0, next_run_at = 0,
 			last_status = 'failed', updated_at = ? WHERE id = ?`, time.Now().UnixMilli(), s.ID)
 		return err
 	})
-	m.appendScheduleMessage(s.SessionID, fmt.Sprintf("定时任务「%s」需要审批（approvalId=%s），当前无人应答，已自动暂停；处理后可在定时任务中重新启用或立即运行。", s.Title, approvalID))
 }
 
 func (m *Module) appendScheduleMessage(sessionID, text string) {
