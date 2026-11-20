@@ -11,10 +11,10 @@
 命令（工作目录 `backend`）：
 
 ```powershell
-go test ./cmd/simo -run 'TestP5MemoryEmptyAndUnknownContract|TestP7ScheduleEmptyAndNotFoundContract' -count=1
+go test ./cmd/simo -run 'TestP5MemoryEmptyAndUnknownContract|TestP6TeamEmptyAndUnknownContract|TestP7ScheduleEmptyAndNotFoundContract' -count=1
 ```
 
-结果：`ok simo/cmd/simo 0.455s`，exit 0。
+结果：`ok simo/cmd/simo 0.509s`，exit 0。
 
 ### TestP5MemoryEmptyAndUnknownContract
 
@@ -24,6 +24,13 @@ go test ./cmd/simo -run 'TestP5MemoryEmptyAndUnknownContract|TestP7ScheduleEmpty
 - `/api/memory/scopes` 空库：200、`ok:true`。
 
 对应测试计划：`specs/test/P5-MEM/test-plan.md` 的 `TC-P5-E1`、`TC-P5-E2`（由 missing 升为 partial）。不覆盖前端空/错误态与加载闪烁。
+
+### TestP6TeamEmptyAndUnknownContract
+
+- 普通会话 `/api/sessions/main/team`：200、`ok:true`、`team:null`、`members:[]`。
+- 未知团队 `/api/teams/does-not-exist`：404、`ok:false`、`team_not_found`。
+
+对应测试计划：`specs/test/P6-TEAM/test-plan.md` 的 `TC-P6-E1`、`TC-P6-E2`（由 missing 升为 partial）。不覆盖前端空/错误态、成员 CRUD 失败与权限。
 
 ### TestP7ScheduleEmptyAndNotFoundContract
 

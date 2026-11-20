@@ -57,6 +57,28 @@ func TestP5MemoryEmptyAndUnknownContract(t *testing.T) {
 	}
 }
 
+// P6-E1/E2：普通会话没有团队时必须返回 null + 空成员，未知团队必须 404 JSON。
+func TestP6TeamEmptyAndUnknownContract(t *testing.T) {
+	_, ts := newM2App(t, nil, nil)
+
+	status, body := httpGet(t, ts.URL+"/api/sessions/main/team")
+	if status != http.StatusOK {
+		t.Fatalf("普通会话 team = %d %s", status, body)
+	}
+	if !strings.Contains(string(body), `"ok":true`) || !strings.Contains(string(body), `"team":null`) ||
+		!strings.Contains(string(body), `"members":[]`) {
+		t.Fatalf("普通会话 team 形状错误: %s", body)
+	}
+
+	status, body = httpGet(t, ts.URL+"/api/teams/does-not-exist")
+	if status != http.StatusNotFound {
+		t.Fatalf("未知团队 = %d %s", status, body)
+	}
+	if !strings.Contains(string(body), `"ok":false`) || !strings.Contains(string(body), `"team_not_found"`) {
+		t.Fatalf("未知团队缺少统一错误码: %s", body)
+	}
+}
+
 // P7-E1/E2：空列表、未知 id 的 GET/PATCH/DELETE 必须 404 JSON，非法 JSON 必须 400 JSON。
 func TestP7ScheduleEmptyAndNotFoundContract(t *testing.T) {
 	_, ts := newM2App(t, nil, nil)
