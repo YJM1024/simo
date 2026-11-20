@@ -1,17 +1,25 @@
 # 司墨 · 当前状态
 
-更新时间：2026-11-20
+更新时间：2026-11-21
 
-## 2026-11-20 当前状态（以此为准）
+## 2026-11-21 当前状态（以此为准）
 
-- **8787**：2026-11-20 15:26 由 Lead 用 `backend/simo-live-composer.exe serve -addr 127.0.0.1:8787 -model real` 启动（`SIMO_HOME=data`），进程 PID 42660；`GET /api/health` **200**（db ok、modules sessions/chat/tasks/memory）；首页 build-id **`mwfzyf8u-h9f0d`**；modelMode **real**；日志 `.tmp/simo-8787-20261120.log`。
+- **8787**：2026-11-21 02:27 由 Lead 用 `backend/simo-live-final4.exe serve -addr 127.0.0.1:8787 -model real` 启动（`SIMO_HOME=E:\dsh_home\workspaces\agent\data`），后台 job `pwsh-109d2d9819a3486a`；`GET /api/health` **200**（db ok、modules sessions/chat/tasks/memory）；首页 build-id **`mwp7s4x6-xfe53`**；modelMode **real**。
+- **CI**：GitHub Actions run `44789876899`（head `49083c1b65ba1def9ac7d8a04365ea558c1d3622`）Linux 与 Windows 两个 job 均 **success**；optional docker/real-model smoke 为 **skipped**，不等于已跑。
+- **测试**：前端 69/69、CDP E2E 11/11、后端 223/223；12 个重启/多进程脚本 exit 0，脚本内 118 条检查 PASS（见 `docs/testing/PENDING-EVALS-20261121.md`）。
+- **计数未变**：71 PRD，**covered 0 / partial 48 / gap 23**，unimplemented **16**；不因 CI 通过升级。
+- **门禁**：`check:sdd` PASS（15 specs、COMP 5、A 134/134、manifest 33）；`check:trace` PASS（71 PRD、10 change 包、0 失败、0 提示）。
+
+## 2026-11-20 历史状态（已被 2026-11-21 取代）
+
+- **8787（历史）**：2026-11-20 15:26 由 Lead 用 `backend/simo-live-composer.exe serve -addr 127.0.0.1:8787 -model real` 启动（`SIMO_HOME=data`），进程 PID 42660；`GET /api/health` **200**（db ok、modules sessions/chat/tasks/memory）；首页 build-id **`mwfzyf8u-h9f0d`**；modelMode **real**；日志 `.tmp/simo-8787-20261120.log`。
 - **前端单测**：**69/69 PASS、0 failed**（8 个测试文件，2026-11-20）：App.integration 7、Composer 10、LibraryUtilities 2、MessageItem 18、MetricsDashboard 9、RightPanel 6、Sidebar 9、TimelineGroups 8。
 - **CDP E2E**：**11/11 PASS、exit 0**，连续 5 次均 11/11；报告 `frontend/e2e/report/cdp/`，测试计划 `specs/test/e2e/README.md`。Playwright Test 普通路径仍受沙箱限制，CI 未实跑；E2E 使用隔离 API 19230 与临时 `SIMO_HOME`，不是 8787 生产实例。
 - **spec 底座**：产品域 spec **10/10**、域 test-plan **10/10**、E2E 计划 **1/1**；71 个 PRD，**covered 0 / partial 48 / gap 23**，unimplemented **16**（含 P9 `PRD-TOOL-003` 按后端无实现口径降级）。
 - **后端测试**：`cd backend && go test ./... -count=1 -json` **223/223 PASS、0 FAIL、0 SKIP、exit 0**（26 package，16 有测试，283.33s；日志 `.tmp/backend-fulltest-20261120.jsonl`）；P5–P9 已有 change 包与证据映射。
 - **遗留域包**：P1–P4、P10 已补 `CHG-LEGACY-P1-CONV`、`CHG-LEGACY-P2-TASK`、`CHG-LEGACY-P3-WORK`、`CHG-LEGACY-P4-FILE`、`CHG-LEGACY-P10-METRIC` 各 7 件套（docs-only 归档，不升级 covered）；`specs/changes` 现共 10 个 legacy domain 包。
 - **发布门禁**：`check:sdd` PASS（15 specs、COMP 5、A 134/134、manifest 33）；`check:trace` PASS（71 PRD、10 change 包、0 失败、0 提示）；组件 parity = Blocking；`check:visual` = Nightly/Warning。
-- **Git/文档**：测试资产提交 `c1d16b9319a304afc32d0cc9663ebcca7e4f92a0`（parent `beadd280351a2226defb3467e51fb6eaa7270782`；208 文件范围内 69 变更、139 复用，远程缺失 0/hash 不匹配 0）；SDD/证据收口提交 `5bb15cb2929b61ecb7181af69f221e675a5141bc`（194 文档/脚本/package 文件，64 新 blob，130 复用）；域级 legacy 包提交 `59a12a8`（P1–P4/P10 5 包 35 文件）、复审修正 `bdc0291`。`.github/workflows/ci.yml` 已在本地写入，但当前 GitHub PAT 缺少 Workflow 权限，上传被 403 拒绝；因此远程尚无该 workflow，**不得声称 CI 已配置或已运行**。
+- **Git/文档**：测试资产提交 `c1d16b9319a304afc32d0cc9663ebcca7e4f92a0`（parent `beadd280351a2226defb3467e51fb6eaa7270782`；208 文件范围内 69 变更、139 复用，远程缺失 0/hash 不匹配 0）；SDD/证据收口提交 `5bb15cb2929b61ecb7181af69f221e675a5141bc`（194 文档/脚本/package 文件，64 新 blob，130 复用）；域级 legacy 包提交 `59a12a8`（P1–P4/P10 5 包 35 文件）、复审修正 `bdc0291`。`.github/workflows/ci.yml` 当时因 PAT 缺 Workflow 权限上传被 403；后经用户授予权限，2026-11-21 已上传并成功运行。本段是历史结论，当前 CI 状态以文件顶部 2026-11-21 块为准。
 
 > **以下为 2026-11-13 历史快照，不代表当前状态；当前以本节顶部 2026-11-20 状态块为准。**
 

@@ -87,7 +87,7 @@
 | [`../frontend/review/REVIEW.md`](../frontend/review/REVIEW.md) | 前端审查记录 |
 | [`../evals/RELEASE.md`](../evals/RELEASE.md) | 评测最终通过数/分层结果（不预写未定数字） |
 
-## 4. 当前真实状态（2026-11-20）
+## 4. 当前真实状态（2026-11-21）
 
 > 本节是**当前状态**；`tasks/STATUS.md` 顶部已加 2026-11-20 状态块，旧条目保留为历史，不得用旧条目覆盖本节。
 
@@ -121,11 +121,11 @@
 
 ### 4.3 测试与线上状态
 
-- **8787 当前实例**：2026-11-20 15:26 由 Lead 重启，`backend/simo-live-composer.exe serve -addr 127.0.0.1:8787 -model real`，进程 PID 42660，启动参数含 `-model real`，启动记录使用 `SIMO_HOME=data`。
-  - `GET /api/health` → **200**，`{"ok":true,"ready":true,"checks":{"db":"ok","modules":["sessions","chat","tasks","memory"]}}`。
-  - `GET /` 的 `<meta name="build-id">` = **`mwfzyf8u-h9f0d`**；modelMode = **real**（由 `-model real` 启动参数与当前进程命令行确认）。
-  - 日志：`.tmp/simo-8787-20261120.log`。本节写的是**当前实例**，不是历史 STATUS 中的 `mwdqyg05-famq9`。
-- **前端单测**：**69/69 PASS、0 failed**（2026-11-20 执行，8 个测试文件）：App.integration 7、Composer 10、LibraryUtilities 2、MessageItem 18、MetricsDashboard 9、RightPanel 6、Sidebar 9、TimelineGroups 8；配置为 Vitest + Testing Library + jsdom。
+- **8787 当前实例**：2026-11-21 02:27 由 Lead 重启，二进制 `backend/simo-live-final4.exe`（由当前源码构建），命令 `serve -addr 127.0.0.1:8787 -model real`，`SIMO_HOME=E:\dsh_home\workspaces\agent\data`。
+  - `GET /api/health` → **200**，`{"ok":true,"ready":true,"time":1795199538078,"checks":{"db":"ok","modules":["sessions","chat","tasks","memory"]}}`。
+  - `GET /` 的 `<meta name="build-id">` = **`mwp7s4x6-xfe53`**；modelMode = **real**（由 `-model real` 启动参数确认）。
+  - 该实例通过后台 job `pwsh-109d2d9819a3486a` 保持运行；本节写的是**当前实例**，不是历史 STATUS 中的 `mwdqyg05-famq9` 或 `mwfzyf8u-h9f0d`。
+- **前端单测**：**69/69 PASS、0 failed**（2026-11-21 02:29 以 `--pool=threads` 重跑；2026-11-20 原始日志未保留，8 个测试文件）：App.integration 7、Composer 10、LibraryUtilities 2、MessageItem 18、MetricsDashboard 9、RightPanel 6、Sidebar 9、TimelineGroups 8；配置为 Vitest + Testing Library + jsdom。
 - **CDP E2E**：**11/11 PASS、exit 0**，同一 runner 连续 5 次均 11/11（`run-iter1..5.log`）；报告与截图在 `frontend/e2e/report/cdp/`。11 个场景覆盖：首屏结构、375 响应式、发送与 WS 流式、Enter/Shift+Enter 与发送模式反转、FE-007 逐级加载/413/403/空上级、消息接口 500 错误重试、右栏任务定位、交付物可见与真实下载。
   - runner：`frontend/e2e/scripts/cdp-runner.mjs`，命令 `cd frontend && npm run test:e2e:cdp`；测试计划见 [`../specs/test/e2e/README.md`](../specs/test/e2e/README.md)。
   - **限制**：CDP runner 不是 Playwright Test；`test:e2e` 的 Playwright 普通路径仍受本机沙箱限制，CI 未实跑；E2E 使用隔离 API 19230 与临时 `SIMO_HOME`，不是 8787 生产实例；未覆盖记忆/团队/调度/设置/工具等域。
@@ -134,8 +134,9 @@
 - **覆盖率**：`frontend/coverage/coverage-summary.json` 当前只统计 `frontend/src/components/library.tsx`：lines 85.58%（279/326）、statements 80.25%（374/466）、functions 82.31%（135/164）、branches 80.89%（470/581）；这是组件库单文件覆盖，**不是全仓覆盖率**，不能外推。
 - **发布门禁**：`check:sdd` PASS（15 specs、COMP 5、A 134/134、manifest 33、0 fail 0 warn）；`check:trace` PASS（71 PRD、10 change 包、0 失败、0 提示）；组件 parity 门禁 = Blocking；`check:visual` 整页像素对比 = Nightly/Warning，不作为发布阻断。
 - **最近一次文档同步**：2026-11-20 推送 `YJM1024/simo` main；测试资产提交 `c1d16b9319a304afc32d0cc9663ebcca7e4f92a0`，SDD/证据收口提交 `5bb15cb2929b61ecb7181af69f221e675a5141bc`（194 个文档/脚本/package 文件，64 新 blob，130 复用），域级 legacy 包提交 `59a12a8`（P1–P4/P10 5 包 35 文件）、复审修正 `bdc0291`；更早文档提交 `beadd280351a2226defb3467e51fb6eaa7270782`。具体以 GitHub main 历史为准。
-- **CI 远程状态**：`.github/workflows/ci.yml` 已写入本地工作区，但当前 GitHub PAT 缺少 Workflow 权限，GitHub Contents API 返回 403 `Resource not accessible by personal access token`；远程仓库尚未包含该 workflow，**不得声称 CI 已配置或已运行**。需给 token 增加 Workflows: Read and write 后重传。
-- **本轮证据回写状态**：2026-11-20 的后端证据映射（test-plan/TRACE/TREE/STATUS/本文件）已提交到 `5bb15cb`；后续提交前必须重新确认 remote head，不得用旧 SHA 强推。
+- **CI 远程状态**：GitHub Actions run [`44789876899`](https://github.com/YJM1024/simo/actions/runs/44789876899)（head `49083c1b65ba1def9ac7d8a04365ea558c1d3622`）：Linux quality job **success**、Windows build-test job **success**；`optional docker build` 与 `optional real-model smoke` 为 **skipped**，不计入通过。CI 使用 mock eval，不能替代真实模型验收。
+- **重启/多进程评测**：12 个脚本全部 exit 0，脚本内 **118 条检查 PASS**；明细见 [`testing/PENDING-EVALS-20261121.md`](testing/PENDING-EVALS-20261121.md)。不改变 covered 0 / partial 48 / gap 23。
+- **本轮证据回写状态**：2026-11-20 的后端证据映射已提交到 `5bb15cb`；2026-11-21 的 CI 修复提交为 `49083c1`；文档收口提交需在最终提交后回填。后续提交前必须重新确认 remote head，不得用旧 SHA 强推。
 
 ### 4.4 明确未完成 / 不可宣称
 

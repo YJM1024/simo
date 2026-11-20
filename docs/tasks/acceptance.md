@@ -1500,3 +1500,37 @@ SUMMARY: PASS（失败 0，警告 0）
 - **签字边界**：只签**可追溯性与引用真实性**；全仓 covered 仍为 **0/48/23**，16 个 `unimplemented` 未完成；不签产品功能、视觉、部署或真实模型验收。
 - **修正记录**：14 处不存在的前端组件路径统一改为 `frontend/src/components/library.tsx:<line>`（Sidebar:50、Composer:509、MessageItem:176、ConversationPanel:666、TimelineGroups:432、RightPanel:811、OverviewPanel:684、MetricsDashboard:750、WorkbenchChart:267）；P4 后端的 `embed_office.py` 改为 `embed_office.go`（`//go:embed office_helper.py`），并在 Scope/代码地图登记；P2/P4 的 `spec.md` 拆为“实现状态”与“追溯状态”，未把实现存在写成 covered。
 - **提交**：`59a12a8`（5 个域级 legacy 包，35 个文件）、`bdc0291`（本轮复审修正）；CI workflow 远程仍缺 Workflow 权限，**未签 CI 已运行**。
+
+## 2026-11-21 CI 与重启类评测收口（事实记录，不替代独立签字）
+
+> 本节只登记可复核的执行结果；不把自动化通过等同于产品 AC 完成。
+
+### CI
+
+- 提交 `49083c1b65ba1def9ac7d8a04365ea558c1d3622`（parent `f225305a10abc6ab822d5d08841583a41a1fc0b9`），message `fix: match active turns by session and allow slow CI powershell approval`。
+- 父提交 `f225305a10abc6ab822d5d08841583a41a1fc0b9`，message `ci: avoid PowerShell native stderr abort in eval stage; harden category backfill`。
+- GitHub Actions run [`44789876899`](https://github.com/YJM1024/simo/actions/runs/44789876899)（head `49083c1`）：
+  - `linux / frontend + backend quality gate`：**success**；
+  - `windows / go + web + mock evals + package`：**success**；
+  - `optional docker build`、`optional real-model smoke`：**skipped**，不计入通过。
+- Linux job 覆盖 frontend install/typecheck/test/coverage/`check:sdd`/`check:trace`、web embed 构建与 `go test`；Windows job 覆盖 `deploy/ci.ps1` 的 frontend/go/build/evals/package。
+- 本轮 CI 修复：
+  - `49083c1`：`sessionTurnActive` 改为遍历 `m.active` 并按 `turn.SessionID` 匹配，修复 `TestM13ApprovalPausesSchedule` 在慢机器上误判 turn 已结束；
+  - `49083c1`：`evals/cases/37-pwsh-basic.json`、`40-env-clean.json` 的审批 POST 超时放宽到 60s，断言未放宽；
+  - `f225305`：`deploy/ci.ps1` 的 eval 阶段隔离 native stderr，避免 PowerShell 5.1 `$ErrorActionPreference='Stop'` 在第一条 `▶ CASE` 中止；
+  - `f225305`：`evals/category-backfill.ps1` 兼容 `agentd.db` 并迁移为 `simo.db`。
+
+### 测试与评测
+
+- 前端：69/69 PASS；CDP E2E 11/11 PASS；后端：223/223 PASS。
+- 12 个重启/多进程脚本全部 exit 0，脚本内 118 条检查 PASS；明细见 [`docs/testing/PENDING-EVALS-20261121.md`](../testing/PENDING-EVALS-20261121.md)。
+- `check:sdd`、`check:trace` 本地 PASS（10 个 change 包、71 PRD、0 失败、0 提示）。
+
+### 不可宣称（本轮仍有效）
+
+1. 16 个 `unimplemented` PRD 仍为 backlog，未实现；`covered` 仍为 **0**（partial 48 / gap 23）。
+2. CI 的 `optional real-model smoke` 与 `optional docker build` 为 skipped；未跑真实模型长程与容器验收。
+3. CI 的 eval 使用 mock 模型；不能替代 8787 真实实例验收。
+4. E2E 仍为隔离后端 + mock，不是 8787 真实数据；普通 Playwright Test 路径仍未在 CI 实跑。
+5. 覆盖率仍只统计 `frontend/src/components/library.tsx`，不是全仓覆盖率。
+6. 本节不是独立验收签字，不改变原签字范围。
