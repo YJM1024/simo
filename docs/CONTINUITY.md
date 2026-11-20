@@ -131,9 +131,10 @@
   - **限制**：CDP runner 不是 Playwright Test；`test:e2e` 的 Playwright 普通路径仍受本机沙箱限制，CI 未实跑；E2E 使用隔离 API 19230 与临时 `SIMO_HOME`，不是 8787 生产实例；未覆盖记忆/团队/调度/设置/工具等域。
 - **后端测试**：`cd backend && go test ./... -count=1 -json` **223/223 PASS、0 FAIL、0 SKIP、exit 0**（2026-11-20，26 package，16 有测试；283.33s；日志 `.tmp/backend-fulltest-20261120.jsonl`）。P5–P9 的用例级证据见各域 test-plan 与 [`testing/BACKEND-EVIDENCE-20261120.md`](testing/BACKEND-EVIDENCE-20261120.md)；223 PASS 不等于产品 AC 全量完成。
 - **覆盖率**：`frontend/coverage/coverage-summary.json` 当前只统计 `frontend/src/components/library.tsx`：lines 85.58%（279/326）、statements 80.25%（374/466）、functions 82.31%（135/164）、branches 80.89%（470/581）；这是组件库单文件覆盖，**不是全仓覆盖率**，不能外推。
-- **发布门禁**：`check:sdd` PASS（15 specs、COMP 5、A 134/134、manifest 33、0 fail 0 warn）；组件 parity 门禁 = Blocking；`check:visual` 整页像素对比 = Nightly/Warning，不作为发布阻断。
-- **最近一次文档同步**：2026-11-20 推送 `YJM1024/simo` main；测试资产提交 `c1d16b9319a304afc32d0cc9663ebcca7e4f92a0`，文档提交 `beadd280351a2226defb3467e51fb6eaa7270782`。具体以 GitHub main 历史为准。
-- **本轮证据回写状态**：2026-11-20 的后端证据映射（test-plan/TRACE/TREE/STATUS/本文件）已在本地工作区；提交前必须重新确认 remote head，不得用旧 SHA 强推。
+- **发布门禁**：`check:sdd` PASS（15 specs、COMP 5、A 134/134、manifest 33、0 fail 0 warn）；`check:trace` PASS（71 PRD、5 change 包、0 失败，提示 35 PRD 无新 change）；组件 parity 门禁 = Blocking；`check:visual` 整页像素对比 = Nightly/Warning，不作为发布阻断。
+- **最近一次文档同步**：2026-11-20 推送 `YJM1024/simo` main；测试资产提交 `c1d16b9319a304afc32d0cc9663ebcca7e4f92a0`，SDD/证据收口提交 `5bb15cb2929b61ecb7181af69f221e675a5141bc`（194 个文档/脚本/package 文件，64 新 blob，130 复用），更早文档提交 `beadd280351a2226defb3467e51fb6eaa7270782`。具体以 GitHub main 历史为准。
+- **CI 远程状态**：`.github/workflows/ci.yml` 已写入本地工作区，但当前 GitHub PAT 缺少 Workflow 权限，GitHub Contents API 返回 403 `Resource not accessible by personal access token`；远程仓库尚未包含该 workflow，**不得声称 CI 已配置或已运行**。需给 token 增加 Workflows: Read and write 后重传。
+- **本轮证据回写状态**：2026-11-20 的后端证据映射（test-plan/TRACE/TREE/STATUS/本文件）已提交到 `5bb15cb`；后续提交前必须重新确认 remote head，不得用旧 SHA 强推。
 
 ### 4.4 明确未完成 / 不可宣称
 
