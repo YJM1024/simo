@@ -14,11 +14,11 @@
 go test ./cmd/simo -run 'TestP5MemoryEmptyAndUnknownContract|TestP6TeamEmptyAndUnknownContract|TestP7ScheduleEmptyAndNotFoundContract' -count=1
 ```
 
-结果：`ok simo/cmd/simo 0.509s`，exit 0。
+结果：本机单次定向运行 `ok simo/cmd/simo 0.509s`，exit 0；该定向运行日志未保留。覆盖全部 3 个测试的留档为随后的后端全量运行 `.tmp/go-test-final2-20261121.log`（`simo/cmd/simo` 218.017s，exit 0）。
 
 ### TestP5MemoryEmptyAndUnknownContract
 
-- 空库 `/api/memory/items?scope=global&status=all&limit=abc`：200、`ok:true`、`items:[]`；非法 limit 回退默认值。
+- 空库 `/api/memory/items?scope=global&status=all&limit=abc`：200、`ok:true`、`items:[]`；非法 limit 不报错。
 - V3 空库 `/api/memory/items?type=fact&limit=abc`：200、`ok:true`、`total:0`。
 - 未知条目 `/api/memory/items/does-not-exist`：404、`ok:false`、含 `error`。
 - `/api/memory/scopes` 空库：200、`ok:true`。
@@ -43,5 +43,5 @@ go test ./cmd/simo -run 'TestP5MemoryEmptyAndUnknownContract|TestP6TeamEmptyAndU
 
 ## 不能宣称
 
-- 这不等于 P5/P7 的产品 AC 全部覆盖；`TRACEABILITY.md` 仍为 covered 0 / partial 48 / gap 23。
+- 这不等于 P5/P6/P7 的产品 AC 全部覆盖；`TRACEABILITY.md` 仍为 covered 0 / partial 48 / gap 23。
 - 未新增 E2E、真实模型或真实用户数据验证。

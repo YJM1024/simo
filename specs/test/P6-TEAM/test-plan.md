@@ -152,9 +152,9 @@
 ## 4. 未实现与缺口
 
 - **unimplemented**：`PRD-TEAM-004`、`PRD-TEAM-006`。
-- **用例级证据**：9 个用例 **pass 4 / partial 0 / missing 5**；pass 只表示该用例的断言已执行，不等于 PRD 覆盖。
+- **用例级证据**：9 个用例 **pass 4 / partial 2 / missing 3**；pass 只表示该用例的断言已执行，不等于 PRD 覆盖。
 - **PRD 覆盖**：**0 covered / 4 partial / 2 gap**；本轮没有因局部证据升级任何 PRD 为 covered。
-- **未覆盖**：`TC-P6-005/006` 与 E1–E3 仍 missing；团队 UI、成员 CRUD、触发器执行、权限/375 无测试。
+- **未覆盖**：`TC-P6-005/006` 与 **E3** 仍 missing（E1/E2 已升 partial）；团队 UI、成员 CRUD、触发器执行、权限/375 无测试。
 - **证据命令/入口**：后端 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0；日志 `.tmp/backend-fulltest-20261120.jsonl`）；前端证据不适用于本域或未覆盖本域。
 - **限制**：本域 E2E/前端证据只覆盖既有 UI 路径；后端 223 PASS 只证明既有测试通过，不证明产品 AC 完成。Playwright Test 普通路径受沙箱限制，CI 未实跑。
 - **不得宣称**：在 AC 全量、权限/异常/真实数据补齐前，不能标记 `covered`，也不能对外说“测试通过”。
