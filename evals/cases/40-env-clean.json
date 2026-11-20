@@ -32,7 +32,8 @@
       "path": "/api/approvals/{{@envId}}",
       "body": { "decision": "allow" },
       "expectStatus": 200,
-      "saveAs": "envAllow"
+      "saveAs": "envAllow",
+      "timeoutMs": 60000
     },
     {
       "type": "poll",

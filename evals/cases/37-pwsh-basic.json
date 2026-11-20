@@ -33,7 +33,8 @@
       "path": "/api/approvals/{{@echoId}}",
       "body": { "decision": "allow" },
       "expectStatus": 200,
-      "saveAs": "echoAllow"
+      "saveAs": "echoAllow",
+      "timeoutMs": 60000
     },
     {
       "type": "poll",

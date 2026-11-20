@@ -476,8 +476,14 @@ func (m *Module) pendingApprovalForSession(sessionID string, since int64) string
 func (m *Module) sessionTurnActive(sessionID string) bool {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	_, ok := m.active[sessionID]
-	return ok
+	// active 以 reply.ID 为 key，不能直接用 sessionID 查；必须遍历并比较 SessionID。
+	// 否则定时任务在慢机器上会在首条审批写入前误判“本轮已结束”，把 failed 写成 done。
+	for _, turn := range m.active {
+		if turn != nil && turn.SessionID == sessionID {
+			return true
+		}
+	}
+	return false
 }
 
 func (m *Module) handleScheduleList(w http.ResponseWriter, r *http.Request) {
