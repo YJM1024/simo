@@ -133,7 +133,7 @@
 - **遗留域包**：P1–P4、P10 已补 5 个 `CHG-LEGACY-*` 域级归档包（各 7 件套）；连同 P5–P9 共 10 个 legacy domain 包，仅登记真实证据与缺口，不升级 covered、不代表六类产物闭环。
 - **覆盖率**：`frontend/coverage/coverage-summary.json` 当前只统计 `frontend/src/components/library.tsx`：lines 85.58%（279/326）、statements 80.25%（374/466）、functions 82.31%（135/164）、branches 80.89%（470/581）；这是组件库单文件覆盖，**不是全仓覆盖率**，不能外推。
 - **发布门禁**：`check:sdd` PASS（15 specs、COMP 5、A 134/134、manifest 33、0 fail 0 warn）；`check:trace` PASS（71 PRD、10 change 包、0 失败、0 提示）；组件 parity 门禁 = Blocking；`check:visual` 整页像素对比 = Nightly/Warning，不作为发布阻断。
-- **最近一次文档同步**：2026-11-20 推送 `YJM1024/simo` main；测试资产提交 `c1d16b9319a304afc32d0cc9663ebcca7e4f92a0`，SDD/证据收口提交 `5bb15cb2929b61ecb7181af69f221e675a5141bc`（194 个文档/脚本/package 文件，64 新 blob，130 复用），更早文档提交 `beadd280351a2226defb3467e51fb6eaa7270782`。具体以 GitHub main 历史为准。
+- **最近一次文档同步**：2026-11-20 推送 `YJM1024/simo` main；测试资产提交 `c1d16b9319a304afc32d0cc9663ebcca7e4f92a0`，SDD/证据收口提交 `5bb15cb2929b61ecb7181af69f221e675a5141bc`（194 个文档/脚本/package 文件，64 新 blob，130 复用），域级 legacy 包提交 `59a12a8`（P1–P4/P10 5 包 35 文件）、复审修正 `bdc0291`；更早文档提交 `beadd280351a2226defb3467e51fb6eaa7270782`。具体以 GitHub main 历史为准。
 - **CI 远程状态**：`.github/workflows/ci.yml` 已写入本地工作区，但当前 GitHub PAT 缺少 Workflow 权限，GitHub Contents API 返回 403 `Resource not accessible by personal access token`；远程仓库尚未包含该 workflow，**不得声称 CI 已配置或已运行**。需给 token 增加 Workflows: Read and write 后重传。
 - **本轮证据回写状态**：2026-11-20 的后端证据映射（test-plan/TRACE/TREE/STATUS/本文件）已提交到 `5bb15cb`；后续提交前必须重新确认 remote head，不得用旧 SHA 强推。
 

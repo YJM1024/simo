@@ -1491,3 +1491,12 @@ SUMMARY: PASS（失败 0，警告 0）
 5. **真实模型能力未重验**：长程会话、团队隔离、调度失败/通知、权限 fail-closed 矩阵、文件上传/预览/PDF/Office 生成等未重验；223 PASS 不等于产品 AC 完成，TRACE 仍为 covered 0 / partial 48 / gap 23。
 6. 本机无 `git` CLI，无法复核 STATUS 中的 commit SHA 与提交边界；本次只确认文档/变更包内容，未改代码/specs（仅改本 `acceptance.md`）。
 
+## 2026-11-20 域级 legacy 包复审（独立签字）
+
+> 注：前文 §9 的“35 个 PRD 未被任何 change 包引用”是当时结论；本节登记的 5 个域级 legacy 包已覆盖这 35 个 PRD。
+
+- **对象**：5 个域级 legacy 包 `specs/changes/CHG-LEGACY-P1-CONV`、`CHG-LEGACY-P2-TASK`、`CHG-LEGACY-P3-WORK`、`CHG-LEGACY-P4-FILE`、`CHG-LEGACY-P10-METRIC`，共 35 个 `.md`（每包 7 件套：proposal/spec/backend/frontend/tasks/test-plan/evidence）。
+- **结论**：schema 独立复审通过；`node scripts/check-trace.mjs` 为 10 个 change 包、0 失败、0 提示，`node scripts/check-sdd.mjs` 为 PASS（15 specs、COMP 5、A 134/134、manifest 33、0 fail/0 warn）。
+- **签字边界**：只签**可追溯性与引用真实性**；全仓 covered 仍为 **0/48/23**，16 个 `unimplemented` 未完成；不签产品功能、视觉、部署或真实模型验收。
+- **修正记录**：14 处不存在的前端组件路径统一改为 `frontend/src/components/library.tsx:<line>`（Sidebar:50、Composer:509、MessageItem:176、ConversationPanel:666、TimelineGroups:432、RightPanel:811、OverviewPanel:684、MetricsDashboard:750、WorkbenchChart:267）；P4 后端的 `embed_office.py` 改为 `embed_office.go`（`//go:embed office_helper.py`），并在 Scope/代码地图登记；P2/P4 的 `spec.md` 拆为“实现状态”与“追溯状态”，未把实现存在写成 covered。
+- **提交**：`59a12a8`（5 个域级 legacy 包，35 个文件）、`bdc0291`（本轮复审修正）；CI workflow 远程仍缺 Workflow 权限，**未签 CI 已运行**。
