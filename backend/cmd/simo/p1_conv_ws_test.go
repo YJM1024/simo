@@ -91,6 +91,29 @@ func p1CollectTurnFrames(t *testing.T, ctx context.Context, conn *websocket.Conn
 	return frames
 }
 
+// p1WaitReplyDoneWithin 是本文件的慢环境等待版。
+// CI（Windows runner）上单轮落库是"每条 delta 一次消息更新 + 两次事件追加 + 会话 spec 落盘"，
+// 磁盘/Defender 争用下同一轮可以远超 waitForReplyDone 固定的 8s 预算；此时回复通常已完整落库、
+// 只是状态未及时转为 done（实测失败日志里 agent 正文已完整但 status 仍是 streaming）。
+// 这里不改变等待语义，只是给这个用例更长的上限并输出诊断，避免把慢环境误判成功能失败。
+func p1WaitReplyDoneWithin(t *testing.T, baseURL, sessionID string, timeout time.Duration) []map[string]any {
+	t.Helper()
+	deadline := time.Now().Add(timeout)
+	var last []map[string]any
+	for time.Now().Before(deadline) {
+		last = listMessages(t, baseURL, sessionID)
+		for _, message := range last {
+			if message["role"] == "agent" && message["status"] == "done" {
+				return last
+			}
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	t.Fatalf("等待 agent 完成超时（上限 %s，会话 %s）；最后消息=%v", timeout, sessionID, last)
+	return nil
+}
+
+// p1IndexOfType 返回首个指定类型的帧下标，没有则为 -1。
 func p1IndexOfType(frames []wsFrame, frameType string) int {
 	for index, frame := range frames {
 		if frame.Type == frameType {
@@ -362,7 +385,8 @@ func TestP1ConvWSMultiClientSameSessionConsistency(t *testing.T) {
 // since=0 回放历史、断线后用 since=lastID 续接不重发旧事件。
 func TestP1ConvWSSubscribeReplayAndSinceContinuation(t *testing.T) {
 	_, ts := newM2App(t, nil, nil)
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	// 历史轮 + 两轮实时/replay 的落库在慢 CI 上会放大，给整个用例更宽的墙钟预算。
+	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
 
 	// 先用 HTTP 制造一轮历史。
@@ -370,7 +394,9 @@ func TestP1ConvWSSubscribeReplayAndSinceContinuation(t *testing.T) {
 	if status, _ := postChat(t, ts.URL, historyText); status != http.StatusAccepted {
 		t.Fatalf("history chat: status = %d", status)
 	}
-	historyMessages := waitForReplyDone(t, ts.URL, "main")
+	historyStarted := time.Now()
+	historyMessages := p1WaitReplyDoneWithin(t, ts.URL, "main", 60*time.Second)
+	t.Logf("历史轮次完成耗时 %s", time.Since(historyStarted))
 	historyUser := p1UserMessage(historyMessages, historyText)
 	if historyUser == nil {
 		t.Fatalf("缺少历史用户消息: %v", historyMessages)
