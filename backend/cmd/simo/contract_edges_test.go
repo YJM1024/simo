@@ -79,6 +79,79 @@ func TestP6TeamEmptyAndUnknownContract(t *testing.T) {
 	}
 }
 
+// P8-E1/E2：权限与运行状态读取、非法权限输入必须返回统一 JSON，不 500。
+func TestP8SettingsAndRuntimeContract(t *testing.T) {
+	_, ts := newM2App(t, nil, nil)
+
+	status, body := httpGet(t, ts.URL+"/api/permissions")
+	if status != http.StatusOK {
+		t.Fatalf("权限读取 = %d %s", status, body)
+	}
+	if !strings.Contains(string(body), `"ok":true`) || !strings.Contains(string(body), `"sandbox"`) ||
+		!strings.Contains(string(body), `"approval"`) {
+		t.Fatalf("权限读取形状错误: %s", body)
+	}
+
+	status, body = httpGet(t, ts.URL+"/api/runtime/status")
+	if status != http.StatusOK || !strings.Contains(string(body), `"ok":true`) || !strings.Contains(string(body), `"activeTasks"`) {
+		t.Fatalf("运行状态 = %d %s", status, body)
+	}
+
+	req, err := http.NewRequest(http.MethodPost, ts.URL+"/api/permissions", strings.NewReader(`{"sandbox":"invalid-mode"}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	raw, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusBadRequest || !strings.Contains(string(raw), `"invalid_sandbox"`) {
+		t.Fatalf("非法 sandbox = %d %s", resp.StatusCode, raw)
+	}
+
+	req, err = http.NewRequest(http.MethodPost, ts.URL+"/api/permissions", strings.NewReader(`{`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err = http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	raw, _ = io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusBadRequest || !strings.Contains(string(raw), `"bad_request"`) {
+		t.Fatalf("非法权限 JSON = %d %s", resp.StatusCode, raw)
+	}
+}
+
+// P9-E1/E2：动作清单可读，未知动作 describe/execute 均返回 404 JSON，不 panic/500。
+func TestP9ActionsUnknownContract(t *testing.T) {
+	_, ts := newM2App(t, nil, nil)
+
+	status, body := httpGet(t, ts.URL+"/api/actions")
+	if status != http.StatusOK {
+		t.Fatalf("动作清单 = %d %s", status, body)
+	}
+	if !strings.Contains(string(body), `"ok":true`) || !strings.Contains(string(body), `"actions"`) ||
+		!strings.Contains(string(body), `"count"`) {
+		t.Fatalf("动作清单形状错误: %s", body)
+	}
+
+	status, body = httpGet(t, ts.URL+"/api/actions/does-not-exist")
+	if status != http.StatusNotFound || !strings.Contains(string(body), `"UNKNOWN_ACTION"`) {
+		t.Fatalf("未知动作 describe = %d %s", status, body)
+	}
+
+	status, body = doContractRequest(t, http.MethodPost, ts.URL+"/api/actions/does-not-exist")
+	if status != http.StatusNotFound || !strings.Contains(string(body), `"UNKNOWN_ACTION"`) {
+		t.Fatalf("未知动作 execute = %d %s", status, body)
+	}
+}
+
 // P7-E1/E2：空列表、未知 id 的 GET/PATCH/DELETE 必须 404 JSON，非法 JSON 必须 400 JSON。
 func TestP7ScheduleEmptyAndNotFoundContract(t *testing.T) {
 	_, ts := newM2App(t, nil, nil)

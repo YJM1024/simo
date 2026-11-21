@@ -1,10 +1,12 @@
 # P9 · 工具与能力 测试计划
 
-状态：**active（2026-11-20 后端证据回写；用例 2 pass / 3 partial / 5 missing）** — 覆盖口径见 §1、§4；pass 只表示该用例的断言已执行，不表示 PRD 的 AC 全覆盖。
+状态：**active（2026-11-21 边界契约补充；用例 2 pass / 5 partial / 3 missing）** — 覆盖口径见 §1、§4；pass 只表示该用例的断言已执行，不表示 PRD 的 AC 全覆盖。
 > 产品域 spec：[`../../product/P9-TOOL/spec.md`](../../product/P9-TOOL/spec.md)；TREE：[`../../../docs/product/TREE.md`](../../../docs/product/TREE.md)；TRACEABILITY：[`../../../docs/product/TRACEABILITY.md`](../../../docs/product/TRACEABILITY.md)。
 
 <!-- EVIDENCE-SUMMARY-20261120 -->
 > **2026-11-20 证据汇总**：本域 10 个用例，**pass 2 / partial 3 / missing 5**；PRD 覆盖仍 **0 covered / 4 partial / 3 gap**。后端 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0；日志 `.tmp/backend-fulltest-20261120.jsonl`）；前端证据不适用于本域或未覆盖本域。
+>
+> **2026-11-21 补充**：新增 `TestP9ActionsUnknownContract`（`backend/cmd/simo/contract_edges_test.go`），覆盖动作清单、未知动作 describe/execute 404 `UNKNOWN_ACTION`；E1/E2 由 missing 升为 partial。不覆盖前端能力目录、真实执行/权限矩阵，不升级 PRD covered。
 
 ## 1. 范围与证据口径
 
@@ -125,7 +127,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：空态可见，加载不闪烁；加载结束进入正确状态；不展示假 0。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing** — 无测试落点；工具域空/加载态无前端测试。
+- 当前证据：**partial** — 2026-11-21 `go test ./cmd/simo -run TestP9ActionsUnknownContract` PASS（`backend/cmd/simo/contract_edges_test.go`）：`/api/actions` 返回 `ok:true` + actions + count，清单可读。未覆盖：前端能力目录加载/空态渲染，保持 partial。
 
 <a id="tc-p9-e2"></a>
 #### TC-P9-E2 · 错误/恢复
@@ -135,7 +137,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：错误提示可见，重试/返回可用；失败不写脏数据、不重复提交。
 - 自动化层级：integration（API 级，未接线）
-- 当前证据：**missing** — 无测试落点；工具域错误/恢复无统一契约测试。
+- 当前证据：**partial** — 2026-11-21 `go test ./cmd/simo -run TestP9ActionsUnknownContract` PASS：未知动作 GET/POST 均返回 404 `UNKNOWN_ACTION`，不 panic/500。未覆盖：前端错误提示、真实动作执行失败/权限拒绝、超时，保持 partial。
 
 <a id="tc-p9-e3"></a>
 #### TC-P9-E3 · 响应式/键盘/权限
@@ -164,9 +166,9 @@
 ## 4. 未实现与缺口
 
 - **unimplemented**：`PRD-TOOL-003` Skills/CLI、`PRD-TOOL-004` MCP 接入、`PRD-TOOL-007` 能力目录 L0–L3。
-- **用例级证据**：10 个用例 **pass 2 / partial 3 / missing 5**；pass 只表示该用例的断言已执行，不等于 PRD 覆盖。
+- **用例级证据**：10 个用例 **pass 2 / partial 5 / missing 3**；pass 只表示该用例的断言已执行，不等于 PRD 覆盖。
 - **PRD 覆盖**：**0 covered / 4 partial / 3 gap**；本轮没有因局部证据升级任何 PRD 为 covered。
-- **未覆盖**：`TC-P9-003/005/007` 与 E1/E2 仍 missing；Skills、MCP、能力目录、白名单、真实网络与权限边界只部分覆盖；TOOL-003 后端口径为 unimplemented。
+- **未覆盖**：`TC-P9-003/005/007` 仍 missing；E1/E2 仅 API 边界 partial，Skills、MCP、能力目录、白名单、真实网络与权限边界只部分覆盖；TOOL-003 后端口径为 unimplemented。
 - **证据命令/入口**：后端 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0；日志 `.tmp/backend-fulltest-20261120.jsonl`）；前端证据不适用于本域或未覆盖本域。
 - **限制**：本域 E2E/前端证据只覆盖既有 UI 路径；后端 223 PASS 只证明既有测试通过，不证明产品 AC 完成。Playwright Test 普通路径受沙箱限制，CI 未实跑。
 - **不得宣称**：在 AC 全量、权限/异常/真实数据补齐前，不能标记 `covered`，也不能对外说“测试通过”。

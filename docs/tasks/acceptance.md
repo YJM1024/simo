@@ -1457,6 +1457,8 @@ SUMMARY: PASS（失败 0，警告 0）
 - P8/P9 的 `tasks.md`、`test-plan.md`、`backend.md`、`evidence.md` 已无 `TestM7*`/`TestM12*`/`TestM17*`/`permission 3`/`M17 四个` 等聚合 PASS 证据；P8/P9 change 包中抽取的 52 个精确 `Test*` 名称均能在 backend 代码中找到 `func` 定义。
 - `config（共 9 个，精确名如下）`、`migrate/…（精确名如下）`、`eventlog（共 4 个，精确名如下）` 等组标题后均跟具体测试名，不再单独作为证据；`config 12` 已拆为 `config 9 + migrate 3`。
 - P8 test-plan 仍为 `pass 3 / partial 8 / missing 4`，P9 test-plan 仍为 `pass 2 / partial 3 / missing 5`；TREE 仍 `17/38/16`、TRACE 仍 `0/48/23`、BACKLOG 仍 16 行且均未完成。
+
+> 注：以上计数是 2026-11-20 复审时的快照。2026-11-21 补充 P8/P9 E1/E2 边界契约测试后，当前计数为 P8 `3 pass / 9 partial / 3 missing`、P9 `2 pass / 5 partial / 3 missing`；TREE/TRACE/BACKLOG 未变。
 - `docs/testing` 已无 22/49、07:29、15 unimplemented、P5–P9 全部 missing 等旧值。
 
 仍阻断（1 处）：
@@ -1473,6 +1475,8 @@ SUMMARY: PASS（失败 0，警告 0）
 - `node scripts/check-sdd.mjs`：EXIT=0，PASS；15 specs（COMP5）、A 134/134、manifest 33、0 fail 0 warn。
 - `specs/changes/CHG-LEGACY-P5-MEM/spec.md:21` 已展开为 `TestM27RecallR2DefaultOn`、`TestM27RecallR2SwitchAndVectorDegrade`、`TestM27RecallR2TwoHopAndAgentic`，与 backend 实际 `func` 名一致。
 - P8/P9 的 tasks/test-plan/backend/evidence/spec/proposal 聚合证据已展开；抽取的 52 个精确 `Test*` 全部能在 backend 找到 `func` 定义；P8/P9 用例状态未变：P8 为 3 pass / 8 partial / 4 missing，P9 为 2 pass / 3 partial / 5 missing。
+
+> 注：同上，这是 2026-11-20 快照；2026-11-21 当前计数见上一条注与 §10。
 - `specs` + `docs` 全量（排除本 `acceptance.md` 的历史审计文字）扫描：无 `Test*` 通配；无 `config 9/12`、`httpserver 3`、`migrate 3`、`sqlite 3`、`permission 3`（聚合用法）、`workspace-migrate 3`、`eventlog 4`、`M13 四个/五个`、`M17 四个` 等**单独作为证据的聚合行**；保留的 `config（共9个，精确名如下）` 等组标题后均列精确测试名。
 - 计数未变：TREE 合计 `17/38/16`；TRACE 合计 `0/48/23`；BACKLOG 16 项（16 行均“是否本轮实现：否”）。
 
@@ -1525,7 +1529,7 @@ SUMMARY: PASS（失败 0，警告 0）
 - 前端：69/69 PASS；CDP E2E 11/11 PASS；后端：223/223 PASS（2026-11-20 记录）。
 - 12 个重启/多进程脚本全部 exit 0，脚本内 118 条检查 PASS；明细见 [`docs/testing/PENDING-EVALS-20261121.md`](../testing/PENDING-EVALS-20261121.md)。
 - `check:sdd`、`check:trace` 本地 PASS（10 个 change 包、71 PRD、0 失败、0 提示）。
-- 2026-11-21 新增 3 个 API 边界契约测试（`TestP5MemoryEmptyAndUnknownContract`、`TestP6TeamEmptyAndUnknownContract`、`TestP7ScheduleEmptyAndNotFoundContract`）；后端全量 `go test ./... -count=1` 重跑 exit 0，最终一次覆盖全部 3 个测试的日志为 `.tmp/go-test-final2-20261121.log`（`simo/cmd/simo` 218.017s，exit 0）。P5/P6/P7 的 E1/E2 只从 missing 升为 partial，covered 不变；明细见 [`docs/testing/EDGE-CONTRACTS-20261121.md`](../testing/EDGE-CONTRACTS-20261121.md)。
+- 2026-11-21 新增 5 个 API 边界契约测试（`TestP5MemoryEmptyAndUnknownContract`、`TestP6TeamEmptyAndUnknownContract`、`TestP7ScheduleEmptyAndNotFoundContract`、`TestP8SettingsAndRuntimeContract`、`TestP9ActionsUnknownContract`）；定向运行 `ok simo/cmd/simo 0.558s`，随后后端全量 `go test ./... -count=1` 重跑 exit 0，覆盖全部 5 个测试的日志为 `.tmp/go-test-final3-20261121.log`。P5/P6/P7/P8/P9 的 E1/E2 只从 missing 升为 partial，P8 test-plan 为 3 pass / 9 partial / 3 missing、P9 为 2 pass / 5 partial / 3 missing；covered 不变，明细见 [`docs/testing/EDGE-CONTRACTS-20261121.md`](../testing/EDGE-CONTRACTS-20261121.md)。
 
 ### 不可宣称（本轮仍有效）
 

@@ -11,10 +11,10 @@
 命令（工作目录 `backend`）：
 
 ```powershell
-go test ./cmd/simo -run 'TestP5MemoryEmptyAndUnknownContract|TestP6TeamEmptyAndUnknownContract|TestP7ScheduleEmptyAndNotFoundContract' -count=1
+go test ./cmd/simo -run 'TestP5MemoryEmptyAndUnknownContract|TestP6TeamEmptyAndUnknownContract|TestP7ScheduleEmptyAndNotFoundContract|TestP8SettingsAndRuntimeContract|TestP9ActionsUnknownContract' -count=1
 ```
 
-结果：本机单次定向运行 `ok simo/cmd/simo 0.509s`，exit 0；该定向运行日志未保留。覆盖全部 3 个测试的留档为随后的后端全量运行 `.tmp/go-test-final2-20261121.log`（`simo/cmd/simo` 218.017s，exit 0）。
+结果：本机单次定向运行 `ok simo/cmd/simo 0.558s`，exit 0；该定向运行日志未保留。覆盖全部 5 个测试的留档为随后的后端全量运行 `.tmp/go-test-final3-20261121.log`（`simo/cmd/simo`，exit 0）。
 
 ### TestP5MemoryEmptyAndUnknownContract
 
@@ -41,7 +41,24 @@ go test ./cmd/simo -run 'TestP5MemoryEmptyAndUnknownContract|TestP6TeamEmptyAndU
 
 对应测试计划：`specs/test/P7-SCHED/test-plan.md` 的 `TC-P7-E1`、`TC-P7-E2`（由 missing 升为 partial）。不覆盖前端错误提示/重试、权限、375。
 
+### TestP8SettingsAndRuntimeContract
+
+- `/api/permissions`：200、`ok:true`、含 sandbox/approval。
+- `/api/runtime/status`：200、`ok:true`、含 activeTasks。
+- `POST /api/permissions` 非法 sandbox：400、`invalid_sandbox`。
+- `POST /api/permissions` 非法 JSON：400、`bad_request`。
+
+对应测试计划：`specs/test/P8-SET/test-plan.md` 的 `TC-P8-E1`、`TC-P8-E2`（E1 由 missing 升为 partial，E2 补证据）。不覆盖前端设置页空/错误态、375、真实越权。
+
+### TestP9ActionsUnknownContract
+
+- `/api/actions`：200、`ok:true`、含 actions/count。
+- 未知动作 `GET /api/actions/does-not-exist`：404、`UNKNOWN_ACTION`。
+- 未知动作 `POST /api/actions/does-not-exist`：404、`UNKNOWN_ACTION`。
+
+对应测试计划：`specs/test/P9-TOOL/test-plan.md` 的 `TC-P9-E1`、`TC-P9-E2`（由 missing 升为 partial）。不覆盖前端能力目录、真实动作执行/权限矩阵。
+
 ## 不能宣称
 
-- 这不等于 P5/P6/P7 的产品 AC 全部覆盖；`TRACEABILITY.md` 仍为 covered 0 / partial 48 / gap 23。
+- 这不等于 P5/P6/P7/P8/P9 的产品 AC 全部覆盖；`TRACEABILITY.md` 仍为 covered 0 / partial 48 / gap 23。
 - 未新增 E2E、真实模型或真实用户数据验证。

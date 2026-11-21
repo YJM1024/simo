@@ -1,10 +1,12 @@
 # P8 · 设置与系统 测试计划
 
-状态：**active（2026-11-20 后端证据回写；用例 3 pass / 8 partial / 4 missing）** — 覆盖口径见 §1、§4；pass 只表示该用例的断言已执行，不表示 PRD 的 AC 全覆盖。
+状态：**active（2026-11-21 边界契约补充；用例 3 pass / 9 partial / 3 missing）** — 覆盖口径见 §1、§4；pass 只表示该用例的断言已执行，不表示 PRD 的 AC 全覆盖。
 > 产品域 spec：[`../../product/P8-SET/spec.md`](../../product/P8-SET/spec.md)；TREE：[`../../../docs/product/TREE.md`](../../../docs/product/TREE.md)；TRACEABILITY：[`../../../docs/product/TRACEABILITY.md`](../../../docs/product/TRACEABILITY.md)。
 
 <!-- EVIDENCE-SUMMARY-20261120 -->
 > **2026-11-20 证据汇总**：本域 15 个用例，**pass 3 / partial 8 / missing 4**；PRD 覆盖仍 **0 covered / 9 partial / 3 gap**。后端 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0；日志 `.tmp/backend-fulltest-20261120.jsonl`）；前端证据不适用于本域或未覆盖本域。
+>
+> **2026-11-21 补充**：新增 `TestP8SettingsAndRuntimeContract`（`backend/cmd/simo/contract_edges_test.go`），覆盖权限/运行状态读取、非法 sandbox 400、非法权限 JSON 400；E1 由 missing 升为 partial。不覆盖前端设置页空/错误态、375 或真实越权，不升级 PRD covered。
 
 ## 1. 范围与证据口径
 
@@ -195,7 +197,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：空态可见，加载不闪烁；加载结束进入正确状态；不展示假 0。
 - 自动化层级：component/integration（待接线）
-- 当前证据：**missing** — 无测试落点；设置域空/加载态无前端测试。
+- 当前证据：**partial** — 2026-11-21 `go test ./cmd/simo -run TestP8SettingsAndRuntimeContract` PASS（`backend/cmd/simo/contract_edges_test.go`）：`/api/permissions` 返回 `ok:true` + sandbox/approval/modes；`/api/runtime/status` 返回 `ok:true` + activeTasks。未覆盖：前端设置页加载/空态渲染与闪烁，保持 partial。
 
 <a id="tc-p8-e2"></a>
 #### TC-P8-E2 · 错误/恢复
@@ -205,7 +207,7 @@
 - 步骤：1）准备对应条件；2）执行主路径或越权路径；3）检查提示、数据与恢复。
 - 断言：错误提示可见，重试/返回可用；失败不写脏数据、不重复提交。
 - 自动化层级：component/integration（待接线）
-- 当前证据：**partial** — 2026-11-20 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0）中的 `TestDefaultPolicy`、`TestCanUseToolOnlyWhenNotAutoApproved`、`TestHookDenyAndAskRule`、`TestM7UniformErrorEnvelope`；仅覆盖部分路径。未覆盖：设置域错误恢复与用户可见提示未覆盖；保持 partial。
+- 当前证据：**partial** — 2026-11-21 `go test ./cmd/simo -run TestP8SettingsAndRuntimeContract` PASS：非法 sandbox 返回 400 `invalid_sandbox`，非法 JSON 返回 400 `bad_request`，均不 500、不写错误配置。未覆盖：前端设置页错误提示/重试与真实越权，保持 partial。
 
 <a id="tc-p8-e3"></a>
 #### TC-P8-E3 · 响应式/键盘/权限
@@ -234,9 +236,9 @@
 ## 4. 未实现与缺口
 
 - **unimplemented**：`PRD-SET-003`、`PRD-SET-005`、`PRD-SET-006`。
-- **用例级证据**：15 个用例 **pass 3 / partial 8 / missing 4**；pass 只表示该用例的断言已执行，不等于 PRD 覆盖。
+- **用例级证据**：15 个用例 **pass 3 / partial 9 / missing 3**；pass 只表示该用例的断言已执行，不等于 PRD 覆盖。
 - **PRD 覆盖**：**0 covered / 9 partial / 3 gap**；本轮没有因局部证据升级任何 PRD 为 covered。
-- **未覆盖**：`TC-P8-003/005/006` 与 E1 仍 missing；设置 UI、模型切换、快捷键、备份/恢复、安装/升级、认证/审计、权限边界只部分覆盖。
+- **未覆盖**：`TC-P8-003/005/006` 仍 missing；E1/E2 仅 API 边界 partial，设置 UI、模型切换、快捷键、备份/恢复、安装/升级、认证/审计、权限边界只部分覆盖。
 - **证据命令/入口**：后端 `cd backend && go test ./... -count=1 -json`（**223/223 PASS**，exit 0；日志 `.tmp/backend-fulltest-20261120.jsonl`）；前端证据不适用于本域或未覆盖本域。
 - **限制**：本域 E2E/前端证据只覆盖既有 UI 路径；后端 223 PASS 只证明既有测试通过，不证明产品 AC 完成。Playwright Test 普通路径受沙箱限制，CI 未实跑。
 - **不得宣称**：在 AC 全量、权限/异常/真实数据补齐前，不能标记 `covered`，也不能对外说“测试通过”。
