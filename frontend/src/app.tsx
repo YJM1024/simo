@@ -186,10 +186,16 @@ export default function App(): React.ReactNode {
     const scroller = scrollerRef.current
     if (!anchor || !scroller) return
     prependAnchorRef.current = null
+    // 增量校正：以"当前 scrollTop"为基准，只补上目标元素位置的变化。
+    // 这样连续 apply（同步一次 + rAF 一次）是幂等的：第二次算出 delta 0，不会把第一次的修正写回旧值。
     const apply = (): void => {
       const target = anchor.id ? scroller.querySelector<HTMLElement>(`[data-message-id="${anchor.id}"]`) : null
-      const nextTop = target ? target.getBoundingClientRect().top - scroller.getBoundingClientRect().top : null
-      scroller.scrollTop = nextTop !== null ? anchor.scrollTop + (nextTop - anchor.offset) : anchor.scrollTop + (scroller.scrollHeight - anchor.scrollHeight)
+      if (target) {
+        const nextTop = target.getBoundingClientRect().top - scroller.getBoundingClientRect().top
+        scroller.scrollTop += nextTop - anchor.offset
+        return
+      }
+      scroller.scrollTop += scroller.scrollHeight - anchor.scrollHeight
     }
     apply()
     requestAnimationFrame(apply)

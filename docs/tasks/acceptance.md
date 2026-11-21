@@ -1539,3 +1539,41 @@ SUMMARY: PASS（失败 0，警告 0）
 4. E2E 仍为隔离后端 + mock，不是 8787 真实数据；普通 Playwright Test 路径仍未在 CI 实跑。
 5. 覆盖率仍只统计 `frontend/src/components/library.tsx`，不是全仓覆盖率。
 6. 本节不是独立验收签字，不改变原签字范围。
+
+## 2026-11-21 会话域批次 3/4/5 收口（事实记录，不替代独立签字）
+
+> 本节登记批次 3/4/5 的实际执行结果；**不升级任何 PRD 为 covered**。CI 结论在 push 后回写（见本节「CI」）。
+
+### 提交范围
+
+- 收口提交：`<COMMIT_SHA>`（parent `1592a90c2e530de04445817916a4b7d052bb7cf0`，message `test: close conversation-domain tests, spec and E2E evidence`）。
+- 覆盖：前端测试新增/修复、后端 P1 测试 19 个、CDP E2E 08–16、`TestM13PauseAndRunNow` 文件锁修复、`frontend/src/app.tsx` prepend 锚定修复、`specs/product/P1-CONV/spec.md`/`specs/test/P1-CONV/test-plan.md`/`docs/product/CONV-CLOSURE.md` 重写、5 个 `CHG-CONV-*`（35 文件）、TREE/TRACE/`specs/changes/README.md` 更新、证据与状态文档。
+
+### 已实现 / 已验证（本机实测）
+
+- **前端**：13 个测试文件 **115/115 PASS**、exit 0（`node node_modules/vitest/vitest.mjs run --pool=threads`，见 `docs/testing/CONV-EVIDENCE-20261121.md`）；`tsc --noEmit` **exit 0**；覆盖率 `frontend/src/components/library.tsx` **Stmts 82.83 / Branch 83.64 / Funcs 84.14 / Lines 85.88**（阈值 80）。
+- **后端**：`go test ./... -count=1` **exit 0**，16 包 ok，**246 个顶层测试**（`^func Test` 计数 246）；本批次新增 19 个：`p1_conv_messages_http_test.go`（5）、`p1_conv_sessions_http_test.go`（5）、`p1_conv_ws_test.go`（4）、`chat/category_test.go`（2）、`sessions/management_test.go`（3）。
+- **E2E**：`node e2e/scripts/cdp-runner.mjs`（即 `pnpm test:e2e:cdp`）**19/19 PASS、连续两次**（`run-20261121-131214.log`、`run-20261121-131332.log`），07 工作台交付物场景按 OOS 默认 skip（`E2E_INCLUDE_OOS=1` 可含）。
+- **修复**：
+  - `backend/cmd/simo/m13_test.go::TestM13PauseAndRunNow` 在 CI Windows 上因 TempDir 文件锁失败；根因是测试清理早于调度真正结束。修复为末尾 `waitScheduleStatus(..., "done", 15s)`——**只等待状态收敛，不改断言语义、不 skip**。
+  - `frontend/src/app.tsx` 祖先 prepend 滚动锚定的“二次 apply 回写旧值”缺陷：修复后集成用例与 E2E 04a（时间轴增长 + prepend 锚定）通过。
+- **门禁**：`check:sdd`、`check:trace` 本地 PASS（15 specs、COMP 5、A 134/134、manifest 33；71 PRD、change 包、0 失败、0 提示）。
+
+### 覆盖与用例（保持不升级）
+
+- P1-CONV：12 个 PRD，**0 covered / 11 partial / 1 gap（SYNC-005）**；用例 **4 pass / 9 partial / 2 missing**（15 条）。
+- 全仓：71 PRD，**0 covered / 48 partial / 23 gap**；unimplemented **16**。
+- 新增前端/后端测试只提升“用例证据”，六类产物 + 全 AC 可复现证据仍未齐，**不升级 covered**。
+
+### 边界（不得宣称）
+
+1. 本轮只做会话域（P1）；**P2–P10 冻结**，未修改其功能与 AC。会话页上“非 P1 但可见”的面（工作台指标、右栏任务/交付物/权限、卡片交互、团队/日程/记忆/工作台独立页面）不计 P1 AC。
+2. E2E 是 **CDP runner，不是 Playwright Test**；后端为隔离 mock + 临时 `SIMO_HOME`（端口 **19230**），不是 8787 真实模型数据；Playwright 普通路径与 E2E 均未接入 CI。
+3. 覆盖率只统计 `frontend/src/components/library.tsx` 单文件，**不是全仓覆盖率**。
+4. `PRD-SYNC-005`（远程访问与通知中心）未实现、无鉴权/通知数据模型，仅登记为 `unimplemented`，不计入 P1 验收面。
+5. 本机无 `git` CLI，提交/CI 操作均经 GitHub REST API；本节不替代独立验收签字。
+
+### CI
+
+- push 前远程 head：`1592a90c2e530de04445817916a4b7d052bb7cf0`；最近一次失败 run [`44867249776`](https://github.com/YJM1024/simo/actions/runs/44867249776)（旧 head 的 `TestM13PauseAndRunNow` 文件锁，本次已修）。
+- 本次 run：**待本次 run 验证**（push 后回写 run id、Linux quality 与 Windows build-test 结论；`optional docker build`、`optional real-model smoke` 若 skipped 不计入通过）。

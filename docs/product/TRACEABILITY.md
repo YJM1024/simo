@@ -31,21 +31,25 @@
 
 > 说明：10 份 test-plan 原为骨架；2026-11-20 已回写 69 个前端单测、11 个 CDP E2E 与 223 个后端测试的**部分执行证据**（见 §2.1）。覆盖状态按 **0 covered / 48 partial / 23 gap** 记录：没有任何 PRD 同时具备产品 spec + 完整的前后端开发 spec + 任务卡 + TEST + 完整 AC 证据，不能因“用例跑过一部分”升级。
 >
+> 2026-11-21 补充（第 2 次证据回写）：前端单测 69→**115/115**、后端 **246** 个顶层测试、E2E **19/19×2** 已按真实用例回写进 `specs/test/P1-CONV/test-plan.md` 与 [`CONV-CLOSURE.md`](CONV-CLOSURE.md)；用例口径 **4 pass / 9 partial / 2 missing**（TC-009 升 partial、E1 升 pass），P1 覆盖口径**维持 0/11/1**。
+>
+> 2026-11-21 补充：P1 已建立 5 个正式变更包 `CHG-CONV-001..005`（会话管理 / 消息与渲染 / 输入与发送 / 多标签与同步 / 未读与通知），并新增缺口总账 [`CONV-CLOSURE.md`](CONV-CLOSURE.md)。六类产物已补齐，但逐 PRD 仍缺 AC 证据或组件签收，覆盖口径**维持 0/11/1**，不升级任何 P1 PRD。
+>
 > 2026-11-20 补充：P1–P4、P10 的 35 个 PRD 已建立域级 legacy 归档包 `CHG-LEGACY-P1-CONV`、`CHG-LEGACY-P2-TASK`、`CHG-LEGACY-P3-WORK`、`CHG-LEGACY-P4-FILE`、`CHG-LEGACY-P10-METRIC`；CHANGE 列保留原 FE/COMP 映射并追加包链接。legacy 包只表示“可追溯归档”，不改变 covered/partial/gap，也不代表六类产物闭环。
 
-## 2.1 2026-11-20 执行证据（不升级 covered）
+## 2.1 执行证据（不升级 covered）
 
-证据详情：前端 [`../testing/EVIDENCE-20261120.md`](../testing/EVIDENCE-20261120.md)；后端 [`../testing/BACKEND-EVIDENCE-20261120.md`](../testing/BACKEND-EVIDENCE-20261120.md)；E2E 计划：[`../../specs/test/e2e/README.md`](../../specs/test/e2e/README.md)。
+证据详情：前端 [`../testing/EVIDENCE-20261120.md`](../testing/EVIDENCE-20261120.md)、2026-11-21 回传（115/115，报告未落 docs）；后端 [`../testing/BACKEND-EVIDENCE-20261120.md`](../testing/BACKEND-EVIDENCE-20261120.md)、2026-11-21 回传（246 顶层）；E2E：[`../../specs/test/e2e/README.md`](../../specs/test/e2e/README.md) + [`../../frontend/e2e/report/cdp/audit-P1-CONV.md`](../../frontend/e2e/report/cdp/audit-P1-CONV.md)。
 
 | 域 | 已回写的部分证据 | 覆盖判定 | 不能升级的原因 |
 |---|---|---|---|
-| P1 会话与消息 | Sidebar 9、MessageItem 18、Composer 10、App 祖先/WS、E2E 01a/02/03/04a–d/05 | 仍 0/11/1 | legacy 包仅归档；009 多标签、011 未读、012 远程访问无证据；六类产物未闭环 |
+| P1 会话与消息 | 前端 115/115（新增 App.conversation 22、App.tabsync 4+2、ConversationPanel 7、conversation-responsive 6、Composer +5）；后端 246（新增 19 个顶层/5 文件）；E2E 19/19×2（01–16，07 OOS）。用例 4 pass / 9 partial / 2 missing | 仍 0/11/1 | 六类产物与 [`CONV-CLOSURE.md`](CONV-CLOSURE.md) 已建；仍未闭环：TC-011 未读（SYNC-004 无后端）、TC-012 远程访问（SYNC-005 gap）、TC-002/006/007 缺陷（failure catch、幂等、真实 IME）、4 个 COMP 未签收、E2E 为 mock 非 Playwright、无 CI、未部署验证 |
 | P2 任务与执行 | RightPanel 6 展示层、E2E 06 定位 | 仍 0/0/6 | 后端生命周期/取消/重试/复杂度/子会话均无执行证据 |
 | P3 工作台与视图 | LibraryUtilities 2、App 工作台指标、RightPanel/E2E 07 | 仍 0/4/1 | WORK-005 未实现；真实 usage/每日聚合/最近活动未覆盖 |
 | P4 文件与交付物 | RightPanel 交付物、E2E 07 下载 | 仍 0/2/4 | 上传/隔离/预览/PDF/Office 未覆盖 |
-| P5–P9 | 后端 223/223 PASS（26 package，16 有测试）；P5 记忆、P6 团队、P7 调度、P8 设置/系统、P9 工具均有直接测试；见 BACKEND-EVIDENCE | 仍 0/26/10 | 产品 AC/change 包/前端/权限/异常未齐；223 PASS 只证明既有测试通过 |
+| P5–P9 | 后端 246/246 PASS（16 package with tests，0 skip）；P5 记忆、P6 团队、P7 调度、P8 设置/系统、P9 工具均有直接测试 | 仍 0/26/10 | 产品 AC/change 包/前端/权限/异常未齐；PASS 只证明既有测试通过 |
 | P10 指标 | MetricsDashboard 9、App 工作台指标 | 仍 0/5/1 | 006 导出/对比/告警未实现；真实后端聚合未覆盖 |
-| **合计** | 69 单测 + 11 E2E + 223 后端测试 | **0/48/23** | 证据只到“部分用例”，未到 PRD 覆盖 |
+| **合计** | 115 单测 + 19 E2E + 246 后端测试 | **0/48/23** | 证据仍只到“部分用例/部分 AC”，未到 PRD 覆盖 |
 
 > 结论：本轮把“没有任何执行证据”推进为“前端、E2E 与 P5–P9 后端均有用例级证据”，但没有改变 covered/partial/gap 的判定；后续必须按 change 包补齐六类产物，才允许逐项升级。
 
@@ -56,18 +60,18 @@
 
 | PRD | 名称 | CHANGE | TEST | 覆盖 | 缺口 |
 |---|---|---|---|---|---|
-| `PRD-CONV-001` | 会话树与主会话 | [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-001](../../specs/test/P1-CONV/test-plan.md#tc-p1-001) | `partial` | 域级测试计划已建；主会话不可归档的边界未单列 AC，缺完整 AC 证据。 |
-| `PRD-CONV-002` | 会话生命周期 | [FE-001](../../specs/FE-001-frontend-rebuild/spec.md) / [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [FE-004](../../specs/FE-004-first-run-empty/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-002](../../specs/test/P1-CONV/test-plan.md#tc-p1-002) | `partial` | 创建/重命名/归档/恢复分散在多个 FE，缺统一状态机。 |
-| `PRD-CONV-003` | 会话搜索与未读 | [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-003](../../specs/test/P1-CONV/test-plan.md#tc-p1-003) | `partial` | 搜索已实现；未读计数/已读游标只有零散实现，无域级 AC 与测试。 |
-| `PRD-CONV-004` | 消息流与渲染 | [FE-001](../../specs/FE-001-frontend-rebuild/spec.md) / [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [COMP-message-colors](../../specs/COMP-message-colors/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-004](../../specs/test/P1-CONV/test-plan.md#tc-p1-004) | `partial` | 消息纯度（无 system/静默噪音）无独立验收项。 |
-| `PRD-CONV-007` | 祖先消息整级加载 | [FE-007](../../specs/FE-007-ancestor-messages/spec.md) / [COMP-timeline-groups](../../specs/COMP-timeline-groups/spec.md) / [COMP-timeline-tip](../../specs/COMP-timeline-tip/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-005](../../specs/test/P1-CONV/test-plan.md#tc-p1-005) | `partial` | 已签但未部署，生产可用性未证明；时间轴点击目标尺寸未单列。 |
-| `PRD-CONV-005` | 发送·流式·断线重连 | [FE-002](../../specs/FE-002-chat-robustness/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-006](../../specs/test/P1-CONV/test-plan.md#tc-p1-006) | `partial` | 断线重连无重复已验证，但“停止/失败恢复”未纳入同一 AC。 |
-| `PRD-CONV-006` | Composer 输入与快捷键 | [FE-006](../../specs/FE-006-chat-experience/spec.md) / [COMP-composer-send-mode](../../specs/COMP-composer-send-mode/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-007](../../specs/test/P1-CONV/test-plan.md#tc-p1-007) | `partial` | IME/发送模式/跨标签同步已有组件级契约，缺产品级 AC。 |
-| `PRD-SYNC-001` | WS 连接与重连 | [FE-002](../../specs/FE-002-chat-robustness/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-008](../../specs/test/P1-CONV/test-plan.md#tc-p1-008) | `partial` | 重连/回放/事件去重无域测试。 |
-| `PRD-SYNC-002` | 多标签 active/ancestor/read cursor | [FE-009](../../specs/FE-009-web-multitab/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-009](../../specs/test/P1-CONV/test-plan.md#tc-p1-009) | `partial` | FE-009-web-multitab 已签部署，但无域测试。 |
-| `PRD-SYNC-003` | 发送模式/设置跨标签同步 | [FE-006](../../specs/FE-006-chat-experience/spec.md) / [COMP-composer-send-mode](../../specs/COMP-composer-send-mode/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-010](../../specs/test/P1-CONV/test-plan.md#tc-p1-010) | `partial` | 仅组件级测试。 |
-| `PRD-SYNC-004` | 未读与已读游标 | [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-011](../../specs/test/P1-CONV/test-plan.md#tc-p1-011) | `partial` | 零散实现；无统一未读口径与跨标签 AC。 |
-| `PRD-SYNC-005` | 远程访问与通知中心 | [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-012](../../specs/test/P1-CONV/test-plan.md#tc-p1-012) | `gap` | 未实现；无远程鉴权/通知产品 spec。 |
+| `PRD-CONV-001` | 会话树与主会话 | [CHG-CONV-001](../../specs/changes/CHG-CONV-001/spec.md) / [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-001](../../specs/test/P1-CONV/test-plan.md#tc-p1-001) | `partial` | 六类已建；新增集成（创建/重命名/空态）+ E2E 01a/11 切会话隔离；仍缺主会话不可归档断言、pin 未接线。 |
+| `PRD-CONV-002` | 会话生命周期 | [CHG-CONV-001](../../specs/changes/CHG-CONV-001/spec.md) / [FE-001](../../specs/FE-001-frontend-rebuild/spec.md) / [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [FE-004](../../specs/FE-004-first-run-empty/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-002](../../specs/test/P1-CONV/test-plan.md#tc-p1-002) | `partial` | 创建/重命名/归档/恢复有集成 + 后端契约 + E2E 08/09/10；“创建失败”已测；仍缺 `rename`/`toggleArchive` 的 `try/catch`（`app.tsx:450/530`）与失败反馈用例；前端无删除入口。 |
+| `PRD-CONV-003` | 会话搜索与未读 | [CHG-CONV-001](../../specs/changes/CHG-CONV-001/spec.md) / [CHG-CONV-005](../../specs/changes/CHG-CONV-005/spec.md) / [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-003](../../specs/test/P1-CONV/test-plan.md#tc-p1-003) | `partial` | 搜索：集成 + E2E 14/15 有证据；语义不一致（产品=标题搜索，UI=当前会话消息搜索）待产品决策，跨会话正文搜索缺失；未读无徽标/持久化/测试。 |
+| `PRD-CONV-004` | 消息流与渲染 | [CHG-CONV-002](../../specs/changes/CHG-CONV-002/spec.md) / [FE-001](../../specs/FE-001-frontend-rebuild/spec.md) / [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [COMP-message-colors](../../specs/COMP-message-colors/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-004](../../specs/test/P1-CONV/test-plan.md#tc-p1-004) | `partial` | 18/18 + 后端 category 14+5 + E2E 01a/02；`COMP-message-colors` 仍未签收（文档 approved“未实现”）；消息纯度无独立 AC。 |
+| `PRD-CONV-007` | 祖先消息整级加载 | [CHG-CONV-002](../../specs/changes/CHG-CONV-002/spec.md) / [FE-007](../../specs/FE-007-ancestor-messages/spec.md) / [COMP-timeline-groups](../../specs/COMP-timeline-groups/spec.md) / [COMP-timeline-tip](../../specs/COMP-timeline-tip/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-005](../../specs/test/P1-CONV/test-plan.md#tc-p1-005) | `partial` | 集成 5 条祖先用例 + E2E 04a–04d + prepend 锚定缺陷已修复；仍缺时间轴点击 ≥44px 断言、两个 COMP 签收、生产部署验证。 |
+| `PRD-CONV-005` | 发送·流式·断线重连 | [CHG-CONV-003](../../specs/changes/CHG-CONV-003/spec.md) / [FE-002](../../specs/FE-002-chat-robustness/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-006](../../specs/test/P1-CONV/test-plan.md#tc-p1-006) | `partial` | 前端重连/去重/停止集成用例已有，后端 WS 4 条契约有证据；仍缺 `clientMutationId` 后端幂等、停止真实中断验证、断网 e2e replay；“send 失败丢文本”待确认。 |
+| `PRD-CONV-006` | Composer 输入与快捷键 | [CHG-CONV-003](../../specs/changes/CHG-CONV-003/spec.md) / [FE-006](../../specs/FE-006-chat-experience/spec.md) / [COMP-composer-send-mode](../../specs/COMP-composer-send-mode/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-007](../../specs/test/P1-CONV/test-plan.md#tc-p1-007) | `partial` | 10/10 + 新增 5 条 + E2E 03；真实中文 IME 未手测；后端仅到请求校验（Lead 口径 partial）；`COMP-composer-send-mode` 未签收。 |
+| `PRD-SYNC-001` | WS 连接与重连 | [CHG-CONV-004](../../specs/changes/CHG-CONV-004/spec.md) / [FE-002](../../specs/FE-002-chat-robustness/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-008](../../specs/test/P1-CONV/test-plan.md#tc-p1-008) | `partial` | 后端生命周期/多客户端/since/错误帧 4 条 + 前端重连集成 + E2E 02；仍缺断网 e2e replay、重连 UI 端到端断言、`since` 保留窗口定义。 |
+| `PRD-SYNC-002` | 多标签 active/ancestor/read cursor | [CHG-CONV-004](../../specs/changes/CHG-CONV-004/spec.md) / [FE-009](../../specs/FE-009-web-multitab/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-009](../../specs/test/P1-CONV/test-plan.md#tc-p1-009) | `partial` | BroadcastChannel 单测 6 条已补（TC-009 missing→partial）+ E2E 13；仍缺未读游标通道（依赖 SYNC-004）、真实双 target 矩阵、`opId` 去重。 |
+| `PRD-SYNC-003` | 发送模式/设置跨标签同步 | [CHG-CONV-004](../../specs/changes/CHG-CONV-004/spec.md) / [FE-006](../../specs/FE-006-chat-experience/spec.md) / [COMP-composer-send-mode](../../specs/COMP-composer-send-mode/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-010](../../specs/test/P1-CONV/test-plan.md#tc-p1-010) | `partial` | 单标签持久化 + E2E 13 多标签发送模式；仍无跨标签单测与降级路径测试；`COMP-composer-send-mode` 未签收。 |
+| `PRD-SYNC-004` | 未读与已读游标 | [CHG-CONV-005](../../specs/changes/CHG-CONV-005/spec.md)（blocked） / [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-011](../../specs/test/P1-CONV/test-plan.md#tc-p1-011) | `partial` | 仅前端内存态；后端无 unread/read_cursor；未读 6 问未答；CHG-CONV-005 全 blocked。 |
+| `PRD-SYNC-005` | 远程访问与通知中心 | [CHG-CONV-005](../../specs/changes/CHG-CONV-005/spec.md)（blocked） / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-012](../../specs/test/P1-CONV/test-plan.md#tc-p1-012) | `gap` | 未实现；无鉴权/通知模型，与 127.0.0.1 无鉴权基线冲突；排除在本轮验收外。 |
 ### P2 · 任务与执行
 <a id="p2"></a>
 
@@ -195,7 +199,7 @@
 
 ## 5. Gap 清单（按域）
 
-- **P1 会话与消息**：`PRD-SYNC-005`（unimplemented）
+- **P1 会话与消息**：`PRD-SYNC-005`（unimplemented）；另有 SYNC-004 未读口径 blocked、SYNC-002/003 缺真实双标签矩阵（BroadcastChannel 单测已有、未读游标通道无）、CONV-005 幂等缺失、CONV-002 失败反馈缺陷、4 个 COMP 未签收（逐项见 [`CONV-CLOSURE.md`](CONV-CLOSURE.md) §3/§4）
 - **P2 任务与执行**：`PRD-TASK-001`（partial）、`PRD-TASK-002`（partial）、`PRD-TASK-003`（unimplemented）、`PRD-TASK-006`（partial）、`PRD-TASK-004`（unimplemented）、`PRD-TASK-005`（unimplemented）
 - **P3 工作台与视图**：`PRD-WORK-005`（unimplemented）
 - **P4 文件与交付物**：`PRD-FILE-001`（partial）、`PRD-FILE-005`（partial）、`PRD-FILE-002`（partial）、`PRD-FILE-006`（partial）

@@ -2,13 +2,16 @@
 
 更新时间：2026-11-21
 
-## 2026-11-21 当前状态（以此为准）
+## 2026-11-21 当前状态（以此为准；会话域批次 3/4/5 收口）
 
-- **8787**：2026-11-21 02:27 由 Lead 用 `backend/simo-live-final4.exe serve -addr 127.0.0.1:8787 -model real` 启动（`SIMO_HOME=E:\dsh_home\workspaces\agent\data`），后台 job `pwsh-109d2d9819a3486a`；`GET /api/health` **200**（db ok、modules sessions/chat/tasks/memory）；首页 build-id **`mwp7s4x6-xfe53`**；modelMode **real**。
-- **CI**：GitHub Actions run `44789876899`（head `49083c1b65ba1def9ac7d8a04365ea558c1d3622`）Linux 与 Windows 两个 job 均 **success**；optional docker/real-model smoke 为 **skipped**，不等于已跑。
-- **测试**：前端 69/69、CDP E2E 11/11、后端 223/223；12 个重启/多进程脚本 exit 0，脚本内 118 条检查 PASS（见 `docs/testing/PENDING-EVALS-20261121.md`）。
-- **计数未变**：71 PRD，**covered 0 / partial 48 / gap 23**，unimplemented **16**；不因 CI 通过升级。
-- **门禁**：`check:sdd` PASS（15 specs、COMP 5、A 134/134、manifest 33）；`check:trace` PASS（71 PRD、10 change 包、0 失败、0 提示）。
+- **产品范围**：本轮只做 **P1 会话域（CONV + SYNC）收口**；**P2–P10 冻结**，未改其功能/AC。交接见根目录 [`HANDOFF.md`](../../HANDOFF.md)。
+- **8787**：保持 2026-11-21 02:27 由 Lead 用 `backend/simo-live-final4.exe serve -addr 127.0.0.1:8787 -model real` 启动的实例（`SIMO_HOME=E:\dsh_home\workspaces\agent\data`，build-id `mwp7s4x6-xfe53`，modelMode real）；本批次**未重启 8787、未在 8787 真实数据上重跑全链路**。
+- **测试（本机实测，2026-11-21）**：前端 **115/115 PASS**（13 文件，`--pool=threads`，exit 0；typecheck exit 0；`library.tsx` 覆盖率 Stmts 82.83 / Branch 83.64 / Funcs 84.14 / Lines 85.88）；后端 **246 个顶层测试**（`go test ./... -count=1` exit 0，16 包 ok）；CDP E2E **19/19 PASS ×2**（CDP runner，**非 Playwright**，mock 后端 **19230**，非 8787）。证据 [`docs/testing/CONV-EVIDENCE-20261121.md`](../testing/CONV-EVIDENCE-20261121.md)。
+- **修复**：`backend/cmd/simo/m13_test.go::TestM13PauseAndRunNow` 补 `waitScheduleStatus(..., "done", 15s)` 修 CI Windows TempDir 文件锁（不改断言、不 skip）；`frontend/src/app.tsx` 修祖先 prepend 滚动锚定二次 apply 回写旧值。
+- **计数未变**：P1 12 PRD **0 covered / 11 partial / 1 gap（SYNC-005）**，用例 **4 pass / 9 partial / 2 missing**；全仓 71 PRD **0 covered / 48 partial / 23 gap**，unimplemented **16**；新增测试**不升级 covered**。
+- **CI**：收口提交 `<COMMIT_SHA>`（parent `1592a90c2e530de04445817916a4b7d052bb7cf0`）；本次 run **待验证**，结论以 GitHub Actions 为准；push 前最近一次失败 run `44867249776`（旧 head 的 m13 文件锁，本次已修）。
+- **门禁**：`check:sdd` PASS（15 specs、COMP 5、A 134/134、manifest 33）；`check:trace` PASS（71 PRD、15 change 包、0 失败、0 提示）。
+- **收口总账**：[`docs/product/CONV-CLOSURE.md`](../product/CONV-CLOSURE.md)。
 
 ## 2026-11-20 历史状态（已被 2026-11-21 取代）
 

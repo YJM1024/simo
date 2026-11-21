@@ -266,4 +266,7 @@ func TestM13PauseAndRunNow(t *testing.T) {
 	if current := getSchedule(t, ts.URL, id); current.RunCount < 1 {
 		t.Fatalf("run-now 未计数: %+v", current)
 	}
+	// RunCount 先于投放结束自增；等 LastStatus=done 确保调度 goroutine 不再持有 DB，
+	// 否则测试退出时 Windows TempDir 清理会因文件占用失败。
+	waitScheduleStatus(t, ts.URL, id, "done", 15*time.Second)
 }

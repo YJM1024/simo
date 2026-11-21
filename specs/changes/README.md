@@ -29,9 +29,19 @@ specs/changes/CHG-<DOMAIN>-<NNN>/
 
 ## 当前状态
 
-- 新建变更包：**0**；
+- 新建变更包：**5**（2026-11-21，P1 会话域收口；均为七件套，无 `design.md`，组件/后端按 N/A+理由写在包内）；
 - 历史 FE 变更（只读归档）：10 个，索引见 [`../README.md`](../README.md)；
 - 不预建空目录；没有 `proposal.md` 与 `spec.md` 的目录视为无效变更包。
+
+| CHANGE | 覆盖 PRD | 状态 | 说明 |
+|---|---|---|---|
+| [`CHG-CONV-001`](CHG-CONV-001/spec.md) | CONV-001 / CONV-002 / CONV-003 | `partial` | 会话管理：树/生命周期/搜索与未读；生命周期失败反馈有缺陷 |
+| [`CHG-CONV-002`](CHG-CONV-002/spec.md) | CONV-004 / CONV-007 | `partial` | 消息与渲染：消息流/祖先加载/时间轴；两个 COMP 未签收 |
+| [`CHG-CONV-003`](CHG-CONV-003/spec.md) | CONV-005 / CONV-006 | `partial` | 输入与发送：发送/流式/Composer；重连与幂等缺证据 |
+| [`CHG-CONV-004`](CHG-CONV-004/spec.md) | SYNC-001 / SYNC-002 / SYNC-003 | `partial` | 多标签与同步：WS/三通道/发送模式；多标签零测试 |
+| [`CHG-CONV-005`](CHG-CONV-005/spec.md) | SYNC-004 / SYNC-005 | `blocked` | 未读与通知：无后端/无口径/与无鉴权基线冲突 |
+
+> 这 5 个包只做“可追溯收口”，**不改变** P1 覆盖口径（0 covered / 11 partial / 1 gap）；缺口总账见 [`../../docs/product/CONV-CLOSURE.md`](../../docs/product/CONV-CLOSURE.md)。
 
 ## 门禁
 

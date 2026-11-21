@@ -13,10 +13,19 @@
  *     (default http://127.0.0.1:9223, override with E2E_CDP_URL);
  *   - starts an isolated backend on a dedicated port (default 19230) with an
  *     empty SIMO_HOME and mock model;
- *   - executes the same 11 scenarios as specs/01..07 with real browser
- *     assertions and screenshots on failure.
+ *   - executes real-browser assertions with screenshots on failure.
  *
- * It does NOT skip tests and does NOT relax assertions.
+ * Scope: P1-CONV (会话/对话) only. The 01..07 scenarios mirror specs/01..07
+ * (01,02,03,04a-04d,05,06 are session-domain; 07 is the workbench deliverable
+ * download, which belongs to the frozen P2 workbench and is therefore NOT run
+ * by default — opt in with E2E_INCLUDE_OOS=1). 08..16 add the P1-CONV gaps:
+ * new-session lazy draft, rename, archive/restore, session switching,
+ * long-scroll/jump-bottom/timeline jump, multi-tab sync, search, session-list
+ * failure+retry, and send failure (no fake persistence).
+ *
+ * It does NOT relax assertions. The only skipped scenarios are the explicitly
+ * out-of-scope (OOS) ones above, and every one of them is reported in
+ * report/cdp/results.json + summary.md as skipped, never as passed.
  */
 import { spawn } from 'node:child_process'
 import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -24,7 +33,11 @@ import { setTimeout as sleep } from 'node:timers/promises'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright'
-import { expect } from '@playwright/test'
+import { expect as baseExpect } from '@playwright/test'
+
+// 只放宽「等待可见/文本出现」的等待时间，不放宽任何期望值：本机负载高时单次
+// 断言可能超过 Playwright 默认 5s（实测 04a/13 偶发），但语义断言完全保持原样。
+const expect = baseExpect.configure({ timeout: 15_000 })
 
 const HERE = fileURLToPath(new URL('.', import.meta.url))
 const E2E_DIR = resolve(HERE, '..')
@@ -35,6 +48,8 @@ const REPORT_DIR = resolve(E2E_DIR, 'report', 'cdp')
 const CDP_URL = process.env.E2E_CDP_URL ?? 'http://127.0.0.1:9223'
 const PORT = Number(process.env.E2E_CDP_PORT ?? 19230)
 const API_BASE = `http://127.0.0.1:${PORT}`
+// 07 是 P2 工作台交付物下载，超出当前 P1-CONV 产品范围；默认不跑，显式 opt-in。
+const INCLUDE_OOS = process.env.E2E_INCLUDE_OOS === '1'
 
 const results = []
 let apiChild = null
@@ -302,6 +317,26 @@ async function dispatchClick(page, selector) {
   await page.locator(selector).first().dispatchEvent('click')
 }
 
+async function listAllSessions() {
+  const data = await request('/api/sessions')
+  return data.sessions ?? []
+}
+
+async function findSessionById(sessionId) {
+  const sessions = await listAllSessions()
+  return sessions.find((session) => session.id === sessionId) ?? null
+}
+
+function sessionRow(page, title) {
+  return page.locator('.session-row', { has: page.locator('.session-title', { hasText: title }) })
+}
+
+async function openSecondTab(context) {
+  const tab = await context.newPage()
+  tab.setDefaultTimeout(15_000)
+  return tab
+}
+
 async function seedChain(childMessages) {
   const suffix = unique('E2E 链路')
   const mainText = `${suffix} 根消息`
@@ -318,8 +353,8 @@ async function seedChain(childMessages) {
 }
 
 const suite = []
-function scenario(name, viewport, fn) {
-  suite.push({ name, viewport, fn })
+function scenario(name, viewport, fn, options = {}) {
+  suite.push({ name, viewport, fn, oos: Boolean(options.oos) })
 }
 
 // 01a / E2E-SHELL-001
@@ -608,6 +643,390 @@ scenario('07 交付物右栏/工作台可见并真实下载', { width: 1600, hei
   const path = await download.path()
   expect(path, '下载文件应落盘').toBeTruthy()
   expect(readFileSync(path, 'utf8')).toBe('TODO\n')
+}, { oos: true })
+
+// 08 / E2E-CONV-NEW — 新建会话走懒草稿：本地行 + 空态 + 首条消息落库物化
+scenario('08 新建会话空态与首条消息物化', { width: 1600, height: 1000 }, async (page) => {
+  const seedTitle = unique('E2E 新建前置')
+  const seed = await createSession('main', seedTitle)
+  await seedChat(seed.id, unique('新建前置消息'))
+
+  await gotoHome(page)
+  await sessionRow(page, seedTitle).first().click()
+  await expect(page.locator('.context-title h1')).toHaveText(seedTitle)
+  await expect(page.locator('.conversation-panel.is-ready')).toBeVisible({ timeout: 15_000 })
+
+  const sessionsBefore = (await listAllSessions()).length
+  const rowsBefore = await page.locator('.session-row').count()
+
+  await page.locator('button[aria-label="新建会话"]').first().click()
+  await expect(page.locator('.context-title h1')).toHaveText('新会话')
+  await expect(page.locator('.conversation-panel.is-empty')).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('.overview-empty b').first()).toHaveText('开始和司墨对话')
+  // 注意：EmptyState 的结构是 .overview-empty > span.overview-empty-mark(装饰点) + div > span(description)
+  await expect(page.locator('.overview-empty div > span').first()).toContainText('说需求、记信息、派任务')
+  await expect(page.locator('.overview-empty button', { hasText: '发送第一条消息' })).toBeVisible()
+  await expect(page.locator('.session-row')).toHaveCount(rowsBefore + 1)
+  // 懒草稿只在本地内存，会话树里还没有它（首条消息才物化）
+  expect((await listAllSessions()).length, '空草稿不应立即落库').toBe(sessionsBefore)
+
+  await page.locator('.overview-empty button', { hasText: '发送第一条消息' }).click()
+  await expect(page.locator('textarea[aria-label="消息输入框"]')).toBeFocused()
+
+  const firstText = unique('草稿首条消息')
+  await sendViaComposer(page, firstText)
+  await expect(page.locator('.conversation-panel.is-ready')).toBeVisible({ timeout: 20_000 })
+  await expect(page.locator('.msg.from-user').filter({ hasText: firstText })).toBeVisible()
+  await expect(page.locator('.msg.from-agent').filter({ hasText: 'Mock 模型' }).first()).toBeVisible({ timeout: 20_000 })
+  await expect(page.locator('.context-title h1')).toHaveText('新会话')
+  await expect.poll(async () => (await listAllSessions()).length, {
+    timeout: 15_000,
+    message: '首条消息后草稿应物化为真实会话',
+  }).toBe(sessionsBefore + 1)
+  await expect(page.locator('.session-row', { has: page.locator('.session-title', { hasText: '新会话' }) })).toHaveCount(1)
+})
+
+// 09 / E2E-CONV-RENAME — 重命名四态：空值不提交、Escape 取消、Enter 提交、blur 提交
+scenario('09 重命名 Enter/Escape/空值/blur 与持久化', { width: 1600, height: 1000 }, async (page) => {
+  const title = unique('E2E 重命名原')
+  const session = await createSession('main', title)
+  await seedChat(session.id, unique('重命名预热消息'))
+  await gotoHome(page)
+  const row = sessionRow(page, title).first()
+  await row.click()
+  await expect(page.locator('.context-title h1')).toHaveText(title)
+  const input = page.locator('input.session-rename')
+
+  // 空值：关闭编辑但不提交
+  await row.dblclick()
+  await expect(input).toBeVisible()
+  await input.fill('   ')
+  await input.press('Enter')
+  await expect(input).toHaveCount(0)
+  expect((await findSessionById(session.id))?.title, '空标题不应提交').toBe(title)
+
+  // Escape：取消编辑，不提交
+  await row.dblclick()
+  await expect(input).toBeVisible()
+  await input.fill(unique('应被丢弃的标题'))
+  await input.press('Escape')
+  await expect(input).toHaveCount(0)
+  expect((await findSessionById(session.id))?.title, 'Escape 不应提交').toBe(title)
+  await expect(page.locator('.context-title h1')).toHaveText(title)
+
+  // Enter 提交：API 持久化 + 侧栏/标题同步
+  const renamed = unique('E2E 重命名落库')
+  await row.dblclick()
+  await input.fill(renamed)
+  await input.press('Enter')
+  await expect(input).toHaveCount(0)
+  await expect.poll(async () => (await findSessionById(session.id))?.title, { timeout: 15_000 }).toBe(renamed)
+  await expect(page.locator('.context-title h1')).toHaveText(renamed)
+  await expect(sessionRow(page, renamed)).toHaveCount(1)
+  await expect(sessionRow(page, title)).toHaveCount(0)
+
+  // blur 提交
+  const blurred = unique('E2E 失焦落库')
+  await sessionRow(page, renamed).first().dblclick()
+  await input.fill(blurred)
+  await page.locator('.context-title h1').click()
+  await expect.poll(async () => (await findSessionById(session.id))?.title, { timeout: 15_000 }).toBe(blurred)
+  await expect(page.locator('.context-title h1')).toHaveText(blurred)
+  await expect(sessionRow(page, blurred)).toHaveCount(1)
+})
+
+// 10 / E2E-CONV-ARCHIVE — 归档、显示归档、只读与恢复
+scenario('10 归档、显示归档、只读与恢复', { width: 1600, height: 1000 }, async (page) => {
+  const title = unique('E2E 归档会话')
+  const warm = unique('归档前消息')
+  const session = await createSession('main', title)
+  await seedChat(session.id, warm)
+  await gotoHome(page)
+  const row = sessionRow(page, title).first()
+  await row.click()
+  await expect(page.locator('.context-title h1')).toHaveText(title)
+  await expect(page.locator('.msg.from-user').filter({ hasText: warm })).toBeVisible()
+
+  await row.locator('.session-more').click()
+  await expect(page.locator('.session-menu')).toBeVisible()
+  await expect(page.locator('.session-menu button')).toHaveText('归档')
+  await page.locator('.session-menu button').click()
+  await expect.poll(async () => (await findSessionById(session.id))?.archived, { timeout: 15_000 }).toBe(1)
+  // 默认列表隐藏归档会话，但当前会话仍是它（只读）
+  await expect(sessionRow(page, title)).toHaveCount(0)
+  await expect(page.locator('.context-title h1')).toHaveText(title)
+  await expect(page.locator('.context-title .badge', { hasText: '已归档' })).toBeVisible()
+  const box = page.locator('textarea[aria-label="消息输入框"]')
+  await expect(box).toBeDisabled()
+  await expect(page.locator('.msg.from-user').filter({ hasText: warm })).toBeVisible()
+
+  // 显示归档 → 归档行带 is-archived
+  const toggle = page.locator('.side-label button', { hasText: '显示归档' })
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+  const archivedRow = page.locator('.session-row.is-archived', { has: page.locator('.session-title', { hasText: title }) })
+  await expect(archivedRow).toHaveCount(1)
+
+  // 恢复
+  await archivedRow.locator('.session-more').click()
+  await expect(page.locator('.session-menu button')).toHaveText('恢复')
+  await page.locator('.session-menu button').click()
+  await expect.poll(async () => (await findSessionById(session.id))?.archived, { timeout: 15_000 }).toBe(0)
+  await expect(page.locator('.context-title .badge', { hasText: '已归档' })).toHaveCount(0)
+  await expect(box).toBeEnabled()
+  await expect(page.locator('.session-row.is-archived')).toHaveCount(0)
+  await expect(sessionRow(page, title)).toHaveCount(1)
+
+  // 关闭显示归档，默认列表仍可见
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+  await expect(sessionRow(page, title)).toHaveCount(1)
+
+  // 恢复后可继续发消息
+  const after = unique('恢复后消息')
+  await sendViaComposer(page, after)
+  await expect(page.locator('.msg.from-user').filter({ hasText: after })).toBeVisible({ timeout: 20_000 })
+})
+
+// 11 / E2E-CONV-SWITCH — 会话切换与消息隔离
+scenario('11 会话切换与消息隔离', { width: 1600, height: 1000 }, async (page) => {
+  const aTitle = unique('E2E 切换甲')
+  const bTitle = unique('E2E 切换乙')
+  const aText = unique('甲会话专属消息')
+  const bText = unique('乙会话专属消息')
+  const a = await createSession('main', aTitle)
+  const b = await createSession('main', bTitle)
+  await seedChat(a.id, aText)
+  await seedChat(b.id, bText)
+
+  await gotoHome(page)
+  await sessionRow(page, aTitle).first().click()
+  await expect(page.locator('.context-title h1')).toHaveText(aTitle)
+  await expect(page.locator('.conversation-panel.is-ready')).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('.msg.from-user').filter({ hasText: aText })).toBeVisible()
+  await expect(page.locator('.msg.from-user').filter({ hasText: bText })).toHaveCount(0)
+  await expect(page.locator('.tlg-session')).toHaveCount(1)
+  await expect(page.locator('.tlg-session.is-current-session')).toHaveAttribute('aria-label', `当前会话：${aTitle}`)
+
+  await sessionRow(page, bTitle).first().click()
+  await expect(page.locator('.context-title h1')).toHaveText(bTitle)
+  await expect(page.locator('.conversation-panel.is-ready')).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('.msg.from-user').filter({ hasText: bText })).toBeVisible()
+  await expect(page.locator('.msg.from-user').filter({ hasText: aText })).toHaveCount(0)
+
+  await sessionRow(page, aTitle).first().click()
+  await expect(page.locator('.context-title h1')).toHaveText(aTitle)
+  await expect(page.locator('.msg.from-user').filter({ hasText: aText })).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('.msg.from-user').filter({ hasText: bText })).toHaveCount(0)
+  await expect(page.locator('.tlg-session')).toHaveCount(1)
+
+  const aMessages = await getMessages(a.id)
+  const bMessages = await getMessages(b.id)
+  expect(aMessages.some((message) => message.text.includes(aText)), '甲会话应含甲消息').toBe(true)
+  expect(aMessages.some((message) => message.text.includes(bText)), '甲会话不应含乙消息').toBe(false)
+  expect(bMessages.some((message) => message.text.includes(bText)), '乙会话应含乙消息').toBe(true)
+  expect(bMessages.some((message) => message.text.includes(aText)), '乙会话不应含甲消息').toBe(false)
+})
+
+// 12 / E2E-CONV-SCROLL — 长消息滚动、回到底部与时间轴跳转
+scenario('12 长消息滚动、回到底部与时间轴跳转', { width: 1600, height: 900 }, async (page) => {
+  const title = unique('E2E 长滚动会话')
+  const session = await createSession('main', title)
+  const total = 16
+  for (let index = 0; index < total; index += 1) {
+    await seedChat(session.id, `${title} 长消息 ${String(index + 1).padStart(2, '0')}`)
+  }
+  await openSession(page, title)
+  await expect(page.locator('.conversation-panel.is-ready')).toBeVisible({ timeout: 15_000 })
+  const scroller = page.locator('.conversation-scroll')
+  await expect.poll(async () => scroller.evaluate((element) => element.scrollHeight - element.clientHeight), {
+    message: '长会话应可滚动',
+  }).toBeGreaterThan(0)
+  await expect.poll(async () => scroller.evaluate((element) => element.scrollHeight - element.scrollTop - element.clientHeight), {
+    message: '首屏应贴底',
+  }).toBeLessThan(4)
+
+  const messageCount = await page.locator('.conversation-scroll .msg').count()
+  expect(messageCount).toBeGreaterThanOrEqual(total * 2)
+  await expect(page.locator('.tl-bar')).toHaveCount(messageCount)
+
+  // 滚到顶部 → 出现「回到底部」且时间轴标记唯一当前项
+  await scroller.evaluate((element) => { element.scrollTop = 0 })
+  await expect(page.locator('.jump-bottom')).toBeVisible({ timeout: 10_000 })
+  await expect(page.locator('.jump-bottom')).toContainText('回到底部')
+  await expect(page.locator('.tl-bar[aria-current="true"]')).toHaveCount(1)
+
+  // 时间轴跳转到第 11 条消息：滚到视口顶部
+  const targetId = await page.locator('.conversation-scroll .msg').nth(10).getAttribute('data-message-id')
+  await page.locator('.tl-bar').nth(10).click()
+  await expect.poll(async () => {
+    const offset = targetId ? await messageOffsetInScroller(page, targetId) : null
+    return offset === null ? null : Math.abs(offset)
+  }, { message: '时间轴点击应把目标消息滚到视口顶部' }).toBeLessThan(4)
+  await expect(page.locator('.tl-bar[aria-current="true"]')).toHaveCount(1)
+  await expect(page.locator('.tl-bar.is-current')).toHaveCount(1)
+
+  // 回到底部
+  await page.locator('.jump-bottom').click()
+  await expect.poll(async () => scroller.evaluate((element) => element.scrollHeight - element.scrollTop - element.clientHeight)).toBeLessThan(4)
+  await expect(page.locator('.jump-bottom')).toHaveCount(0)
+
+  // 跳到首条：滚回顶部并再次出现「回到底部」
+  await page.locator('.tl-bar').first().click()
+  await expect(page.locator('.conversation-scroll .msg').first()).toBeInViewport()
+  await expect(page.locator('.jump-bottom')).toBeVisible()
+})
+
+// 13 / E2E-CONV-TABS — 多标签：active 会话、发送模式与 WS 实时同步
+scenario('13 多标签 active 会话、发送模式与 WS 同步', { width: 1440, height: 900 }, async (page, context) => {
+  const title = unique('E2E 多标签会话')
+  const session = await createSession('main', title)
+  await seedChat(session.id, unique('多标签预热消息'))
+
+  const tabB = await openSecondTab(context)
+  try {
+    await gotoHome(page)
+    await gotoHome(tabB)
+    // 等 B 的首次 active 广播落定，避免「A 的点击早于 B 的初始发布」这种竞态
+    await sleep(400)
+
+    // A 切会话 → B 通过 BroadcastChannel 跟随
+    await sessionRow(page, title).first().click()
+    await expect(page.locator('.context-title h1')).toHaveText(title)
+    await expect(tabB.locator('.context-title h1')).toHaveText(title, { timeout: 15_000 })
+
+    // A 发消息 → B 通过 WS 实时收到
+    const text = unique('跨标签实时消息')
+    await sendViaComposer(page, text)
+    await expect(page.locator('.msg.from-user').filter({ hasText: text })).toBeVisible({ timeout: 20_000 })
+    await expect(tabB.locator('.msg.from-user').filter({ hasText: text })).toBeVisible({ timeout: 20_000 })
+
+    // A 切换发送模式 → B 同步
+    await page.locator('.composer-hint-icon').click()
+    await expect(page.locator('.composer-hint-icon')).toHaveAttribute('aria-pressed', 'true')
+    await expect(tabB.locator('.composer-hint-icon')).toHaveAttribute('aria-pressed', 'true', { timeout: 10_000 })
+
+    // B 在反转模式下 Enter 只换行、不发送
+    const boxB = tabB.locator('textarea[aria-label="消息输入框"]')
+    await boxB.click()
+    await boxB.fill(unique('反转模式换行'))
+    const beforeCount = await tabB.locator('.msg.from-user').count()
+    await boxB.press('Enter')
+    await expect(boxB).toHaveValue(/\n$/)
+    expect(await tabB.locator('.msg.from-user').count(), '反转模式下 Enter 不应发送').toBe(beforeCount)
+
+    // B Shift+Enter 发送 → A 通过 WS 收到
+    const reply = unique('跨标签回复消息')
+    await boxB.fill(reply)
+    await boxB.press('Shift+Enter')
+    await expect(tabB.locator('.msg.from-user').filter({ hasText: reply })).toBeVisible({ timeout: 20_000 })
+    await expect(page.locator('.msg.from-user').filter({ hasText: reply })).toBeVisible({ timeout: 20_000 })
+  } finally {
+    await tabB.close()
+  }
+})
+
+// 14 / E2E-CONV-SEARCH — 会话搜索：标题命中、消息命中与无匹配空态
+scenario('14 会话搜索标题/消息命中与无匹配空态', { width: 1600, height: 1000 }, async (page) => {
+  const titleToken = unique('标题令牌')
+  const msgToken = unique('正文令牌')
+  const aTitle = `E2E 搜索甲 ${titleToken}`
+  const bTitle = unique('E2E 搜索乙')
+  const a = await createSession('main', aTitle)
+  const b = await createSession('main', bTitle)
+  await seedChat(a.id, unique('搜索预热甲'))
+  // 前端 searchMessages 不传 sessionId，服务端按默认会话 main 过滤，因此正文命中种子放 main
+  await seedChat('main', `主会话正文包含 ${msgToken}`)
+  await seedChat(b.id, unique('搜索预热乙'))
+
+  await gotoHome(page)
+  const search = page.locator('input[aria-label="搜索会话"]')
+  const rowA = sessionRow(page, aTitle)
+  const rowB = sessionRow(page, bTitle)
+  const rowMain = sessionRow(page, '主会话')
+
+  // 标题命中（客户端过滤，跨会话）
+  await search.fill(titleToken)
+  await expect(rowA).toHaveCount(1, { timeout: 15_000 })
+  await expect(rowB).toHaveCount(0)
+
+  // 正文命中（服务端 /api/messages/search 结果按 sessionId 命中）
+  await search.fill(msgToken)
+  await expect(rowMain).toHaveCount(1, { timeout: 15_000 })
+  await expect(rowA).toHaveCount(0)
+  await expect(page.locator('.side-empty')).toHaveCount(0)
+
+  // 无匹配空态
+  await search.fill(unique('绝无匹配令牌'))
+  await expect(page.locator('.side-empty')).toHaveText('没有匹配的会话', { timeout: 15_000 })
+
+  // 清空恢复
+  await search.fill('')
+  await expect(page.locator('.side-empty')).toHaveCount(0)
+  await expect(rowA).toHaveCount(1)
+  await expect(rowB).toHaveCount(1)
+})
+
+// 15 / E2E-CONV-LIST-ERROR — 会话列表加载失败与重试恢复
+scenario('15 会话列表加载失败与重试恢复', { width: 1600, height: 1000 }, async (page) => {
+  const title = unique('E2E 列表重试')
+  const session = await createSession('main', title)
+  await seedChat(session.id, unique('列表重试预热'))
+
+  let failTree = true
+  await page.route(/\/api\/sessions\/tree/, async (route) => {
+    if (!failTree) { await route.continue(); return }
+    await route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ ok: false, error: 'boom' }) })
+  })
+
+  await gotoHome(page)
+  const sidebarError = page.locator('.sidebar .state-error[role="alert"]')
+  await expect(sidebarError).toBeVisible({ timeout: 15_000 })
+  await expect(sidebarError).toContainText('会话加载失败')
+  await expect(sidebarError).toContainText('请求失败（500）')
+  await expect(page.locator('.session-row')).toHaveCount(0)
+  await expect(page.locator('.sidebar .state-loading')).toHaveCount(0)
+
+  failTree = false
+  await sidebarError.locator('button').click()
+  await expect(sessionRow(page, title)).toHaveCount(1, { timeout: 15_000 })
+  await expect(sidebarError).toHaveCount(0)
+
+  // 刷新按钮同样从真实接口取数，且不再出现错误态
+  await page.locator('button[aria-label="刷新会话"]').click()
+  await expect(sessionRow(page, title)).toHaveCount(1)
+  await expect(page.locator('.sidebar .state-error')).toHaveCount(0)
+})
+
+// 16 / E2E-CONV-SEND-ERROR — 发送失败提示且不假落库，恢复后重发成功
+scenario('16 发送失败提示且不假落库，恢复后重发成功', { width: 1440, height: 900 }, async (page) => {
+  const title = unique('E2E 发送失败')
+  const session = await createSession('main', title)
+  await seedChat(session.id, unique('发送失败预热'))
+  await openSession(page, title)
+  await expect(page.locator('.conversation-panel.is-ready')).toBeVisible({ timeout: 15_000 })
+
+  let failChat = true
+  await page.route(/\/api\/chat$/, async (route) => {
+    if (!failChat) { await route.continue(); return }
+    await route.fulfill({ status: 502, contentType: 'application/json', body: JSON.stringify({ ok: false, error: 'boom' }) })
+  })
+
+  const text = unique('发送失败消息')
+  await sendViaComposer(page, text)
+  const composerError = page.locator('.composer-error[role="alert"]')
+  await expect(composerError).toBeVisible({ timeout: 15_000 })
+  await expect(composerError).toHaveText('请求失败（502），请稍后重试')
+  await expect(page.locator('.msg.from-user').filter({ hasText: text })).toHaveCount(0)
+  const messagesAfterFailure = await getMessages(session.id)
+  expect(messagesAfterFailure.some((message) => message.text.includes(text)), '失败的发送不应落库').toBe(false)
+
+  failChat = false
+  await page.unroute(/\/api\/chat$/)
+  await sendViaComposer(page, text)
+  await expect(page.locator('.msg.from-user').filter({ hasText: text })).toBeVisible({ timeout: 20_000 })
+  await expect(page.locator('.msg.from-agent').filter({ hasText: 'Mock 模型' }).first()).toBeVisible({ timeout: 20_000 })
+  await expect(composerError).toHaveCount(0)
 })
 
 async function run() {
@@ -617,7 +1036,15 @@ async function run() {
   const browser = await chromium.connectOverCDP(CDP_URL)
   console.log(`[cdp] connected: ${CDP_URL} version=${browser.version()}`)
 
-  for (const item of suite) {
+  // P1-CONV 范围：07（工作台交付物，P2 冻结）默认不跑，只有显式 E2E_INCLUDE_OOS=1 才执行。
+  // 跳过项在报告里标 SKIPPED，绝不混进 passed。
+  const selected = INCLUDE_OOS ? suite : suite.filter((item) => !item.oos)
+  const skippedOos = (INCLUDE_OOS ? [] : suite.filter((item) => item.oos)).map((item) => item.name)
+  if (skippedOos.length > 0) {
+    console.log(`[cdp] skip out-of-scope: ${skippedOos.join(', ')} (E2E_INCLUDE_OOS=1 to include)`)
+  }
+
+  for (const item of selected) {
     const startedAt = Date.now()
     let page
     try {
@@ -634,7 +1061,7 @@ async function run() {
       })
       page = await context.newPage()
       page.setDefaultTimeout(15_000)
-      await item.fn(page)
+      await item.fn(page, context)
       results.push({ name: item.name, ok: true, durationMs: Date.now() - startedAt })
       console.log(`PASS ${item.name} (${Date.now() - startedAt}ms)`)
       await context.close()
@@ -659,19 +1086,33 @@ async function run() {
   const failed = results.length - passed
   writeFileSync(
     join(REPORT_DIR, 'results.json'),
-    `${JSON.stringify({ cdpUrl: CDP_URL, apiBase: API_BASE, passed, failed, total: results.length, results }, null, 2)}\n`,
+    `${JSON.stringify({
+      cdpUrl: CDP_URL,
+      apiBase: API_BASE,
+      scope: 'P1-CONV',
+      includeOos: INCLUDE_OOS,
+      inScope: selected.length,
+      passed,
+      failed,
+      skippedOos,
+      total: results.length,
+      results,
+    }, null, 2)}\n`,
   )
   const lines = [
     '# CDP E2E 运行结果',
     '',
     `- CDP: ${CDP_URL}`,
     `- API: ${API_BASE}`,
+    '- 范围: P1-CONV（会话/对话）',
     `- 时间: ${new Date().toISOString()}`,
     `- 结果: ${passed}/${results.length} passed, ${failed} failed`,
+    `- 跳过（P2 冻结，非本范围）: ${skippedOos.length > 0 ? skippedOos.join('、') : '无'}`,
     '',
     '| 场景 | 结果 | 耗时(ms) |',
     '|---|---|---|',
     ...results.map((result) => `| ${result.name} | ${result.ok ? 'PASS' : 'FAIL'} | ${result.durationMs} |`),
+    ...skippedOos.map((name) => `| ${name} | SKIPPED (OOS) | - |`),
   ]
   if (failed > 0) {
     lines.push('', '## 失败原因', '')

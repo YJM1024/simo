@@ -1,64 +1,110 @@
 {
   "cdpUrl": "http://127.0.0.1:9223",
   "apiBase": "http://127.0.0.1:19230",
-  "passed": 11,
+  "scope": "P1-CONV",
+  "includeOos": false,
+  "inScope": 19,
+  "passed": 19,
   "failed": 0,
-  "total": 11,
+  "skippedOos": [
+    "07 交付物右栏/工作台可见并真实下载"
+  ],
+  "total": 19,
   "results": [
     {
       "name": "01a 首屏结构（消息 + 时间轴 + 右栏）",
       "ok": true,
-      "durationMs": 903
+      "durationMs": 1223
     },
     {
       "name": "01b 375 宽度无横向溢出、时间轴/侧栏隐藏",
       "ok": true,
-      "durationMs": 455
+      "durationMs": 604
     },
     {
       "name": "02 Enter 发送、WS 流式与 mock 回复",
       "ok": true,
-      "durationMs": 1429
+      "durationMs": 1448
     },
     {
       "name": "03 Enter/Shift+Enter 与反转模式",
       "ok": true,
-      "durationMs": 1175
+      "durationMs": 1589
     },
     {
       "name": "04a FE-007 逐级加载、时间轴增长、prepend 锚定",
       "ok": true,
-      "durationMs": 5881
+      "durationMs": 12136
     },
     {
       "name": "04b FE-007 413 显示错误且不插入祖先消息",
       "ok": true,
-      "durationMs": 1385
+      "durationMs": 2827
     },
     {
       "name": "04c FE-007 403 显示无权限",
       "ok": true,
-      "durationMs": 1417
+      "durationMs": 2539
     },
     {
       "name": "04d FE-007 空上级提示并允许继续向上",
       "ok": true,
-      "durationMs": 1113
+      "durationMs": 1530
     },
     {
       "name": "05 消息接口 500 错误态与重试恢复",
       "ok": true,
-      "durationMs": 918
+      "durationMs": 1420
     },
     {
       "name": "06 右栏任务点击定位并高亮消息",
       "ok": true,
-      "durationMs": 8999
+      "durationMs": 9357
     },
     {
-      "name": "07 交付物右栏/工作台可见并真实下载",
+      "name": "08 新建会话空态与首条消息物化",
       "ok": true,
-      "durationMs": 1456
+      "durationMs": 1854
+    },
+    {
+      "name": "09 重命名 Enter/Escape/空值/blur 与持久化",
+      "ok": true,
+      "durationMs": 1790
+    },
+    {
+      "name": "10 归档、显示归档、只读与恢复",
+      "ok": true,
+      "durationMs": 1994
+    },
+    {
+      "name": "11 会话切换与消息隔离",
+      "ok": true,
+      "durationMs": 1965
+    },
+    {
+      "name": "12 长消息滚动、回到底部与时间轴跳转",
+      "ok": true,
+      "durationMs": 6413
+    },
+    {
+      "name": "13 多标签 active 会话、发送模式与 WS 同步",
+      "ok": true,
+      "durationMs": 10889
+    },
+    {
+      "name": "14 会话搜索标题/消息命中与无匹配空态",
+      "ok": true,
+      "durationMs": 2933
+    },
+    {
+      "name": "15 会话列表加载失败与重试恢复",
+      "ok": true,
+      "durationMs": 1276
+    },
+    {
+      "name": "16 发送失败提示且不假落库，恢复后重发成功",
+      "ok": true,
+      "durationMs": 1606
     }
   ]
 }

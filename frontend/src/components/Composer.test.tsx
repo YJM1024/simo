@@ -116,4 +116,69 @@ describe('Composer', () => {
     await user.click(screen.getByRole('button', { name: '发送' }))
     expect(onSend).toHaveBeenCalledWith(text)
   })
+
+  it('migrates the legacy send-mode localStorage key on mount', () => {
+    localStorage.clear()
+    localStorage.setItem('simo.composer.send-mode', 'enter-newline')
+    setup()
+    expect(screen.getByText('Enter 换行，Shift+Enter 发送')).toBeInTheDocument()
+    expect(localStorage.getItem('simo.composer.sendMode')).toBe('shift-enter')
+    expect(localStorage.getItem('simo.composer.send-mode')).toBeNull()
+  })
+
+  it('keeps the toggle aria-pressed and accessible name in sync with the mode', async () => {
+    localStorage.clear()
+    const user = userEvent.setup()
+    setup()
+    const toggle = screen.getByRole('button', { name: /切换发送方式/ })
+    expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    expect(toggle).toHaveAccessibleName(/当前 Enter 发送/)
+    await user.click(toggle)
+    expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    expect(toggle).toHaveAccessibleName(/当前 Shift\+Enter 发送/)
+    await user.click(toggle)
+    expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByText('Enter 发送，Shift+Enter 换行')).toBeInTheDocument()
+  })
+
+  it('follows send-mode changes published by another tab through the storage event', () => {
+    localStorage.clear()
+    setup()
+    expect(screen.getByText('Enter 发送，Shift+Enter 换行')).toBeInTheDocument()
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: 'simo.composer.sendMode', newValue: 'shift-enter' }))
+    })
+    expect(screen.getByText('Enter 换行，Shift+Enter 发送')).toBeInTheDocument()
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: 'simo.composer.sendMode', newValue: 'enter' }))
+    })
+    expect(screen.getByText('Enter 发送，Shift+Enter 换行')).toBeInTheDocument()
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: 'unrelated', newValue: 'shift-enter' }))
+    })
+    expect(screen.getByText('Enter 发送，Shift+Enter 换行')).toBeInTheDocument()
+  })
+
+  it('never sends from a disabled composer, including Enter and Ctrl+Enter', () => {
+    localStorage.clear()
+    const { onSend, input } = setup({ disabled: true })
+    fireEvent.change(input, { target: { value: '只读会话' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    fireEvent.keyDown(input, { key: 'Enter', ctrlKey: true })
+    expect(onSend).not.toHaveBeenCalled()
+    expect(input).toBeDisabled()
+  })
+
+  it('ignores Enter within 50ms after an IME composition ends, then accepts it', async () => {
+    localStorage.clear()
+    const { onSend, input } = setup()
+    fireEvent.change(input, { target: { value: '组合输入' } })
+    fireEvent.compositionStart(input)
+    fireEvent.compositionEnd(input)
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(onSend).not.toHaveBeenCalled()
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 60)) })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(onSend).toHaveBeenCalledWith('组合输入')
+  })
 })
