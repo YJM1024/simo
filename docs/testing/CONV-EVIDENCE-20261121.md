@@ -8,7 +8,7 @@
 
 ## 0. 提交边界
 
-- 收口提交：`<COMMIT_SHA>`（parent `1592a90c2e530de04445817916a4b7d052bb7cf0`）。
+- 收口提交：`f357c6ae25735abd53f5347753ec05b82533180e`（parent `1592a90c2e530de04445817916a4b7d052bb7cf0`）。
 - 本机无 `git` CLI；提交经 GitHub REST API（Git Data API）完成，parent 为提交时的远程 head，未强推。
 - 环境：Windows 本机、Node 24（`E:\dsh_home\dsh-runtimes\dsh-primary-runtime\dependencies\node\bin\node.exe`）、Go 工具链 `toolchain/go.ps1`（go1.27.3）；所有命令后台静默执行，日志落 `.tmp/release-scribe/`。
 
@@ -151,9 +151,10 @@ node e2e/scripts/cdp-runner.mjs    # 等价 pnpm test:e2e:cdp
 
 ## 6. CI（真实状态）
 
-- push 前远程 head：`1592a90c2e530de04445817916a4b7d052bb7cf0`；push 前最近一次 run [`44867249776`](https://github.com/YJM1024/simo/actions/runs/44867249776) 为 **failure**（旧 head、m13 文件锁，本次已修）。
-- 收口提交 `<COMMIT_SHA>` 的 run：**待本次 run 验证**（push 后回写 run id、Linux quality 与 Windows build-test 结论）。
-- `optional docker build`、`optional real-model smoke` 为 optional；若 **skipped 不计入通过**。CI eval 使用 mock 模型，不能替代 8787 真实实例验收。
+- push 前远程 head：`1592a90c2e530de04445817916a4b7d052bb7cf0`；在此之前最近一次 run [`44867249776`](https://github.com/YJM1024/simo/actions/runs/44867249776) 为 **failure**（旧 head、m13 文件锁，本次已修）。
+- 收口提交 `f357c6ae25735abd53f5347753ec05b82533180e` 的 run [`44871922169`](https://github.com/YJM1024/simo/actions/runs/44871922169)：Linux **success**、Windows **failure** —— 唯一失败为本批新增的 `TestP1ConvWSSubscribeReplayAndSinceContinuation`（8s 等待预算不足，ci-logs `go-test.log` 显示 agent 正文已完整、`status` 仍 `streaming`，属 Windows 慢落库）。
+- 测试修复提交 `788f2ace516b66bd809b94e56d19a5c627e3cbc1`（只改 `backend/cmd/simo/p1_conv_ws_test.go`：等待上限 60s、用例 ctx 120s，不改断言、不 skip）→ run [`44874959613`](https://github.com/YJM1024/simo/actions/runs/44874959613)（head `788f2ac`，run conclusion **success**）：**Linux quality success、Windows build-test success**；同一 job 的 `go-test.log` 为 `ok simo/cmd/simo 312.764s`，其余包全 ok。
+- `optional docker build`、`optional real-model smoke` 为 **skipped**——**skipped 不计入通过**。CI eval 使用 mock 模型，不能替代 8787 真实实例验收。
 
 ## 7. 结论与不升级说明
 
@@ -161,4 +162,4 @@ node e2e/scripts/cdp-runner.mjs    # 等价 pnpm test:e2e:cdp
 - 这些结果**只证明测试与工具链在本机当前源码上通过**；不等于 P1 产品 AC 全量完成，不改变：
   - P1：**0 covered / 11 partial / 1 gap（SYNC-005）**、用例 **4 pass / 9 partial / 2 missing**；
   - 全仓：**0 covered / 48 partial / 23 gap**、unimplemented 16。
-- 仍未验证：8787 真实模型下全链路、Playwright 普通 E2E、CI 两 job 的本批次结论（见 §6）、部署验证、真实 IME、权限 fail-closed 矩阵。
+- 仍未验证：8787 真实模型下全链路、Playwright 普通 E2E、部署验证、真实 IME、权限 fail-closed 矩阵。

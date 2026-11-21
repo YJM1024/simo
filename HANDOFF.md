@@ -17,7 +17,7 @@
 - token 从 `E:\dsh_home\workspaces\agent\.git\config` 的 remote URL 读取（`x-access-token:...`）；**不要把 token 写进文件、日志或提交**。
 - **不要用 PowerShell `Invoke-RestMethod` 访问 GitHub**（本机 schannel 已损坏），用 Node `fetch`。
 - 提交方式：Git Data API（blob → tree（带 `base_tree`）→ commit → `PATCH /refs/heads/main`，`force:false`）；提交前必须先 `GET /git/ref/heads/main` 校验远程 head 未被别人改动，parent 必须是当时 head。
-- 本文件所在批次：parent = `1592a90c2e530de04445817916a4b7d052bb7cf0`（`docs: clarify P8 edge coverage wording`）；本批次收口 commit 与 CI 结论见第 3 节（拿到结果后已回写）。
+- 本文件所在批次：起点 parent = `1592a90c2e530de04445817916a4b7d052bb7cf0`（`docs: clarify P8 edge coverage wording`）；批次收口提交 `f357c6ae25735abd53f5347753ec05b82533180e`，随后唯一 CI 修复提交 `788f2ace516b66bd809b94e56d19a5c627e3cbc1`（parent = `f357c6a`）；本文件由其后的文档提交收尾，CI 结论见 3.1。
 
 ## 3. CI 真实状态（不夸大）
 
@@ -29,11 +29,12 @@
 
 ### 3.1 本批次 CI 结论（收口后回写）
 
-- 收口提交：`<COMMIT_SHA>`（parent `1592a90c2e530de04445817916a4b7d052bb7cf0`）。
-- GitHub Actions run：[`<RUN_ID>`](https://github.com/YJM1024/simo/actions/runs/<RUN_ID>)（head `<COMMIT_SHA>`）
-  - `linux / frontend + backend quality gate`：**<LINUX_CONCLUSION>**
-  - `windows / go + web + mock evals + package`：**<WINDOWS_CONCLUSION>**
-  - optional docker / real-model smoke：**<OPTIONAL>**
+- 收口提交：`f357c6ae25735abd53f5347753ec05b82533180e`（parent `1592a90c2e530de04445817916a4b7d052bb7cf0`）；随后唯一测试修复提交：`788f2ace516b66bd809b94e56d19a5c627e3cbc1`（parent `f357c6a`，message `test: allow slow CI reply completion in P1 ws replay case`，只改 `backend/cmd/simo/p1_conv_ws_test.go`：该用例等待上限 8s→60s、用例 ctx 30s→120s，不改断言、不 skip）。
+- GitHub Actions run：[`44874959613`](https://github.com/YJM1024/simo/actions/runs/44874959613)（head `788f2ac`，run conclusion **success**）
+  - `linux / frontend + backend quality gate`：**success**（06:19:07Z–06:23:25Z）
+  - `windows / go + web + mock evals + package`：**success**（06:19:08Z–06:32:47Z，`Pipeline (deploy/ci.ps1)` 与 `Upload portable package`、`Upload CI logs` 均 success）
+  - optional docker build / optional real-model smoke：**skipped**（skipped ≠ 通过，不计入“CI 全绿”）
+- 失败历史（如实登记）：run [`44871922169`](https://github.com/YJM1024/simo/actions/runs/44871922169)（head `f357c6a`）Linux success、Windows **failure**——`TestP1ConvWSSubscribeReplayAndSinceContinuation` 在 Windows 上 `等待 agent 完成超时`（8s 预算），ci-logs `go-test.log` 显示最后一条 agent 消息正文已完整但 `status:streaming`（落库慢，不是功能失败）；由 `788f2ac` 放宽该用例等待上限后重跑，Windows 转 success，`go-test.log` 为 `ok simo/cmd/simo 312.764s`、其余包全 ok。
 - 若与上面不同，以 GitHub Actions 页面为准；本文件的数字只作为登记，不是签字。
 
 ## 4. 测试与证据（可复现命令）

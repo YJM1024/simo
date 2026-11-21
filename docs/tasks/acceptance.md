@@ -1546,7 +1546,7 @@ SUMMARY: PASS（失败 0，警告 0）
 
 ### 提交范围
 
-- 收口提交：`<COMMIT_SHA>`（parent `1592a90c2e530de04445817916a4b7d052bb7cf0`，message `test: close conversation-domain tests, spec and E2E evidence`）。
+- 收口提交：`f357c6ae25735abd53f5347753ec05b82533180e`（parent `1592a90c2e530de04445817916a4b7d052bb7cf0`，message `test: close conversation-domain tests, spec and E2E evidence`）。
 - 覆盖：前端测试新增/修复、后端 P1 测试 19 个、CDP E2E 08–16、`TestM13PauseAndRunNow` 文件锁修复、`frontend/src/app.tsx` prepend 锚定修复、`specs/product/P1-CONV/spec.md`/`specs/test/P1-CONV/test-plan.md`/`docs/product/CONV-CLOSURE.md` 重写、5 个 `CHG-CONV-*`（35 文件）、TREE/TRACE/`specs/changes/README.md` 更新、证据与状态文档。
 
 ### 已实现 / 已验证（本机实测）
@@ -1576,4 +1576,17 @@ SUMMARY: PASS（失败 0，警告 0）
 ### CI
 
 - push 前远程 head：`1592a90c2e530de04445817916a4b7d052bb7cf0`；最近一次失败 run [`44867249776`](https://github.com/YJM1024/simo/actions/runs/44867249776)（旧 head 的 `TestM13PauseAndRunNow` 文件锁，本次已修）。
-- 本次 run：**待本次 run 验证**（push 后回写 run id、Linux quality 与 Windows build-test 结论；`optional docker build`、`optional real-model smoke` 若 skipped 不计入通过）。
+- 本次 run：**已回写**于本节末「2026-11-21 最终 CI 结论」——head `788f2ac` 的 run `44874959613` 两 job success（`optional` 为 skipped，不计入通过）。
+
+## 2026-11-21 最终 CI 结论（会话域批次 3/4/5）
+
+> 只登记 CI 的真实结论；**不改变任何 PRD 覆盖状态**。
+
+- **测试修复提交**：`788f2ace516b66bd809b94e56d19a5c627e3cbc1`（parent `f357c6ae25735abd53f5347753ec05b82533180e`），message `test: allow slow CI reply completion in P1 ws replay case`。仅改 `backend/cmd/simo/p1_conv_ws_test.go`：`TestP1ConvWSSubscribeReplayAndSinceContinuation` 的历史回复等待从 `waitForReplyDone`（`backend/cmd/simo/server_test.go:111`，固定 **8s** 上限）改为本文件新增的 `p1WaitReplyDoneWithin(..., 60*time.Second)`，用例 ctx 30s→**120s**；**不改断言语义、不 skip、不改产品代码**。
+- **CI run**：[`44874959613`](https://github.com/YJM1024/simo/actions/runs/44874959613)（head `788f2ac`，run conclusion **success**）：
+  - `linux / frontend + backend quality gate`：**success**（06:19:07Z–06:23:25Z）
+  - `windows / go + web + mock evals + package`：**success**（06:19:08Z–06:32:47Z；`Pipeline (deploy/ci.ps1)`、`Upload portable package`、`Upload CI logs` 均 success）
+  - `optional docker build`、`optional real-model smoke`：**skipped**——**skipped ≠ 通过**，不得写成“CI 全绿”。
+- **失败历史（如实记录）**：run [`44871922169`](https://github.com/YJM1024/simo/actions/runs/44871922169)（head `f357c6a`）Linux success、Windows **failure**：唯一失败 `TestP1ConvWSSubscribeReplayAndSinceContinuation`（`--- FAIL ... (10.86s)`），报 `等待 agent 完成超时`；ci-logs `go-test.log` 显示最后一条 agent 消息 `text` 已完整、`status` 仍为 `streaming`，属 Windows runner 慢落库，不是功能回归。修复后同一 job 的 `go-test.log` 为 `ok simo/cmd/simo 312.764s`，其余包全 `ok`。
+- **仍未改变**：P1 仍 **0 covered / 11 partial / 1 gap（SYNC-005）**，用例 **4 pass / 9 partial / 2 missing**；全仓仍 **0 covered / 48 partial / 23 gap**（unimplemented 16）。CI 通过只证明测试与构建门禁通过，**不升级 covered**。
+- **限制**：CI 的 eval 使用 mock 模型；E2E 仍是 CDP runner + mock 后端（19230），不是 8787 真实数据，Playwright 普通 E2E 未接入 CI；覆盖率仍只统计 `frontend/src/components/library.tsx` 单文件。本节不替代独立验收签字。

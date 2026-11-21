@@ -9,7 +9,7 @@
 - **测试（本机实测，2026-11-21）**：前端 **115/115 PASS**（13 文件，`--pool=threads`，exit 0；typecheck exit 0；`library.tsx` 覆盖率 Stmts 82.83 / Branch 83.64 / Funcs 84.14 / Lines 85.88）；后端 **246 个顶层测试**（`go test ./... -count=1` exit 0，16 包 ok）；CDP E2E **19/19 PASS ×2**（CDP runner，**非 Playwright**，mock 后端 **19230**，非 8787）。证据 [`docs/testing/CONV-EVIDENCE-20261121.md`](../testing/CONV-EVIDENCE-20261121.md)。
 - **修复**：`backend/cmd/simo/m13_test.go::TestM13PauseAndRunNow` 补 `waitScheduleStatus(..., "done", 15s)` 修 CI Windows TempDir 文件锁（不改断言、不 skip）；`frontend/src/app.tsx` 修祖先 prepend 滚动锚定二次 apply 回写旧值。
 - **计数未变**：P1 12 PRD **0 covered / 11 partial / 1 gap（SYNC-005）**，用例 **4 pass / 9 partial / 2 missing**；全仓 71 PRD **0 covered / 48 partial / 23 gap**，unimplemented **16**；新增测试**不升级 covered**。
-- **CI**：收口提交 `<COMMIT_SHA>`（parent `1592a90c2e530de04445817916a4b7d052bb7cf0`）；本次 run **待验证**，结论以 GitHub Actions 为准；push 前最近一次失败 run `44867249776`（旧 head 的 m13 文件锁，本次已修）。
+- **CI**：收口提交 `f357c6ae25735abd53f5347753ec05b82533180e`（parent `1592a90c2e530de04445817916a4b7d052bb7cf0`）之后的测试修复 `788f2ace516b66bd809b94e56d19a5c627e3cbc1`（只改 `backend/cmd/simo/p1_conv_ws_test.go` 的慢环境等待上限，不改断言/不 skip）。run [`44874959613`](https://github.com/YJM1024/simo/actions/runs/44874959613)（head `788f2ac`）：**Linux quality success、Windows build-test success**；`optional docker build`、`optional real-model smoke` 为 **skipped，不计入通过**（skipped ≠ 通过）。此前 run `44871922169`（head `f357c6a`）Windows 失败于 `TestP1ConvWSSubscribeReplayAndSinceContinuation` 的 8s 等待预算，已由 `788f2ac` 修复并验证。
 - **门禁**：`check:sdd` PASS（15 specs、COMP 5、A 134/134、manifest 33）；`check:trace` PASS（71 PRD、15 change 包、0 失败、0 提示）。
 - **收口总账**：[`docs/product/CONV-CLOSURE.md`](../product/CONV-CLOSURE.md)。
 
