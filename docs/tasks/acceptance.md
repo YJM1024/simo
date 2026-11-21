@@ -1529,7 +1529,7 @@ SUMMARY: PASS（失败 0，警告 0）
 - 前端：69/69 PASS；CDP E2E 11/11 PASS；后端：223/223 PASS（2026-11-20 记录）。
 - 12 个重启/多进程脚本全部 exit 0，脚本内 118 条检查 PASS；明细见 [`docs/testing/PENDING-EVALS-20261121.md`](../testing/PENDING-EVALS-20261121.md)。
 - `check:sdd`、`check:trace` 本地 PASS（10 个 change 包、71 PRD、0 失败、0 提示）。
-- 2026-11-21 新增 5 个 API 边界契约测试（`TestP5MemoryEmptyAndUnknownContract`、`TestP6TeamEmptyAndUnknownContract`、`TestP7ScheduleEmptyAndNotFoundContract`、`TestP8SettingsAndRuntimeContract`、`TestP9ActionsUnknownContract`）；定向运行 `ok simo/cmd/simo 0.558s`，随后后端全量 `go test ./... -count=1` 重跑 exit 0，覆盖全部 5 个测试的日志为 `.tmp/go-test-final3-20261121.log`。P5/P6/P7/P8/P9 的 E1/E2 只从 missing 升为 partial，P8 test-plan 为 3 pass / 9 partial / 3 missing、P9 为 2 pass / 5 partial / 3 missing；covered 不变，明细见 [`docs/testing/EDGE-CONTRACTS-20261121.md`](../testing/EDGE-CONTRACTS-20261121.md)。
+- 2026-11-21 新增 5 个 API 边界契约测试（`TestP5MemoryEmptyAndUnknownContract`、`TestP6TeamEmptyAndUnknownContract`、`TestP7ScheduleEmptyAndNotFoundContract`、`TestP8SettingsAndRuntimeContract`、`TestP9ActionsUnknownContract`）；定向运行 `ok simo/cmd/simo 0.558s`，随后后端全量 `go test ./... -count=1` 重跑 exit 0，覆盖全部 5 个测试的日志为 `.tmp/go-test-final3-20261121.log`。P5/P6/P7/P9 的 E1/E2、P8 的 E1 只从 missing 升为 partial（P8 的 E2 是补证据）；P8 test-plan 为 3 pass / 9 partial / 3 missing、P9 为 2 pass / 5 partial / 3 missing；covered 不变，明细见 [`docs/testing/EDGE-CONTRACTS-20261121.md`](../testing/EDGE-CONTRACTS-20261121.md)。
 
 ### 不可宣称（本轮仍有效）
 
