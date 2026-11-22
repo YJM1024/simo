@@ -1,0 +1,1207 @@
+{
+  "layout": {
+    "w1180": {
+      "vw": 1180,
+      "vh": 900,
+      "dpr": 1,
+      "docScrollWidth": 1180,
+      "bodyScrollWidth": 1180,
+      "docScrollHeight": 900,
+      "hasHorizontalOverflow": false,
+      "mq": {
+        "max1024": false,
+        "notMin900": false,
+        "max760": false,
+        "max1180": true
+      },
+      "parts": {
+        "app": {
+          "sel": ".app",
+          "present": true,
+          "display": "grid",
+          "visibility": "visible",
+          "x": 0,
+          "y": 0,
+          "w": 1180,
+          "h": 900,
+          "right": 1180,
+          "bottom": 900
+        },
+        "sidebar": {
+          "sel": ".sidebar",
+          "present": true,
+          "display": "flex",
+          "visibility": "visible",
+          "x": 0,
+          "y": 0,
+          "w": 228,
+          "h": 876,
+          "right": 228,
+          "bottom": 876
+        },
+        "panel": {
+          "sel": ".conversation-panel",
+          "present": true,
+          "display": "flex",
+          "visibility": "visible",
+          "x": 280,
+          "y": 153,
+          "w": 568,
+          "h": 563,
+          "right": 848,
+          "bottom": 716
+        },
+        "scroller": {
+          "sel": ".conversation-scroll",
+          "present": true,
+          "display": "block",
+          "visibility": "visible",
+          "x": 280,
+          "y": 153,
+          "w": 568,
+          "h": 563,
+          "right": 848,
+          "bottom": 716
+        },
+        "timeline": {
+          "sel": ".conversation-panel > .timeline",
+          "present": true,
+          "display": "flex",
+          "visibility": "visible",
+          "x": 248,
+          "y": 153,
+          "w": 44,
+          "h": 563,
+          "right": 292,
+          "bottom": 716
+        },
+        "groups": {
+          "sel": ".timeline-groups",
+          "present": true,
+          "display": "flex",
+          "visibility": "visible",
+          "x": 248,
+          "y": 153,
+          "w": 44,
+          "h": 563,
+          "right": 292,
+          "bottom": 716
+        },
+        "inspector": {
+          "sel": "aside.inspector",
+          "present": true,
+          "display": "flex",
+          "visibility": "visible",
+          "x": 900,
+          "y": 90,
+          "w": 280,
+          "h": 786,
+          "right": 1180,
+          "bottom": 876
+        },
+        "rail": {
+          "sel": ".insp-rail",
+          "present": true,
+          "display": "flex",
+          "visibility": "visible",
+          "x": 1140,
+          "y": 90,
+          "w": 40,
+          "h": 786,
+          "right": 1180,
+          "bottom": 876
+        },
+        "composer": {
+          "sel": ".composer",
+          "present": true,
+          "display": "block",
+          "visibility": "visible",
+          "x": 300,
+          "y": 712,
+          "w": 528,
+          "h": 150,
+          "right": 828,
+          "bottom": 862
+        },
+        "send": {
+          "sel": ".composer .send",
+          "present": true,
+          "display": "block",
+          "visibility": "visible",
+          "x": 763,
+          "y": 811,
+          "w": 54,
+          "h": 28,
+          "right": 817,
+          "bottom": 839
+        },
+        "input": {
+          "sel": "textarea[aria-label=\"消息输入框\"]",
+          "present": true,
+          "display": "inline-block",
+          "visibility": "visible",
+          "x": 301,
+          "y": 721,
+          "w": 526,
+          "h": 85,
+          "right": 827,
+          "bottom": 806
+        },
+        "topbar": {
+          "sel": ".topbar",
+          "present": true,
+          "display": "flex",
+          "visibility": "visible",
+          "x": 228,
+          "y": 0,
+          "w": 952,
+          "h": 48,
+          "right": 1180,
+          "bottom": 48
+        },
+        "badge": {
+          "sel": ".session-count",
+          "present": true,
+          "display": "block",
+          "visibility": "visible",
+          "x": 200,
+          "y": 196,
+          "w": 11,
+          "h": 12,
+          "right": 211,
+          "bottom": 208
+        }
+      },
+      "gridColumns": "228px 952px",
+      "overlaps": {
+        "timeline_vs_scroller": {
+          "w": 12,
+          "h": 563,
+          "area": 6755
+        },
+        "timeline_vs_composer": {
+          "w": 0,
+          "h": 4,
+          "area": 0
+        },
+        "timeline_vs_input": {
+          "w": 0,
+          "h": 0,
+          "area": 0
+        },
+        "groups_vs_scroller": {
+          "w": 12,
+          "h": 563,
+          "area": 6755
+        },
+        "rail_vs_panel": {
+          "w": 0,
+          "h": 563,
+          "area": 0
+        }
+      },
+      "occlusion": {
+        "send": {
+          "sel": ".composer .send",
+          "present": true,
+          "visible": true,
+          "inside": true,
+          "top": "button.send"
+        },
+        "input": {
+          "sel": "textarea[aria-label=\"消息输入框\"]",
+          "present": true,
+          "visible": true,
+          "inside": true,
+          "top": "textarea"
+        },
+        "timeline": {
+          "sel": ".conversation-panel > .timeline",
+          "present": true,
+          "visible": true,
+          "inside": true,
+          "top": "div.tlg-session.is-current-session"
+        }
+      },
+      "messages": 77,
+      "partsBeyondViewport": []
+    },
+    "w768": {
+      "vw": 768,
+      "vh": 1024,
+      "dpr": 1,
+      "docScrollWidth": 768,
+      "bodyScrollWidth": 768,
+      "docScrollHeight": 1024,
+      "hasHorizontalOverflow": false,
+      "mq": {
+        "max1024": true,
+        "notMin900": true,
+        "max760": false,
+        "max1180": true
+      },
+      "parts": {
+        "app": {
+          "sel": ".app",
+          "present": true,
+          "display": "grid",
+          "visibility": "visible",
+          "x": 0,
+          "y": 0,
+          "w": 768,
+          "h": 1024,
+          "right": 768,
+          "bottom": 1024
+        },
+        "sidebar": {
+          "sel": ".sidebar",
+          "present": true,
+          "display": "flex",
+          "visibility": "visible",
+          "x": 0,
+          "y": 0,
+          "w": 220,
+          "h": 1000,
+          "right": 220,
+          "bottom": 1000
+        },
+        "panel": {
+          "sel": ".conversation-panel",
+          "present": true,
+          "display": "flex",
+          "visibility": "visible",
+          "x": 236,
+          "y": 153,
+          "w": 516,
+          "h": 687,
+          "right": 752,
+          "bottom": 840
+        },
+        "scroller": {
+          "sel": ".conversation-scroll",
+          "present": true,
+          "display": "block",
+          "visibility": "visible",
+          "x": 236,
+          "y": 153,
+          "w": 516,
+          "h": 687,
+          "right": 752,
+          "bottom": 840
+        },
+        "timeline": {
+          "sel": ".conversation-panel > .timeline",
+          "present": true,
+          "display": "none",
+          "visibility": "visible",
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "right": 0,
+          "bottom": 0
+        },
+        "groups": {
+          "sel": ".timeline-groups",
+          "present": true,
+          "display": "none",
+          "visibility": "visible",
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "right": 0,
+          "bottom": 0
+        },
+        "inspector": {
+          "sel": "aside.inspector",
+          "present": true,
+          "display": "none",
+          "visibility": "visible",
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "right": 0,
+          "bottom": 0
+        },
+        "rail": {
+          "sel": ".insp-rail",
+          "present": true,
+          "display": "flex",
+          "visibility": "visible",
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "right": 0,
+          "bottom": 0
+        },
+        "composer": {
+          "sel": ".composer",
+          "present": true,
+          "display": "block",
+          "visibility": "visible",
+          "x": 256,
+          "y": 836,
+          "w": 476,
+          "h": 150,
+          "right": 732,
+          "bottom": 986
+        },
+        "send": {
+          "sel": ".composer .send",
+          "present": true,
+          "display": "block",
+          "visibility": "visible",
+          "x": 667,
+          "y": 935,
+          "w": 54,
+          "h": 28,
+          "right": 721,
+          "bottom": 963
+        },
+        "input": {
+          "sel": "textarea[aria-label=\"消息输入框\"]",
+          "present": true,
+          "display": "inline-block",
+          "visibility": "visible",
+          "x": 257,
+          "y": 845,
+          "w": 474,
+          "h": 85,
+          "right": 731,
+          "bottom": 930
+        },
+        "topbar": {
+          "sel": ".topbar",
+          "present": true,
+          "display": "flex",
+          "visibility": "visible",
+          "x": 220,
+          "y": 0,
+          "w": 548,
+          "h": 48,
+          "right": 768,
+          "bottom": 48
+        },
+        "badge": {
+          "sel": ".session-count",
+          "present": true,
+          "display": "block",
+          "visibility": "visible",
+          "x": 192,
+          "y": 196,
+          "w": 11,
+          "h": 12,
+          "right": 203,
+          "bottom": 208
+        }
+      },
+      "gridColumns": "220px 548px",
+      "overlaps": {
+        "timeline_vs_scroller": {
+          "w": 0,
+          "h": 0,
+          "area": 0
+        },
+        "timeline_vs_composer": {
+          "w": 0,
+          "h": 0,
+          "area": 0
+        },
+        "timeline_vs_input": {
+          "w": 0,
+          "h": 0,
+          "area": 0
+        },
+        "groups_vs_scroller": {
+          "w": 0,
+          "h": 0,
+          "area": 0
+        },
+        "rail_vs_panel": {
+          "w": 0,
+          "h": 0,
+          "area": 0
+        }
+      },
+      "occlusion": {
+        "send": {
+          "sel": ".composer .send",
+          "present": true,
+          "visible": true,
+          "inside": true,
+          "top": "button.send"
+        },
+        "input": {
+          "sel": "textarea[aria-label=\"消息输入框\"]",
+          "present": true,
+          "visible": true,
+          "inside": true,
+          "top": "textarea"
+        },
+        "timeline": {
+          "sel": ".conversation-panel > .timeline",
+          "present": true,
+          "visible": false
+        }
+      },
+      "messages": 77,
+      "partsBeyondViewport": [],
+      "scrolled": {
+        "scrollTop": 6939,
+        "scrollHeight": 7626,
+        "clientHeight": 687
+      }
+    }
+  },
+  "sync": {
+    "initial": {
+      "A": {
+        "at": 1795341822218,
+        "activeTitle": "主会话",
+        "probe": {
+          "title": "verify-conv-rest-sync",
+          "active": false,
+          "unread": true,
+          "count": "2"
+        },
+        "other": {
+          "title": "新会话",
+          "active": false,
+          "unread": false,
+          "count": "16"
+        },
+        "rows": 16,
+        "msgText": "主会话\n你\n你\n·\n21:22\n复制\n\n帮我整理一份本周工作周报，输出成 Markdown 文件。\n\n墨\n司墨\n·\n进度汇报\n·\n21:22\n复制\n\n可以。我先确认周报范围和输出内容，再开始整理：\n\n- 范围：本周（11/09–11/15） - 内容：进展、风险、下周计划 - 产出：Markdown 文件\n\n请确认下面的范围。\n\n墨\n司墨\n·\n进度汇报\n·\n21:22\n复制\n\n我会按本周（11/09–11/15）整理，请确认范围。\n\n本周周报 · 确认范围\nsubmitted · v1\n\n我会按本周（11/09–11/15）整理进展、风险和下周计划。\n\n周报范围\n请选择…\n本周（11/09–11/15）\n上周（11/02–11/08）\n补充说明（可选）\n取消\n确认\n你\n你\n·\n21:22\n复制\n\n确认，本周。重点写进展和风险。\n\n墨\n司墨\n·\n需求澄清\n·\n21:23\n复制\n\n收到。我会先生成初稿，完成后把 Markdown 文件放到交付物里。\n\n墨\n司墨\n·\n进度汇报\n·\n21:27\n复制\n\n初稿已完成：本周完成 3 项、风险 2 项、下周计划 3 项。交付物已生成。\n\n你\n你\n·\n21:42\n复制\n\n补充测试消息 1：继续完善周报内容。\n\n墨\n司墨\n·\n进度汇报\n·\n21:42\n复制\n\n收到第 1 条补充，我会按当前 spec 继续更新；这是用于滚动/未读测试的消息。\n\n你\n你\n·\n21:42\n复制\n\n补充测试消息 2：继续完善周报内容。\n\n墨\n司墨\n·\n进度汇报\n·\n21:42\n复制\n\n收到第 2 条补充，我会按当前 spec 继续更新；这是用于滚动/未读测试的消息。\n\n你\n你\n·\n21:43\n复制\n\n补充测试消息 3：继续完善周报内容。\n\n墨\n司墨\n·\n进度汇报\n·\n21:43\n复制\n\n收到第 3 条补充，我会按当前 spec 继续更新；这是用于滚动/未读测试的消息。\n\n你\n你\n·\n21:43\n复制\n\n补充测试消息 4：继续完善周报内容。\n\n墨\n司墨\n·\n进度汇报\n·\n21:43\n复制\n\n收到第 4 条补充，我会按当前 spec 继续更新；这是用于滚动/未读测试的消息。\n\n你\n你\n·\n21:43\n复制\n\n补充测试消息 5：继续完善周报内容。\n\n墨\n司墨\n·\n进度汇报\n·\n21:43\n复制\n\n收到第 5 条补充，我会按当前 spec 继续更新；这是用于滚动/未读测试的消息。\n\n你\n你\n·\n21:43\n复制\n\n补充测试消息 6：继续完善周报内容。\n\n墨\n司墨\n·\n进度汇报\n·\n21:43\n复制\n\n收到第 6 条补充，我会按当前 spec 继续更新；这是用于滚动/未读测试的消息。\n\n你\n你\n·\n21:43\n复制\n\n补充测试消息 7：继续完善周报内容。\n\n墨\n司墨\n·\n进度汇报\n·\n21:43\n复制\n\n收到第 7 条补充，我会按当前 spec 继续更新；这是",
+        "msgCount": 77,
+        "composerError": null,
+        "bc": [
+          {
+            "at": 1795341820332,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "83179a01-ea48-4c5e-94db-5fd569105adf",
+              "opId": "83179a01-ea48-4c5e-94db-5fd569105adf:1795341820329",
+              "at": 0,
+              "sessionId": "main"
+            }
+          },
+          {
+            "at": 1795341820496,
+            "data": {
+              "type": "active_session_changed",
+              "tabId": "83179a01-ea48-4c5e-94db-5fd569105adf",
+              "opId": "83179a01-ea48-4c5e-94db-5fd569105adf:1795341820495",
+              "at": 1795341820495,
+              "sessionId": "main"
+            }
+          },
+          {
+            "at": 1795341820509,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "83179a01-ea48-4c5e-94db-5fd569105adf",
+              "opId": "83179a01-ea48-4c5e-94db-5fd569105adf:1795341820507",
+              "at": 0,
+              "sessionId": "main"
+            }
+          },
+          {
+            "at": 1795341820580,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "83179a01-ea48-4c5e-94db-5fd569105adf",
+              "opId": "83179a01-ea48-4c5e-94db-5fd569105adf:1795341820580",
+              "at": 0,
+              "sessionId": "main"
+            }
+          }
+        ]
+      },
+      "B": {
+        "at": 1795341822224,
+        "activeTitle": "主会话",
+        "probe": {
+          "title": "verify-conv-rest-sync",
+          "active": false,
+          "unread": true,
+          "count": "2"
+        },
+        "other": {
+          "title": "新会话",
+          "active": false,
+          "unread": false,
+          "count": "16"
+        },
+        "rows": 16,
+        "msgText": "主会话\n你\n你\n·\n21:22\n复制\n\n帮我整理一份本周工作周报，输出成 Markdown 文件。\n\n墨\n司墨\n·\n进度汇报\n·\n21:22\n复制\n\n可以。我先确认周报范围和输出内容，再开始整理：\n\n- 范围：本周（11/09–11/15） - 内容：进展、风险、下周计划 - 产出：Markdown 文件\n\n请确认下面的范围。\n\n墨\n司墨\n·\n进度汇报\n·\n21:22\n复制\n\n我会按本周（11/09–11/15）整理，请确认范围。\n\n本周周报 · 确认范围\nsubmitted · v1\n\n我会按本周（11/09–11/15）整理进展、风险和下周计划。\n\n周报范围\n请选择…\n本周（11/09–11/15）\n上周（11/02–11/08）\n补充说明（可选）\n取消\n确认\n你\n你\n·\n21:22\n复制\n\n确认，本周。重点写进展和风险。\n\n墨\n司墨\n·\n需求澄清\n·\n21:23\n复制\n\n收到。我会先生成初稿，完成后把 Markdown 文件放到交付物里。\n\n墨\n司墨\n·\n进度汇报\n·\n21:27\n复制\n\n初稿已完成：本周完成 3 项、风险 2 项、下周计划 3 项。交付物已生成。\n\n你\n你\n·\n21:42\n复制\n\n补充测试消息 1：继续完善周报内容。\n\n墨\n司墨\n·\n进度汇报\n·\n21:42\n复制\n\n收到第 1 条补充，我会按当前 spec 继续更新；这是用于滚动/未读测试的消息。\n\n你\n你\n·\n21:42\n复制\n\n补充测试消息 2：继续完善周报内容。\n\n墨\n司墨\n·\n进度汇报\n·\n21:42\n复制\n\n收到第 2 条补充，我会按当前 spec 继续更新；这是用于滚动/未读测试的消息。\n\n你\n你\n·\n21:43\n复制\n\n补充测试消息 3：继续完善周报内容。\n\n墨\n司墨\n·\n进度汇报\n·\n21:43\n复制\n\n收到第 3 条补充，我会按当前 spec 继续更新；这是用于滚动/未读测试的消息。\n\n你\n你\n·\n21:43\n复制\n\n补充测试消息 4：继续完善周报内容。\n\n墨\n司墨\n·\n进度汇报\n·\n21:43\n复制\n\n收到第 4 条补充，我会按当前 spec 继续更新；这是用于滚动/未读测试的消息。\n\n你\n你\n·\n21:43\n复制\n\n补充测试消息 5：继续完善周报内容。\n\n墨\n司墨\n·\n进度汇报\n·\n21:43\n复制\n\n收到第 5 条补充，我会按当前 spec 继续更新；这是用于滚动/未读测试的消息。\n\n你\n你\n·\n21:43\n复制\n\n补充测试消息 6：继续完善周报内容。\n\n墨\n司墨\n·\n进度汇报\n·\n21:43\n复制\n\n收到第 6 条补充，我会按当前 spec 继续更新；这是用于滚动/未读测试的消息。\n\n你\n你\n·\n21:43\n复制\n\n补充测试消息 7：继续完善周报内容。\n\n墨\n司墨\n·\n进度汇报\n·\n21:43\n复制\n\n收到第 7 条补充，我会按当前 spec 继续更新；这是",
+        "msgCount": 77,
+        "composerError": null,
+        "bc": []
+      }
+    },
+    "s1": {
+      "clickAt": {
+        "at": 1795341822393,
+        "pos": {
+          "x": 120,
+          "y": 298,
+          "w": 223,
+          "h": 32
+        }
+      },
+      "followB": {
+        "ok": true,
+        "ms": 9
+      },
+      "dotGoneB": {
+        "ok": true,
+        "ms": 73
+      },
+      "A": {
+        "at": 1795341822976,
+        "activeTitle": "verify-conv-rest-sync",
+        "probe": {
+          "title": "verify-conv-rest-sync",
+          "active": true,
+          "unread": false,
+          "count": "2"
+        },
+        "other": {
+          "title": "新会话",
+          "active": false,
+          "unread": false,
+          "count": "16"
+        },
+        "rows": 16,
+        "msgText": "显示上级会话\nverify-conv-rest-sync\n你\n你\n·\n18:01\n复制\n\n跨标签同步取证消息 1\n\n墨\n司墨\n·\n信息咨询\n·\n18:01\n失败\n\n回复生成失败，未返回内容。\n\n重试",
+        "msgCount": 2,
+        "composerError": null,
+        "bc": [
+          {
+            "at": 1795341822729,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "a6239024-ffcd-4139-aa1b-61ac7ad1d379",
+              "opId": "a6239024-ffcd-4139-aa1b-61ac7ad1d379:1795341822728",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          },
+          {
+            "at": 1795341822729,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "2f3d5a98-9cd3-424a-8456-c875608b9aef",
+              "opId": "2f3d5a98-9cd3-424a-8456-c875608b9aef:1795341822729",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          },
+          {
+            "at": 1795341822731,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "98e1b5f2-e1df-4fd2-97b5-0d3496d3c240",
+              "opId": "98e1b5f2-e1df-4fd2-97b5-0d3496d3c240:1795341822730",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          },
+          {
+            "at": 1795341822733,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "98e1b5f2-e1df-4fd2-97b5-0d3496d3c240",
+              "opId": "98e1b5f2-e1df-4fd2-97b5-0d3496d3c240:1795341822733",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          },
+          {
+            "at": 1795341822746,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "2f3d5a98-9cd3-424a-8456-c875608b9aef",
+              "opId": "2f3d5a98-9cd3-424a-8456-c875608b9aef:1795341822746",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          },
+          {
+            "at": 1795341822749,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "2f3d5a98-9cd3-424a-8456-c875608b9aef",
+              "opId": "2f3d5a98-9cd3-424a-8456-c875608b9aef:1795341822749",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          }
+        ]
+      },
+      "B": {
+        "at": 1795341822978,
+        "activeTitle": "verify-conv-rest-sync",
+        "probe": {
+          "title": "verify-conv-rest-sync",
+          "active": true,
+          "unread": false,
+          "count": "2"
+        },
+        "other": {
+          "title": "新会话",
+          "active": false,
+          "unread": false,
+          "count": "16"
+        },
+        "rows": 16,
+        "msgText": "显示上级会话\nverify-conv-rest-sync\n你\n你\n·\n18:01\n复制\n\n跨标签同步取证消息 1\n\n墨\n司墨\n·\n信息咨询\n·\n18:01\n失败\n\n回复生成失败，未返回内容。\n\n重试",
+        "msgCount": 2,
+        "composerError": null,
+        "bc": [
+          {
+            "at": 1795341822728,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "a6239024-ffcd-4139-aa1b-61ac7ad1d379",
+              "opId": "a6239024-ffcd-4139-aa1b-61ac7ad1d379:1795341822728",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          },
+          {
+            "at": 1795341822729,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "2f3d5a98-9cd3-424a-8456-c875608b9aef",
+              "opId": "2f3d5a98-9cd3-424a-8456-c875608b9aef:1795341822729",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          },
+          {
+            "at": 1795341822731,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "98e1b5f2-e1df-4fd2-97b5-0d3496d3c240",
+              "opId": "98e1b5f2-e1df-4fd2-97b5-0d3496d3c240:1795341822730",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          },
+          {
+            "at": 1795341822733,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "98e1b5f2-e1df-4fd2-97b5-0d3496d3c240",
+              "opId": "98e1b5f2-e1df-4fd2-97b5-0d3496d3c240:1795341822733",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          },
+          {
+            "at": 1795341822747,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "2f3d5a98-9cd3-424a-8456-c875608b9aef",
+              "opId": "2f3d5a98-9cd3-424a-8456-c875608b9aef:1795341822746",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          },
+          {
+            "at": 1795341822749,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "2f3d5a98-9cd3-424a-8456-c875608b9aef",
+              "opId": "2f3d5a98-9cd3-424a-8456-c875608b9aef:1795341822749",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          }
+        ]
+      },
+      "framesB": [
+        {
+          "at": 1795341822501,
+          "type": "session_read",
+          "id": 9241,
+          "data": {
+            "sessionId": "sess-ed275c9234ff49a9"
+          }
+        }
+      ],
+      "framesA": [],
+      "bcB": [
+        {
+          "at": 1795341822441,
+          "data": {
+            "type": "active_session_changed",
+            "tabId": "fbc80768-c6c3-43b7-b59b-5bda112ab9c7",
+            "opId": "fbc80768-c6c3-43b7-b59b-5bda112ab9c7:1795341822439",
+            "at": 1795341822439,
+            "sessionId": "sess-ed275c9234ff49a9"
+          }
+        }
+      ]
+    },
+    "s2": {
+      "marker": "conv-rest-marker-1795341899844",
+      "sendEnabled": true,
+      "seenB": {
+        "ok": true,
+        "ms": 1511
+      },
+      "framesB": [
+        {
+          "at": 1795341900146,
+          "type": "message.created",
+          "id": 9242,
+          "data": {
+            "id": "msg-ba6e273e7ec2f68e",
+            "sessionId": "sess-ed275c9234ff49a9",
+            "sessionTitle": "verify-conv-rest-sync",
+            "role": "user",
+            "text": "conv-rest-marker-1795341899844",
+            "at": 1795341900133,
+            "status": "done",
+            "attachments": [],
+            "taskId": "",
+            "category": "",
+            "sessionPath": [
+              {
+                "id": "main",
+                "title": "主会话"
+              },
+              {
+                "id": "sess-ed275c9234ff49a9",
+                "title": "verify-conv-rest-sync"
+              }
+            ]
+          }
+        },
+        {
+          "at": 1795341900169,
+          "type": "message.created",
+          "id": 9246,
+          "data": {
+            "id": "msg-44589d55f35ad45d",
+            "sessionId": "sess-ed275c9234ff49a9",
+            "sessionTitle": "verify-conv-rest-sync",
+            "role": "agent",
+            "text": "",
+            "at": 1795341900155,
+            "status": "streaming",
+            "attachments": [],
+            "taskId": "",
+            "category": "",
+            "sessionPath": [
+              {
+                "id": "main",
+                "title": "主会话"
+              },
+              {
+                "id": "sess-ed275c9234ff49a9",
+                "title": "verify-conv-rest-sync"
+              }
+            ],
+            "agentId": "simo"
+          }
+        },
+        {
+          "at": 1795341900169,
+          "type": "session_unread",
+          "id": null,
+          "data": {
+            "sessionId": "sess-ed275c9234ff49a9"
+          }
+        }
+      ],
+      "frameTypes": [
+        "message.created",
+        "session_unread"
+      ],
+      "A": {
+        "at": 1795341904152,
+        "activeTitle": "verify-conv-rest-sync",
+        "probe": {
+          "title": "verify-conv-rest-sync",
+          "active": true,
+          "unread": false,
+          "count": "4"
+        },
+        "other": {
+          "title": "新会话",
+          "active": false,
+          "unread": false,
+          "count": "16"
+        },
+        "rows": 16,
+        "msgText": "显示上级会话\nverify-conv-rest-sync\n你\n你\n·\n18:01\n复制\n\n跨标签同步取证消息 1\n\n墨\n司墨\n·\n信息咨询\n·\n18:01\n失败\n\n回复生成失败，未返回内容。\n\n重试\n你\n你\n·\n18:05\n复制\n\nconv-rest-marker-1795341899844\n\n墨\n司墨\n·\n信息咨询\n·\n18:05\n失败\n\n回复生成失败，未返回内容。\n\n重试",
+        "msgCount": 4,
+        "composerError": null,
+        "bc": [
+          {
+            "at": 1795341901607,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "fbc80768-c6c3-43b7-b59b-5bda112ab9c7",
+              "opId": "fbc80768-c6c3-43b7-b59b-5bda112ab9c7:1795341901597",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          },
+          {
+            "at": 1795341901607,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "64fb33cb-8ea7-42cd-bd4f-716846a8b0ed",
+              "opId": "64fb33cb-8ea7-42cd-bd4f-716846a8b0ed:1795341901598",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          },
+          {
+            "at": 1795341901608,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "a6239024-ffcd-4139-aa1b-61ac7ad1d379",
+              "opId": "a6239024-ffcd-4139-aa1b-61ac7ad1d379:1795341901601",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          },
+          {
+            "at": 1795341901611,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "9fcf8e5c-c2a8-4e17-b8bf-a1d6e4666d43",
+              "opId": "9fcf8e5c-c2a8-4e17-b8bf-a1d6e4666d43:1795341901606",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          },
+          {
+            "at": 1795341901624,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "3e11588d-bbea-4bd6-8072-d68b647be902",
+              "opId": "3e11588d-bbea-4bd6-8072-d68b647be902:1795341901620",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          },
+          {
+            "at": 1795341901624,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "83179a01-ea48-4c5e-94db-5fd569105adf",
+              "opId": "83179a01-ea48-4c5e-94db-5fd569105adf:1795341901622",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          }
+        ]
+      },
+      "B": {
+        "at": 1795341904156,
+        "activeTitle": "verify-conv-rest-sync",
+        "probe": {
+          "title": "verify-conv-rest-sync",
+          "active": true,
+          "unread": false,
+          "count": "4"
+        },
+        "other": {
+          "title": "新会话",
+          "active": false,
+          "unread": false,
+          "count": "16"
+        },
+        "rows": 16,
+        "msgText": "显示上级会话\nverify-conv-rest-sync\n你\n你\n·\n18:01\n复制\n\n跨标签同步取证消息 1\n\n墨\n司墨\n·\n信息咨询\n·\n18:01\n失败\n\n回复生成失败，未返回内容。\n\n重试\n你\n你\n·\n18:05\n复制\n\nconv-rest-marker-1795341899844\n\n墨\n司墨\n·\n信息咨询\n·\n18:05\n失败\n\n回复生成失败，未返回内容。\n\n重试",
+        "msgCount": 4,
+        "composerError": null,
+        "bc": [
+          {
+            "at": 1795341901611,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "fbc80768-c6c3-43b7-b59b-5bda112ab9c7",
+              "opId": "fbc80768-c6c3-43b7-b59b-5bda112ab9c7:1795341901597",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          },
+          {
+            "at": 1795341901611,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "64fb33cb-8ea7-42cd-bd4f-716846a8b0ed",
+              "opId": "64fb33cb-8ea7-42cd-bd4f-716846a8b0ed:1795341901598",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          },
+          {
+            "at": 1795341901612,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "a6239024-ffcd-4139-aa1b-61ac7ad1d379",
+              "opId": "a6239024-ffcd-4139-aa1b-61ac7ad1d379:1795341901601",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          },
+          {
+            "at": 1795341901612,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "9fcf8e5c-c2a8-4e17-b8bf-a1d6e4666d43",
+              "opId": "9fcf8e5c-c2a8-4e17-b8bf-a1d6e4666d43:1795341901606",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          },
+          {
+            "at": 1795341901625,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "3e11588d-bbea-4bd6-8072-d68b647be902",
+              "opId": "3e11588d-bbea-4bd6-8072-d68b647be902:1795341901620",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          },
+          {
+            "at": 1795341901625,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "83179a01-ea48-4c5e-94db-5fd569105adf",
+              "opId": "83179a01-ea48-4c5e-94db-5fd569105adf:1795341901622",
+              "at": 0,
+              "sessionId": "sess-ed275c9234ff49a9"
+            }
+          }
+        ]
+      }
+    },
+    "s3": {
+      "B": {
+        "at": 1795341906964,
+        "activeTitle": "主会话",
+        "probe": {
+          "title": "verify-conv-rest-sync",
+          "active": false,
+          "unread": false,
+          "count": "4"
+        },
+        "other": {
+          "title": "新会话",
+          "active": false,
+          "unread": false,
+          "count": "16"
+        },
+        "rows": 16,
+        "msgText": "主会话\n你\n你\n·\n21:22\n复制\n\n帮我整理一份本周工作周报，输出成 Markdown 文件。\n\n墨\n司墨\n·\n进度汇报\n·\n21:22\n复制\n\n可以。我先确认周报范围和输出内容，再开始整理：\n\n- 范围：本周（11/09–11/15） - 内容：进展、风险、下周计划 - 产出：Markdown 文件\n\n请确认下面的范围。\n\n墨\n司墨\n·\n进度汇报\n·\n21:22\n复制\n\n我会按本周（11/09–11/15）整理，请确认范围。\n\n本周周报 · 确认范围\nsubmitted · v1\n\n我会按本周（11/09–11/15）整理进展、风险和下周计划。\n\n周报范围\n请选择…\n本周（11/09–11/15）\n上周（11/02–11/08）\n补充说明（可选）\n取消\n确认\n你\n你\n·\n21:22\n复制\n\n确认，本周。重点写进展和风险。\n\n墨\n司墨\n·\n需求澄清\n·\n21:23\n复制\n\n收到。我会先生成初稿，完成后把 Markdown 文件放到交付物里。\n\n墨\n司墨\n·\n进度汇报\n·\n21:27\n复制\n\n初稿已完成：本周完成 3 项、风险 2 项、下周计划 3 项。交付物已生成。\n\n你\n你\n·\n21:42\n复制\n\n补充测试消息 1：继续完善周报内容。\n\n墨\n司墨\n·\n进度汇报\n·\n21:42\n复制\n\n收到第 1 条补充，我会按当前 spec 继续更新；这是用于滚动/未读测试的消息。\n\n你\n你\n·\n21:42\n复制\n\n补充测试消息 2：继续完善周报内容。\n\n墨\n司墨\n·\n进度汇报\n·\n21:42\n复制\n\n收到第 2 条补充，我会按当前 spec 继续更新；这是用于滚动/未读测试的消息。\n\n你\n你\n·\n21:43\n复制\n\n补充测试消息 3：继续完善周报内容。\n\n墨\n司墨\n·\n进度汇报\n·\n21:43\n复制\n\n收到第 3 条补充，我会按当前 spec 继续更新；这是用于滚动/未读测试的消息。\n\n你\n你\n·\n21:43\n复制\n\n补充测试消息 4：继续完善周报内容。\n\n墨\n司墨\n·\n进度汇报\n·\n21:43\n复制\n\n收到第 4 条补充，我会按当前 spec 继续更新；这是用于滚动/未读测试的消息。\n\n你\n你\n·\n21:43\n复制\n\n补充测试消息 5：继续完善周报内容。\n\n墨\n司墨\n·\n进度汇报\n·\n21:43\n复制\n\n收到第 5 条补充，我会按当前 spec 继续更新；这是用于滚动/未读测试的消息。\n\n你\n你\n·\n21:43\n复制\n\n补充测试消息 6：继续完善周报内容。\n\n墨\n司墨\n·\n进度汇报\n·\n21:43\n复制\n\n收到第 6 条补充，我会按当前 spec 继续更新；这是用于滚动/未读测试的消息。\n\n你\n你\n·\n21:43\n复制\n\n补充测试消息 7：继续完善周报内容。\n\n墨\n司墨\n·\n进度汇报\n·\n21:43\n复制\n\n收到第 7 条补充，我会按当前 spec 继续更新；这是",
+        "msgCount": 77,
+        "composerError": null,
+        "bc": []
+      },
+      "server": {
+        "status": 200,
+        "hits": [
+          {
+            "id": "sess-ed275c9234ff49a9",
+            "hasUnread": false,
+            "title": "verify-conv-rest-sync",
+            "messageCount": 4
+          },
+          {
+            "id": "sess-ed275c9234ff49a9",
+            "hasUnread": false,
+            "title": "verify-conv-rest-sync",
+            "messageCount": 4
+          }
+        ],
+        "topKeys": [
+          "sessions",
+          "tree"
+        ]
+      },
+      "markerPersisted": false
+    },
+    "s4": {
+      "clickAt": {
+        "at": 1795341907246,
+        "pos": {
+          "x": 120,
+          "y": 330,
+          "w": 223,
+          "h": 32
+        }
+      },
+      "followB": {
+        "ok": true,
+        "ms": 101
+      },
+      "A": {
+        "at": 1795341907831,
+        "activeTitle": "新会话",
+        "probe": {
+          "title": "verify-conv-rest-sync",
+          "active": false,
+          "unread": false,
+          "count": "4"
+        },
+        "other": {
+          "title": "新会话",
+          "active": true,
+          "unread": false,
+          "count": "16"
+        },
+        "rows": 16,
+        "msgText": "显示上级会话\n新会话\n你\n你\n·\n01:23\n复制\n\n这是部署走查的连通性测试，请只输出一段 60 字以内的纯中文说明，说明重连测试正在进行；不要调用任何工具，不要创建文件。\n\n墨\n司墨\n·\n需求澄清\n·\n01:23\n复制\n\n这个操作风险较高或信息不足，我先确认一下：你是想让我处理「这是部署走查的连通性测试，请只输出一段 60 字以内的纯中文说明，说明重连测试正在进行；不要调用任何工具，不要创建文件。」吗？确认后我再执行。\n\n你\n你\n·\n01:25\n复制\n\n继续部署走查的连通性测试：请只回复一句中文，确认当前连接可用。不要调用任何工具，不要创建文件。\n\n墨\n司墨\n·\n需求澄清\n·\n01:25\n复制\n\n这个操作风险较高或信息不足，我先确认一下：你是想让我处理「继续部署走查的连通性测试：请只回复一句中文，确认当前连接可用。不要调用任何工具，不要创建文件。」吗？确认后我再执行。\n\n你\n你\n·\n01:25\n复制\n\n重连已完成。请只回复一句：重连后回复正常。不要调用任何工具。\n\n墨\n司墨\n·\n信息咨询\n·\n01:25\n失败\n\n回复生成失败，未返回内容。\n\n重试\n你\n你\n·\n01:28\n复制\n\n这是一次部署走查的断线重连测试。请直接回复一句话：预热消息已收到。\n\n墨\n司墨\n·\n需求澄清\n·\n01:28\n复制\n\n这个操作风险较高或信息不足，我先确认一下：你是想让我处理「这是一次部署走查的断线重连测试。请直接回复一句话：预热消息已收到。」吗？确认后我再执行。\n\n你\n你\n·\n01:29\n复制\n\n重连之后请直接回复一句话：重连后回复正常。\n\n墨\n司墨\n·\n信息咨询\n·\n01:29\n失败\n\n回复生成失败，未返回内容。\n\n重试\n你\n你\n·\n01:31\n复制\n\n请直接回复一句话：连通性正常。\n\n墨\n司墨\n·\n信息咨询\n·\n01:31\n失败\n\n回复生成失败，未返回内容。\n\n重试\n你\n你\n·\n01:33\n复制\n\n重连走查预热：回复一句即可。\n\n墨\n司墨\n·\n信息咨询\n·\n01:33\n复制\n\n（M2 Mock 模型）收到你的消息：重连走查预热：回复一句即可。。真实模型在 -model real / SIMO_LLM=deepseek 时启用。\n\n你\n你\n·\n01:33\n复制\n\n重连之后请直接回复一句话：重连后回复正常。\n\n墨\n司墨\n·\n信息咨询\n·\n01:33\n复制\n\n（M2 Mock 模型）收到你的消息：重连之后请直接回复一句话：重连后回复正常。。真实模型在 -model real / SIMO_LLM=deepseek 时启用。",
+        "msgCount": 16,
+        "composerError": null,
+        "bc": [
+          {
+            "at": 1795341907422,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "9fcf8e5c-c2a8-4e17-b8bf-a1d6e4666d43",
+              "opId": "9fcf8e5c-c2a8-4e17-b8bf-a1d6e4666d43:1795341907406",
+              "at": 0,
+              "sessionId": "sess-b3b42e8f8de61893"
+            }
+          },
+          {
+            "at": 1795341907422,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "5b33c59a-94d9-484c-aad5-3858c5555b11",
+              "opId": "5b33c59a-94d9-484c-aad5-3858c5555b11:1795341907412",
+              "at": 0,
+              "sessionId": "sess-b3b42e8f8de61893"
+            }
+          },
+          {
+            "at": 1795341907422,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "22a26a45-3e15-4bb4-9a35-54e818cc0ff1",
+              "opId": "22a26a45-3e15-4bb4-9a35-54e818cc0ff1:1795341907415",
+              "at": 0,
+              "sessionId": "sess-b3b42e8f8de61893"
+            }
+          },
+          {
+            "at": 1795341907422,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "1497325c-7f81-4b7f-97ce-39fe1a70bf05",
+              "opId": "1497325c-7f81-4b7f-97ce-39fe1a70bf05:1795341907415",
+              "at": 0,
+              "sessionId": "sess-b3b42e8f8de61893"
+            }
+          },
+          {
+            "at": 1795341907434,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "fbc80768-c6c3-43b7-b59b-5bda112ab9c7",
+              "opId": "fbc80768-c6c3-43b7-b59b-5bda112ab9c7:1795341907421",
+              "at": 0,
+              "sessionId": "sess-b3b42e8f8de61893"
+            }
+          },
+          {
+            "at": 1795341907454,
+            "data": {
+              "type": "read_cursor_changed",
+              "tabId": "1497325c-7f81-4b7f-97ce-39fe1a70bf05",
+              "opId": "1497325c-7f81-4b7f-97ce-39fe1a70bf05:1795341907454",
+              "at": 0,
+              "sessionId": "sess-b3b42e8f8de61893"
+            }
+          }
+        ]
+      },
+      "B": {
+        "at": 1795341907835,
+        "activeTitle": "新会话",
+        "probe": {
+          "title": "verify-conv-rest-sync",
+          "active": false,
+          "unread": false,
+          "count": "4"
+        },
+        "other": {
+          "title": "新会话",
+          "active": true,
+          "unread": false,
+          "count": "16"
+        },
+        "rows": 16,
+        "msgText": "显示上级会话\n新会话\n你\n你\n·\n01:23\n复制\n\n这是部署走查的连通性测试，请只输出一段 60 字以内的纯中文说明，说明重连测试正在进行；不要调用任何工具，不要创建文件。\n\n墨\n司墨\n·\n需求澄清\n·\n01:23\n复制\n\n这个操作风险较高或信息不足，我先确认一下：你是想让我处理「这是部署走查的连通性测试，请只输出一段 60 字以内的纯中文说明，说明重连测试正在进行；不要调用任何工具，不要创建文件。」吗？确认后我再执行。\n\n你\n你\n·\n01:25\n复制\n\n继续部署走查的连通性测试：请只回复一句中文，确认当前连接可用。不要调用任何工具，不要创建文件。\n\n墨\n司墨\n·\n需求澄清\n·\n01:25\n复制\n\n这个操作风险较高或信息不足，我先确认一下：你是想让我处理「继续部署走查的连通性测试：请只回复一句中文，确认当前连接可用。不要调用任何工具，不要创建文件。」吗？确认后我再执行。\n\n你\n你\n·\n01:25\n复制\n\n重连已完成。请只回复一句：重连后回复正常。不要调用任何工具。\n\n墨\n司墨\n·\n信息咨询\n·\n01:25\n失败\n\n回复生成失败，未返回内容。\n\n重试\n你\n你\n·\n01:28\n复制\n\n这是一次部署走查的断线重连测试。请直接回复一句话：预热消息已收到。\n\n墨\n司墨\n·\n需求澄清\n·\n01:28\n复制\n\n这个操作风险较高或信息不足，我先确认一下：你是想让我处理「这是一次部署走查的断线重连测试。请直接回复一句话：预热消息已收到。」吗？确认后我再执行。\n\n你\n你\n·\n01:29\n复制\n\n重连之后请直接回复一句话：重连后回复正常。\n\n墨\n司墨\n·\n信息咨询\n·\n01:29\n失败\n\n回复生成失败，未返回内容。\n\n重试\n你\n你\n·\n01:31\n复制\n\n请直接回复一句话：连通性正常。\n\n墨\n司墨\n·\n信息咨询\n·\n01:31\n失败\n\n回复生成失败，未返回内容。\n\n重试\n你\n你\n·\n01:33\n复制\n\n重连走查预热：回复一句即可。\n\n墨\n司墨\n·\n信息咨询\n·\n01:33\n复制\n\n（M2 Mock 模型）收到你的消息：重连走查预热：回复一句即可。。真实模型在 -model real / SIMO_LLM=deepseek 时启用。\n\n你\n你\n·\n01:33\n复制\n\n重连之后请直接回复一句话：重连后回复正常。\n\n墨\n司墨\n·\n信息咨询\n·\n01:33\n复制\n\n（M2 Mock 模型）收到你的消息：重连之后请直接回复一句话：重连后回复正常。。真实模型在 -model real / SIMO_LLM=deepseek 时启用。",
+        "msgCount": 16,
+        "composerError": null,
+        "bc": []
+      },
+      "bcB": [],
+      "framesB": []
+    },
+    "s5": {
+      "dotAfterReturn": {
+        "unread": false,
+        "active": true
+      },
+      "framesB": [
+        {
+          "at": 1795341822501,
+          "type": "session_read",
+          "id": 9241,
+          "data": {
+            "sessionId": "sess-ed275c9234ff49a9"
+          }
+        },
+        {
+          "at": 1795341900169,
+          "type": "session_unread",
+          "id": null,
+          "data": {
+            "sessionId": "sess-ed275c9234ff49a9"
+          }
+        },
+        {
+          "at": 1795341900529,
+          "type": "session_read",
+          "id": 9251,
+          "data": {
+            "sessionId": "sess-ed275c9234ff49a9"
+          }
+        }
+      ]
+    }
+  },
+  "frames": {},
+  "shots": [
+    "conv-rest-1180.png",
+    "conv-rest-768.png",
+    "conv-rest-768-bottom.png",
+    "conv-rest-tabA-probe.png",
+    "conv-rest-tabB-probe.png",
+    "conv-rest-tabA-sent.png",
+    "conv-rest-tabB-received.png",
+    "conv-rest-tabB-reload.png",
+    "conv-rest-tabB-switched.png"
+  ],
+  "notes": [
+    "tabA C6A15C123AB3B971E29B998DDFAC37E3",
+    "tabB 20A7330BAFB91A6DA31C45DDA08D8354"
+  ],
+  "error": "Error: row not found: main\n    at clickRow (file:///E:/dsh_home/workspaces/agent/docs/testing/conv-rest-verify.mjs:102:19)\n    at async main (file:///E:/dsh_home/workspaces/agent/docs/testing/conv-rest-verify.mjs:318:3)"
+}

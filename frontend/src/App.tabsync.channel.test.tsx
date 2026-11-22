@@ -1,9 +1,9 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { setupServer } from 'msw/node'
 import App from './app'
-import { tabId, type TabSyncMessage } from './tabsync'
+import { type TabSyncMessage } from './tabsync'
 import { appHandlers, createSnapshot, MockWebSocket, type AppSnapshot } from './App.test-utils'
 
 const server = setupServer()
@@ -15,7 +15,8 @@ type ChannelListener = (event: ChannelEvent) => void
 /**
  * 跨标签协议本身的契约（SYNC-002）：
  *   - 频道名固定为 simo.tab-sync.v1，另一标签页才接得上；
- *   - App 挂载后立即广播自己的当前会话，让其它标签页收敛；
+ *   - App 挂载时恢复上次会话，但不广播 active_session_changed（PRD-SYNC-002）：
+ *     刷新只影响本标签，不能把其它标签的 active 一起拉走；
  *   - "外部切到同一会话"不应触发本页清空已加载的上级链（否则一跳就丢上下文）。
  * setup.ts 的 BroadcastChannel 是 noop，所以这里替换成可捕获实例的实现。
  */
@@ -95,19 +96,15 @@ async function renderApp(): Promise<ReturnType<typeof userEvent.setup>> {
 }
 
 describe('跨标签通道契约 (SYNC-002)', () => {
-  it('uses the stable channel name and announces the active session on mount', async () => {
+  it('uses the stable channel name and does not announce the active session on mount', async () => {
     await renderApp()
 
     // 频道名是跨标签协议的一部分：改名会让两个标签页互相听不到
     expect(peerChannel()).toBeDefined()
 
-    await waitFor(() => {
-      expect(CapturingBroadcastChannel.posted).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ type: 'active_session_changed', sessionId: 'main', tabId }),
-        ]),
-      )
-    })
+    // 挂载是恢复而不是用户切换：广播 active 会把其它标签一起拉回本标签的会话（PRD-SYNC-002）。
+    await act(async () => { await Promise.resolve() })
+    expect(CapturingBroadcastChannel.posted.filter((item) => item.type === 'active_session_changed')).toEqual([])
   })
 
   it('keeps loaded ancestors when another tab re-announces the same session', async () => {

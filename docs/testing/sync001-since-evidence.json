@@ -1,0 +1,167 @@
+{
+  "startedAt": "2026-11-22T11:08:48.752Z",
+  "steps": [
+    {
+      "step": "loaded",
+      "status": {
+        "status": "已连接",
+        "statusbar": "就绪 V4.1 Flash · 读/写权限按策略"
+      },
+      "subscribes": 1
+    },
+    {
+      "step": "find-test-session",
+      "row": {
+        "x": 119.5,
+        "y": 329.6875,
+        "id": null
+      }
+    },
+    {
+      "step": "active",
+      "active": {
+        "id": null,
+        "title": null
+      },
+      "status": {
+        "status": "已连接",
+        "statusbar": "就绪 V4.1 Flash · 读/写权限按策略"
+      }
+    },
+    {
+      "step": "after-chat",
+      "cursorFrames": [
+        {
+          "at": 1795345732956,
+          "type": "message.created",
+          "id": 9283
+        },
+        {
+          "at": 1795345732969,
+          "type": "reply.created",
+          "id": 9286
+        },
+        {
+          "at": 1795345732972,
+          "type": "message.created",
+          "id": 9287
+        },
+        {
+          "at": 1795345732973,
+          "type": "session_unread",
+          "id": null
+        }
+      ],
+      "waitedMs": 0
+    },
+    {
+      "step": "stop-clicked",
+      "stopFrame": null
+    },
+    {
+      "step": "offline",
+      "down": {
+        "ok": false,
+        "ms": 15088,
+        "s": {
+          "status": "已连接",
+          "statusbar": "就绪 V4.1 Flash · 读/写权限按策略"
+        }
+      }
+    },
+    {
+      "step": "online",
+      "up": {
+        "ok": true,
+        "ms": 2,
+        "s": {
+          "status": "已连接",
+          "statusbar": "就绪 V4.1 Flash · 读/写权限按策略"
+        }
+      }
+    }
+  ],
+  "subscribes": [
+    {
+      "at": 1795345728969,
+      "parsed": {
+        "sessionId": "main",
+        "since": null,
+        "sinceType": "undefined",
+        "hasSince": false
+      },
+      "raw": "{\"type\":\"subscribe\",\"data\":{\"sessionId\":\"main\"}}"
+    },
+    {
+      "at": 1795345731443,
+      "parsed": {
+        "sessionId": "sess-b3b42e8f8de61893",
+        "since": null,
+        "sinceType": "undefined",
+        "hasSince": false
+      },
+      "raw": "{\"type\":\"subscribe\",\"data\":{\"sessionId\":\"sess-b3b42e8f8de61893\"}}"
+    }
+  ],
+  "cursorFrames": [
+    {
+      "at": 1795345732956,
+      "type": "message.created",
+      "id": 9283
+    },
+    {
+      "at": 1795345732969,
+      "type": "reply.created",
+      "id": 9286
+    },
+    {
+      "at": 1795345732972,
+      "type": "message.created",
+      "id": 9287
+    },
+    {
+      "at": 1795345732973,
+      "type": "session_unread",
+      "id": null
+    },
+    {
+      "at": 1795345732978,
+      "type": "status",
+      "id": 9288
+    },
+    {
+      "at": 1795345749493,
+      "type": "reply.done",
+      "id": 9289
+    },
+    {
+      "at": 1795345749497,
+      "type": "message.done",
+      "id": 9290
+    },
+    {
+      "at": 1795345749504,
+      "type": "status",
+      "id": 9291
+    }
+  ],
+  "errors": [],
+  "target": {
+    "id": "7B3419910043C94A712EF01D79DFDAAE",
+    "url": "http://127.0.0.1:8787/"
+  },
+  "sessionId": null,
+  "chat": {
+    "status": 202,
+    "body": "{\"id\":\"msg-f1c15eeeef248d5b\",\"messageId\":\"msg-f1c15eeeef248d5b\",\"ok\":true}\n"
+  },
+  "lastEventId": 9288,
+  "newSubscribes": [],
+  "finishedAt": "2026-11-22T11:09:10.081Z",
+  "verdict": {
+    "sawNumericEventBeforeDisconnect": true,
+    "reconnectSubscribeCount": 0,
+    "reconnectSince": [],
+    "sinceIsNumber": false
+  }
+}

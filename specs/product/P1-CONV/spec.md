@@ -9,8 +9,8 @@
 
 把“会话与消息”从零散接口/旧 FE 规格收敛成可验收的产品能力：每条 AC 描述**用户在界面上能观察到的行为**（操作 → 预期可见结果），并与真实测试证据一一对应；未实现的能力标 `unimplemented`，缺证据的写 `missing`，不得写成已完成。
 
-本域覆盖 13 个 L3：`covered` 11、`conditional` 1（CONV-006）、`gap` 1（SYNC-005），13 个 PRD 均有可运行实现。
-改造前覆盖口径（2026-11-21，CHG-CONV-006 前）：**0 covered / 12 partial / 1 gap** —— 验收面 12 = `CONV-001..008` + `SYNC-001..004`（新增 CONV-008）；六类产物已补齐（见各 PRD“六类状态”），但每个 PRD 仍至少缺一类可复现 AC 证据，故不升级 covered。本轮由 [CHG-CONV-006](../../changes/CHG-CONV-006/proposal.md) 收口到 12 covered。
+本域覆盖 12 个 L3：`covered` 12、`conditional` 0、`gap` 0，12 个 PRD 均有可运行实现与可复现证据。
+改造前覆盖口径（2026-11-21，CHG-CONV-006 前，13 个 PRD 含当时未移除的 SYNC-005）：**0 covered / 12 partial / 1 gap** —— 验收面 12 = `CONV-001..008` + `SYNC-001..004`（新增 CONV-008）；六类产物已补齐（见各 PRD“六类状态”），但每个 PRD 仍至少缺一类可复现 AC 证据，故不升级 covered。本轮由 [CHG-CONV-006](../../changes/CHG-CONV-006/proposal.md) 收口到 12 covered / 0 partial / 0 gap。
 
 ## 2. 非目标与边界
 
@@ -20,7 +20,7 @@
 - 不把后端路由/表存在等同于用户可用；没有入口或没有证据的能力最多 `partial`。
 - 不为每个 PRD 新建独立 spec；功能点在本文档内以 PRD 章节维护。
 - 不在本 spec 修改代码、测试或部署。
-- **排除 SYNC-005（远程访问与通知中心）**：未实现、无鉴权与通知数据模型，其 AC 仅登记为 `unimplemented`，不计入 P1 验收通过面。
+- **SYNC-005 已移除（2026-11-22 用户裁决）**：远程访问与通知中心不在 P1 范围，编号不复用；后续若要做，需先立鉴权 PRD。
 - **删除会话（显式非目标）**：用户裁决“会话暂时不允许删除，只允许归档”。本阶段不提供删除 UI、确认令牌、二次确认或级联；`DELETE /api/sessions/{id}` 当前固定 403 `R4_CONFIRM_REQUIRED`，是保护性占位，不是待补功能。后续若要删除，须新开变更包并定义确认令牌、主会话拒绝、子会话级联、事务与回滚；backlog 编号 `REQ-CONV-002-03`（非 AC，不计入本 PRD 验收面）。
 - **子会话不可移动 / 换父（显式非目标）**：本阶段不提供“把子会话挂到其他会话下”的 UI、接口或数据迁移；父链只读展示，不提供换父操作。理由：用户裁决“暂先限定为不能移动”；后续若要做，必须新开 CHG，定义 parent 变更的权限、环检测、消息/任务归属与回滚迁移，不能以“补一个入口”处理。
 - **草稿会话语义**：`POST /api/sessions` 返回 `201 draft=true`；草稿是**服务端内存态**，不出现在 `GET /api/sessions` 与 `/tree`，首条消息物化后才进入列表。因此草稿行只存在于当前标签的会话态里，刷新后会消失（以服务端为准），不视为数据丢失。草稿不请求 `spec-projection`，右栏显示“发送第一条消息后生成目标与执行态”占位，该占位优先于加载/错误/暂无投影；这与 §4.5 `AC-CONV-008-03` 的空态口径不冲突（草稿是独立前置态）。
@@ -155,7 +155,7 @@
 
 - 优先级：P0
 - 实现状态：`implemented`（覆盖 `covered`，2026-11-22 收口）
-- 六类状态：产品 spec ✅ / CHANGE [CHG-CONV-003](../../changes/CHG-CONV-003/spec.md) ✅ / 前端 ✅ / 后端 ✅ / 组件 N/A / 任务卡 ✅ / test-plan ✅（TC-P1-006 pass，`AC-CONV-005-01/02` 判 pass）/ 证据 ✅（component + 集成重连/去重 + 后端 WS 4 测 + 停止定向 `stop_interrupt_test.go:32`/`:402` + 幂等 7 测）/ 残余未验证：断网 e2e、真实厂商连接级中断、跨标签双 WS
+- 六类状态：产品 spec ✅ / CHANGE [CHG-CONV-003](../../changes/CHG-CONV-003/spec.md) ✅ / 前端 ✅ / 后端 ✅ / 组件 N/A / 任务卡 ✅ / test-plan ✅（TC-P1-006 pass，`AC-CONV-005-01/02` 判 pass）/ 证据 ✅（component + 集成重连/去重 + 后端 WS 4 测 + 停止定向 `stop_interrupt_test.go:32`/`:402` + 停止上游 `stop_upstream_test.go` 三断言 + 幂等 7 测）/ 环境限制：真实厂商 `api.deepseek.com` 本机 403，连接级中断不可达，按产品侧机制判定；断网 e2e 与跨标签双 WS 仍属未取证据项，不作为 AC 判据
 - 目标行为：
   1. 发送：点击发送或快捷键提交 → `POST /api/chat` 接受（202）→ 输入框清空 → 通过 WS 收 `delta` 增量追加、`done` 收尾；
   2. 流式中显示“停止”，点击后不再追加该回复（前端忽略后续帧并发 correct 帧请求中止）；
@@ -165,14 +165,14 @@
   6. 幂等：请求携带 `clientMutationId`，服务端据此去重（已实现，见 `backend/internal/modules/chat/idempotency.go`；`client_mutations` 表、TTL 7d、在途等待 5s，7 条测试在 `backend/cmd/simo/p1_conv_chat_idempotency_test.go`）。
 - AC：
   - `AC-CONV-005-01` 主路径：**When** 用户发送文本，**Then** 消息乐观出现、流式增量渲染、done 后为终态、输入清空；停止后不再增长，停止只作用于被点消息，同会话其它流不受影响。证据：`Composer.test.tsx`（send/clear/streaming-stop）、`TestWebSocketEventOrder`、`TestM2MockStreamRecordsUsageAndDecision`、`stop_interrupt_test.go:402`（同会话双流只停目标）、`App.conversation.test.tsx:455`（逐条帧各带 messageId）、`CDP 02/05`。
-  - `AC-CONV-005-02` 异常/边界：**Given** 发送失败、重复点击、WS 断开、停止中，**Then** 文本保留可重试、不重复提交、断线可见并按退避重连、`since` 续传不丢不重、停止后不追加。证据：`Composer.test.tsx`（失败恢复/防重复）、`TestM55StartupRecoversStaleStreaming`、`TestM55StreamingWatchdogTimeout`、`TestWebSocketSinceContinuation`。剩余未验证：真实厂商连接级中断（本机 `api.deepseek.com` 仍 403，停止用例用可控假上游）；跨标签双 WS（并发用例是同一条 WS 上的两条流）；前端无独立 `since` 回放用例，重连补拉 `App.conversation.test.tsx:486` 与后端 `p1_conv_ws_test.go:386` 共同覆盖不丢不重。停止真中断已覆盖：`stop_interrupt_test.go:32`（单流取消上游）、`:402`（双流只停目标）。
+  - `AC-CONV-005-02` 异常/边界（机制判据，与厂商无关）：**Given** 发送失败、重复点击、WS 断开、停止中，**When** 用户点击停止，**Then** 文本保留可重试、不重复提交、断线可见并按退避重连、`since` 续传不丢不重；**And** 停止帧下发后，后端对上游请求执行 `context` 取消、不再派发 `reply.delta`/`message.delta`、不落库新内容、状态回到 `idle`。证据：`Composer.test.tsx`（失败恢复/防重复）、`TestM55StartupRecoversStaleStreaming`、`TestM55StreamingWatchdogTimeout`、`TestWebSocketSinceContinuation`、`backend/internal/modules/chat/stop_upstream_test.go`（可控假上游 HTTP SSE：停止后 10ms 内上游 context 关闭，之后 `reply.delta`/`message.delta` 为 0，`reply.retracted` 先于 `idle`，负例不取消），运行记录 `docs/testing/STOP-UPSTREAM-EVIDENCE-20261122.md`（5 PASS / 0 FAIL）。环境限制：真实厂商 `api.deepseek.com` 本机 403（key 失效），连接级中断未直接观测；该限制不作为判据。跨标签双 WS 与断网 e2e 未取证据，不计入本 AC。
 
 #### PRD-CONV-006 · Composer 输入与快捷键
 <a id="prd-conv-006"></a>
 
 - 优先级：P0
 - 实现状态：`implemented`
-- 六类状态：产品 spec ✅ / CHANGE [CHG-CONV-003](../../changes/CHG-CONV-003/spec.md) ✅ / 前端 ✅ / 后端 N/A（纯前端交互，写 N/A+理由）/ 组件 ⚠️（`COMP-composer-send-mode` 仍 `spec ready`，未签收）/ 任务卡 ✅ / test-plan ✅（TC-P1-CONV-018 pass / TC-P1-CONV-019 partial）/ 证据 ✅（10/10 + 新增 5 条 + E2E 03；后端仅请求校验）
+- 六类状态：产品 spec ✅ / CHANGE [CHG-CONV-003](../../changes/CHG-CONV-003/spec.md) ✅ / 前端 ✅ / 后端 N/A（纯前端交互，写 N/A+理由）/ 组件 ⚠️（`COMP-composer-send-mode` 仍 `spec ready`，未签收）/ 任务卡 ✅ / test-plan ✅（TC-P1-CONV-018 pass / TC-P1-CONV-019 pass）/ 证据 ✅（10/10 + 新增 5 条 + E2E 03；后端仅请求校验）
 - 目标行为：
   1. 两种发送模式：`enter`（Enter 发送、Shift+Enter 换行）与 `shift-enter`（Shift+Enter 发送、Enter 换行）；Ctrl/⌘+Enter 在两种模式下都发送；
   2. 模式切换按钮 aria 状态与提示文案同步变化，选择写入 `localStorage`（`simo.composer.sendMode`），并迁移旧 key；
@@ -181,7 +181,7 @@
   5. 发送失败错误区可读；长文本不截断。
 - AC：
   - `AC-CONV-006-01` 主路径：**Given** 当前为 `enter` 模式，**When** Enter / Shift+Enter / Ctrl+Enter / ⌘+Enter，**Then** 分别发送/换行/发送/发送；**When** 切到 `shift-enter` 模式，**Then** 快捷键行为反转、按钮 aria 与提示同步、刷新后模式保持。证据：`Composer.test.tsx`（Enter、Shift+Enter、Ctrl/Meta、模式持久化）、`CDP 03`。
-  - `AC-CONV-006-02` 异常/边界：**Given** IME 组合中、发送失败、无会话/归档、长文本，**Then** 组合中不发送、失败可恢复且文本保留、禁用态明确、长文本不截断。证据：`Composer.test.tsx`（IME/失败恢复/disabled/long text）。跨标签模式同步归 SYNC-003，已由 `Composer.test.tsx:144/178/198/219` 覆盖（`test-plan.md:155` 记 pass）。**缺**：真实中文输入法未手测（无输入法环境），本 AC 保持 `partial`（`test-plan.md:149`，§15 M-05）。
+  - `AC-CONV-006-02` 异常/边界：**Given** IME 组合中、发送失败、无会话/归档、长文本，**Then** 组合中不发送、失败可恢复且文本保留、禁用态明确、长文本不截断。证据：`Composer.test.tsx`（IME/失败恢复/disabled/long text）。跨标签模式同步归 SYNC-003，已由 `Composer.test.tsx:144/178/198/219` 覆盖（`test-plan.md:155` 记 pass）。2026-11-22 第十轮用 CDP `Input.imeSetComposition` 合成组合态完成五点验证（组合中不发送、组合中 Enter 不发送且 `isComposing=true`、提交无拼音残留、点发恰好 +1、连续两句不粘不重），证据 `docs/testing/IME-EVIDENCE-20261122.md` 与截图 `ime-compose-20261122.png`、`ime-timeline-20261122.png`，本 AC 判 pass；物理输入法未覆盖，作为环境限制记入 `test-plan.md` §15 M-05，不作为判据。
 
 ### 4.4 L2 · 多标签与同步
 
@@ -243,22 +243,13 @@
   2. 新消息到达且该会话不是当前 active 会话 → 置位；用户进入（激活）该会话 → 立即标记已读并清除；任一标签已读即全标签已读；
   3. 左栏该会话行显示**未读点**（有/无两态）；归档会话同样可有未读点；
   4. **持久化读游标**：刷新/重启后仍能正确显示未读；读游标按会话保存，进入即写已读；多标签共享同一游标（任一标签已读，全部标签已读）；**需新增后端读游标表与接口，属本阶段新增能力，不是收口**；
-  5. 通知中心/系统级提醒另立项，不与本 PRD 同源（SYNC-005 边界）。
+  5. 通知中心/系统级提醒不在本域范围（原 SYNC-005 已移除，编号不复用）。
 - AC：
   - `AC-SYNC-004-01` 主路径：**Given** 两个会话、当前 active 为 A，**When** B 收到新消息，**Then** B 行出现未读点、A 行无；**When** 用户切到 B，**Then** 未读点立即消失且切回 A 后不再出现；**When** 刷新或重启，**Then** B 的已读状态保持，不重新出现未读。证据：`App.conversation.test.tsx:148`（未读点+进入清除）、`:179`（`session_unread` 合并刷新）、`Sidebar.test.tsx:126`（只出点、无数字）、`unread_test.go:93`（重启持久化）；`test-plan.md:156` 记 pass。
   - `AC-SYNC-004-02` 异常/边界：**Given** 刷新、服务端重启、跨标签，**Then** 刷新/重启后未读按持久化游标恢复（已读不复活、未读不丢）、另一标签已读后本标签未读点清除、不出现幽灵未读；**And** 游标读写失败时左栏不显示假未读/假已读，进入会话仍可重试。证据：`App.conversation.test.tsx:161`（`session_read` 后刷新并信服务端）、`:213`（写失败保留红点+toast）、`:179`、`unread_test.go:93`、`p1_conv_unread_test.go:93`；`test-plan.md:157` 记 pass。
   - `AC-SYNC-004-03` 会话级持久化读游标（**P2，默认裁决**）：**Given** 任一标签收到某会话新消息，**When** 该会话非 active，**Then** 该会话显示未读点；**When** 用户进入该会话或任一标签标记已读，**Then** 所有标签该会话未读点清除；**And** 读游标写后端并在刷新/重启后恢复；**And** 不显示全站汇总数字/条数、不做跨设备同步、不把通知中心纳入本 AC。证据：`App.conversation.test.tsx:161/179`、`Sidebar.test.tsx:126`、跨标签 CDP 双 target（`test-plan.md:158`）；读游标写后端并在重启后恢复（`unread_test.go:93`）→ pass；实现属本阶段新增能力，不是收口。
 
-#### PRD-SYNC-005 · 远程访问与通知中心
-<a id="prd-sync-005"></a>
-
-- 优先级：P2
-- 实现状态：`unimplemented`
-- 六类状态：产品 spec ✅（仅登记）/ CHANGE [CHG-CONV-005](../../changes/CHG-CONV-005/spec.md)（blocked）/ 前端 ❌ / 后端 ❌ / 组件 ❌ / 任务卡 ❌（未拆）/ test-plan ✅（TC-P1-CONV-028/029 blocked）/ 证据 ❌
-- 目标行为：**未定义**（无鉴权模型、无设备管理、无通知渠道与数据模型；与当前 127.0.0.1 无鉴权基线冲突）。
-- AC：
-  - `AC-SYNC-005-01` 主路径：`unimplemented`，不计入 P1 验收通过面；不得对外宣称可用。
-  - `AC-SYNC-005-02` 异常/边界：同上，仅登记为规划项。
+> PRD-SYNC-005 已移除（2026-11-22 用户裁决）：远程访问与通知中心不在范围内，编号不复用。
 
 ### 4.5 L2 · 右栏会话投影
 
@@ -290,10 +281,10 @@
 | A2 | 空、加载、错误、权限不足在左栏/中栏/右栏/Composer 至少各有可见反馈，不静默、不假 0 | 必验 | **部分**：E1/E2/E3 partial；权限只能以归档只读近似（无鉴权 UI） |
 | A3 | 有 UI 的功能点可用键盘完成主路径（Tab/Enter/Escape/箭头/Home/End），焦点可见 | 有 UI 必验 | **部分**：键盘用例有；无 axe/对比度/全键盘遍历 |
 | A4 | 375/768/1280 三档不横向溢出、不遮挡主操作 | 有 UI 必验 | **部分**：仅 375（CDP 01b）；无 768/1280 |
-| A5 | 不展示假 0/假成功；未实现/无证据项在界面与文档中明确标注 | 必验 | **部分**：统计占位已验；未读/远程无界面标注 |
+| A5 | 不展示假 0/假成功；未实现/无证据项在界面与文档中明确标注 | 必验 | **部分**：统计占位已验；未读无界面标注 |
 | A6 | 权限/隔离默认拒绝（归档只读、越权路径不依赖前端隐藏按钮） | 涉及权限必验 | **部分**：归档只读后端测试有；无鉴权面 |
-| A7 | `unimplemented`（SYNC-005）在 TREE/TRACEABILITY/spec 中一致标注，不计 covered | 必验 | **满足**（文档口径一致） |
-| A8 | 每个 AC 至少映射一个用例；证据缺失写 `missing`，不写“通过” | 必验 | **部分**：35 行 AC 已映射（test-plan §3）；有效 33 = 32 pass / 1 partial（`AC-CONV-006-02` 待真实中文 IME）/ 2 blocked（SYNC-005 未实现），无未映射的 pass 项 |
+| A7 | `PRD-SYNC-005` 已从 TREE/TRACEABILITY/spec/test-plan 移除，编号不复用、不计 covered | 必验 | **满足**（2026-11-22 移除，文档口径一致） |
+| A8 | 每个 AC 至少映射一个用例；证据缺失写 `missing`，不写“通过” | 必验 | **满足**：33 行 AC 已映射（test-plan §3）；33 条全部生效 = 33 pass / 0 partial / 0 blocked（`AC-CONV-006-02` 已由 CDP 合成组合态证据转 pass） |
 
 ## 6. 当前实现状态与未实现项
 
@@ -302,19 +293,18 @@
 | `PRD-CONV-001` | 会话树与主会话 | `implemented`（覆盖 `covered`） | 主路径+四态有组件/API 证据；**主会话不可归档（守卫已存在，AC-001-03）**；置顶入口本轮交付（AC-001-04）；切换中栏无 E2E |
 | `PRD-CONV-002` | 会话生命周期 | `implemented`（覆盖 `covered`） | 归档/恢复/草稿有证据；失败反馈与“重试不产生重复/脏数据”已由 `App.operation-errors.test.tsx:49/75/96/115`、`Sidebar.test.tsx:77` 覆盖，`test-plan.md:137` 记 `AC-CONV-002-02` pass（重试计数 POST /api/sessions 2、archive 2、unarchive 2、read 2）；删除为显式非目标（`REQ-CONV-002-03` backlog），不计入验收面；DELETE 固定 403 保护性占位、UI 不暴露 |
 | `PRD-CONV-003` | 会话搜索与未读 | `implemented`（覆盖 `covered`） | 标题搜索与未读均已有证据；**标题搜索为主（AC-003-03），消息正文搜索降 P2**；未读为会话级持久化读游标（SYNC-004，已实现并通过） |
-| `PRD-CONV-004` | 消息流与渲染 | `implemented`（覆盖 `covered`） | 18/18 + API 证据；消息纯度已升独立 AC-004-03（证据已有）；COMP-message-colors 未签收 |
-| `PRD-CONV-007` | 祖先消息整级加载 | `implemented`（覆盖 `covered`） | 祖先/时间轴/413/403 有证据；整列命中已真机验证（ACCEPT-CONV-6）、未部署；两个 COMP 未签收 |
+| `PRD-CONV-004` | 消息流与渲染 | `implemented`（覆盖 `covered`） | 18/18 + API 证据；消息纯度已升独立 AC-004-03（证据已有）；COMP-message-colors 已签收 |
+| `PRD-CONV-007` | 祖先消息整级加载 | `implemented`（覆盖 `covered`） | 祖先/时间轴/413/403 有证据；整列命中已真机验证（ACCEPT-CONV-6）、未部署；两个 COMP 已签收 |
 | `PRD-CONV-008` | 右栏会话投影 | `implemented`（覆盖 `covered`） | 组件 + 后端 + 6 条组件测试 + E2E 01a/06；真机 spec-projection 200→304（ETag `spec-c5a2d772dd1d5d88`、304 空体）与 375 四态截图已补（ACCEPT-CONV-8）；375 下 sidebar 与 inspector 均 `display:none`、无抽屉入口，遮挡判定不适用；Composer 359×144、发送 54×28、可见比例 1.0、文档 `scrollWidth=375`（`test-plan.md:163`，ACCEPT-CONV-9 §2.4） |
-| `PRD-CONV-005` | 发送·流式·断线重连 | `implemented`（覆盖 `covered`） | 发送/流式/失败/防重复有证据；停止按 `messageId` 定向已验真（`stop_interrupt_test.go:32`/`:402`、`App.conversation.test.tsx:455`）；幂等已实现（`idempotency.go` + 7 测）；残余未验证：真实厂商连接中断、跨标签双 WS、断网 e2e |
-| `PRD-CONV-006` | Composer 输入与快捷键 | `implemented`（覆盖 `conditional`） | 10/10 + 新增 5 条；`AC-CONV-006-02` 真实中文输入法待人工验证（33 条生效 AC 中唯一 partial）；COMP 未签收 |
+| `PRD-CONV-005` | 发送·流式·断线重连 | `implemented`（覆盖 `covered`） | 发送/流式/失败/防重复有证据；停止按 `messageId` 定向已验真（`stop_interrupt_test.go:32`/`:402`、`App.conversation.test.tsx:455`）；停止机制由 `stop_upstream_test.go` 按假上游证明（10ms 内取消上游 context、之后 delta 0、`idle` 在 `retracted` 之后，`STOP-UPSTREAM-EVIDENCE-20261122.md`）；幂等已实现（`idempotency.go` + 7 测）；环境限制：真实厂商 403、跨标签双 WS、断网 e2e 不作为判据 |
+| `PRD-CONV-006` | Composer 输入与快捷键 | `implemented`（覆盖 `covered`） | 10/10 + 新增 5 条；`AC-CONV-006-02` 由 CDP `Input.imeSetComposition` 五点验证转 pass（`IME-EVIDENCE-20261122.md`），物理输入法未覆盖只作环境限制；COMP 已签收 |
 | `PRD-SYNC-001` | WS 连接与重连 | `implemented`（覆盖 `covered`） | 后端顺序/since/fanout/恢复有证据；前端 close→open 重连与断线补拉由 `App.conversation.test.tsx:486` 覆盖，`test-plan.md:151` 记 pass；`since` 日志截断/保留窗口仍未定义 |
 | `PRD-SYNC-002` | 多标签 active/ancestor/read cursor | `implemented`（覆盖 `covered`） | `App.tabsync.test.tsx:115/148/165/189/211/235/273/297/316/340`、`App.tabsync.channel.test.tsx:98/113`、`App.tabsync.degrade.test.tsx` 覆盖 active/祖先/读游标、同 `at` tiebreak 与降级，`test-plan.md:152-153` 记 pass；peer 为模拟双实例，真双标签时序仍归 §15 M-03 |
 | `PRD-SYNC-003` | 发送模式/设置跨标签同步 | `implemented`（覆盖 `covered`） | 单标签持久化与跨标签/降级均有测试：`Composer.test.tsx:144/178/198/219`，`test-plan.md:155` 记 pass；真实两标签时序见 §15 M-03 |
-| `PRD-SYNC-004` | 未读与已读游标 | `implemented`（覆盖 `covered`） | 会话级持久化读游标已实现（后端表/接口 + 前端接入）；`AC-SYNC-004-01/02/03` 全 pass；SYNC-005 仍排除在本轮验收外 |
-| `PRD-SYNC-005` | 远程访问与通知中心 | `unimplemented` | 无实现；无鉴权/通知模型；排除在本轮验收外 |
+| `PRD-SYNC-004` | 未读与已读游标 | `implemented`（覆盖 `covered`） | 会话级持久化读游标已实现（后端表/接口 + 前端接入）；`AC-SYNC-004-01/02/03` 全 pass。 |
 
-**未实现项（unimplemented）**：`PRD-SYNC-005`。
-**覆盖口径**：**出口预期 12 covered / 0 partial / 1 gap（SYNC-005）**；**当前状态以证据为准：11 covered / 1 conditional（CONV-006）/ 0 partial / 1 gap（SYNC-005）**（`specs/test/P1-CONV/test-plan.md`：33 条生效 AC = 32 pass / 1 partial `AC-CONV-006-02`，SYNC-005 2 条 blocked）。删除/子会话移动为**显式非目标**，不计缺口；`implemented` 只表示“可运行实现 + 部分证据”。改造前统计为 0 covered / 12 partial / 1 gap。
+**未实现项（unimplemented）**：无（原 `PRD-SYNC-005` 已移除，编号不复用）。
+**覆盖口径**：**当前状态 12 covered / 0 partial / 0 gap**（`specs/test/P1-CONV/test-plan.md`：33 条 AC = 33 pass / 0 partial / 0 blocked）；删除/子会话移动为**显式非目标**，不计缺口；`implemented` 只表示“可运行实现 + 部分证据”。改造前按移除后的 12 个 PRD 计为 0 covered / 12 partial / 0 gap。
 
 ## 7. 依赖、风险、待确认与边界清单
 
@@ -323,6 +313,6 @@
 - 风险 2：组件 spec 与实现漂移（message-colors / timeline-groups / timeline-tip / composer-send-mode 均未按实现签收）。
 - 风险 3：未读口径已裁决（会话级持久化读游标），实现与用例已补（`unread_test.go:93`、`App.conversation.test.tsx:148/161/179/213`，`test-plan.md:156-158` 记 pass）；`CHG-CONV-005` 仍为 blocked 历史包，由 `CHG-CONV-006` 收口。
 - 已裁决（**默认裁决，2026-11-21，用户可在 spec review 推翻**）：① 搜索=标题搜索（`GET /api/sessions?q=`，跨全部会话含子会话；消息正文搜索降 P2、不在本阶段验收，全局正文进 backlog）→ AC-CONV-003-03；② 未读=会话级持久化读游标（进入即已读、刷新/重启保留、多标签共享、不做全站数字/条数、通知中心另立项；需新增后端表/接口，属本阶段新增能力）→ AC-SYNC-004-01..03；③ 删除会话 = 显式非目标/backlog `REQ-CONV-002-03`（用户裁决暂不允许删除；不从本 PRD AC 验收；DELETE 固定 403 保护性占位、UI 不暴露；后续新 CHG 才定义确认令牌/主会话拒绝/级联/回滚）；④ pin 入口进 UI（本轮验收面：会话行菜单置顶/取消置顶；主会话、草稿、归档不提供；置顶只影响同级分组内顺序，不改变父子归属、不提升到顶层，同级内排序以后端返回为准）→ AC-CONV-001-04；⑤ 右栏会话投影新增 `PRD-CONV-008`（P1）→ §4.5；⑥ 主会话不可归档升 `AC-CONV-001-03`、消息纯度升 `AC-CONV-004-03`；⑦ 子会话不可移动/换父（显式非目标，后续新 CHG）→ §2.1。
-- 仍待确认：SYNC-005 是否立项（本轮明确排除，保持 gap）；未读粒度仍为会话级有/无，若后续改判条数/全站数字，需另开 CHG，不回改已发布 AC 编号。
+- 仍待确认：未读粒度仍为会话级有/无，若后续改判条数/全站数字，需另开 CHG，不回改已发布 AC 编号。
 - **非 P1 但页面可见（另域验收，不计入本域）**：工作台指标（P3/P10）、右栏任务投影（P2-TASK-002）、交付物（P4）、权限只读（P8）、卡片交互（M41/COMP）、团队/日程/记忆/智能体/工作台独立页面（P2–P10 冻结）。
 - 证据：测试计划 [`../../test/P1-CONV/test-plan.md`](../../test/P1-CONV/test-plan.md)；未执行项一律 `missing`；逐 PRD 六类状态与 owner 见 [`CONV-CLOSURE.md`](../../../docs/product/CONV-CLOSURE.md)。

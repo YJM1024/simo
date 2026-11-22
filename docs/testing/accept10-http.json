@@ -1,0 +1,476 @@
+{
+  "at": "2026-11-22T11:10:58.327Z",
+  "base": "http://127.0.0.1:8787",
+  "health": {
+    "status": 200,
+    "headers": {
+      "content-length": "114",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:10:58 GMT"
+    },
+    "text": "{\"ok\":true,\"ready\":true,\"time\":1795345858405,\"checks\":{\"db\":\"ok\",\"modules\":[\"sessions\",\"chat\",\"tasks\",\"memory\"]}}\n",
+    "json": {
+      "ok": true,
+      "ready": true,
+      "time": 1795345858405,
+      "checks": {
+        "db": "ok",
+        "modules": [
+          "sessions",
+          "chat",
+          "tasks",
+          "memory"
+        ]
+      }
+    }
+  },
+  "archiveMain": {
+    "status": 409,
+    "headers": {
+      "content-length": "114",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:10:58 GMT"
+    },
+    "text": "{\"blockers\":[\"主会话不可归档\"],\"code\":\"main_session_protected\",\"error\":\"主会话不可归档\",\"ok\":false}\n",
+    "json": {
+      "blockers": [
+        "主会话不可归档"
+      ],
+      "code": "main_session_protected",
+      "error": "主会话不可归档",
+      "ok": false
+    }
+  },
+  "unarchiveMain": {
+    "status": 200,
+    "headers": {
+      "content-length": "182",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:10:58 GMT"
+    },
+    "text": "{\"ok\":true,\"session\":{\"id\":\"main\",\"parentId\":\"\",\"title\":\"主会话\",\"createdAt\":1794490306999,\"archived\":0,\"pinned\":false,\"ownerAgentId\":\"simo\",\"hasUnread\":false,\"messageCount\":85}}\n",
+    "json": {
+      "ok": true,
+      "session": {
+        "id": "main",
+        "parentId": "",
+        "title": "主会话",
+        "createdAt": 1794490306999,
+        "archived": 0,
+        "pinned": false,
+        "ownerAgentId": "simo",
+        "hasUnread": false,
+        "messageCount": 85
+      }
+    }
+  },
+  "mainAfter": {
+    "status": 404,
+    "headers": {
+      "content-length": "78",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:10:58 GMT"
+    },
+    "text": "{\"ok\":false,\"error\":\"接口不存在: /api/sessions/main\",\"code\":\"not_found\"}\n",
+    "json": {
+      "ok": false,
+      "error": "接口不存在: /api/sessions/main",
+      "code": "not_found"
+    }
+  },
+  "projection": {
+    "status": 200,
+    "etag": "\"spec-c5a2d772dd1d5d88\"",
+    "bytes": 1375
+  },
+  "projection304": {
+    "status": 304,
+    "headers": {
+      "cache-control": "no-cache",
+      "date": "Sun, 22 Nov 2026 11:10:58 GMT",
+      "etag": "\"spec-c5a2d772dd1d5d88\""
+    },
+    "text": "",
+    "json": null
+  },
+  "projection304Bytes": 0,
+  "projectionLimit0": {
+    "status": 400,
+    "headers": {
+      "content-length": "85",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:10:58 GMT"
+    },
+    "text": "{\"error\":{\"code\":\"invalid_task_limit\",\"message\":\"taskLimit 范围 1-50\"},\"ok\":false}\n",
+    "json": {
+      "error": {
+        "code": "invalid_task_limit",
+        "message": "taskLimit 范围 1-50"
+      },
+      "ok": false
+    }
+  },
+  "projectionLimit51": {
+    "status": 400,
+    "headers": {
+      "content-length": "85",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:10:58 GMT"
+    },
+    "text": "{\"error\":{\"code\":\"invalid_task_limit\",\"message\":\"taskLimit 范围 1-50\"},\"ok\":false}\n",
+    "json": {
+      "error": {
+        "code": "invalid_task_limit",
+        "message": "taskLimit 范围 1-50"
+      },
+      "ok": false
+    }
+  },
+  "projection50": {
+    "status": 200,
+    "headers": {
+      "cache-control": "no-cache",
+      "content-length": "1969",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:10:58 GMT",
+      "etag": "\"spec-e217d5acfbc1ba18\""
+    },
+    "text": "{\"sessionId\":\"main\",\"status\":\"active\",\"revision\":34,\"updatedAt\":1795277763987,\"goal\":null,\"constraints\":[],\"inputs\":[],\"tasks\":{\"done\":{\"total\":6,\"items\":[{\"id\":\"task-seed-done-1\",\"title\":\"汇总本周进展\",\"state\":\"done\",\"updatedAt\":1794489947453,\"messageId\":\"msg-a1\"},{\"id\":\"task-seed-done-2\",\"title\":\"整理风险清单\",\"state\":\"done\",\"updatedAt\":1794489957453,\"messageId\":\"\"},{\"id\":\"task-seed-done-3\",\"title\":\"生成下周计划\",\"state\":\"done\",\"updatedAt\":1794489967453,\"messageId\":\"\"},{\"id\":\"task-00279a8c1a00969f\",\"title\":\"多标签A测试\",\"state\":\"done\",\"updatedAt\":1794504158591,\"messageId\":\"\"},{\"id\":\"task-91391c82769adf5c\",\"title\":\"多标签B测试\",\"state\":\"done\",\"updatedAt\":1794504159907,\"messageId\":\"\"},{\"id\":\"task-72fdbd8228961699\",\"title\":\"生产切换验证：请只回复 OK。不要创建任务。\",\"state\":\"done\",\"updatedAt\":1794536221520,\"messageId\":\"\"}],\"hasMore\":false},\"running\":{\"total\":0,\"items\":[],\"hasMore\":false},\"pending\":{\"total\":4,\"items\":[{\"id\":\"task-seed-run-1\",\"title\":\"生成周报初稿\",\"state\":\"pending\",\"updatedAt\":1794490352693,\"messageId\":\"\"},{\"id\":\"task-seed-pending-1\",\"title\":\"等待确认交付格式\",\"state\":\"pending\",\"updatedAt\":1794490097453,\"messageId\":\"\"},{\"id\":\"task-719f7e499dd7ee0c\",\"title\":\"失败发送保留测试\",\"state\":\"pending\",\"updatedAt\":1795277414138,\"messageId\":\"\"},{\"id\":\"task-2710651a8b63c363\",\"title\":\"失败发送保留测试\",\"state\":\"pending\",\"updatedAt\":1795277763982,\"messageId\":\"\"}],\"hasMore\":false}},\"deliverables\":{\"total\":1,\"items\":[{\"id\":\"art-weekly-report\",\"name\":\"weekly-report.md\",\"kind\":\"text\",\"size\":101,\"createdAt\":1794490047453,\"downloadRef\":\"artifact:art-weekly-report\",\"previewUrl\":\"/api/artifacts/art-weekly-report/content\",\"downloadUrl\":\"/api/artifacts/art-weekly-report/content?download=1\"}],\"hasMore\":false},\"pendingConfirmations\":{\"total\":0,\"items\":[],\"hasMore\":false},\"links\":{\"fullSpec\":\"/sessions/main/spec\",\"self\":\"/api/sessions/main/spec-projection?taskLimit=50\"}}\n",
+    "json": {
+      "sessionId": "main",
+      "status": "active",
+      "revision": 34,
+      "updatedAt": 1795277763987,
+      "goal": null,
+      "constraints": [],
+      "inputs": [],
+      "tasks": {
+        "done": {
+          "total": 6,
+          "items": [
+            {
+              "id": "task-seed-done-1",
+              "title": "汇总本周进展",
+              "state": "done",
+              "updatedAt": 1794489947453,
+              "messageId": "msg-a1"
+            },
+            {
+              "id": "task-seed-done-2",
+              "title": "整理风险清单",
+              "state": "done",
+              "updatedAt": 1794489957453,
+              "messageId": ""
+            },
+            {
+              "id": "task-seed-done-3",
+              "title": "生成下周计划",
+              "state": "done",
+              "updatedAt": 1794489967453,
+              "messageId": ""
+            },
+            {
+              "id": "task-00279a8c1a00969f",
+              "title": "多标签A测试",
+              "state": "done",
+              "updatedAt": 1794504158591,
+              "messageId": ""
+            },
+            {
+              "id": "task-91391c82769adf5c",
+              "title": "多标签B测试",
+              "state": "done",
+              "updatedAt": 1794504159907,
+              "messageId": ""
+            },
+            {
+              "id": "task-72fdbd8228961699",
+              "title": "生产切换验证：请只回复 OK。不要创建任务。",
+              "state": "done",
+              "updatedAt": 1794536221520,
+              "messageId": ""
+            }
+          ],
+          "hasMore": false
+        },
+        "running": {
+          "total": 0,
+          "items": [],
+          "hasMore": false
+        },
+        "pending": {
+          "total": 4,
+          "items": [
+            {
+              "id": "task-seed-run-1",
+              "title": "生成周报初稿",
+              "state": "pending",
+              "updatedAt": 1794490352693,
+              "messageId": ""
+            },
+            {
+              "id": "task-seed-pending-1",
+              "title": "等待确认交付格式",
+              "state": "pending",
+              "updatedAt": 1794490097453,
+              "messageId": ""
+            },
+            {
+              "id": "task-719f7e499dd7ee0c",
+              "title": "失败发送保留测试",
+              "state": "pending",
+              "updatedAt": 1795277414138,
+              "messageId": ""
+            },
+            {
+              "id": "task-2710651a8b63c363",
+              "title": "失败发送保留测试",
+              "state": "pending",
+              "updatedAt": 1795277763982,
+              "messageId": ""
+            }
+          ],
+          "hasMore": false
+        }
+      },
+      "deliverables": {
+        "total": 1,
+        "items": [
+          {
+            "id": "art-weekly-report",
+            "name": "weekly-report.md",
+            "kind": "text",
+            "size": 101,
+            "createdAt": 1794490047453,
+            "downloadRef": "artifact:art-weekly-report",
+            "previewUrl": "/api/artifacts/art-weekly-report/content",
+            "downloadUrl": "/api/artifacts/art-weekly-report/content?download=1"
+          }
+        ],
+        "hasMore": false
+      },
+      "pendingConfirmations": {
+        "total": 0,
+        "items": [],
+        "hasMore": false
+      },
+      "links": {
+        "fullSpec": "/sessions/main/spec",
+        "self": "/api/sessions/main/spec-projection?taskLimit=50"
+      }
+    }
+  },
+  "projection50tag": "\"spec-e217d5acfbc1ba18\"",
+  "projectionMissing": {
+    "status": 404,
+    "headers": {
+      "content-length": "58",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:10:58 GMT"
+    },
+    "text": "{\"ok\":false,\"error\":\"会话不存在\",\"code\":\"not_found\"}\n",
+    "json": {
+      "ok": false,
+      "error": "会话不存在",
+      "code": "not_found"
+    }
+  },
+  "tree": {
+    "status": 200,
+    "nodes": null
+  },
+  "messagesSearch": {
+    "status": 200,
+    "headers": {
+      "content-length": "36",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:10:58 GMT"
+    },
+    "text": "{\"messages\":[],\"ok\":true,\"total\":0}\n",
+    "json": {
+      "messages": [],
+      "ok": true,
+      "total": 0
+    }
+  },
+  "projectionBody": {
+    "sessionId": "main",
+    "status": "active",
+    "revision": 34,
+    "updatedAt": 1795277763987,
+    "goal": null,
+    "constraints": [],
+    "inputs": [],
+    "tasks": {
+      "done": {
+        "total": 6,
+        "items": [
+          {
+            "id": "task-seed-done-1",
+            "title": "汇总本周进展",
+            "state": "done",
+            "updatedAt": 1794489947453,
+            "messageId": "msg-a1"
+          },
+          {
+            "id": "task-seed-done-2",
+            "title": "整理风险清单",
+            "state": "done",
+            "updatedAt": 1794489957453,
+            "messageId": ""
+          },
+          {
+            "id": "task-seed-done-3",
+            "title": "生成下周计划",
+            "state": "done",
+            "updatedAt": 1794489967453,
+            "messageId": ""
+          }
+        ],
+        "hasMore": true
+      },
+      "running": {
+        "total": 0,
+        "items": [],
+        "hasMore": false
+      },
+      "pending": {
+        "total": 4,
+        "items": [
+          {
+            "id": "task-seed-run-1",
+            "title": "生成周报初稿",
+            "state": "pending",
+            "updatedAt": 1794490352693,
+            "messageId": ""
+          },
+          {
+            "id": "task-seed-pending-1",
+            "title": "等待确认交付格式",
+            "state": "pending",
+            "updatedAt": 1794490097453,
+            "messageId": ""
+          },
+          {
+            "id": "task-719f7e499dd7ee0c",
+            "title": "失败发送保留测试",
+            "state": "pending",
+            "updatedAt": 1795277414138,
+            "messageId": ""
+          }
+        ],
+        "hasMore": true
+      }
+    },
+    "deliverables": {
+      "total": 1,
+      "items": [
+        {
+          "id": "art-weekly-report",
+          "name": "weekly-report.md",
+          "kind": "text",
+          "size": 101,
+          "createdAt": 1794490047453,
+          "downloadRef": "artifact:art-weekly-report",
+          "previewUrl": "/api/artifacts/art-weekly-report/content",
+          "downloadUrl": "/api/artifacts/art-weekly-report/content?download=1"
+        }
+      ],
+      "hasMore": false
+    },
+    "pendingConfirmations": {
+      "total": 0,
+      "items": [],
+      "hasMore": false
+    },
+    "links": {
+      "fullSpec": "/sessions/main/spec",
+      "self": "/api/sessions/main/spec-projection?taskLimit=3"
+    }
+  },
+  "archiveTarget": {
+    "status": 409,
+    "headers": {
+      "content-length": "121",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:10:58 GMT"
+    },
+    "text": "{\"blockers\":[\"missing evidence: task:task-91253cbf97ec7b90\"],\"code\":\"archive_blocked\",\"error\":\"无法归档\",\"ok\":false}\n",
+    "json": {
+      "blockers": [
+        "missing evidence: task:task-91253cbf97ec7b90"
+      ],
+      "code": "archive_blocked",
+      "error": "无法归档",
+      "ok": false
+    }
+  },
+  "archiveTargetAgain": {
+    "status": 409,
+    "headers": {
+      "content-length": "121",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:10:58 GMT"
+    },
+    "text": "{\"blockers\":[\"missing evidence: task:task-91253cbf97ec7b90\"],\"code\":\"archive_blocked\",\"error\":\"无法归档\",\"ok\":false}\n",
+    "json": {
+      "blockers": [
+        "missing evidence: task:task-91253cbf97ec7b90"
+      ],
+      "code": "archive_blocked",
+      "error": "无法归档",
+      "ok": false
+    }
+  },
+  "unarchiveTarget": {
+    "status": 200,
+    "headers": {
+      "content-length": "203",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:10:58 GMT"
+    },
+    "text": "{\"ok\":true,\"session\":{\"id\":\"sess-b3b42e8f8de61893\",\"parentId\":\"main\",\"title\":\"新会话\",\"createdAt\":1795281632984,\"archived\":0,\"pinned\":false,\"ownerAgentId\":\"simo\",\"hasUnread\":false,\"messageCount\":16}}\n",
+    "json": {
+      "ok": true,
+      "session": {
+        "id": "sess-b3b42e8f8de61893",
+        "parentId": "main",
+        "title": "新会话",
+        "createdAt": 1795281632984,
+        "archived": 0,
+        "pinned": false,
+        "ownerAgentId": "simo",
+        "hasUnread": false,
+        "messageCount": 16
+      }
+    }
+  },
+  "targetAfter": {
+    "status": 404,
+    "headers": {
+      "content-length": "95",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:10:58 GMT"
+    },
+    "text": "{\"ok\":false,\"error\":\"接口不存在: /api/sessions/sess-b3b42e8f8de61893\",\"code\":\"not_found\"}\n",
+    "json": {
+      "ok": false,
+      "error": "接口不存在: /api/sessions/sess-b3b42e8f8de61893",
+      "code": "not_found"
+    }
+  },
+  "targetSend": {
+    "status": 202,
+    "headers": {
+      "content-length": "75",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:10:58 GMT"
+    },
+    "text": "{\"id\":\"msg-eb8c9106d4222112\",\"messageId\":\"msg-eb8c9106d4222112\",\"ok\":true}\n",
+    "json": {
+      "id": "msg-eb8c9106d4222112",
+      "messageId": "msg-eb8c9106d4222112",
+      "ok": true
+    }
+  }
+}

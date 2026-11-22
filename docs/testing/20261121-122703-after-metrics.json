@@ -1,0 +1,102 @@
+{
+  "1280": {
+    "bodyFontSize": "13.5px",
+    "bodyBg": "rgb(250, 249, 246)",
+    "chatBodyBg": "rgb(250, 249, 246)",
+    "appTitle": "司墨",
+    "counts": {
+      "msg": 2,
+      "tlBar": 2,
+      "session": 1
+    }
+  },
+  "1600": {
+    "bodyFontSize": "13.5px",
+    "bodyBg": "rgb(250, 249, 246)",
+    "chatBodyBg": "rgb(250, 249, 246)",
+    "appTitle": "司墨",
+    "counts": {
+      "msg": 2,
+      "tlBar": 2,
+      "session": 1
+    }
+  },
+  "hit": {
+    "coarse": true,
+    "touch": 5,
+    "targets": {
+      ".tl-bar": {
+        "rect": {
+          "w": 24,
+          "h": 4
+        },
+        "hit": {
+          "w": 44,
+          "h": 44
+        }
+      },
+      ".session-row": {
+        "rect": {
+          "w": 223,
+          "h": 44
+        },
+        "hit": {
+          "w": 224,
+          "h": 44
+        }
+      },
+      ".session-more": {
+        "rect": {
+          "w": 44,
+          "h": 44
+        },
+        "hit": {
+          "w": 44,
+          "h": 44
+        }
+      },
+      ".msg-copy": {
+        "rect": {
+          "w": 44,
+          "h": 44
+        },
+        "hit": {
+          "w": 44,
+          "h": 44
+        }
+      },
+      ".composer-hint-icon": {
+        "rect": {
+          "w": 44,
+          "h": 44
+        },
+        "hit": {
+          "w": 44,
+          "h": 44
+        }
+      },
+      ".send": {
+        "rect": {
+          "w": 54,
+          "h": 44
+        },
+        "hit": {
+          "w": 54,
+          "h": 44
+        }
+      },
+      ".exec-row": null,
+      ".insp-rail button": {
+        "rect": {
+          "w": 44,
+          "h": 44
+        },
+        "hit": {
+          "w": 44,
+          "h": 44
+        }
+      }
+    }
+  },
+  "stamp": "20261121-122703"
+}

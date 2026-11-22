@@ -31,6 +31,32 @@ type Page = 'chat' | 'workbench'
 /** 底部全局汇总的刷新节流窗口：窗口内连续到达的消息事件合并成一次 GET /api/stats。 */
 const STATS_REFRESH_THROTTLE_MS = 1000
 
+/** 主会话 id：没有可恢复的会话（从未选过、已删除或已归档）时的兜底。 */
+const MAIN_SESSION_ID = 'main'
+
+/**
+ * 本标签上次的 active 会话，存 localStorage 供跨标签共享同一份：
+ * 刷新后恢复它，而不是重置回主会话；挂载恢复不广播，避免把其它标签的 active 拉走。
+ */
+export const ACTIVE_SESSION_KEY = 'simo.active-session'
+
+function readActiveSession(): string | null {
+  try {
+    return window.localStorage.getItem(ACTIVE_SESSION_KEY) || null
+  } catch {
+    return null
+  }
+}
+
+function saveActiveSession(id: string): void {
+  try {
+    if (id) window.localStorage.setItem(ACTIVE_SESSION_KEY, id)
+    else window.localStorage.removeItem(ACTIVE_SESSION_KEY)
+  } catch {
+    // 隐私模式或存储被禁用：退化为只保留内存状态，不影响会话切换本身。
+  }
+}
+
 function flattenTree(roots: Session[]): Session[] {
   const result: Session[] = []
   const seen = new Set<string>()
@@ -110,8 +136,12 @@ export default function App(): React.ReactNode {
   const [searchError, setSearchError] = useState('')
   /** 递增即重试上一次搜索（searchQuery 不变）。 */
   const [searchRetry, setSearchRetry] = useState(0)
-  // 首屏先按“主会话”占位，会话树返回后由 loadSessions 校正；树为空时清空选中。
-  const [activeId, setActiveId] = useState('main')
+  // 刷新后先恢复上次的 active 会话（没有就按“主会话”占位），会话树返回后由 loadSessions 校正。
+  const [activeId, setActiveId] = useState(() => readActiveSession() ?? MAIN_SESSION_ID)
+  const restoringActiveRef = useRef<boolean | null>(null)
+  if (restoringActiveRef.current === null) restoringActiveRef.current = readActiveSession() !== null
+  /** 只有 true 的那次 activeId 变化来自用户主动切会话；挂载恢复与会话树校正都不广播。 */
+  const userActiveChangeRef = useRef(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [ancestorMessages, setAncestorMessages] = useState<Message[]>([])
   const [ancestorLoading, setAncestorLoading] = useState(false)
@@ -248,12 +278,29 @@ export default function App(): React.ReactNode {
     // 304：服务端列表与上次一致，保留当前数组引用与选中态；不能走“清空再填充”，否则界面会闪空。
     if (data.notModified) return
     const roots = dedupeTree(data.tree ?? data.sessions ?? [])
+    const flat = flattenTree(roots)
     setSessions(roots)
     // 计数以去重后的整棵树为准（含深层子会话）；不采信 data.sessions 的平铺长度，避免同一会话计两次。
-    setSessionCount(flattenTree(roots).length)
-    if (!flattenTree(roots).some((session) => session.id === activeIdRef.current)) {
+    setSessionCount(flat.length)
+    if (restoringActiveRef.current) {
+      // 只在首次成功加载时校验“刷新恢复”的会话：它可能已被删除或归档，此时回落主会话。
+      restoringActiveRef.current = false
+      const restored = flat.find((session) => session.id === activeIdRef.current)
+      if (!restored || restored.archived === 1) {
+        const fallback = flat.find((session) => session.id === MAIN_SESSION_ID && session.archived !== 1)
+          ?? flat.find((session) => session.archived !== 1)
+          ?? flat[0]
+        if (fallback) {
+          if (fallback.id !== activeIdRef.current) setActiveId(fallback.id)
+        } else {
+          setActiveId('')
+        }
+      }
+      return
+    }
+    if (!flat.some((session) => session.id === activeIdRef.current)) {
       // 当前选中项不在树里：树非空时落到第一个会话，树为空时清空选中，避免继续加载旧的 main。
-      setActiveId(flattenTree(roots)[0]?.id ?? '')
+      setActiveId(flat[0]?.id ?? '')
     }
     } catch (err) {
       setSessionsError(err instanceof Error ? err.message : '会话加载失败')
@@ -381,7 +428,12 @@ export default function App(): React.ReactNode {
   }, [])
 
   useEffect(() => {
-    if (remoteActiveRef.current) { remoteActiveRef.current = false; return }
+    // 先落盘：刷新后从同一份 localStorage 恢复本标签的 active 会话。
+    saveActiveSession(activeId)
+    const userInitiated = userActiveChangeRef.current
+    userActiveChangeRef.current = false
+    // 挂载恢复、会话树校正与远端同步都不广播；只有用户在本标签主动切会话才通知其它标签。
+    if (!userInitiated || remoteActiveRef.current) { remoteActiveRef.current = false; return }
     lastActiveOpRef.current = { at: Date.now(), tabId }
     publishTabSync({ type: 'active_session_changed', tabId, opId: `${tabId}:${Date.now()}`, at: lastActiveOpRef.current.at, sessionId: activeId })
   }, [activeId])
@@ -901,6 +953,7 @@ export default function App(): React.ReactNode {
       const id = extractSessionId(created)
       if (id) {
         setSessions((current) => [{ id, parentId: root?.id ?? 'main', title: '新会话', createdAt: Date.now(), archived: 0, pinned: false, draft: true }, ...current.filter((session) => session.id !== id)])
+        userActiveChangeRef.current = true
         setActiveId(id)
       }
     } catch (err) {
@@ -948,6 +1001,7 @@ export default function App(): React.ReactNode {
     const scroller = scrollerRef.current
     if (scroller) scrollPositionsRef.current.set(activeIdRef.current, scroller.scrollTop)
     pinnedActiveRef.current = null
+    userActiveChangeRef.current = true
     setActiveId(sessionId)
   }, [])
 
@@ -1060,7 +1114,7 @@ export default function App(): React.ReactNode {
               <div className="section-title"><h2>最近活动</h2><span>{recentSessions.length} 个会话</span></div>
               <div className="list">
                 {recentSessions.length === 0 ? <EmptyState title="暂无最近活动" description="新建或打开会话后会出现在这里。" /> : recentSessions.map((session) => (
-                  <button className="row" type="button" key={session.id} onClick={() => { setActiveId(session.id); setPage('chat') }}><span className="kind">会话</span><span className="title">{session.title}</span><span className="time">{formatTime(session.createdAt)}</span></button>
+                  <button className="row" type="button" key={session.id} onClick={() => { userActiveChangeRef.current = true; setActiveId(session.id); setPage('chat') }}><span className="kind">会话</span><span className="title">{session.title}</span><span className="time">{formatTime(session.createdAt)}</span></button>
                 ))}
               </div>
               <div className="section-title"><h2>交付物</h2><span>用户产物</span></div>

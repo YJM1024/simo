@@ -2,6 +2,7 @@
 backend/config.local.json
 data/
 .tmp/
+.tmp-*
 .trash/
 *.log
 logs/
@@ -39,6 +40,50 @@ archive/labs/storybook/storybook-static/
 archive/labs/storybook/.cache/
 archive/labs/storybook/.home/
 
+# ---- local toolchain & machine-specific artifacts ----
+.tools/
+scratch/
+data-backup-*/
+data-preprod-*/
+.tmp-*/
+.final*-home/
+.ui*-home/
+.m[0-9]*/
+backend/.tmp-*/
+backend/internal/webui/dist.bak-*/
+
+# ---- captured review screenshots & throwaway browser profiles ----
+docs/testing/.chrome-*/
+docs/testing/**/*.png
+docs/testing/*-home/
+frontend/review/**
+frontend/coverage/**
+frontend/coverage-threshold-check/**
+archive/prototypes/**/*.png
+*-profile/
+probe.png
+probe2.png
+
+# ---- runtime state files ----
+*.db
+*.db-shm
+*.db-wal
+*.db.lock
+
+# ---- one-off probe payloads dropped in repo root ----
+.*-probe*.json
+.probe-*.json
+.allow-*.json
+.*-allow.json
+.d-*.json
+.da-*.json
+.g-*.json
+.ga-*.json
+.sch*.json
+.py-*.json
+.ui*.json
+.g2.json
+
 # ---- editor / OS noise ----
 .git/
 .idea/
@@ -50,52 +95,4 @@ node_modules/
 .pnpm-store/
 **/.pnpm-store/
 *.ignored_*
-
-# ==== hygiene: toolchain & sandbox homes ====
-.tools/
-.*-home/
-.tmp-compfix/
-
-# ==== hygiene: runtime databases & sidecars ====
-*.db
-*.db-shm
-*.db-wal
-*.db.lock
-backend/.tmp*
-
-# ==== hygiene: one-off probe & dump artifacts in repo root ====
-/.*-allow*.json
-/.allow-*.json
-/.*-probe*.json
-/.probe-*.json
-/.chat-probe*.json
-/.d-d-*.json
-/.da-d-*.json
-/.g-g-*.json
-/.ga-g-*.json
-/.g2.json
-/.sch*.json
-/.ui1-*.json
 /*.bin
-
-# ==== hygiene: pre-op data snapshots ====
-data-backup-*/
-data-preprod-*/
-
-# ==== hygiene: scratch workspace ====
-scratch/
-
-# ==== hygiene: frontend generated output & review screenshots ====
-frontend/coverage/
-frontend/coverage-threshold-check/
-frontend/review/**/*.png
-frontend/e2e/report/
-
-# ==== hygiene: backend generated output ====
-backend/internal/webui/dist.bak-*/
-backend/*.err
-backend/*.out
-
-# ==== hygiene: archived experiments (keep the index) ====
-archive/*
-!archive/README.md

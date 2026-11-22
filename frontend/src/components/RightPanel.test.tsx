@@ -179,4 +179,38 @@ describe('RightPanel / OverviewPanel', () => {
     expect(screen.getByText('未选择会话')).toBeInTheDocument()
     expect(within(aside).getByRole('button', { name: '☰' })).toHaveClass('active')
   })
+
+  it('opens the tablet drawer from the rail and closes it with the close button, Escape or the scrim', async () => {
+    const user = userEvent.setup()
+    render(<RightPanel session={session()} projection={projection()} loading={false} />)
+    const aside = screen.getByRole('complementary', { name: '会话概览' })
+    expect(aside).not.toHaveClass('is-drawer-open')
+    // 关闭按钮只属于抽屉：收起时既不渲染，也没有遮罩
+    expect(aside.querySelectorAll('.insp-drawer-close')).toHaveLength(0)
+    expect(aside.querySelectorAll('.insp-drawer-scrim')).toHaveLength(0)
+
+    await user.click(within(aside).getByRole('button', { name: '☰' }))
+    expect(aside).toHaveClass('is-drawer-open')
+    expect(aside).toHaveAttribute('data-drawer-open', 'true')
+    expect(within(aside).getByRole('button', { name: '☰' })).toHaveAttribute('aria-expanded', 'true')
+    expect(aside.querySelectorAll('.insp-drawer-scrim')).toHaveLength(1)
+    expect(aside.querySelectorAll('.insp-drawer-close')).toHaveLength(1)
+
+    // 关闭按钮与遮罩同名（都叫「关闭右栏」），按类名取抽屉里那颗
+    await user.click(aside.querySelector('.insp-drawer-close') as HTMLElement)
+    expect(aside).not.toHaveClass('is-drawer-open')
+    expect(aside.querySelectorAll('.insp-drawer-close')).toHaveLength(0)
+
+    await user.click(within(aside).getByRole('button', { name: '☰' }))
+    await user.keyboard('{Escape}')
+    expect(aside).not.toHaveClass('is-drawer-open')
+    expect(aside.querySelectorAll('.insp-drawer-scrim')).toHaveLength(0)
+
+    // 再次从 rail 打开，点遮罩关闭
+    await user.click(within(aside).getByRole('button', { name: '☰' }))
+    expect(aside).toHaveClass('is-drawer-open')
+
+    await user.click(aside.querySelector('.insp-drawer-scrim') as HTMLElement)
+    expect(aside).not.toHaveClass('is-drawer-open')
+  })
 })

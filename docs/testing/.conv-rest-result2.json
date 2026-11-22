@@ -1,0 +1,922 @@
+{
+  "sync": {
+    "m2": {
+      "initial": {
+        "A": {
+          "at": 1795341960985,
+          "activeTitle": "主会话",
+          "rows": [
+            {
+              "title": "主会话",
+              "active": true,
+              "unread": false
+            },
+            {
+              "title": "验收序B",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收序A",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "verify-conv-rest-sync",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "新会话",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-error-mwqnboie",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-error-mwqnb5p4",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-arch-mwqn98a8",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "probe-archive-mwqn8oz1",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收未读V",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收未读U",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收序C",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "研究员",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收链L2",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "验收链L3",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "验收链L4",
+              "active": false,
+              "unread": false
+            }
+          ],
+          "probe": {
+            "title": "verify-conv-rest-sync",
+            "active": false,
+            "unread": false
+          },
+          "msgHasMarker": false,
+          "msgCount": 77
+        },
+        "B": {
+          "at": 1795341960988,
+          "activeTitle": "主会话",
+          "rows": [
+            {
+              "title": "主会话",
+              "active": true,
+              "unread": false
+            },
+            {
+              "title": "验收序B",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收序A",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "verify-conv-rest-sync",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "新会话",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-error-mwqnboie",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-error-mwqnb5p4",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-arch-mwqn98a8",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "probe-archive-mwqn8oz1",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收未读V",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收未读U",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收序C",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "研究员",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收链L2",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "验收链L3",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "验收链L4",
+              "active": false,
+              "unread": false
+            }
+          ],
+          "probe": {
+            "title": "verify-conv-rest-sync",
+            "active": false,
+            "unread": false
+          },
+          "msgHasMarker": false,
+          "msgCount": 77
+        }
+      },
+      "followOther": {
+        "ok": true,
+        "ms": 32,
+        "value": true
+      },
+      "reload": {
+        "A": {
+          "at": 1795341963068,
+          "activeTitle": "主会话",
+          "rows": [
+            {
+              "title": "主会话",
+              "active": true,
+              "unread": false
+            },
+            {
+              "title": "验收序B",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收序A",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "verify-conv-rest-sync",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "新会话",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-error-mwqnboie",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-error-mwqnb5p4",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-arch-mwqn98a8",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "probe-archive-mwqn8oz1",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收未读V",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收未读U",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收序C",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "研究员",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收链L2",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "验收链L3",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "验收链L4",
+              "active": false,
+              "unread": false
+            }
+          ],
+          "probe": {
+            "title": "verify-conv-rest-sync",
+            "active": false,
+            "unread": false
+          },
+          "msgHasMarker": false,
+          "msgCount": 77
+        },
+        "B": {
+          "at": 1795341963071,
+          "activeTitle": "主会话",
+          "rows": [
+            {
+              "title": "主会话",
+              "active": true,
+              "unread": false
+            },
+            {
+              "title": "验收序B",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收序A",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "verify-conv-rest-sync",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "新会话",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-error-mwqnboie",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-error-mwqnb5p4",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-arch-mwqn98a8",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "probe-archive-mwqn8oz1",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收未读V",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收未读U",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收序C",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "研究员",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收链L2",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "验收链L3",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "验收链L4",
+              "active": false,
+              "unread": false
+            }
+          ],
+          "probe": {
+            "title": "verify-conv-rest-sync",
+            "active": false,
+            "unread": false
+          },
+          "msgHasMarker": false,
+          "msgCount": 77
+        },
+        "serverStatus": 200,
+        "probeServer": {
+          "title": "verify-conv-rest-sync",
+          "unread": false,
+          "active": null
+        },
+        "compare": [
+          {
+            "title": "验收序B",
+            "A": false,
+            "B": false,
+            "server": false
+          },
+          {
+            "title": "验收序A",
+            "A": false,
+            "B": false,
+            "server": false
+          },
+          {
+            "title": "verify-conv-rest-sync",
+            "A": false,
+            "B": false,
+            "server": false
+          },
+          {
+            "title": "新会话",
+            "A": false,
+            "B": false,
+            "server": false
+          },
+          {
+            "title": "regress-error-mwqnboie",
+            "A": false,
+            "B": false,
+            "server": false
+          },
+          {
+            "title": "regress-error-mwqnb5p4",
+            "A": false,
+            "B": false,
+            "server": false
+          },
+          {
+            "title": "regress-arch-mwqn98a8",
+            "A": true,
+            "B": true,
+            "server": true
+          },
+          {
+            "title": "probe-archive-mwqn8oz1",
+            "A": false,
+            "B": false,
+            "server": false
+          },
+          {
+            "title": "验收未读V",
+            "A": false,
+            "B": false,
+            "server": false
+          },
+          {
+            "title": "验收未读U",
+            "A": false,
+            "B": false,
+            "server": false
+          },
+          {
+            "title": "验收序C",
+            "A": false,
+            "B": false,
+            "server": false
+          },
+          {
+            "title": "研究员",
+            "A": false,
+            "B": false,
+            "server": false
+          },
+          {
+            "title": "验收链L2",
+            "A": true,
+            "B": true,
+            "server": true
+          },
+          {
+            "title": "验收链L3",
+            "A": true,
+            "B": true,
+            "server": true
+          },
+          {
+            "title": "验收链L4",
+            "A": false,
+            "B": false,
+            "server": false
+          }
+        ],
+        "mismatch": []
+      },
+      "bToA": {
+        "clickB": {
+          "at": 1795341963306,
+          "pos": {
+            "x": 120,
+            "y": 298
+          }
+        },
+        "followA": {
+          "ok": true,
+          "ms": 57
+        },
+        "A": {
+          "at": 1795341964216,
+          "activeTitle": "verify-conv-rest-sync",
+          "rows": [
+            {
+              "title": "主会话",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收序B",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收序A",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "verify-conv-rest-sync",
+              "active": true,
+              "unread": false
+            },
+            {
+              "title": "新会话",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-error-mwqnboie",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-error-mwqnb5p4",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-arch-mwqn98a8",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "probe-archive-mwqn8oz1",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收未读V",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收未读U",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收序C",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "研究员",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收链L2",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "验收链L3",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "验收链L4",
+              "active": false,
+              "unread": false
+            }
+          ],
+          "probe": {
+            "title": "verify-conv-rest-sync",
+            "active": true,
+            "unread": false
+          },
+          "msgHasMarker": true,
+          "msgCount": 4
+        },
+        "B": {
+          "at": 1795341964225,
+          "activeTitle": "verify-conv-rest-sync",
+          "rows": [
+            {
+              "title": "主会话",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收序B",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收序A",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "verify-conv-rest-sync",
+              "active": true,
+              "unread": false
+            },
+            {
+              "title": "新会话",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-error-mwqnboie",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-error-mwqnb5p4",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-arch-mwqn98a8",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "probe-archive-mwqn8oz1",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收未读V",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收未读U",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收序C",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "研究员",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收链L2",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "验收链L3",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "验收链L4",
+              "active": false,
+              "unread": false
+            }
+          ],
+          "probe": {
+            "title": "verify-conv-rest-sync",
+            "active": true,
+            "unread": false
+          },
+          "msgHasMarker": true,
+          "msgCount": 4
+        },
+        "framesA": []
+      },
+      "restore": {
+        "back": 1795341965111,
+        "followBack": {
+          "ok": true,
+          "ms": 4
+        },
+        "A": {
+          "at": 1795341965655,
+          "activeTitle": "主会话",
+          "rows": [
+            {
+              "title": "主会话",
+              "active": true,
+              "unread": false
+            },
+            {
+              "title": "验收序B",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收序A",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "verify-conv-rest-sync",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "新会话",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-error-mwqnboie",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-error-mwqnb5p4",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-arch-mwqn98a8",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "probe-archive-mwqn8oz1",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收未读V",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收未读U",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收序C",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "研究员",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收链L2",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "验收链L3",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "验收链L4",
+              "active": false,
+              "unread": false
+            }
+          ],
+          "probe": {
+            "title": "verify-conv-rest-sync",
+            "active": false,
+            "unread": false
+          },
+          "msgHasMarker": false,
+          "msgCount": 77
+        },
+        "B": {
+          "at": 1795341965659,
+          "activeTitle": "主会话",
+          "rows": [
+            {
+              "title": "主会话",
+              "active": true,
+              "unread": false
+            },
+            {
+              "title": "验收序B",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收序A",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "verify-conv-rest-sync",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "新会话",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-error-mwqnboie",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-error-mwqnb5p4",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "regress-arch-mwqn98a8",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "probe-archive-mwqn8oz1",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收未读V",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收未读U",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收序C",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "研究员",
+              "active": false,
+              "unread": false
+            },
+            {
+              "title": "验收链L2",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "验收链L3",
+              "active": false,
+              "unread": true
+            },
+            {
+              "title": "验收链L4",
+              "active": false,
+              "unread": false
+            }
+          ],
+          "probe": {
+            "title": "verify-conv-rest-sync",
+            "active": false,
+            "unread": false
+          },
+          "msgHasMarker": false,
+          "msgCount": 77
+        }
+      }
+    }
+  },
+  "layout": {
+    "overlapCheck": {
+      "timeline": {
+        "x": 248,
+        "right": 292,
+        "w": 44
+      },
+      "scroller": {
+        "x": 280,
+        "w": 568
+      },
+      "msgBoxLeft": 300,
+      "textLeft": 351,
+      "textCount": 4,
+      "hitSamples": [
+        {
+          "fy": 0.15,
+          "topTag": "nav",
+          "topClass": "timeline timeline-group.",
+          "isTimeline": true
+        },
+        {
+          "fy": 0.5,
+          "topTag": "nav",
+          "topClass": "timeline timeline-group.",
+          "isTimeline": true
+        },
+        {
+          "fy": 0.85,
+          "topTag": "nav",
+          "topClass": "timeline timeline-group.",
+          "isTimeline": true
+        }
+      ],
+      "vw": 1180,
+      "docScrollWidth": 1180,
+      "sendHit": "button."
+    }
+  },
+  "shots": [
+    "conv-rest-tabB-reload-consistent.png",
+    "conv-rest-restored.png"
+  ]
+}

@@ -8,7 +8,7 @@
 | 版本 | v1.0 |
 | 最后更新 | 2026-11-21 |
 | owner | 后端角色（TASK-CHG-CONV-006-10） |
-| 产品输入 | `specs/product/P1-CONV/spec.md`（PRD-CONV-001..008 + PRD-SYNC-001..004，SYNC-005 排除） |
+| 产品输入 | `specs/product/P1-CONV/spec.md`（PRD-CONV-001..008 + PRD-SYNC-001..004；SYNC-005 已于 2026-11-22 移除） |
 | 变更输入 | `specs/changes/CHG-CONV-006/product.md`、`specs/changes/CHG-CONV-006/tasks.md` |
 | 运行时基线 | `127.0.0.1:8787`，单用户、无鉴权中间件；SQLite 单进程单写者；时间戳均为 Unix 毫秒（除特别注明） |
 | 代码基线 | `backend/internal/modules/{sessions,chat}`、`backend/internal/core/{session,eventlog}`、`backend/cmd/simo/*_test.go` |

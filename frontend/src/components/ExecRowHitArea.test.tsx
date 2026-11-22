@@ -36,7 +36,7 @@ describe.skipIf(!browser)('coarse hit areas and narrow-layout occlusion in Chrom
     await client.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: true })
     await client.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 })
     await page.setContent(
-      `<!doctype html><html><head><style>html,body{margin:0}${tokensCss}\n${componentsCss}</style></head><body>${body}</body></html>`,
+      `<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"><style>html,body{margin:0}${tokensCss}\n${componentsCss}</style></head><body>${body}</body></html>`,
     )
     return { context, page }
   }

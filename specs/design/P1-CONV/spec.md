@@ -6,7 +6,7 @@ Owner：设计（本节）；评审：产品、前端、验收；裁决：Lead
 输入契约：`specs/product/P1-CONV/spec.md`（active，2026-11-21，12 个 PRD / 34 条 AC）
 变更来源：`specs/changes/CHG-CONV-006/product.md`（六条默认裁决）、`docs/plan/MASTER-PLAN.md` §1.7（长期 Spec 按域一文件、文件内按功能点 ID 分节）
 范围：P1 会话域的**视觉与交互设计**（区域划分、层级、间距、状态、组件复用、可验收视觉判据）。不含代码、不含接口实现、不含测试脚本。
-不覆盖：`PRD-SYNC-005`（未立项、排除在 P1 验收面外，产品 spec §7 已明确）；工作台指标 / 右栏任务投影 P2 / 交付物 P4 / 权限 P8 等非本域页面（产品 spec §7 末条）。
+不覆盖：`PRD-SYNC-005`（2026-11-22 已移除，编号不复用）；工作台指标 / 右栏任务投影 P2 / 交付物 P4 / 权限 P8 等非本域页面（产品 spec §7 末条）。
 
 ## 读法与约定
 
@@ -509,11 +509,13 @@ button.tl-bar        20×4（active/hover 24×4）视觉条，可聚焦
 
 | 视口 | 右栏 |
 |---|---|
-| ≥64em（1024+） | 展开 300（现状） |
+| ≥64em（1024+） | 展开：1024–1180 为 **280**（2026-11-22 实测），>1180 为 **300**（现状） |
 | 47.5em–64em（760–1024） | 折叠为 **40 宽图标条**，不占内容区（现状此档直接 `display:none`，`components.css:522-524`） |
 | <47.5em（<760） | 隐藏；入口移到 `.context` 行右侧 28×28 图标按钮，点开为覆盖式抽屉：宽 `min(300, 100vw − 32)`、右贴 16、顶贴 `.context` 下 8、**底边 = Composer 顶 − 8**（因此永不遮挡 Composer 与发送按钮）、`--shadow-pop`、圆角 10、点遮罩关闭 |
 
 这与产品 `AC-CONV-008-03`"375 宽右栏不遮挡 Composer"一致；但与产品目标行为 6 的"投影内容仍可读"在 375 档存在实现张力（现隐藏 = 不可读）。进 §13 第 6 条。
+
+展开宽另有一条实测口径：视口从 760 起量，`[[760,40],[1023,40],[1024,280],[1179,280]]` 显示 1024–1180 档展开宽为 280，与 1180 档的 280 一致；因此 1024–1180 按 280 计，>1180 才按 300 计。依据 `docs/testing/ACCEPT-CONV-10-20261122.md` §8.1 的实测序列与 `docs/plan/DECISIONS.md` 的 2026-11-22 裁决。
 
 ### 8.2 交互与状态
 
@@ -540,7 +542,7 @@ button.tl-bar        20×4（active/hover 24×4）视觉条，可聚焦
 
 ### 8.4 可验收视觉判据
 
-- `V-CONV-008-1` 右栏总宽 300±1，图标条 40±1，内容区内边距 12/14；三组顺序为 状态→目标→输入→执行会话→交付物（截图）。（AC-CONV-008-01）
+- `V-CONV-008-1` 右栏总宽 300±1（1024–1180 档为 280±1），图标条 40±1，内容区内边距 12/14；三组顺序为 状态→目标→输入→执行会话→交付物（截图）。（AC-CONV-008-01）
 - `V-CONV-008-2` 每组任务默认显示 3 条（计数文案显示 `3/总数`）；展开后 >3 且右栏不出现横向滚动（`scrollWidth ≤ clientWidth`）。（AC-CONV-008-02）
 - `V-CONV-008-3` 四态文案逐字命中：`右栏加载中…` / `右栏加载失败`（+重试）/ `暂无会话投影` / 无会话时无 `data-session` 属性且不崩。（AC-CONV-008-03）
 - `V-CONV-008-4` 交付物超过 8 条时只渲染 8 行且出现"仅显示最近 8 个"；下载链接 10px `--accent` 可点。（AC-CONV-008-02）
@@ -697,7 +699,7 @@ button.tl-bar        20×4（active/hover 24×4）视觉条，可聚焦
 | 004 | `COMP-message-colors` | approved（2026-11-13，只文档未改代码）；契约已按现状契约化，未签收。四色 token + `.msg-tag-*`（`components.css:958-961`）与时间轴三色（`:962-965`）已落地 | 本节引用它定义标签与轴的配色；**不重复定义色值** |
 | 006/011(SYNC-003) | `COMP-composer-send-mode` | spec ready（**已实现未签收**：8787 线上 smoke 通过；契约含 50ms 组合结束抑制与旧 key 迁移） | 本节引用 20px 槽 + 2px 间距 + 文案；补"隐藏时不可聚焦"的 a11y 缺口 |
 | 007 | `COMP-timeline-groups` / `COMP-timeline-tip` | 均 spec ready（已实现未签收）；groups 已按现状契约化：active=`--timeline-selected`、组级 .55、阶段 1 无日期分组、**命中区 44×44（实测）** | 本节引用其刻度/分组/Tip 规格；命中区口径已与契约一致 |
-| 全域 | `COMP-conversation-panel` | approved（2026-11-21 按现状契约化：透明容器 + 每条消息白卡；CardBlock 双层白框为已知缺陷） | 本节以"页面级事实"提出 v2 修订（§13 第 1、10 条） |
+| 全域 | `COMP-conversation-panel` | accepted（2026-11-22 复签；透明容器 + 每条消息白卡） | 本节以"页面级事实"提出 v2 修订（§13 第 1、10 条） |
 
 ### 14.2 四条协作规则
 
@@ -726,7 +728,7 @@ button.tl-bar        20×4（active/hover 24×4）视觉条，可聚焦
 | 10 | 右栏另两个图标按钮可点但无行为（假可用） | `library.tsx:730-734` |
 | 11 | 组件画廊未登记 `Sidebar` / `OverviewPanel`（RightPanel）/ `ExecutionGroup`；无 `ConfirmDialog` | `frontend/src/gallery.tsx:2-23` 导入列表 + 全文无这三个 Section；`manifest.json` 有 `Sidebar`/`ExecutionGroup` 条目但画廊未展示 → 违反 `DESIGN.md` §5.2 |
 | 12 | 无 768 档截图证据（产品 A4 要求 375/768/1280） | `frontend/review/` 285 张中无 `*768*`（glob 结果仅 375/1180/1280/1600/1920） |
-| 13 | 5 个 COMP 契约已按现状契约化，但均未走签收流程 | 见 `specs/COMP-*/spec.md`（conversation-panel 含已知缺陷；composer-send-mode/timeline-tip 已实现未签收；timeline-groups 已接页面；message-colors 只文档） |
+| 13 | 5 个 COMP 契约已按现状契约化，且全部 accepted（2026-11-22 复签） | 见 `specs/COMP-*/spec.md`（5 个组件 spec 状态均为 accepted） |
 | 14 | 旧 `Timeline`（22px）仍导出、仍在画廊，但页面已用 `TimelineGroups` | `library.tsx:360-422`；`gallery.tsx:19`、`:76`、`:125` |
 | 15 | 原型 `frontend/prototype/gallery.html` 仍用旧类与旧文案（`Enter 发送 · Shift+Enter 换行`、右栏"当前会话/消息/模型"、刻度带原生 `title`） | `frontend/prototype/gallery.html:84`（title）、`:89`（文案）、`:105-111`（右栏） |
 | 16 | 卡片标题 700 字重（违反 `DESIGN.md` 不用 700） | `components.css:497` |

@@ -1,0 +1,147 @@
+{
+  "at": "2026-11-22T11:12:12.464Z",
+  "id": "sess-c67c5b80fb58cd69",
+  "list": {
+    "status": 200,
+    "count": 17,
+    "mainMessageCount": 85,
+    "sum": 229,
+    "allInteger": true,
+    "fields": [
+      "id",
+      "parentId",
+      "title",
+      "createdAt",
+      "archived",
+      "pinned",
+      "ownerAgentId",
+      "hasUnread",
+      "messageCount"
+    ]
+  },
+  "tree": {
+    "status": 200,
+    "nodes": 39,
+    "sum": 385,
+    "maxDepth": 4
+  },
+  "before": null,
+  "archive": {
+    "status": 200,
+    "headers": {
+      "content-length": "220",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:12:12 GMT"
+    },
+    "text": "{\"ok\":true,\"session\":{\"id\":\"sess-c67c5b80fb58cd69\",\"parentId\":\"main\",\"title\":\"ACC10-一次性归档探针\",\"createdAt\":1795345900313,\"archived\":1,\"pinned\":false,\"ownerAgentId\":\"simo\",\"hasUnread\":false,\"messageCount\":4}}\n",
+    "json": {
+      "ok": true,
+      "session": {
+        "id": "sess-c67c5b80fb58cd69",
+        "parentId": "main",
+        "title": "ACC10-一次性归档探针",
+        "createdAt": 1795345900313,
+        "archived": 1,
+        "pinned": false,
+        "ownerAgentId": "simo",
+        "hasUnread": false,
+        "messageCount": 4
+      }
+    }
+  },
+  "archivedFlag": null,
+  "sendWhileArchived": {
+    "status": 409,
+    "headers": {
+      "content-length": "96",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:12:12 GMT"
+    },
+    "text": "{\"ok\":false,\"error\":\"会话已归档（只读），请先 unarchive\",\"code\":\"session_archived\"}\n",
+    "json": {
+      "ok": false,
+      "error": "会话已归档（只读），请先 unarchive",
+      "code": "session_archived"
+    }
+  },
+  "renameWhileArchived": {
+    "status": 409,
+    "headers": {
+      "content-length": "69",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:12:12 GMT"
+    },
+    "text": "{\"ok\":false,\"error\":\"会话已归档（只读）\",\"code\":\"conflict\"}\n",
+    "json": {
+      "ok": false,
+      "error": "会话已归档（只读）",
+      "code": "conflict"
+    }
+  },
+  "childWhileArchived": {
+    "status": 409,
+    "headers": {
+      "content-length": "69",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:12:12 GMT"
+    },
+    "text": "{\"ok\":false,\"error\":\"会话已归档（只读）\",\"code\":\"conflict\"}\n",
+    "json": {
+      "ok": false,
+      "error": "会话已归档（只读）",
+      "code": "conflict"
+    }
+  },
+  "patchEndpoint": {
+    "status": 409,
+    "headers": {
+      "content-length": "69",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:12:12 GMT"
+    },
+    "text": "{\"ok\":false,\"error\":\"会话已归档（只读）\",\"code\":\"conflict\"}\n",
+    "json": {
+      "ok": false,
+      "error": "会话已归档（只读）",
+      "code": "conflict"
+    }
+  },
+  "unarchive": {
+    "status": 200,
+    "headers": {
+      "content-length": "220",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:12:12 GMT"
+    },
+    "text": "{\"ok\":true,\"session\":{\"id\":\"sess-c67c5b80fb58cd69\",\"parentId\":\"main\",\"title\":\"ACC10-一次性归档探针\",\"createdAt\":1795345900313,\"archived\":0,\"pinned\":false,\"ownerAgentId\":\"simo\",\"hasUnread\":false,\"messageCount\":4}}\n",
+    "json": {
+      "ok": true,
+      "session": {
+        "id": "sess-c67c5b80fb58cd69",
+        "parentId": "main",
+        "title": "ACC10-一次性归档探针",
+        "createdAt": 1795345900313,
+        "archived": 0,
+        "pinned": false,
+        "ownerAgentId": "simo",
+        "hasUnread": false,
+        "messageCount": 4
+      }
+    }
+  },
+  "archivedAfterUnarchive": null,
+  "sendAfterUnarchive": {
+    "status": 202,
+    "headers": {
+      "content-length": "75",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:12:12 GMT"
+    },
+    "text": "{\"id\":\"msg-5a774fbf9d146a44\",\"messageId\":\"msg-5a774fbf9d146a44\",\"ok\":true}\n",
+    "json": {
+      "id": "msg-5a774fbf9d146a44",
+      "messageId": "msg-5a774fbf9d146a44",
+      "ok": true
+    }
+  }
+}

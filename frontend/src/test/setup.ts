@@ -7,7 +7,12 @@ afterEach(() => cleanup())
 
 // 会话列表与投影的 ETag 缓存都是模块级的：每个用例开始都清一次，
 // 避免上一个用例的标签让新快照的请求命中 304。
-beforeEach(() => { invalidateSessionListCache(); invalidateSpecProjectionCache() })
+// localStorage 同时存 active 会话：不清会让上一个用例的会话选择串到下一个用例。
+beforeEach(() => {
+  invalidateSessionListCache()
+  invalidateSpecProjectionCache()
+  localStorage.clear()
+})
 
 class ResizeObserverStub {
   observe(): void {}

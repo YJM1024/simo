@@ -198,11 +198,15 @@ a { color: inherit; text-decoration: none; }
 .textarea:focus { border-color: var(--accent); box-shadow: var(--focus); }
 
 /* ============ Right rail ============ */
+/* 图标条宽度：细指针 40（设计契约 40px），粗指针 48（触控命中区），抽屉右贴与它保持一致。 */
+:root { --insp-rail-w: var(--sp-40); }
 .inspector { width: var(--rail); flex: none; border-left: 1px solid var(--line); background: var(--surface); display: flex; min-height: 0; }
-.insp-rail { width: var(--sp-40); flex: none; border-left: 1px solid var(--line-soft); display: flex; flex-direction: column; align-items: center; gap: var(--sp-4); padding-top: var(--space-10); }
+.insp-rail { width: var(--insp-rail-w); flex: none; border-left: 1px solid var(--line-soft); display: flex; flex-direction: column; align-items: center; gap: var(--sp-4); padding-top: var(--space-10); }
 .insp-rail button { width: var(--size-28); height: var(--size-28); border-radius: var(--r-6); display: grid; place-items: center; color: var(--faint); font-size: var(--font-14); }
 .insp-rail button.active { background: var(--accent-soft); color: var(--accent); }
 .insp-body { flex: 1; min-width: 0; min-height: 0; overflow-y: auto; padding: var(--sp-12) var(--space-14); }
+/* 抽屉只在 760–1179 档出现；宽屏与手机档都不渲染遮罩/关闭按钮。 */
+.insp-drawer-scrim, .insp-drawer-close { display: none; }
 .insp-body > .insp-block:last-child { border-bottom: 0; }
 .insp-head { display: flex; align-items: center; gap: var(--sp-8); margin-bottom: var(--space-10); }
 .insp-head b { font-size: var(--font-12); }
@@ -367,7 +371,43 @@ a { color: inherit; text-decoration: none; }
   .chat-tabs { max-width: none; padding-left: calc(var(--gutter-timeline) + var(--chat-pad-x) + var(--avatar-size) + var(--sp-12)); }
   .chat-inner { padding: var(--sp-16) var(--space-18) var(--space-14); }
 }
-@media (max-width: 64em) {
+/* 47.5em–64em（760–1023.98px）：右栏收为 40px 图标条，面板以固定定位抽屉盖在中栏上，不参与 flex 布局，
+   因此中栏正文宽度不被压缩；64em 起（≥1024）恢复展开态，47.5em 以下整块不渲染（V-CONV-008-6）。 */
+@media (min-width: 47.5em) and (max-width: 63.999em) {
+  .inspector { width: var(--insp-rail-w); border-left: 0; }
+  .insp-rail { border-left: 1px solid var(--line); }
+  .insp-body { display: none; }
+  /* 关闭按钮挂在抽屉自己的右上角：抽屉是 fixed 定位，按钮绝对定位在它内部，不占内容行。 */
+  .insp-drawer-close { display: inline-flex; position: absolute; top: var(--sp-8); right: var(--sp-8); align-items: center; justify-content: center; width: var(--size-28); height: var(--size-28); border-radius: var(--r-6); }
+  .inspector.is-drawer-open .insp-body {
+    display: block;
+    position: fixed;
+    top: calc(var(--topbar) + var(--context) + var(--sp-8));
+    right: var(--insp-rail-w);
+    /* 底边停在 Composer 之上：打开时实测 Composer 顶边写 --insp-drawer-bottom，兜底值按默认输入框高度算。 */
+    bottom: var(--insp-drawer-bottom, calc(var(--size-66) + var(--size-20) + var(--space-14) + var(--sp-8) * 3 + 2px));
+    z-index: 55;
+    width: min(var(--rail), calc(100vw - var(--insp-rail-w) - var(--sp-8)));
+    padding-top: var(--sp-12);
+    border: 1px solid var(--line);
+    border-radius: var(--r-10);
+    background: var(--surface);
+    box-shadow: var(--shadow-pop);
+  }
+  .insp-drawer-scrim {
+    display: block;
+    position: fixed;
+    top: calc(var(--topbar) + var(--context));
+    right: var(--insp-rail-w);
+    bottom: 0;
+    left: var(--sidebar);
+    z-index: 54;
+    border: 0;
+    padding: 0;
+    background: rgba(22, 23, 27, .18);
+  }
+}
+@media (max-width: 47.49em) {
   .inspector { display: none; }
 }
 @media (max-width: 56.25em) {
@@ -546,7 +586,7 @@ body { overflow: hidden; }
 @media (max-width: 73.75em) {
   .workbench-grid { grid-template-columns: 1fr; }
 }
-@media (max-width: 64em) {
+@media (max-width: 47.49em) {
   .inspector { display: none; }
 }
 @media (max-width: 56.25em) {
@@ -1075,12 +1115,13 @@ body { overflow: hidden; }
 .timeline { isolation: isolate; cursor: pointer; }
 .timeline .tl-bar { pointer-events: none; }
 @media (pointer: coarse) {
+  :root { --insp-rail-w: var(--size-48); }
   .send { min-height: 44px; }
   .session-row { min-height: 44px; }
   .exec-row { min-height: 44px; }
   .session-more { width: 44px; height: 44px; opacity: 1; }
   .msg-copy { height: 44px; min-width: 44px; opacity: 1; }
-  .insp-rail { width: 48px; gap: 16px; }
+  .insp-rail { width: var(--insp-rail-w); gap: 16px; }
   .insp-rail button { width: 44px; height: 44px; }
   .composer-hint-icon { width: 44px; height: 44px; opacity: 1; pointer-events: auto; justify-content: center; }
 }

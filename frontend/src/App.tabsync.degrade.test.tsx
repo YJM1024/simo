@@ -8,7 +8,8 @@ import { appHandlers, createSnapshot, MockWebSocket, type AppSnapshot } from './
 /**
  * AC-SYNC-002-02 / AC-SYNC-003-02 的降级路径：
  * 浏览器不支持 BroadcastChannel（或实现缺失）时，App 必须静默退化，
- * 本地导航照常可用，并且刷新后以后端会话树为准，而不是沿用内存里的跨标签状态。
+ * 本地导航照常可用；刷新后按 localStorage 恢复上次的 active 会话（PRD-SYNC-002），
+ * 而不是重置回主会话，也不对外广播（没有通道）。
  *
  * 本文件独立于 App.tabsync.test.tsx：tabsync.ts 的 channel 是模块级单例，
  * 必须在模块加载前就把 BroadcastChannel 拿掉，才能覆盖"启动即不可用"。
@@ -43,7 +44,7 @@ afterAll(() => {
 })
 
 describe('App tab sync degradation without BroadcastChannel', () => {
-  it('mounts without throwing, keeps local navigation usable and reloads from the backend', async () => {
+  it('mounts without throwing, keeps local navigation usable and restores the last session', async () => {
     expect(typeof BroadcastChannel).toBe('undefined')
     const user = userEvent.setup()
     const first = render(<App />)
@@ -56,10 +57,10 @@ describe('App tab sync degradation without BroadcastChannel', () => {
 
     first.unmount()
 
-    // 重新加载：跨标签状态不持久化，活动会话以服务端返回的树为准
+    // 重新加载：没有通道也按 localStorage 恢复上次的 active 会话，而不是重置回主会话
     render(<App />)
-    expect(await screen.findByText('主会话消息')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '主会话' })).toBeInTheDocument()
-    expect(screen.getByTitle('子会话')).toBeInTheDocument()
+    expect(await screen.findByText('子会话消息')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '子会话' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '显示上级会话：主会话' })).toBeInTheDocument()
   })
 })

@@ -20,7 +20,7 @@
 
 | 域 | 名称 | 技术域码 | 产品 spec | 测试计划 | PRD 数 | 覆盖状态 |
 |---|---|---|---|---|---:|---|
-| P1 | 会话与消息 | CONV/SYNC | [spec](product/P1-CONV/spec.md) | [test-plan](test/P1-CONV/test-plan.md) | 12 | 0 covered / 11 partial / 1 gap |
+| P1 | 会话与消息 | CONV/SYNC | [spec](product/P1-CONV/spec.md) | [test-plan](test/P1-CONV/test-plan.md) | 12 | 12 covered / 0 partial / 0 gap |
 | P2 | 任务与执行 | TASK | [spec](product/P2-TASK/spec.md) | [test-plan](test/P2-TASK/test-plan.md) | 6 | 0 covered / 0 partial / 6 gap |
 | P3 | 工作台与视图 | WORK | [spec](product/P3-WORK/spec.md) | [test-plan](test/P3-WORK/test-plan.md) | 5 | 0 covered / 4 partial / 1 gap |
 | P4 | 文件与交付物 | FILE | [spec](product/P4-FILE/spec.md) | [test-plan](test/P4-FILE/test-plan.md) | 6 | 0 covered / 2 partial / 4 gap |

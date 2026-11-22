@@ -1,0 +1,3 @@
+time=2026-11-13T23:58:21.538+08:00 level=INFO msg=空会话清理完成 count=0
+time=2026-11-13T23:58:21.583+08:00 level=INFO msg="simo starting" addr=127.0.0.1:8787 home=E:\dsh_home\workspaces\agent\data db=E:\dsh_home\workspaces\agent\data\simo.db workspace=E:\dsh_home\workspaces\agent\data\workspace artifacts=E:\dsh_home\workspaces\agent\data\artifacts modules="[sessions chat tasks memory]" modelMode=real llm=deepseek-flash debug=false
+time=2026-11-13T23:58:21.585+08:00 level=INFO msg=listening url=http://127.0.0.1:8787

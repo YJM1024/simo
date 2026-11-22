@@ -1,7 +1,7 @@
 # CHG-CONV-005 · 未读与通知收口
 
 状态：**blocked**（2026-11-21；缺产品口径与鉴权模型，不推进实现）
-Implements: PRD-SYNC-004、PRD-SYNC-005
+Implements: PRD-SYNC-004
 Domains: `SYNC`
 Owner：产品（口径）/ 前端 + 后端（待口径后）；协调：Lead
 design.md：N/A：阻塞中，方案不可写（见 `proposal.md` §4）。

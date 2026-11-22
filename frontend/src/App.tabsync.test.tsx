@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { setupServer } from 'msw/node'
-import App from './app'
+import App, { ACTIVE_SESSION_KEY } from './app'
 import { tabId, type TabSyncMessage } from './tabsync'
 import {
   appHandlers,
@@ -223,6 +223,9 @@ describe('App cross-tab session sync (SYNC-002 / PRD-CONV-001)', () => {
     expect(screen.getByRole('heading', { name: '孙会话' })).toBeInTheDocument()
     firstRun.view.unmount()
 
+    // 首次运行收到远端会话并落盘；清掉后让两轮都从主会话起步（本用例只验证乱序帧的 tiebreak 收敛）。
+    localStorage.removeItem(ACTIVE_SESSION_KEY)
+
     // 顺序二：先到旧消息，再到新消息；最终状态与顺序一相同
     const secondRun = await renderAppView()
     fromPeer(first)
@@ -357,5 +360,59 @@ describe('App cross-tab session sync (SYNC-002 / PRD-CONV-001)', () => {
     expect(document.querySelectorAll('.tlg-session.is-current-session')).toHaveLength(1)
     expect(document.querySelectorAll('.tl-bar')).toHaveLength(3)
     await waitFor(() => expect(screen.queryByRole('button', { name: /显示上级会话/ })).not.toBeInTheDocument())
+  })
+})
+
+describe('App restores the last active session on mount (PRD-SYNC-002)', () => {
+  function activeFrames(): TabSyncMessage[] {
+    return CapturingBroadcastChannel.posted.filter((item) => item.type === 'active_session_changed')
+  }
+
+  it('restores the session stored by the last visit and does not broadcast the restore', async () => {
+    localStorage.setItem(ACTIVE_SESSION_KEY, 'child')
+    render(<App />)
+
+    expect(await screen.findByText('子会话消息')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '子会话' })).toBeInTheDocument()
+    expect(sessionRow('子会话')).toHaveClass('is-active')
+
+    // 挂载恢复不是用户切换：不能广播，否则其它标签会被拉回本标签的会话。
+    await act(async () => { await Promise.resolve() })
+    expect(activeFrames()).toEqual([])
+  })
+
+  it('falls back to the main session when the stored session no longer exists', async () => {
+    localStorage.setItem(ACTIVE_SESSION_KEY, 'session-deleted')
+    render(<App />)
+
+    expect(await screen.findByText('主会话消息')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '主会话' })).toBeInTheDocument()
+    await act(async () => { await Promise.resolve() })
+    expect(activeFrames()).toEqual([])
+    expect(localStorage.getItem(ACTIVE_SESSION_KEY)).toBe('main')
+  })
+
+  it('falls back to the main session when the stored session is archived', async () => {
+    const child = snap.tree[0]?.children?.[0]
+    expect(child?.id).toBe('child')
+    if (child) child.archived = 1
+    localStorage.setItem(ACTIVE_SESSION_KEY, 'child')
+    render(<App />)
+
+    expect(await screen.findByText('主会话消息')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '主会话' })).toBeInTheDocument()
+    await act(async () => { await Promise.resolve() })
+    expect(activeFrames()).toEqual([])
+  })
+
+  it('still broadcasts when the user switches sessions', async () => {
+    const user = await renderApp()
+    await user.click(sessionRow('子会话'))
+    await waitFor(() => {
+      expect(activeFrames()).toEqual([
+        expect.objectContaining({ type: 'active_session_changed', sessionId: 'child' }),
+      ])
+    })
+    expect(localStorage.getItem(ACTIVE_SESSION_KEY)).toBe('child')
   })
 })

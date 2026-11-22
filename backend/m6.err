@@ -1,0 +1,20 @@
+time=2026-11-14T00:08:49.841+08:00 level=INFO msg=空会话清理完成 count=0
+time=2026-11-14T00:08:49.892+08:00 level=INFO msg="simo starting" addr=127.0.0.1:8787 home=E:\dsh_home\workspaces\agent\data db=E:\dsh_home\workspaces\agent\data\simo.db workspace=E:\dsh_home\workspaces\agent\data\workspace artifacts=E:\dsh_home\workspaces\agent\data\artifacts modules="[sessions chat tasks memory]" modelMode=real llm=deepseek-flash debug=false
+time=2026-11-14T00:08:49.894+08:00 level=INFO msg=listening url=http://127.0.0.1:8787
+time=2026-11-14T02:53:44.928+08:00 level=INFO msg="模型 token 用量" replyId=msg-cf61c10de98002d3 promptTokens=2502 completionTokens=167 reasoningTokens=91 totalTokens=2669 model=deepseek-flash
+time=2026-11-14T02:53:46.630+08:00 level=INFO msg="模型 token 用量" replyId=msg-cf61c10de98002d3 promptTokens=2697 completionTokens=79 reasoningTokens=12 totalTokens=2776 model=deepseek-flash
+time=2026-11-14T02:53:47.531+08:00 level=INFO msg="模型 token 用量" replyId=msg-cf61c10de98002d3 promptTokens=2919 completionTokens=71 reasoningTokens=19 totalTokens=2990 model=deepseek-flash
+time=2026-11-14T02:54:38.666+08:00 level=INFO msg="模型 token 用量" replyId=msg-903d4e6c0b7616fa promptTokens=2754 completionTokens=139 reasoningTokens=67 totalTokens=2893 model=deepseek-flash
+time=2026-11-14T02:55:24.051+08:00 level=INFO msg="模型 token 用量" replyId=msg-710df096d6d20c21 promptTokens=2756 completionTokens=77 reasoningTokens=18 totalTokens=2833 model=deepseek-flash
+time=2026-11-14T02:55:24.329+08:00 level=INFO msg="模型 token 用量" replyId=msg-af568b9a3903bf80 promptTokens=2759 completionTokens=96 reasoningTokens=12 totalTokens=2855 model=deepseek-flash
+time=2026-11-14T02:55:35.840+08:00 level=INFO msg="模型 token 用量" replyId=msg-ff458f1dd395969a promptTokens=2863 completionTokens=100 reasoningTokens=36 totalTokens=2963 model=deepseek-flash
+time=2026-11-14T02:56:50.295+08:00 level=INFO msg="模型 token 用量" replyId=msg-06a058e4ac4b8d95 promptTokens=2898 completionTokens=96 reasoningTokens=13 totalTokens=2994 model=deepseek-flash
+time=2026-11-14T02:57:57.118+08:00 level=INFO msg="模型 token 用量" replyId=msg-fa16b282a4554eb9 promptTokens=2523 completionTokens=114 reasoningTokens=44 totalTokens=2637 model=deepseek-flash
+time=2026-11-14T02:57:58.766+08:00 level=INFO msg="模型 token 用量" replyId=msg-fa16b282a4554eb9 promptTokens=2858 completionTokens=247 reasoningTokens=16 totalTokens=3105 model=deepseek-flash
+time=2026-11-14T02:57:58.769+08:00 level=INFO msg="模型 token 用量" replyId=msg-2dd7a564118b2318 promptTokens=2521 completionTokens=303 reasoningTokens=233 totalTokens=2824 model=deepseek-flash
+time=2026-11-14T02:57:59.967+08:00 level=INFO msg="模型 token 用量" replyId=msg-fa16b282a4554eb9 promptTokens=4621 completionTokens=122 reasoningTokens=24 totalTokens=4743 model=deepseek-flash
+time=2026-11-14T02:58:02.039+08:00 level=INFO msg="模型 token 用量" replyId=msg-2dd7a564118b2318 promptTokens=2967 completionTokens=325 reasoningTokens=43 totalTokens=3292 model=deepseek-flash
+time=2026-11-14T02:59:08.604+08:00 level=INFO msg="模型 token 用量" replyId=msg-4f6f2fdbc47fcdb2 promptTokens=2789 completionTokens=215 reasoningTokens=103 totalTokens=3004 model=deepseek-flash
+time=2026-11-14T02:59:11.027+08:00 level=INFO msg="模型 token 用量" replyId=msg-4f6f2fdbc47fcdb2 promptTokens=4534 completionTokens=256 reasoningTokens=214 totalTokens=4790 model=deepseek-flash
+time=2026-11-14T02:59:11.594+08:00 level=INFO msg="模型 token 用量" replyId=msg-19f3fa39b57744cc promptTokens=2788 completionTokens=445 reasoningTokens=116 totalTokens=3233 model=deepseek-flash
+time=2026-11-14T02:59:13.744+08:00 level=INFO msg="模型 token 用量" replyId=msg-4f6f2fdbc47fcdb2 promptTokens=5419 completionTokens=578 reasoningTokens=82 totalTokens=5997 model=deepseek-flash

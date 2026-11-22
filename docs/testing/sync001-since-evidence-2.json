@@ -1,0 +1,55 @@
+{
+  "startedAt": "2026-11-22T11:09:36.011Z",
+  "subscribes": [
+    {
+      "at": 1795345785993,
+      "parsed": {
+        "sessionId": "sess-b3b42e8f8de61893",
+        "since": 9291,
+        "sinceType": "number",
+        "hasSince": true
+      },
+      "raw": "{\"type\":\"subscribe\",\"data\":{\"sessionId\":\"sess-b3b42e8f8de61893\",\"since\":9291}}"
+    }
+  ],
+  "numericFrames": [],
+  "transitions": [
+    {
+      "at": 1795345781138,
+      "kind": "down",
+      "s": {
+        "status": "重连中",
+        "statusbar": "重连中 V4.1 Flash · 读/写权限按策略"
+      }
+    },
+    {
+      "at": 1795345786064,
+      "kind": "up",
+      "s": {
+        "status": "已连接",
+        "statusbar": "就绪 V4.1 Flash · 读/写权限按策略"
+      }
+    }
+  ],
+  "errors": [],
+  "target": {
+    "id": "7B3419910043C94A712EF01D79DFDAAE",
+    "url": "http://127.0.0.1:8787/?since=1795345728856"
+  },
+  "initialStatus": {
+    "status": "已连接",
+    "statusbar": "就绪 V4.1 Flash · 读/写权限按策略"
+  },
+  "finishedAt": "2026-11-22T11:09:47.077Z",
+  "verdict": {
+    "priorRunSawNumericEvent": true,
+    "priorLastEventId": 9288,
+    "sawDown": true,
+    "sawUp": true,
+    "reconnectSubscribeCount": 1,
+    "reconnectSince": [
+      9291
+    ],
+    "sinceIsNumber": true
+  }
+}

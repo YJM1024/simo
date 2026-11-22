@@ -1087,7 +1087,7 @@ export function ConversationPanel({ timeline, children, state = 'ready', empty, 
   )
 }
 
-export function OverviewPanel({ session, projection, loading, error = '', onRetry, onTaskClick, onArtifactOpen, onExpandGroup }: {
+export function OverviewContent({ session, projection, loading, error = '', onRetry, onTaskClick, onArtifactOpen, onExpandGroup }: {
   session: Session | null
   projection: import('../types').SessionSpecProjection | null
   loading: boolean
@@ -1109,9 +1109,7 @@ export function OverviewPanel({ session, projection, loading, error = '', onRetr
   // 草稿会话尚未落库，spec-projection 只会 404；右栏直接给占位，不发请求（请求守卫在 app.tsx）。
   const isDraft = session?.draft === true
   return (
-    // 无会话时不渲染 data-session，避免伪造一个不存在的会话 id。
-    <aside className="inspector" aria-label="会话概览" data-session={session ? session.id : undefined}>
-      <div className="insp-body">
+    <>
         {!session && <p className="insp-placeholder">未选择会话</p>}
         {session && (isDraft ? <EmptyState title="目标与执行态待生成" description="发送第一条消息后生成目标与执行态" /> : <>
         {loading && <LoadingState label="右栏加载中…" />}
@@ -1135,11 +1133,83 @@ export function OverviewPanel({ session, projection, loading, error = '', onRetr
           </section>
         </>}
         </>)}
-      </div>
+    </>
+  )
+}
+
+export function OverviewPanel(props: React.ComponentProps<typeof OverviewContent>): React.ReactNode {
+  return (
+    <aside className="inspector" aria-label="会话概览" data-session={props.session ? props.session.id : undefined}>
+      <div className="insp-body"><OverviewContent {...props} /></div>
       <div className="insp-rail" aria-label="概览导航">
         <button type="button" className="active" title="概览">☰</button>
         <button type="button" title="消息">◷</button>
         <button type="button" title="交付物">▤</button>
+      </div>
+    </aside>
+  )
+}
+
+export function RightPanel(props: React.ComponentProps<typeof OverviewContent>): React.ReactNode {
+  // 760–1179 档右栏只剩 40px 图标条，内容改由覆盖层抽屉打开（V-CONV-008-6）；
+  // 宽屏档抽屉样式不生效，手机档整块不渲染，故这套状态对两端都是空操作。
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  // 抽屉底边让开 Composer：高度随输入行数变化，打开时实测，并用 ResizeObserver 跟随换行增高。
+  const [drawerBottom, setDrawerBottom] = useState<number | null>(null)
+  const openDrawer = (): void => setDrawerOpen(true)
+  const closeDrawer = (): void => setDrawerOpen(false)
+  useEffect(() => {
+    if (!drawerOpen) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setDrawerOpen(false)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [drawerOpen])
+  useLayoutEffect(() => {
+    if (!drawerOpen) {
+      setDrawerBottom(null)
+      return
+    }
+    const measure = () => {
+      const composer = document.querySelector('.composer')
+      const rect = composer?.getBoundingClientRect()
+      // jsdom / 无 Composer 的挂载环境量不到高度，交回 CSS 兜底值。
+      setDrawerBottom(rect && rect.height > 0 ? Math.round(window.innerHeight - rect.top + 8) : null)
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    // Composer 换行增高时窗口尺寸不变，只靠 resize 会漏；观察它自身的高度变化重算底边。
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
+    const composer = document.querySelector('.composer')
+    if (observer && composer) observer.observe(composer)
+    return () => {
+      window.removeEventListener('resize', measure)
+      observer?.disconnect()
+    }
+  }, [drawerOpen])
+  return (
+    // 无会话时不渲染 data-session，避免伪造一个不存在的会话 id。
+    <aside
+      className={drawerOpen ? 'inspector is-drawer-open' : 'inspector'}
+      aria-label="会话概览"
+      data-drawer-open={drawerOpen ? 'true' : undefined}
+      data-session={props.session ? props.session.id : undefined}
+      style={drawerBottom === null ? undefined : ({ '--insp-drawer-bottom': `${drawerBottom}px` } as React.CSSProperties)}
+    >
+      {drawerOpen ? (
+        <button type="button" className="insp-drawer-scrim" aria-label="关闭右栏" tabIndex={-1} onClick={closeDrawer} />
+      ) : null}
+      <div className="insp-body" id="insp-panel">
+        {drawerOpen ? (
+          <button type="button" className="insp-drawer-close" aria-label="关闭右栏" onClick={closeDrawer}>×</button>
+        ) : null}
+        <OverviewContent {...props} />
+      </div>
+      <div className="insp-rail" aria-label="概览导航">
+        <button type="button" className="active" title="概览" aria-expanded={drawerOpen} aria-controls="insp-panel" onClick={openDrawer}>☰</button>
+        <button type="button" title="消息">◷</button>
+        <button type="button" title="交付物" aria-expanded={drawerOpen} aria-controls="insp-panel" onClick={openDrawer}>▤</button>
       </div>
     </aside>
   )
@@ -1220,8 +1290,4 @@ export function MetricsDashboard({ state = 'ready', windowKind = '7d', data, onW
       )}
     </section>
   )
-}
-
-export function RightPanel(props: React.ComponentProps<typeof OverviewPanel>): React.ReactNode {
-  return <OverviewPanel {...props} />
 }

@@ -1,7 +1,7 @@
 # 前端长期 Spec · 会话域（P1-CONV）
 
 > **文档类型**：长期 Spec（按域一个文件，功能点按 ID 分节；粒度依据 `docs/plan/MASTER-PLAN.md` §1.7）
-> **域**：`P1-CONV` 会话域 ｜ **验收面**：12 个 PRD（CONV-001..008 + SYNC-001..004；SYNC-005 本轮排除）
+> **域**：`P1-CONV` 会话域 ｜ **验收面**：12 个 PRD（CONV-001..008 + SYNC-001..004；SYNC-005 已于 2026-11-22 移除）
 > **上游**：`specs/product/P1-CONV/spec.md`（行为契约的唯一事实来源；本文件只把它落成**前端可验收的契约**）
 > **本轮变更包**：`specs/changes/CHG-CONV-006/`（`product.md` 六条默认裁决 + `tasks.md` W1–W5 共 20 张卡）
 > **owner / 角色**：前端（`frontend`）。本文件由 `CHG-CONV-006` `TASK-W3-09` 产出，**不含实现、不改代码**
@@ -30,7 +30,7 @@
 | §12 | `PRD-SYNC-003` | 发送模式跨标签同步 | P1 | implemented | 契约完整 | `Composer` | localStorage + BC | 组件 + CDP 13 |
 | §13 | `PRD-SYNC-004` | 未读与已读游标 | P1 | **partial** | **契约与实现不一致** | `Sidebar` / `App` | 仅前端内存态 | 无（`missing`） |
 
-排除项：`PRD-SYNC-005`（远程访问与通知中心）unimplemented/gap，本轮不写前端契约（`specs/product/P1-CONV/spec.md:248`、`:320` ① 已裁决排除）。
+排除项：`PRD-SYNC-005`（远程访问与通知中心）已于 2026-11-22 移除，编号不复用，本文件不写前端契约。
 
 ### 1.2 组件边界（样式与复用规则）
 

@@ -1,0 +1,50 @@
+{
+  "at": "2026-11-22T11:11:40.189Z",
+  "tree": {
+    "status": 200,
+    "textHead": "{\"sessions\":[{\"id\":\"main\",\"parentId\":\"\",\"title\":\"主会话\",\"createdAt\":1794490306999,\"archived\":0,\"pinned\":false,\"ownerAgentId\":\"simo\",\"hasUnread\":true,\"messageCount\":85,\"children\":[{\"id\":\"sess-38497934b31bfc0a\",\"parentId\":\"main\",\"title\":\"验收序B\",\"createdAt\":1795275435400,\"archived\":0,\"pinned\":true,\"ownerAgentId\":\"simo\",\"hasUnread\":false,\"messageCount\":2},{\"id\":\"sess-a29cef9ffc38240b\",\"parentId\":\"main\",\""
+  },
+  "list": {
+    "status": 200,
+    "count": null,
+    "mainMessageCount": null,
+    "sumMessageCount": null,
+    "allInteger": null,
+    "archivedField": null
+  },
+  "created": {
+    "status": 201,
+    "id": "sess-c67c5b80fb58cd69",
+    "body": "{\"draft\":true,\"ok\":true,\"session\":{\"id\":\"sess-c67c5b80fb58cd69\",\"parentId\":\"main\",\"title\":\"ACC10-一次性归档探针\",\"createdAt\":1795345900313,\"archived\":0,\"pinned\":false,\"ownerAgentId\":\"simo\",\"hasUnread\":false,"
+  },
+  "archiveFresh": {
+    "status": 404
+  },
+  "sendArchived": {
+    "status": 202,
+    "code": null,
+    "body": "{\"id\":\"msg-c5934a7cebf33b65\",\"messageId\":\"msg-c5934a7cebf33b65\",\"ok\":true}\n"
+  },
+  "freshArchivedFlag": null,
+  "unarchiveFresh": {
+    "status": 200
+  },
+  "sendRestored": {
+    "status": 202,
+    "body": "{\"id\":\"msg-eeeb722d84bbe82e\",\"messageId\":\"msg-eeeb722d84bbe82e\",\"ok\":true}\n"
+  },
+  "freshAfter": {
+    "status": 404,
+    "headers": {
+      "content-length": "95",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Sun, 22 Nov 2026 11:11:40 GMT"
+    },
+    "text": "{\"ok\":false,\"error\":\"接口不存在: /api/sessions/sess-c67c5b80fb58cd69\",\"code\":\"not_found\"}\n",
+    "json": {
+      "ok": false,
+      "error": "接口不存在: /api/sessions/sess-c67c5b80fb58cd69",
+      "code": "not_found"
+    }
+  }
+}

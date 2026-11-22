@@ -1,6 +1,6 @@
 # COMP-composer-send-mode · Composer 发送方式
 
-状态：**spec ready（2026-11-21 按事实更正：已实现、8787 线上 smoke 通过且有签字记录；缺六件套门禁，未归档）**。未签收：2026-11-21 组件验收判 **rejected**（报告 `docs/testing/COMP-SIGN-20261121.md` §5）；缺口为 A5 模式提示文案默认常显、与“默认隐藏/移出消失”相反，A8 发送失败清空输入、与“失败保留输入”冲突。修复或先修订契约文字后重验，不得改状态为 accepted。
+状态：**accepted（2026-11-22）**。
 Owner：前端（实现）/ 产品（交互口径）/ 验收
 范围：Composer 输入区的发送/换行快捷键、发送方式切换提示、持久化与多标签同步。
 视觉基线：`DESIGN.md`；相关组件：`Composer`、`Button/IconButton`、`Tooltip`。

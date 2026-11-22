@@ -90,10 +90,12 @@ specs/changes/CHG-<域>-<NNN>/         变更 Spec（七件套，归档后仍留
 
 ```text
 阶段 0  流程与门禁落地（CHG-SYS-001）              ← 进行中
-阶段 1  会话域（"绘画"）走完并 8787 部署验收       ← 当前焦点
+阶段 1  会话域（"绘画"）已完成（2026-11-22 签字）  ← 当前进入阶段 2：输出完整产品功能树与优先级
 阶段 2  会话域之外的其余产品功能补齐               ← 按功能树逐批
 阶段 3  全产品功能树盘点与缺口收口                 ← 与阶段 2 交织
 ```
+
+**当前状态（2026-11-22）**：阶段 1 会话域已签字并收口，12 covered / 0 partial / 0 gap（33 条 AC 全 pass；停止机制由 `stop_upstream_test.go` 假上游证明，IME 由 CDP 合成组合态验证）；阶段 2 的 B1 核心闭环标 `parked`，代码与文档已产出但未提交、未重建、未部署，重启需用户明确批准。
 
 ### 阶段 0 · 流程与门禁
 - 交付：`CHG-SYS-001` 变更包（六类产物）+ `scripts/check-sdd.mjs`/`check-trace.mjs` 硬化（六类齐、AC→用例、证据可复现、`--self-test`）。
@@ -101,7 +103,7 @@ specs/changes/CHG-<域>-<NNN>/         变更 Spec（七件套，归档后仍留
 
 ### 阶段 1 · 会话域（"绘画"）
 - 范围：`specs/product/P1-CONV/spec.md` 的 12 个 PRD（CONV-001/002/003/004/005/006/007、SYNC-001/002/003/004），**SYNC-005 已排除**（远程访问与通知中心，保持 gap）。
-- 现状：**0 covered / 11 partial / 1 gap**；前端已知缺陷集中在生命周期失败反馈、搜索语义、未读、5 个 COMP 未签收。
+- 现状：**0 covered / 11 partial / 1 gap**（2026-11-22 开工前基线；签字后的当前状态见 §2）；前端已知缺陷集中在生命周期失败反馈、搜索语义、未读；5 个 COMP 全部 accepted（复签见 `COMP-SIGN-20261121.md:129` 起）。
 - 起点：会话域现状盘点与功能点草案 → `docs/plan/CONV-DISCOVERY.md`（进行中）。
 - 做法：产品功能树（场景 → 功能点 → AC）→ 设计（交互/视觉稿 + 验收截图口径）→ 前端/后端实现 → 测试（后端+前端+E2E）→ 独立验收 → **8787 真机部署验证（功能 + 视觉）**。
 - 出口条件：会话域 12 个 PRD 全部 `covered`；前端 115+、后端 246+、E2E 全绿；8787 重建部署后逐条走查通过（含视觉与设计稿对齐）；截图与命令证据归档。
@@ -124,7 +126,7 @@ specs/changes/CHG-<域>-<NNN>/         变更 Spec（七件套，归档后仍留
 | CONV-001 | 主会话不可归档无独立断言；切换会话中栏变化无 E2E；pin 后端有、UI 未接线 |
 | CONV-002 | `frontend/src/app.tsx:449/456/536` 三处失败无反馈；无删除入口（后端 API 已有） |
 | CONV-003 | 搜索语义不一致（UI 走消息搜索，产品写标题搜索）；未读无徽标/无持久化 |
-| CONV-004 | 5 个 COMP 未签收（message-colors 等） |
+| CONV-004 | 5 个 COMP 全部 accepted（复签见 `COMP-SIGN-20261121.md:129` 起） |
 | CONV-005 | 无 close→open replay E2E；`clientMutationId` 后端未消费；停止未验证真实中断 |
 | CONV-006 | Composer 快捷键/发送模式证据不全（待 `CONV-DISCOVERY.md` 补） |
 | CONV-007 | 413/403 仅 mock；时间轴点击 ≥44px 无断言；未部署验证 |
@@ -138,11 +140,13 @@ specs/changes/CHG-<域>-<NNN>/         变更 Spec（七件套，归档后仍留
 ## 4. 固定事实（避免反复确认）
 
 - 运行基线：`127.0.0.1:8787`，无鉴权；数据根 `SIMO_HOME`。
-- 测试基线：前端 115（`--pool=threads`）、后端 246（`go test ./...`）、CDP E2E 19（mock 后端 19230）。
+- 测试基线：前端 243 用例、后端 16 个有测试的包全部 ok（`cmd/simo` 253.124s，日志 `backend/.tmp/final-backend.log`）、CDP E2E 19/19×2（mock 后端 19230）。
 - 工具链：git 便携版在 `.tools\git\cmd\git.exe`；node 不在 PATH（捆绑在 `E:\dsh_home\dsh-runtimes\dsh-primary-runtime\dependencies\node\bin\node.exe`）；只有 Windows PowerShell 5.1（无 pwsh）；curl 走代理不可靠，node fetch 可用。
-- 部署：现有 `backend/simo-live-final4.exe` 构建于 2026-11-21 02:26，**不含** 13:00 后的前端修复 → 任何 8787 验证前必须重建。
+- 部署：当前运行 `backend/simo-8787-exit.exe`（2026-11-22 14:31 构建，22,107,136 B，buildId `mwrgkenj-4xh98`），由 Lead 的后台 job 持有，`GET /api/health` 返回 200；旧的 `backend/simo-live-final4.exe`（2026-11-21 02:26 构建）作为历史保留。
 - 文件安全：禁止就地删除，只能移入 `E:\dsh_home\trash\pending-delete\`。
 - 安全待办：`.git/config` 内嵌明文 PAT（有效），需轮换并改走凭据管理。
+- 入仓状态：远程 `main` 已入仓 `de4cda8`（`de4cda8c2c60d0c6c43bb4c17e01548b44e840e6`，2026-11-22，206 files，A=142 / M=64 / D=0）；本地提交 `76bc63e61dd309a94a7f06929e14e448c85cd550`，树 sha `1b9d3e4f56f5ec4972a1ffc0f0ac6208f6b82609` 与远程一致。推送走 GitHub REST API，`git push` 被代理对 `github.com:443` 的 CONNECT 403 拦住，SSH 因沙箱命名管道不可用；记录在 `.tmp/freeze/PUSH-API-RESULT.md`。
+- 仓库基线待办（未裁决，仅记录）：工作区本地 `.git` 仍是 2026-11-09 的旧落后仓库，与远程无共同祖先；后续要么整体替换为 `.tmp/repo-clean` 的 `.git`（旧目录移入 `E:\dsh_home\trash\pending-delete\`，不就地删除），要么继续用 API 入仓。决定未做，暂不执行。
 
 ---
 
@@ -177,3 +181,4 @@ specs/changes/CHG-<域>-<NNN>/         变更 Spec（七件套，归档后仍留
 - 2026-11-21：A1–A4 全部由用户定案（SYNC-005 不纳入；8787 部署验证强制；前端含视觉返工）。新增 §1.6 部署验证门禁。
 - 2026-11-21：**A1 更正**：我先把"绘画"误判为图像生成，用户给出等式「"绘画" = 会话」→ 阶段 1 回到会话域（P1-CONV 12 PRD，SYNC-005 排除），§0/§2/§3/§6 修正；`paint-discovery` 已改向为 `CONV-DISCOVERY.md`。教训：术语只用用户给出的等式，不自行解释历史文档。
 - 2026-11-21：新增 §1.1 两种 Spec（长期 = 仓库文件；变更 = changelog）与 §1.7 粒度/目录（按域一文件、文件内按功能点 ID 分节）；建立 `docs/plan/BACKLOG.md` 作为唯一执行队列，需求项统一叫「需求项」，大项拆小项逐项执行。
+- 2026-11-22：阶段 1 会话域交付已入仓，远程 `main` head `de4cda8`（206 files，A=142 / M=64 / D=0），推送走 GitHub REST API；登记本地 `.git` 落后于远程、待选择整体替换或继续 API 入仓的待办。本文件自 `de4cda8` 入仓后的改动（含 §4 入仓状态与测试基线、阶段状态）属下一批入仓。

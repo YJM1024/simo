@@ -212,3 +212,45 @@ describe('会话面板与 Composer 基线样式（A5 / A13）', () => {
     expect(effective('.conversation-panel .chat-inner', 'padding', 1600)).toBe('var(--sp-16) var(--sp-20)')
   })
 })
+
+/**
+ * V-CONV-008-6 三档：760–1023px 右栏折叠为 40px 图标条、内容以覆盖层抽屉打开；
+ * ≥1024 恢复展开态，760 以下整块不渲染（375 档不回归）。
+ */
+describe('右栏三档：760–1023 图标条、≥1024 展开、<760 隐藏（V-CONV-008-6）', () => {
+  it('folds the inspector into the rail-only strip between 760 and 1023', () => {
+    for (const width of [760, 768, 900, 1023]) {
+      expect(effective('.inspector', 'display', width)).toBe('flex')
+      expect(effective('.inspector', 'width', width)).toBe('var(--insp-rail-w)')
+      expect(effective('.insp-body', 'display', width)).toBe('none')
+    }
+  })
+
+  it('opens the body as a fixed overlay anchored to the rail width so the middle column keeps its width', () => {
+    for (const width of [768, 900, 1023]) {
+      expect(effective('.inspector.is-drawer-open .insp-body', 'display', width)).toBe('block')
+      expect(effective('.inspector.is-drawer-open .insp-body', 'position', width)).toBe('fixed')
+      expect(effective('.inspector.is-drawer-open .insp-body', 'right', width)).toBe('var(--insp-rail-w)')
+      expect(effective('.insp-drawer-scrim', 'display', width)).toBe('block')
+    }
+  })
+
+  it('restores the expanded inspector from 1024 without any drawer overlay', () => {
+    for (const width of [1024, 1179, 1180, 1440]) {
+      expect(effective('.inspector', 'width', width)).toBe('var(--rail)')
+      expect(effective('.insp-body', 'display', width)).toBeNull()
+      expect(effective('.insp-drawer-scrim', 'display', width)).toBe('none')
+      expect(effective('.insp-drawer-close', 'display', width)).toBe('none')
+    }
+    expect(effective('.insp-body', 'position', 1024)).toBeNull()
+  })
+
+  it('keeps 759/760, 1023/1024 and 375 boundaries exact', () => {
+    expect(effective('.inspector', 'display', 759)).toBe('none')
+    expect(effective('.inspector', 'width', 760)).toBe('var(--insp-rail-w)')
+    expect(effective('.inspector', 'width', 1023)).toBe('var(--insp-rail-w)')
+    expect(effective('.inspector', 'width', 1024)).toBe('var(--rail)')
+    expect(effective('.inspector', 'display', MOBILE_375)).toBe('none')
+    expect(effective('.insp-drawer-scrim', 'display', MOBILE_375)).toBe('none')
+  })
+})

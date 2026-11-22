@@ -1,6 +1,6 @@
 # COMP-conversation-panel · ConversationPanel（会话面板容器）
 
-状态：**approved（含已知缺陷；2026-11-21 按现状契约化，见 §0）**。未签收：2026-11-21 组件验收判 **rejected**（报告 `docs/testing/COMP-SIGN-20261121.md` §4）；缺口为 A5 卡内双层白底与第二道边、A7 三态未验证、A10 画廊缺 empty/loading/error、A13 1180 标签错位 37px 与右栏基线差 51px（另 API 缺 `density`/`ariaLabel`）。修复并重验前不得改状态为 accepted。
+状态：**accepted（2026-11-22 复签）**。
 Owner：前端（实现）/ 产品（本 spec）/ 验收（截图与走查）
 流程：`docs/process/component-system.md` §6.8 COMP spec；本文件只定义组件，不改代码。
 视觉基线：`DESIGN.md`（当前唯一视觉基准）。**视觉基线已由用户确认（2026-11-12）**：灰底 / 白卡 / 居中 / Composer 同宽 / 标签对齐 / 右栏任务对齐；本组件不引入 M62 历史渐变规范。

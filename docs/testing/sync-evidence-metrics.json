@@ -1,0 +1,112 @@
+{
+  "capturedAt": "2026-11-22T19:05:00+08:00",
+  "buildId": "mwrpos0p-d8dkh",
+  "exe": {
+    "path": "E:\\dsh_home\\workspaces\\agent\\backend\\simo-8787-final10.exe",
+    "bytes": 22110208,
+    "buildCommand": "toolchain\\go.ps1 build -o backend\\simo-8787-final10.exe ./cmd/simo (workdir backend, 1.85s)",
+    "buildIdSource": "GET / meta[name=build-id]"
+  },
+  "server": {
+    "simoHome": "E:\\dsh_home\\workspaces\\agent\\data",
+    "health": { "ok": true, "ready": true, "checks": { "db": "ok", "modules": ["sessions", "chat", "tasks", "memory"] } },
+    "indexBuildIdMatchesBuild": true,
+    "listenPidAfterCycle2": 2840
+  },
+  "frontendBuild": {
+    "tailwind": { "entry": "frontend/src/styles.css", "out": "frontend/dist/assets/app.css", "bytes": 80899, "sha256": "d2110d67cb4cead505c03a628328d2293660278157fb6aa25d3aa73f0c277be4", "seconds": 5.67 },
+    "esbuild": { "entry": "frontend/src/main.tsx", "out": "frontend/dist/assets/app.js", "bytes": 317904, "sha256": "1dd87a82b8c214d6ef4146cdcbc12189837ddb0f41d7906616cf07ad8ed48ecf", "seconds": 0.13 },
+    "indexHtml": { "bytes": 406, "sha256": "c9b3a7e2bea5f573f058429e43af3d63b70718d86ab4f7e00e186c2ccffdc671" },
+    "webuiDistAllMatch": true,
+    "buildScript": ".tmp/deploy/final10-build.ps1"
+  },
+  "sync001": {
+    "title": "WS 连接与重连",
+    "method": "CDP 9223 headless Chrome；Page.addScriptToEvaluateOnNewDocument 预埋探针（WebSocket ctor/open/close/message、send 帧、状态栏文案 100ms 采样）；Stop-Process -Force 杀 8787 后由 restart-after.ps1 在 ~2.3s 后重启",
+    "cycles": 2,
+    "authoritativeCycle": 2,
+    "killedAt": 1795345118208,
+    "killedPid": 35056,
+    "raw": {
+      "disconnectDetectedMs": 840,
+      "reconnectingUiMs": 272,
+      "reconnectOpenMs": 2297,
+      "statusOpenAgainMs": 2386,
+      "sinceIsNumber": false,
+      "sinceRaw": "absent",
+      "messageCountBefore": 83,
+      "messageCountAfter": 83,
+      "uniqueAfter": 83,
+      "duplicateIdCount": 0,
+      "recvFramesAfterReopen": 1,
+      "recvAfterReopenSample": [{ "type": "hello", "len": 44, "at": 1795345120506 }],
+      "consoleErrors": [],
+      "pageErrors": [],
+      "statusTimeline": [
+        { "at": 1795345118992, "text": "重连中", "wsState": 3 },
+        { "at": 1795345120595, "text": "已连接", "wsState": 1 }
+      ],
+      "wsEvents": { "close": { "code": 1006, "clean": false }, "openCount": 2 }
+    },
+    "cycle1": {
+      "disconnectDetectedMs": 839,
+      "reconnectingUiMs": 301,
+      "reconnectOpenMs": 2286,
+      "statusOpenAgainMs": 2305,
+      "sinceIsNumber": false,
+      "messageCountBefore": 83,
+      "messageCountAfter": 83,
+      "uniqueAfter": 83,
+      "duplicateIdCount": 0,
+      "recvFramesAfterReopen": 1,
+      "consoleErrors": [],
+      "pageErrors": []
+    },
+    "notes": [
+      "重连 subscribe 帧不含 since：探针记录的 send 帧只有 {type:'subscribe', data:{sessionId:'main'}}，无 since 字段，即客户端未带数字游标。",
+      "服务端在订阅时先发 hello 帧（backend/internal/modules/chat/http.go:291），重连后唯一收到的就是该帧，说明通道已恢复但没有新事件可补。"
+    ]
+  },
+  "sync003": {
+    "title": "发送模式跨标签同步",
+    "method": "同源两个 CDP 标签 A/B，各自预埋 25ms 采样（localStorage key simo.composer.sendMode、span.composer-hint 文案、aria-pressed）与 BroadcastChannel 包装；在 A 内 click button.composer-hint-icon",
+    "authoritativeRun": 2,
+    "run2": {
+      "initial": { "a": "enter", "b": "enter", "aHint": "Enter 发送，Shift+Enter 换行" },
+      "clickAt": 1795344981039,
+      "broadcastChannel": "simo.composer.sendMode.v1",
+      "broadcastFrames": { "aAt": 1795344981040, "bAt": 1795344981041, "payload": "shift-enter" },
+      "bChangeDetectedAt": 1795344981040,
+      "aToBLatencyMs": 1,
+      "after": { "aKey": "shift-enter", "bKey": "shift-enter", "aHint": "Enter 换行，Shift+Enter 发送", "bHint": "Enter 换行，Shift+Enter 发送", "bPressed": "true" },
+      "reload": { "bKey": "shift-enter", "bHint": "Enter 换行，Shift+Enter 发送", "bPressed": "true", "persisted": true },
+      "restoredA": { "key": "enter", "hint": "Enter 发送，Shift+Enter 换行", "pressed": "false" },
+      "consoleErrors": { "a": [], "b": [] }
+    },
+    "run1": {
+      "initial": { "a": null, "b": null },
+      "aToBLatencyMs": 15,
+      "broadcastFrames": { "aAt": 1795344819954, "bAt": 1795344819955, "payload": "shift-enter" },
+      "reloadPersisted": true
+    }
+  },
+  "artifacts": {
+    "screenshots": [
+      { "file": "docs/testing/sync-001-before-restart.png", "bytes": 103541, "sha256_16": "34A08890EF2A2807" },
+      { "file": "docs/testing/sync-001-reconnecting.png", "bytes": 103541, "sha256_16": "34A08890EF2A2807", "valid": false, "reason": "字节与重启前截图完全相同，headless 无动画未提交新帧，未证明「重连中」画面" },
+      { "file": "docs/testing/sync-001-recovered.png", "bytes": 103984, "sha256_16": "5EE2E6A99753221C" },
+      { "file": "docs/testing/sync-003-a-before.png", "bytes": 105965, "sha256_16": "4EE6FF2096E8" },
+      { "file": "docs/testing/sync-003-a-after-toggle.png", "bytes": 105977, "sha256_16": "3B8301ABE530" },
+      { "file": "docs/testing/sync-003-b-before.png", "bytes": 105965, "sha256_16": "4EE6FF2096E8" },
+      { "file": "docs/testing/sync-003-b-after-sync.png", "bytes": 105977, "sha256_16": "3B8301ABE530" },
+      { "file": "docs/testing/sync-003-b-after-reload.png", "bytes": 105977, "sha256_16": "3B8301ABE530" }
+    ],
+    "scripts": [".tmp/deploy/cdp.mjs", ".tmp/deploy/sync001-a.mjs", ".tmp/deploy/sync001-b.mjs", ".tmp/deploy/sync003.mjs", ".tmp/deploy/final10-build.ps1", ".tmp/deploy/restart-after.ps1", ".tmp/deploy/final10-serve.ps1"],
+    "rawJson": [".tmp/deploy/sync001-a.json", ".tmp/deploy/sync001-b.json", ".tmp/deploy/sync003.json", ".tmp/deploy/kill.json", ".tmp/deploy/final10-build.json"]
+  },
+  "deviations": [
+    "frontend/build.mjs 未运行（沙箱内子进程管道 EPERM，且会清空 dist）；改用等价 Tailwind CLI + esbuild.exe 直调，产物就地覆盖。",
+    "Stop-Process -Force 后 data\\simo.db.lock 残留导致重启报「数据库已被另一个 simo 实例占用」；锁文件被移入工作区内 .trash/pending-delete/workspaces/agent/data/（保留原路径结构，未删除）。全局隔离目录 E:\\dsh_home\\trash\\pending-delete 在沙箱写权限之外，Move-Item 被拒。",
+    "未验证项：重连后没有发生新事件，因此「新消息仍能到达」只用服务端订阅 hello 帧与 83→83 无重复来证明，未发起真实聊天回合（会触发模型调用与副作用）。"
+  ]
+}
