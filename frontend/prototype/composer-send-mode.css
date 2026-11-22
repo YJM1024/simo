@@ -1,0 +1,25 @@
+﻿.composer-send-mode .composer-right { min-height: var(--size-20); }
+.composer-send-mode .hint-icon {
+  width: var(--size-20); height: var(--size-20); padding: 0; margin-right: var(--space-2);
+  display: inline-flex; align-items: center; justify-content: flex-end;
+  border: 0; border-radius: var(--r-4); background: transparent; color: var(--muted);
+  opacity: 0; transform: translateX(2px); pointer-events: none;
+  transition: opacity .14s ease, transform .14s ease, background .14s ease;
+}
+.composer-send-mode .composer-right:hover .hint-icon,
+.composer-send-mode .composer-right:focus-within .hint-icon,
+.composer-send-mode .composer-box:focus-within .hint-icon { opacity: 1; transform: none; pointer-events: auto; }
+.composer-send-mode .hint-icon:hover { background: var(--surface-2); color: var(--ink); }
+.composer-send-mode .hint-icon:focus-visible { outline: 2px solid var(--accent-line); outline-offset: 1px; opacity: 1; pointer-events: auto; }
+.composer-send-mode .composer-hint { min-width: 0; }
+@media (max-width: 30rem) {
+  .composer-send-mode .hint-icon { opacity: 0; }
+  .composer-send-mode .composer-box:focus-within .hint-icon { opacity: 1; pointer-events: auto; }
+}
+@media (max-width: 30rem) {
+  .composer-send-mode .composer-hint { display: inline; font-size: var(--font-10); }
+  .composer-send-mode .composer-left { display: none; }
+  .composer-send-mode .composer-right { gap: var(--sp-8); width: 100%; justify-content: flex-end; }
+  .composer-send-mode .hint-icon { width: var(--size-20); height: var(--size-20); }
+}
+

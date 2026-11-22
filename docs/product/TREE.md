@@ -66,7 +66,7 @@ mindmap
 
 | 域 | 名称 | 技术域码 | L2 | L3 | implemented | partial | unimplemented | 产品 spec | TEST |
 |---|---|---|---:|---:|---:|---:|---:|---|---|
-| [`P1`](#p1) | 会话与消息 | `CONV`/`SYNC` | 4 | 12 | 9 | 2 | 1 | [spec](../../specs/product/P1-CONV/spec.md) | [test](../../specs/test/P1-CONV/test-plan.md) |
+| [`P1`](#p1) | 会话与消息 | `CONV`/`SYNC` | 5 | 13 | 12 | 0 | 1 | [spec](../../specs/product/P1-CONV/spec.md) | [test](../../specs/test/P1-CONV/test-plan.md) |
 | [`P2`](#p2) | 任务与执行 | `TASK` | 3 | 6 | 0 | 3 | 3 | [spec](../../specs/product/P2-TASK/spec.md) | [test](../../specs/test/P2-TASK/test-plan.md) |
 | [`P3`](#p3) | 工作台与视图 | `WORK` | 4 | 5 | 3 | 1 | 1 | [spec](../../specs/product/P3-WORK/spec.md) | [test](../../specs/test/P3-WORK/test-plan.md) |
 | [`P4`](#p4) | 文件与交付物 | `FILE` | 5 | 6 | 1 | 5 | 0 | [spec](../../specs/product/P4-FILE/spec.md) | [test](../../specs/test/P4-FILE/test-plan.md) |
@@ -76,7 +76,9 @@ mindmap
 | [`P8`](#p8) | 设置与系统 | `SET`/`SYS` | 5 | 12 | 1 | 8 | 3 | [spec](../../specs/product/P8-SET/spec.md) | [test](../../specs/test/P8-SET/test-plan.md) |
 | [`P9`](#p9) | 工具与能力 | `TOOL` | 4 | 7 | 0 | 4 | 3 | [spec](../../specs/product/P9-TOOL/spec.md) | [test](../../specs/test/P9-TOOL/test-plan.md) |
 | [`P10`](#p10) | 指标 | `METRIC` | 3 | 6 | 3 | 2 | 1 | [spec](../../specs/product/P10-METRIC/spec.md) | [test](../../specs/test/P10-METRIC/test-plan.md) |
-| **合计** | — | 12 个技术域码 | **39** | **71** | **17** | **38** | **16** | **10/10** | **10/10** |
+| **合计** | — | 12 个技术域码 | **40** | **72** | **20** | **36** | **16** | **10/10** | **10/10** |
+
+> 覆盖口径（2026-11-22 P1 收口后）：全仓 72 个 PRD = **11 covered / 38 partial / 23 gap**；P1 = **11 / 1 / 1**（conditional 计入 partial，`SYNC-005` 保持 gap）。上表 implemented / partial / unimplemented 三列统计实现状态，与覆盖状态分轴，故 P1 仍为 12 / 0 / 1；覆盖状态以各 PRD 行的“覆盖”列为准。
 
 ## 3. L2 / L3 功能点
 
@@ -85,39 +87,55 @@ mindmap
 
 范围：会话树、消息流、发送/流式、输入、时间轴、未读；并含 `SYNC` 的跨域边界。
 
-证据（2026-11-21 回写）：前端 115/115、后端 246 个顶层测试、E2E 19/19×2（CDP + mock 后端 19230，非 Playwright）；用例口径 4 pass / 9 partial / 2 missing，P1 覆盖仍 **0 covered / 11 partial / 1 gap**。逐项见 [test-plan](../../specs/test/P1-CONV/test-plan.md) 与 [CONV-CLOSURE](CONV-CLOSURE.md)。
+证据（2026-11-22 收口）：33 条生效 AC = **32 通过 / 1 部分**（`AC-CONV-006-02` 中文输入法待人工）；`SYNC-005` 2 条 `blocked` 仅登记、不计入生效面。P1 覆盖 **11 covered / 1 conditional / 0 not covered / 1 gap**（验收面 12 = `CONV-001..008` + `SYNC-001..004`：`CONV-006` conditional（IME 待人工）；`CONV-005` 已闭环，停止按消息定向、双流只停目标（`stop_interrupt_test.go:402`）；`CONV-008` 已闭环，真机 304 已补；`SYNC-005` 排除、保持 gap）。逐项见 [STOP-EVIDENCE-2](../testing/STOP-EVIDENCE-2-20261122.md)、[第八轮验收](../testing/ACCEPT-CONV-8-20261122.md)、[test-plan](../../specs/test/P1-CONV/test-plan.md) 与 [CONV-CLOSURE](CONV-CLOSURE.md)。
 
 #### L2 · 会话管理
 
-| PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
-|---|---|---|---|---|---|---|---|---|
-| `PRD-CONV-001` | 会话树与主会话 | P0 | `implemented` | [spec](../../specs/product/P1-CONV/spec.md#prd-conv-001) | [CHG-CONV-001](../../specs/changes/CHG-CONV-001/spec.md) | [FE-001](../../specs/FE-001-frontend-rebuild/spec.md) / [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [M1](../m1-contract.md) | — | [TC-P1-001](../../specs/test/P1-CONV/test-plan.md#tc-p1-001) |
-| `PRD-CONV-002` | 会话生命周期 | P0 | `implemented` | [spec](../../specs/product/P1-CONV/spec.md#prd-conv-002) | [CHG-CONV-001](../../specs/changes/CHG-CONV-001/spec.md) | [FE-001](../../specs/FE-001-frontend-rebuild/spec.md) / [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [FE-004](../../specs/FE-004-first-run-empty/spec.md) / [M1](../m1-contract.md) | — | [TC-P1-002](../../specs/test/P1-CONV/test-plan.md#tc-p1-002) |
-| `PRD-CONV-003` | 会话搜索与未读 | P1 | `partial` | [spec](../../specs/product/P1-CONV/spec.md#prd-conv-003) | [CHG-CONV-001](../../specs/changes/CHG-CONV-001/spec.md) | [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [M1](../m1-contract.md) | — | [TC-P1-003](../../specs/test/P1-CONV/test-plan.md#tc-p1-003) |
+场景 A / B：会话导航与生命周期（树加载、选中/新建、重命名、归档/恢复、归档只读）；搜索与未读。
+
+| PRD | L3 功能点 | P | 实现状态 | 覆盖 | 产品 spec | CHANGE | 开发 | COMP | TEST |
+|---|---|---|---|---|---|---|---|---|---|
+| `PRD-CONV-001` | 会话树与主会话 | P0 | `implemented` | `covered` | [spec](../../specs/product/P1-CONV/spec.md#prd-conv-001) | [CHG-CONV-001](../../specs/changes/CHG-CONV-001/spec.md) | [FE-001](../../specs/FE-001-frontend-rebuild/spec.md) / [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [M1](../m1-contract.md) | — | [TC-P1-001](../../specs/test/P1-CONV/test-plan.md#tc-p1-001) |
+| `PRD-CONV-002` | 会话生命周期 | P0 | `implemented` | `covered` | [spec](../../specs/product/P1-CONV/spec.md#prd-conv-002) | [CHG-CONV-001](../../specs/changes/CHG-CONV-001/spec.md) | [FE-001](../../specs/FE-001-frontend-rebuild/spec.md) / [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [FE-004](../../specs/FE-004-first-run-empty/spec.md) / [M1](../m1-contract.md) | — | [TC-P1-002](../../specs/test/P1-CONV/test-plan.md#tc-p1-002) |
+| `PRD-CONV-003` | 会话搜索与未读 | P1 | `implemented` | `covered` | [spec](../../specs/product/P1-CONV/spec.md#prd-conv-003) | [CHG-CONV-001](../../specs/changes/CHG-CONV-001/spec.md) | [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [M1](../m1-contract.md) | — | [TC-P1-003](../../specs/test/P1-CONV/test-plan.md#tc-p1-003) |
 
 #### L2 · 消息与渲染
 
-| PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
-|---|---|---|---|---|---|---|---|---|
-| `PRD-CONV-004` | 消息流与渲染 | P0 | `implemented` | [spec](../../specs/product/P1-CONV/spec.md#prd-conv-004) | [CHG-CONV-002](../../specs/changes/CHG-CONV-002/spec.md) | [FE-001](../../specs/FE-001-frontend-rebuild/spec.md) / [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [M1](../m1-contract.md) / [M14](../m14-contract.md) | [COMP-message-colors](../../specs/COMP-message-colors/spec.md) | [TC-P1-004](../../specs/test/P1-CONV/test-plan.md#tc-p1-004) |
-| `PRD-CONV-007` | 祖先消息整级加载 | P1 | `implemented` | [spec](../../specs/product/P1-CONV/spec.md#prd-conv-007) | [CHG-CONV-002](../../specs/changes/CHG-CONV-002/spec.md) | [FE-007](../../specs/FE-007-ancestor-messages/spec.md) / [M1](../m1-contract.md) / [M14](../m14-contract.md) | [COMP-timeline-groups](../../specs/COMP-timeline-groups/spec.md) / [COMP-timeline-tip](../../specs/COMP-timeline-tip/spec.md) | [TC-P1-005](../../specs/test/P1-CONV/test-plan.md#tc-p1-005) |
+场景 C：消息渲染与祖先（角色/分类/Markdown/复制/流式/失败/卡片只读/祖先逐级/时间轴）。
+
+| PRD | L3 功能点 | P | 实现状态 | 覆盖 | 产品 spec | CHANGE | 开发 | COMP | TEST |
+|---|---|---|---|---|---|---|---|---|---|
+| `PRD-CONV-004` | 消息流与渲染 | P0 | `implemented` | `covered` | [spec](../../specs/product/P1-CONV/spec.md#prd-conv-004) | [CHG-CONV-002](../../specs/changes/CHG-CONV-002/spec.md) | [FE-001](../../specs/FE-001-frontend-rebuild/spec.md) / [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [M1](../m1-contract.md) / [M14](../m14-contract.md) | [COMP-message-colors](../../specs/COMP-message-colors/spec.md) | [TC-P1-004](../../specs/test/P1-CONV/test-plan.md#tc-p1-004) |
+| `PRD-CONV-007` | 祖先消息整级加载 | P1 | `implemented` | `covered` | [spec](../../specs/product/P1-CONV/spec.md#prd-conv-007) | [CHG-CONV-002](../../specs/changes/CHG-CONV-002/spec.md) | [FE-007](../../specs/FE-007-ancestor-messages/spec.md) / [M1](../m1-contract.md) / [M14](../m14-contract.md) | [COMP-timeline-groups](../../specs/COMP-timeline-groups/spec.md) / [COMP-timeline-tip](../../specs/COMP-timeline-tip/spec.md) | [TC-P1-005](../../specs/test/P1-CONV/test-plan.md#tc-p1-005) |
 
 #### L2 · 输入与发送
 
-| PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
-|---|---|---|---|---|---|---|---|---|
-| `PRD-CONV-005` | 发送·流式·断线重连 | P0 | `implemented` | [spec](../../specs/product/P1-CONV/spec.md#prd-conv-005) | [CHG-CONV-003](../../specs/changes/CHG-CONV-003/spec.md) | [FE-002](../../specs/FE-002-chat-robustness/spec.md) / [M1](../m1-contract.md) | — | [TC-P1-006](../../specs/test/P1-CONV/test-plan.md#tc-p1-006) |
-| `PRD-CONV-006` | Composer 输入与快捷键 | P0 | `implemented` | [spec](../../specs/product/P1-CONV/spec.md#prd-conv-006) | [CHG-CONV-003](../../specs/changes/CHG-CONV-003/spec.md) | [FE-006](../../specs/FE-006-chat-experience/spec.md) / [M1](../m1-contract.md) | [COMP-composer-send-mode](../../specs/COMP-composer-send-mode/spec.md) | [TC-P1-007](../../specs/test/P1-CONV/test-plan.md#tc-p1-007) |
+场景 D：输入与发送（快捷键/IME/失败重试/防重复/停止/归档禁用）。
+
+| PRD | L3 功能点 | P | 实现状态 | 覆盖 | 产品 spec | CHANGE | 开发 | COMP | TEST |
+|---|---|---|---|---|---|---|---|---|---|
+| `PRD-CONV-005` | 发送·流式·断线重连 | P0 | `implemented` | `covered`（停止按消息定向：`correct` 帧带 `messageId`，双流只停目标，见 `stop_interrupt_test.go:402`） | [spec](../../specs/product/P1-CONV/spec.md#prd-conv-005) | [CHG-CONV-003](../../specs/changes/CHG-CONV-003/spec.md) | [FE-002](../../specs/FE-002-chat-robustness/spec.md) / [M1](../m1-contract.md) | — | [TC-P1-006](../../specs/test/P1-CONV/test-plan.md#tc-p1-006) |
+| `PRD-CONV-006` | Composer 输入与快捷键 | P0 | `implemented` | `partial`（conditional：仅差 `AC-CONV-006-02` 中文输入法人工验证） | [spec](../../specs/product/P1-CONV/spec.md#prd-conv-006) | [CHG-CONV-003](../../specs/changes/CHG-CONV-003/spec.md) | [FE-006](../../specs/FE-006-chat-experience/spec.md) / [M1](../m1-contract.md) | [COMP-composer-send-mode](../../specs/COMP-composer-send-mode/spec.md) | [TC-P1-007](../../specs/test/P1-CONV/test-plan.md#tc-p1-007) |
 
 #### L2 · 多标签与同步
 
-| PRD | L3 功能点 | P | 状态 | 产品 spec | CHANGE | 开发 | COMP | TEST |
-|---|---|---|---|---|---|---|---|---|
-| `PRD-SYNC-001` | WS 连接与重连 | P0 | `implemented` | [spec](../../specs/product/P1-CONV/spec.md#prd-sync-001) | [CHG-CONV-004](../../specs/changes/CHG-CONV-004/spec.md) | [FE-002](../../specs/FE-002-chat-robustness/spec.md) / [M1](../m1-contract.md) | — | [TC-P1-008](../../specs/test/P1-CONV/test-plan.md#tc-p1-008) |
-| `PRD-SYNC-002` | 多标签 active/ancestor/read cursor | P0 | `implemented` | [spec](../../specs/product/P1-CONV/spec.md#prd-sync-002) | [CHG-CONV-004](../../specs/changes/CHG-CONV-004/spec.md) | [FE-009](../../specs/FE-009-web-multitab/spec.md) / [M1](../m1-contract.md) | — | [TC-P1-009](../../specs/test/P1-CONV/test-plan.md#tc-p1-009) |
-| `PRD-SYNC-003` | 发送模式/设置跨标签同步 | P1 | `implemented` | [spec](../../specs/product/P1-CONV/spec.md#prd-sync-003) | [CHG-CONV-004](../../specs/changes/CHG-CONV-004/spec.md) | [FE-006](../../specs/FE-006-chat-experience/spec.md) / [M1](../m1-contract.md) | [COMP-composer-send-mode](../../specs/COMP-composer-send-mode/spec.md) | [TC-P1-010](../../specs/test/P1-CONV/test-plan.md#tc-p1-010) |
-| `PRD-SYNC-004` | 未读与已读游标 | P1 | `partial` | [spec](../../specs/product/P1-CONV/spec.md#prd-sync-004) | [CHG-CONV-005](../../specs/changes/CHG-CONV-005/spec.md) | [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [M1](../m1-contract.md) | — | [TC-P1-011](../../specs/test/P1-CONV/test-plan.md#tc-p1-011) |
-| `PRD-SYNC-005` | 远程访问与通知中心 | P2 | `unimplemented` · [backlog](BACKLOG.md) | [spec](../../specs/product/P1-CONV/spec.md#prd-sync-005) | [CHG-CONV-005](../../specs/changes/CHG-CONV-005/spec.md) | — | — | [TC-P1-012](../../specs/test/P1-CONV/test-plan.md#tc-p1-012) |
+场景 E：实时同步与多标签（WS 三态、`since` 回放、active/ancestor/read 广播、设置同步）。
+
+| PRD | L3 功能点 | P | 实现状态 | 覆盖 | 产品 spec | CHANGE | 开发 | COMP | TEST |
+|---|---|---|---|---|---|---|---|---|---|
+| `PRD-SYNC-001` | WS 连接与重连 | P0 | `implemented` | `covered` | [spec](../../specs/product/P1-CONV/spec.md#prd-sync-001) | [CHG-CONV-004](../../specs/changes/CHG-CONV-004/spec.md) | [FE-002](../../specs/FE-002-chat-robustness/spec.md) / [M1](../m1-contract.md) | — | [TC-P1-008](../../specs/test/P1-CONV/test-plan.md#tc-p1-008) |
+| `PRD-SYNC-002` | 多标签 active/ancestor/read cursor | P0 | `implemented` | `covered` | [spec](../../specs/product/P1-CONV/spec.md#prd-sync-002) | [CHG-CONV-004](../../specs/changes/CHG-CONV-004/spec.md) | [FE-009](../../specs/FE-009-web-multitab/spec.md) / [M1](../m1-contract.md) | — | [TC-P1-009](../../specs/test/P1-CONV/test-plan.md#tc-p1-009) |
+| `PRD-SYNC-003` | 发送模式/设置跨标签同步 | P1 | `implemented` | `covered` | [spec](../../specs/product/P1-CONV/spec.md#prd-sync-003) | [CHG-CONV-004](../../specs/changes/CHG-CONV-004/spec.md) | [FE-006](../../specs/FE-006-chat-experience/spec.md) / [M1](../m1-contract.md) | [COMP-composer-send-mode](../../specs/COMP-composer-send-mode/spec.md) | [TC-P1-010](../../specs/test/P1-CONV/test-plan.md#tc-p1-010) |
+| `PRD-SYNC-004` | 未读与已读游标 | P1 | `implemented` | `covered` | [spec](../../specs/product/P1-CONV/spec.md#prd-sync-004) | [CHG-CONV-005](../../specs/changes/CHG-CONV-005/spec.md) | [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [M1](../m1-contract.md) | — | [TC-P1-011](../../specs/test/P1-CONV/test-plan.md#tc-p1-011) |
+| `PRD-SYNC-005` | 远程访问与通知中心 | P2 | `unimplemented` · [backlog](BACKLOG.md) | `gap` | [spec](../../specs/product/P1-CONV/spec.md#prd-sync-005) | [CHG-CONV-005](../../specs/changes/CHG-CONV-005/spec.md) | — | — | [TC-P1-012](../../specs/test/P1-CONV/test-plan.md#tc-p1-012) |
+
+#### L2 · 右栏会话投影
+
+场景 F：右栏会话投影（目标/输入/状态、任务组、交付物只读、加载/错误/重试/空态、展开折叠、`messageId` 定位）。
+
+| PRD | L3 功能点 | P | 实现状态 | 覆盖 | 产品 spec | CHANGE | 开发 | COMP | TEST |
+|---|---|---|---|---|---|---|---|---|---|
+| `PRD-CONV-008` | 右栏会话投影（新增） | P1 | `implemented` | `covered`（375 四态截图与真机 304 已补，见 [ACCEPT-CONV-8](../testing/ACCEPT-CONV-8-20261122.md)） | [spec](../../specs/product/P1-CONV/spec.md#prd-conv-008) | [CHG-CONV-006](../../specs/changes/CHG-CONV-006/proposal.md) | [FE-001](../../specs/FE-001-frontend-rebuild/spec.md) / [M1](../m1-contract.md) | — | [TC-P1-CONV-008](../../specs/test/P1-CONV/test-plan.md#tc-p1-conv-008) |
 
 ### P2 · 任务与执行
 <a id="p2"></a>

@@ -551,3 +551,58 @@ func TestP1ConvDraftScopedPerTree(t *testing.T) {
 		t.Fatalf("已物化的草稿不应被复用，得到旧 id %q", id)
 	}
 }
+
+// TestMainSessionArchiveRejected 覆盖 AC-CONV-001-03（主会话不可归档）：
+// 主会话是应用入口，归档 API 必须硬拒绝且不留下只读副作用；读取与写入不受影响。
+func TestMainSessionArchiveRejected(t *testing.T) {
+	_, ts := newM2App(t, nil, nil)
+
+	status, body := p1RequestJSON(t, http.MethodPost, ts.URL+"/api/sessions/main/archive", nil)
+	p1AssertErrorEnvelope(t, "archive main", status, body, http.StatusConflict, "main_session_protected")
+	if !strings.Contains(string(body), "主会话不可归档") {
+		t.Fatalf("archive main 错误消息应可读: %s", body)
+	}
+	// AC-CONV-001-03：409 信封必须带结构化 blockers，且 code 保持不变（既有调用方按 code 分支）。
+	blocked := p1DecodeJSON(t, "archive main blockers", body)
+	rawBlockers, ok := blocked["blockers"].([]any)
+	if !ok || len(rawBlockers) == 0 {
+		t.Fatalf("archive main 409 应带非空 blockers: %s", body)
+	}
+	hasProtectedBlocker := false
+	for _, item := range rawBlockers {
+		// spec :75 定义值为人类可读原因；至少含产品定义的原因码/原因之一。
+		if text, _ := item.(string); text == "主会话不可归档" {
+			hasProtectedBlocker = true
+		}
+	}
+	if !hasProtectedBlocker {
+		t.Fatalf("blockers 应含产品定义原因「主会话不可归档」: %s", body)
+	}
+	if code, _ := blocked["code"].(string); code != "main_session_protected" {
+		t.Fatalf("409 code = %q, want main_session_protected", code)
+	}
+
+	// 拒绝必须发生在写库之前：main 仍是可写会话，全量历史标记为非归档。
+	status, body = p1RequestJSON(t, http.MethodGet, ts.URL+"/api/sessions/main/messages/all", nil)
+	if status != http.StatusOK {
+		t.Fatalf("main all messages: status = %d, body=%s", status, body)
+	}
+	payload := p1DecodeJSON(t, "main all messages", body)
+	if archived, _ := payload["archived"].(bool); archived {
+		t.Fatalf("main 归档被拒后不应变成只读: %s", body)
+	}
+	if status := postChatSession(t, ts.URL, "main", "主会话仍可写"); status != http.StatusAccepted {
+		t.Fatalf("main 归档被拒后仍应可发送: status = %d", status)
+	}
+	waitForReplyDone(t, ts.URL, "main")
+
+	// 重复归档得到同样的拒绝，而不是 200 幂等成功。
+	status, body = p1RequestJSON(t, http.MethodPost, ts.URL+"/api/sessions/main/archive", nil)
+	p1AssertErrorEnvelope(t, "archive main again", status, body, http.StatusConflict, "main_session_protected")
+
+	// unarchive main 保持旧行为（幂等 no-op），旧客户端/测试脚本不会因保护规则报错。
+	status, body = p1RequestJSON(t, http.MethodPost, ts.URL+"/api/sessions/main/unarchive", nil)
+	if status != http.StatusOK {
+		t.Fatalf("unarchive main: status = %d, body=%s", status, body)
+	}
+}

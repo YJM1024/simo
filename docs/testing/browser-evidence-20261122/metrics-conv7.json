@@ -1,0 +1,5255 @@
+{
+  "generatedAt": "2026-11-22T05:04:48.743Z",
+  "url": "http://127.0.0.1:8787/",
+  "buildId": null,
+  "health": {
+    "ok": true,
+    "ready": true,
+    "time": 1795323888108,
+    "checks": {
+      "db": "ok",
+      "modules": [
+        "sessions",
+        "chat",
+        "tasks",
+        "memory"
+      ]
+    }
+  },
+  "browser": "Chrome/157.0.8103.80",
+  "cdp": "127.0.0.1:9223",
+  "viewport": {
+    "w": 1600,
+    "h": 1000
+  },
+  "pointer": {
+    "fine": true,
+    "coarse": false
+  },
+  "page": {
+    "bars": 75,
+    "msgs": 75,
+    "groups": 1,
+    "timeline": {
+      "x": 358,
+      "y": 153,
+      "w": 44,
+      "h": 662.953125,
+      "top": 153,
+      "bottom": 815.953125,
+      "left": 358,
+      "right": 402
+    },
+    "scroller": {
+      "top": 153,
+      "bottom": 815.953125,
+      "scrollTop": 6351,
+      "scrollHeight": 7014,
+      "clientHeight": 663,
+      "maxScroll": 6351
+    },
+    "pointerEvents": "none",
+    "cursor": "pointer",
+    "maxTopAlignIndex": 68,
+    "bottomTickChoice": {
+      "index": 65,
+      "reason": "取 maxTopAlign-3，使该条 +18px 偏移映射到的 +3 条仍能顶对齐；末 6 条受滚动边界钳制"
+    }
+  },
+  "centers": [
+    {
+      "i": 0,
+      "cy": 262.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 21:22"
+    },
+    {
+      "i": 1,
+      "cy": 268.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 21:22"
+    },
+    {
+      "i": 2,
+      "cy": 274.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 21:22"
+    },
+    {
+      "i": 3,
+      "cy": 280.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 21:22"
+    },
+    {
+      "i": 4,
+      "cy": 286.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 21:23"
+    },
+    {
+      "i": 5,
+      "cy": 292.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 21:27"
+    },
+    {
+      "i": 6,
+      "cy": 298.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 21:42"
+    },
+    {
+      "i": 7,
+      "cy": 304.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 21:42"
+    },
+    {
+      "i": 8,
+      "cy": 310.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 21:42"
+    },
+    {
+      "i": 9,
+      "cy": 316.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 21:42"
+    },
+    {
+      "i": 10,
+      "cy": 322.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 21:43"
+    },
+    {
+      "i": 11,
+      "cy": 328.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 21:43"
+    },
+    {
+      "i": 12,
+      "cy": 334.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 21:43"
+    },
+    {
+      "i": 13,
+      "cy": 340.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 21:43"
+    },
+    {
+      "i": 14,
+      "cy": 346.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 21:43"
+    },
+    {
+      "i": 15,
+      "cy": 352.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 21:43"
+    },
+    {
+      "i": 16,
+      "cy": 358.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 21:43"
+    },
+    {
+      "i": 17,
+      "cy": 364.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 21:43"
+    },
+    {
+      "i": 18,
+      "cy": 370.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 21:43"
+    },
+    {
+      "i": 19,
+      "cy": 376.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 21:43"
+    },
+    {
+      "i": 20,
+      "cy": 382.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 21:43"
+    },
+    {
+      "i": 21,
+      "cy": 388.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 21:43"
+    },
+    {
+      "i": 22,
+      "cy": 394.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 21:43"
+    },
+    {
+      "i": 23,
+      "cy": 400.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 21:43"
+    },
+    {
+      "i": 24,
+      "cy": 406.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 21:43"
+    },
+    {
+      "i": 25,
+      "cy": 412.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 21:43"
+    },
+    {
+      "i": 26,
+      "cy": 418.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 21:43"
+    },
+    {
+      "i": 27,
+      "cy": 424.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 21:43"
+    },
+    {
+      "i": 28,
+      "cy": 430.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 21:43"
+    },
+    {
+      "i": 29,
+      "cy": 436.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 21:43"
+    },
+    {
+      "i": 30,
+      "cy": 442.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 00:59"
+    },
+    {
+      "i": 31,
+      "cy": 448.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 00:59"
+    },
+    {
+      "i": 32,
+      "cy": 454.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 01:22"
+    },
+    {
+      "i": 33,
+      "cy": 460.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 01:22"
+    },
+    {
+      "i": 34,
+      "cy": 466.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 01:22"
+    },
+    {
+      "i": 35,
+      "cy": 472.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 01:22"
+    },
+    {
+      "i": 36,
+      "cy": 478.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 01:22"
+    },
+    {
+      "i": 37,
+      "cy": 484.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 01:22"
+    },
+    {
+      "i": 38,
+      "cy": 490.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 01:26"
+    },
+    {
+      "i": 39,
+      "cy": 496.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 01:26"
+    },
+    {
+      "i": 40,
+      "cy": 502.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 10:16"
+    },
+    {
+      "i": 41,
+      "cy": 508.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 10:16"
+    },
+    {
+      "i": 42,
+      "cy": 514.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 02:54"
+    },
+    {
+      "i": 43,
+      "cy": 520.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 02:54"
+    },
+    {
+      "i": 44,
+      "cy": 526.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 02:55"
+    },
+    {
+      "i": 45,
+      "cy": 532.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 02:55"
+    },
+    {
+      "i": 46,
+      "cy": 538.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 02:55"
+    },
+    {
+      "i": 47,
+      "cy": 544.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 02:55"
+    },
+    {
+      "i": 48,
+      "cy": 550.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 02:55"
+    },
+    {
+      "i": 49,
+      "cy": 556.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 02:55"
+    },
+    {
+      "i": 50,
+      "cy": 562.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 02:56"
+    },
+    {
+      "i": 51,
+      "cy": 568.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 02:56"
+    },
+    {
+      "i": 52,
+      "cy": 574.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 23:52"
+    },
+    {
+      "i": 53,
+      "cy": 580.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 23:52"
+    },
+    {
+      "i": 54,
+      "cy": 586.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 00:05"
+    },
+    {
+      "i": 55,
+      "cy": 592.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 00:10"
+    },
+    {
+      "i": 56,
+      "cy": 598.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 00:10"
+    },
+    {
+      "i": 57,
+      "cy": 604.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 00:10"
+    },
+    {
+      "i": 58,
+      "cy": 610.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 00:10"
+    },
+    {
+      "i": 59,
+      "cy": 616.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 00:10"
+    },
+    {
+      "i": 60,
+      "cy": 622.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 00:10"
+    },
+    {
+      "i": 61,
+      "cy": 628.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 00:12"
+    },
+    {
+      "i": 62,
+      "cy": 634.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 00:12"
+    },
+    {
+      "i": 63,
+      "cy": 640.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 00:16"
+    },
+    {
+      "i": 64,
+      "cy": 646.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 00:16"
+    },
+    {
+      "i": 65,
+      "cy": 652.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 00:16"
+    },
+    {
+      "i": 66,
+      "cy": 658.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 00:16"
+    },
+    {
+      "i": 67,
+      "cy": 664.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 00:30"
+    },
+    {
+      "i": 68,
+      "cy": 670.484,
+      "w": 23.984375,
+      "h": 4,
+      "label": "司墨 · 主会话 · 00:30"
+    },
+    {
+      "i": 69,
+      "cy": 676.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 01:52"
+    },
+    {
+      "i": 70,
+      "cy": 682.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 01:52"
+    },
+    {
+      "i": 71,
+      "cy": 688.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 01:54"
+    },
+    {
+      "i": 72,
+      "cy": 694.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 01:54"
+    },
+    {
+      "i": 73,
+      "cy": 700.484,
+      "w": 20,
+      "h": 4,
+      "label": "你 · 主会话 · 01:54"
+    },
+    {
+      "i": 74,
+      "cy": 706.484,
+      "w": 20,
+      "h": 4,
+      "label": "司墨 · 主会话 · 01:54"
+    }
+  ],
+  "clicks": [
+    {
+      "pick": 2,
+      "tickLabel": "司墨 · 主会话 · 21:22",
+      "tickCy": 274.484,
+      "dx": 0,
+      "dy": 0,
+      "x": 380,
+      "y": 274.484,
+      "expectedIndex": 2,
+      "expectedDistance": 0,
+      "hit": {
+        "tag": "DIV",
+        "cls": "tlg-session is-current-session",
+        "inTimeline": true
+      },
+      "svTargets": [
+        {
+          "index": 2,
+          "id": "msg-a2"
+        }
+      ],
+      "svIndex": 2,
+      "attributionOK": true,
+      "beforeScrollTop": 6351,
+      "scrollTop": 264,
+      "activeIndex": 2,
+      "activeLabel": "司墨 · 主会话 · 21:22",
+      "topMessage": {
+        "id": "msg-a2",
+        "indexInDom": 2,
+        "top": -0.44
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "pick": 2,
+      "tickLabel": "司墨 · 主会话 · 21:22",
+      "tickCy": 274.484,
+      "dx": 16,
+      "dy": 0,
+      "x": 396,
+      "y": 274.484,
+      "expectedIndex": 2,
+      "expectedDistance": 0,
+      "hit": {
+        "tag": "NAV",
+        "cls": "timeline timeline-groups",
+        "inTimeline": true
+      },
+      "svTargets": [
+        {
+          "index": 2,
+          "id": "msg-a2"
+        }
+      ],
+      "svIndex": 2,
+      "attributionOK": true,
+      "beforeScrollTop": 264,
+      "scrollTop": 264,
+      "activeIndex": 2,
+      "activeLabel": "司墨 · 主会话 · 21:22",
+      "topMessage": {
+        "id": "msg-a2",
+        "indexInDom": 2,
+        "top": -0.44
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "pick": 2,
+      "tickLabel": "司墨 · 主会话 · 21:22",
+      "tickCy": 274.484,
+      "dx": -16,
+      "dy": 0,
+      "x": 364,
+      "y": 274.484,
+      "expectedIndex": 2,
+      "expectedDistance": 0,
+      "hit": {
+        "tag": "NAV",
+        "cls": "timeline timeline-groups",
+        "inTimeline": true
+      },
+      "svTargets": [
+        {
+          "index": 2,
+          "id": "msg-a2"
+        }
+      ],
+      "svIndex": 2,
+      "attributionOK": true,
+      "beforeScrollTop": 264,
+      "scrollTop": 264,
+      "activeIndex": 2,
+      "activeLabel": "司墨 · 主会话 · 21:22",
+      "topMessage": {
+        "id": "msg-a2",
+        "indexInDom": 2,
+        "top": -0.44
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "pick": 2,
+      "tickLabel": "司墨 · 主会话 · 21:22",
+      "tickCy": 274.484,
+      "dx": 0,
+      "dy": 18,
+      "x": 380,
+      "y": 292.484,
+      "expectedIndex": 5,
+      "expectedDistance": 0,
+      "hit": {
+        "tag": "DIV",
+        "cls": "tlg-session is-current-session",
+        "inTimeline": true
+      },
+      "svTargets": [
+        {
+          "index": 5,
+          "id": "msg-a4"
+        }
+      ],
+      "svIndex": 5,
+      "attributionOK": true,
+      "beforeScrollTop": 264,
+      "scrollTop": 738,
+      "activeIndex": 5,
+      "activeLabel": "司墨 · 主会话 · 21:27",
+      "topMessage": {
+        "id": "msg-a4",
+        "indexInDom": 5,
+        "top": 0.05
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "pick": 2,
+      "tickLabel": "司墨 · 主会话 · 21:22",
+      "tickCy": 274.484,
+      "dx": 0,
+      "dy": -18,
+      "x": 380,
+      "y": 256.484,
+      "expectedIndex": 0,
+      "expectedDistance": 6,
+      "hit": {
+        "tag": "NAV",
+        "cls": "timeline timeline-groups",
+        "inTimeline": true
+      },
+      "svTargets": [
+        {
+          "index": 0,
+          "id": "msg-u1"
+        }
+      ],
+      "svIndex": 0,
+      "attributionOK": true,
+      "beforeScrollTop": 738,
+      "scrollTop": 49,
+      "activeIndex": 0,
+      "activeLabel": "你 · 主会话 · 21:22",
+      "topMessage": {
+        "id": "msg-u1",
+        "indexInDom": 0,
+        "top": -0.5
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "pick": 2,
+      "tickLabel": "司墨 · 主会话 · 21:22",
+      "tickCy": 274.484,
+      "dx": 20,
+      "dy": 18,
+      "x": 400,
+      "y": 292.484,
+      "expectedIndex": 5,
+      "expectedDistance": 0,
+      "hit": {
+        "tag": "NAV",
+        "cls": "timeline timeline-groups",
+        "inTimeline": true
+      },
+      "svTargets": [
+        {
+          "index": 5,
+          "id": "msg-a4"
+        }
+      ],
+      "svIndex": 5,
+      "attributionOK": true,
+      "beforeScrollTop": 49,
+      "scrollTop": 738,
+      "activeIndex": 5,
+      "activeLabel": "司墨 · 主会话 · 21:27",
+      "topMessage": {
+        "id": "msg-a4",
+        "indexInDom": 5,
+        "top": 0.05
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "pick": 37,
+      "tickLabel": "司墨 · 主会话 · 01:22",
+      "tickCy": 484.484,
+      "dx": 0,
+      "dy": 0,
+      "x": 380,
+      "y": 484.484,
+      "expectedIndex": 37,
+      "expectedDistance": 0,
+      "hit": {
+        "tag": "DIV",
+        "cls": "tlg-session is-current-session",
+        "inTimeline": true
+      },
+      "svTargets": [
+        {
+          "index": 37,
+          "id": "msg-0e4a594577d612d7"
+        }
+      ],
+      "svIndex": 37,
+      "attributionOK": true,
+      "beforeScrollTop": 738,
+      "scrollTop": 3255,
+      "activeIndex": 37,
+      "activeLabel": "司墨 · 主会话 · 01:22",
+      "topMessage": {
+        "id": "msg-0e4a594577d612d7",
+        "indexInDom": 37,
+        "top": 0.08
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "pick": 37,
+      "tickLabel": "司墨 · 主会话 · 01:22",
+      "tickCy": 484.484,
+      "dx": 16,
+      "dy": 0,
+      "x": 396,
+      "y": 484.484,
+      "expectedIndex": 37,
+      "expectedDistance": 0,
+      "hit": {
+        "tag": "NAV",
+        "cls": "timeline timeline-groups",
+        "inTimeline": true
+      },
+      "svTargets": [
+        {
+          "index": 37,
+          "id": "msg-0e4a594577d612d7"
+        }
+      ],
+      "svIndex": 37,
+      "attributionOK": true,
+      "beforeScrollTop": 3255,
+      "scrollTop": 3255,
+      "activeIndex": 37,
+      "activeLabel": "司墨 · 主会话 · 01:22",
+      "topMessage": {
+        "id": "msg-0e4a594577d612d7",
+        "indexInDom": 37,
+        "top": 0.08
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "pick": 37,
+      "tickLabel": "司墨 · 主会话 · 01:22",
+      "tickCy": 484.484,
+      "dx": -16,
+      "dy": 0,
+      "x": 364,
+      "y": 484.484,
+      "expectedIndex": 37,
+      "expectedDistance": 0,
+      "hit": {
+        "tag": "NAV",
+        "cls": "timeline timeline-groups",
+        "inTimeline": true
+      },
+      "svTargets": [
+        {
+          "index": 37,
+          "id": "msg-0e4a594577d612d7"
+        }
+      ],
+      "svIndex": 37,
+      "attributionOK": true,
+      "beforeScrollTop": 3255,
+      "scrollTop": 3255,
+      "activeIndex": 37,
+      "activeLabel": "司墨 · 主会话 · 01:22",
+      "topMessage": {
+        "id": "msg-0e4a594577d612d7",
+        "indexInDom": 37,
+        "top": 0.08
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "pick": 37,
+      "tickLabel": "司墨 · 主会话 · 01:22",
+      "tickCy": 484.484,
+      "dx": 0,
+      "dy": 18,
+      "x": 380,
+      "y": 502.484,
+      "expectedIndex": 40,
+      "expectedDistance": 0,
+      "hit": {
+        "tag": "DIV",
+        "cls": "tlg-session is-current-session",
+        "inTimeline": true
+      },
+      "svTargets": [
+        {
+          "index": 40,
+          "id": "msg-d6732d80b45d685a"
+        }
+      ],
+      "svIndex": 40,
+      "attributionOK": true,
+      "beforeScrollTop": 3255,
+      "scrollTop": 3531,
+      "activeIndex": 40,
+      "activeLabel": "你 · 主会话 · 10:16",
+      "topMessage": {
+        "id": "msg-d6732d80b45d685a",
+        "indexInDom": 40,
+        "top": 0.41
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "pick": 37,
+      "tickLabel": "司墨 · 主会话 · 01:22",
+      "tickCy": 484.484,
+      "dx": 0,
+      "dy": -18,
+      "x": 380,
+      "y": 466.484,
+      "expectedIndex": 34,
+      "expectedDistance": 0,
+      "hit": {
+        "tag": "DIV",
+        "cls": "tlg-session is-current-session",
+        "inTimeline": true
+      },
+      "svTargets": [
+        {
+          "index": 34,
+          "id": "msg-368e142d60cf679c"
+        }
+      ],
+      "svIndex": 34,
+      "attributionOK": true,
+      "beforeScrollTop": 3531,
+      "scrollTop": 3001,
+      "activeIndex": 34,
+      "activeLabel": "你 · 主会话 · 01:22",
+      "topMessage": {
+        "id": "msg-368e142d60cf679c",
+        "indexInDom": 34,
+        "top": 0.02
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "pick": 37,
+      "tickLabel": "司墨 · 主会话 · 01:22",
+      "tickCy": 484.484,
+      "dx": 20,
+      "dy": 18,
+      "x": 400,
+      "y": 502.484,
+      "expectedIndex": 40,
+      "expectedDistance": 0,
+      "hit": {
+        "tag": "NAV",
+        "cls": "timeline timeline-groups",
+        "inTimeline": true
+      },
+      "svTargets": [
+        {
+          "index": 40,
+          "id": "msg-d6732d80b45d685a"
+        }
+      ],
+      "svIndex": 40,
+      "attributionOK": true,
+      "beforeScrollTop": 3001,
+      "scrollTop": 3531,
+      "activeIndex": 40,
+      "activeLabel": "你 · 主会话 · 10:16",
+      "topMessage": {
+        "id": "msg-d6732d80b45d685a",
+        "indexInDom": 40,
+        "top": 0.41
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "pick": 65,
+      "tickLabel": "你 · 主会话 · 00:16",
+      "tickCy": 652.484,
+      "dx": 0,
+      "dy": 0,
+      "x": 380,
+      "y": 652.484,
+      "expectedIndex": 65,
+      "expectedDistance": 0,
+      "hit": {
+        "tag": "DIV",
+        "cls": "tlg-session is-current-session",
+        "inTimeline": true
+      },
+      "svTargets": [
+        {
+          "index": 65,
+          "id": "msg-f97d8b5c2c15565b"
+        }
+      ],
+      "svIndex": 65,
+      "attributionOK": true,
+      "beforeScrollTop": 3531,
+      "scrollTop": 6069,
+      "activeIndex": 65,
+      "activeLabel": "你 · 主会话 · 00:16",
+      "topMessage": {
+        "id": "msg-f97d8b5c2c15565b",
+        "indexInDom": 65,
+        "top": 0.42
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "pick": 65,
+      "tickLabel": "你 · 主会话 · 00:16",
+      "tickCy": 652.484,
+      "dx": 16,
+      "dy": 0,
+      "x": 396,
+      "y": 652.484,
+      "expectedIndex": 65,
+      "expectedDistance": 0,
+      "hit": {
+        "tag": "NAV",
+        "cls": "timeline timeline-groups",
+        "inTimeline": true
+      },
+      "svTargets": [
+        {
+          "index": 65,
+          "id": "msg-f97d8b5c2c15565b"
+        }
+      ],
+      "svIndex": 65,
+      "attributionOK": true,
+      "beforeScrollTop": 6069,
+      "scrollTop": 6069,
+      "activeIndex": 65,
+      "activeLabel": "你 · 主会话 · 00:16",
+      "topMessage": {
+        "id": "msg-f97d8b5c2c15565b",
+        "indexInDom": 65,
+        "top": 0.42
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "pick": 65,
+      "tickLabel": "你 · 主会话 · 00:16",
+      "tickCy": 652.484,
+      "dx": -16,
+      "dy": 0,
+      "x": 364,
+      "y": 652.484,
+      "expectedIndex": 65,
+      "expectedDistance": 0,
+      "hit": {
+        "tag": "NAV",
+        "cls": "timeline timeline-groups",
+        "inTimeline": true
+      },
+      "svTargets": [
+        {
+          "index": 65,
+          "id": "msg-f97d8b5c2c15565b"
+        }
+      ],
+      "svIndex": 65,
+      "attributionOK": true,
+      "beforeScrollTop": 6069,
+      "scrollTop": 6069,
+      "activeIndex": 65,
+      "activeLabel": "你 · 主会话 · 00:16",
+      "topMessage": {
+        "id": "msg-f97d8b5c2c15565b",
+        "indexInDom": 65,
+        "top": 0.42
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "pick": 65,
+      "tickLabel": "你 · 主会话 · 00:16",
+      "tickCy": 652.484,
+      "dx": 0,
+      "dy": 18,
+      "x": 380,
+      "y": 670.484,
+      "expectedIndex": 68,
+      "expectedDistance": 0,
+      "hit": {
+        "tag": "DIV",
+        "cls": "tlg-session is-current-session",
+        "inTimeline": true
+      },
+      "svTargets": [
+        {
+          "index": 68,
+          "id": "msg-ae186270cca9a2f3"
+        }
+      ],
+      "svIndex": 68,
+      "attributionOK": true,
+      "beforeScrollTop": 6069,
+      "scrollTop": 6323,
+      "activeIndex": 68,
+      "activeLabel": "司墨 · 主会话 · 00:30",
+      "topMessage": {
+        "id": "msg-ae186270cca9a2f3",
+        "indexInDom": 68,
+        "top": 0.48
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "pick": 65,
+      "tickLabel": "你 · 主会话 · 00:16",
+      "tickCy": 652.484,
+      "dx": 0,
+      "dy": -18,
+      "x": 380,
+      "y": 634.484,
+      "expectedIndex": 62,
+      "expectedDistance": 0,
+      "hit": {
+        "tag": "DIV",
+        "cls": "tlg-session is-current-session",
+        "inTimeline": true
+      },
+      "svTargets": [
+        {
+          "index": 62,
+          "id": "msg-720e9c156ace2151"
+        }
+      ],
+      "svIndex": 62,
+      "attributionOK": true,
+      "beforeScrollTop": 6323,
+      "scrollTop": 5771,
+      "activeIndex": 62,
+      "activeLabel": "司墨 · 主会话 · 00:12",
+      "topMessage": {
+        "id": "msg-720e9c156ace2151",
+        "indexInDom": 62,
+        "top": -0.44
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "pick": 65,
+      "tickLabel": "你 · 主会话 · 00:16",
+      "tickCy": 652.484,
+      "dx": 20,
+      "dy": 18,
+      "x": 400,
+      "y": 670.484,
+      "expectedIndex": 68,
+      "expectedDistance": 0,
+      "hit": {
+        "tag": "NAV",
+        "cls": "timeline timeline-groups",
+        "inTimeline": true
+      },
+      "svTargets": [
+        {
+          "index": 68,
+          "id": "msg-ae186270cca9a2f3"
+        }
+      ],
+      "svIndex": 68,
+      "attributionOK": true,
+      "beforeScrollTop": 5771,
+      "scrollTop": 6323,
+      "activeIndex": 68,
+      "activeLabel": "司墨 · 主会话 · 00:30",
+      "topMessage": {
+        "id": "msg-ae186270cca9a2f3",
+        "indexInDom": 68,
+        "top": 0.48
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    }
+  ],
+  "scan": [
+    {
+      "y": 222.48,
+      "note": "above-first-40",
+      "x": 380,
+      "expectedIndex": 0,
+      "expectedDistance": 40,
+      "svTargets": [
+        {
+          "index": 0,
+          "id": "msg-u1"
+        }
+      ],
+      "svIndex": 0,
+      "attributionOK": true,
+      "dead": false,
+      "beforeScrollTop": 6323,
+      "scrollTop": 49,
+      "activeIndex": 0,
+      "activeLabel": "你 · 主会话 · 21:22",
+      "topMessage": {
+        "id": "msg-u1",
+        "indexInDom": 0,
+        "top": -0.5
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "y": 250.48,
+      "note": "above-first-12",
+      "x": 380,
+      "expectedIndex": 0,
+      "expectedDistance": 12,
+      "svTargets": [
+        {
+          "index": 0,
+          "id": "msg-u1"
+        }
+      ],
+      "svIndex": 0,
+      "attributionOK": true,
+      "dead": false,
+      "beforeScrollTop": 49,
+      "scrollTop": 49,
+      "activeIndex": 0,
+      "activeLabel": "你 · 主会话 · 21:22",
+      "topMessage": {
+        "id": "msg-u1",
+        "indexInDom": 0,
+        "top": -0.5
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "y": 277.48,
+      "note": "mid-2-3",
+      "x": 380,
+      "expectedIndex": 2,
+      "expectedDistance": 3,
+      "svTargets": [
+        {
+          "index": 2,
+          "id": "msg-a2"
+        }
+      ],
+      "svIndex": 2,
+      "attributionOK": true,
+      "dead": false,
+      "beforeScrollTop": 49,
+      "scrollTop": 264,
+      "activeIndex": 2,
+      "activeLabel": "司墨 · 主会话 · 21:22",
+      "topMessage": {
+        "id": "msg-a2",
+        "indexInDom": 2,
+        "top": -0.44
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "y": 325.48,
+      "note": "mid-10-11",
+      "x": 380,
+      "expectedIndex": 10,
+      "expectedDistance": 3,
+      "svTargets": [
+        {
+          "index": 10,
+          "id": "msg-extra-user-03"
+        }
+      ],
+      "svIndex": 10,
+      "attributionOK": true,
+      "dead": false,
+      "beforeScrollTop": 264,
+      "scrollTop": 1124,
+      "activeIndex": 10,
+      "activeLabel": "你 · 主会话 · 21:43",
+      "topMessage": {
+        "id": "msg-extra-user-03",
+        "indexInDom": 10,
+        "top": 0.38
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "y": 385.48,
+      "note": "mid-20-21",
+      "x": 380,
+      "expectedIndex": 20,
+      "expectedDistance": 3,
+      "svTargets": [
+        {
+          "index": 20,
+          "id": "msg-extra-user-08"
+        }
+      ],
+      "svIndex": 20,
+      "attributionOK": true,
+      "dead": false,
+      "beforeScrollTop": 1124,
+      "scrollTop": 1897,
+      "activeIndex": 20,
+      "activeLabel": "你 · 主会话 · 21:43",
+      "topMessage": {
+        "id": "msg-extra-user-08",
+        "indexInDom": 20,
+        "top": 0.03
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "y": 445.48,
+      "note": "mid-30-31",
+      "x": 380,
+      "expectedIndex": 30,
+      "expectedDistance": 3,
+      "svTargets": [
+        {
+          "index": 30,
+          "id": "msg-cat-requirement"
+        }
+      ],
+      "svIndex": 30,
+      "attributionOK": true,
+      "dead": false,
+      "beforeScrollTop": 1897,
+      "scrollTop": 2670,
+      "activeIndex": 30,
+      "activeLabel": "司墨 · 主会话 · 00:59",
+      "topMessage": {
+        "id": "msg-cat-requirement",
+        "indexInDom": 30,
+        "top": -0.31
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "y": 487.48,
+      "note": "mid-37-38",
+      "x": 380,
+      "expectedIndex": 37,
+      "expectedDistance": 3,
+      "svTargets": [
+        {
+          "index": 37,
+          "id": "msg-0e4a594577d612d7"
+        }
+      ],
+      "svIndex": 37,
+      "attributionOK": true,
+      "dead": false,
+      "beforeScrollTop": 2670,
+      "scrollTop": 3255,
+      "activeIndex": 37,
+      "activeLabel": "司墨 · 主会话 · 01:22",
+      "topMessage": {
+        "id": "msg-0e4a594577d612d7",
+        "indexInDom": 37,
+        "top": 0.08
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "y": 565.48,
+      "note": "mid-50-51",
+      "x": 380,
+      "expectedIndex": 50,
+      "expectedDistance": 3,
+      "svTargets": [
+        {
+          "index": 50,
+          "id": "msg-f372620466c29455"
+        }
+      ],
+      "svIndex": 50,
+      "attributionOK": true,
+      "dead": false,
+      "beforeScrollTop": 3255,
+      "scrollTop": 4593,
+      "activeIndex": 50,
+      "activeLabel": "你 · 主会话 · 02:56",
+      "topMessage": {
+        "id": "msg-f372620466c29455",
+        "indexInDom": 50,
+        "top": -0.08
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "y": 625.48,
+      "note": "mid-60-61",
+      "x": 380,
+      "expectedIndex": 60,
+      "expectedDistance": 3,
+      "svTargets": [
+        {
+          "index": 60,
+          "id": "msg-a7b3e6bba897d670"
+        }
+      ],
+      "svIndex": 60,
+      "attributionOK": true,
+      "dead": false,
+      "beforeScrollTop": 4593,
+      "scrollTop": 5583,
+      "activeIndex": 60,
+      "activeLabel": "司墨 · 主会话 · 00:10",
+      "topMessage": {
+        "id": "msg-a7b3e6bba897d670",
+        "indexInDom": 60,
+        "top": -0.5
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "y": 661.48,
+      "note": "mid-66-67",
+      "x": 380,
+      "expectedIndex": 66,
+      "expectedDistance": 3,
+      "svTargets": [
+        {
+          "index": 66,
+          "id": "msg-6b7c4f9f6f132f24"
+        }
+      ],
+      "svIndex": 66,
+      "attributionOK": true,
+      "dead": false,
+      "beforeScrollTop": 5583,
+      "scrollTop": 6147,
+      "activeIndex": 66,
+      "activeLabel": "司墨 · 主会话 · 00:16",
+      "topMessage": {
+        "id": "msg-6b7c4f9f6f132f24",
+        "indexInDom": 66,
+        "top": -0.31
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "y": 292.48,
+      "note": "center-5",
+      "x": 380,
+      "expectedIndex": 5,
+      "expectedDistance": 0,
+      "svTargets": [
+        {
+          "index": 5,
+          "id": "msg-a4"
+        }
+      ],
+      "svIndex": 5,
+      "attributionOK": true,
+      "dead": false,
+      "beforeScrollTop": 6147,
+      "scrollTop": 738,
+      "activeIndex": 5,
+      "activeLabel": "司墨 · 主会话 · 21:27",
+      "topMessage": {
+        "id": "msg-a4",
+        "indexInDom": 5,
+        "top": 0.05
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "y": 412.48,
+      "note": "center-25",
+      "x": 380,
+      "expectedIndex": 25,
+      "expectedDistance": 0,
+      "svTargets": [
+        {
+          "index": 25,
+          "id": "msg-extra-agent-10"
+        }
+      ],
+      "svIndex": 25,
+      "attributionOK": true,
+      "dead": false,
+      "beforeScrollTop": 738,
+      "scrollTop": 2283,
+      "activeIndex": 25,
+      "activeLabel": "司墨 · 主会话 · 21:43",
+      "topMessage": {
+        "id": "msg-extra-agent-10",
+        "indexInDom": 25,
+        "top": 0.36
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "y": 532.48,
+      "note": "center-45",
+      "x": 380,
+      "expectedIndex": 45,
+      "expectedDistance": 0,
+      "svTargets": [
+        {
+          "index": 45,
+          "id": "msg-61a8facc0c1e3d2b"
+        }
+      ],
+      "svIndex": 45,
+      "attributionOK": true,
+      "dead": false,
+      "beforeScrollTop": 2283,
+      "scrollTop": 3970,
+      "activeIndex": 45,
+      "activeLabel": "你 · 主会话 · 02:55",
+      "topMessage": {
+        "id": "msg-61a8facc0c1e3d2b",
+        "indexInDom": 45,
+        "top": 0.27
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "y": 622.48,
+      "note": "center-60",
+      "x": 380,
+      "expectedIndex": 60,
+      "expectedDistance": 0,
+      "svTargets": [
+        {
+          "index": 60,
+          "id": "msg-a7b3e6bba897d670"
+        }
+      ],
+      "svIndex": 60,
+      "attributionOK": true,
+      "dead": false,
+      "beforeScrollTop": 3970,
+      "scrollTop": 5583,
+      "activeIndex": 60,
+      "activeLabel": "司墨 · 主会话 · 00:10",
+      "topMessage": {
+        "id": "msg-a7b3e6bba897d670",
+        "indexInDom": 60,
+        "top": -0.5
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "y": 670.48,
+      "note": "center-68",
+      "x": 380,
+      "expectedIndex": 68,
+      "expectedDistance": 0,
+      "svTargets": [
+        {
+          "index": 68,
+          "id": "msg-ae186270cca9a2f3"
+        }
+      ],
+      "svIndex": 68,
+      "attributionOK": true,
+      "dead": false,
+      "beforeScrollTop": 5583,
+      "scrollTop": 6323,
+      "activeIndex": 68,
+      "activeLabel": "司墨 · 主会话 · 00:30",
+      "topMessage": {
+        "id": "msg-ae186270cca9a2f3",
+        "indexInDom": 68,
+        "top": 0.48
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "y": 694.48,
+      "note": "center-72",
+      "x": 380,
+      "expectedIndex": 72,
+      "expectedDistance": 0,
+      "svTargets": [
+        {
+          "index": 72,
+          "id": "msg-3f9d34c187841336"
+        }
+      ],
+      "svIndex": 72,
+      "attributionOK": true,
+      "dead": false,
+      "beforeScrollTop": 6323,
+      "scrollTop": 6351,
+      "activeIndex": 68,
+      "activeLabel": "司墨 · 主会话 · 00:30",
+      "topMessage": {
+        "id": "msg-ae186270cca9a2f3",
+        "indexInDom": 68,
+        "top": -27.52
+      },
+      "topDeviation": -4,
+      "scrollClampable": false
+    },
+    {
+      "y": 488.08,
+      "note": "mid-37-38+0.6",
+      "x": 380,
+      "expectedIndex": 38,
+      "expectedDistance": 2.4,
+      "svTargets": [
+        {
+          "index": 38,
+          "id": "msg-b5e3cf090889b993"
+        }
+      ],
+      "svIndex": 38,
+      "attributionOK": true,
+      "dead": false,
+      "beforeScrollTop": 6351,
+      "scrollTop": 3355,
+      "activeIndex": 38,
+      "activeLabel": "你 · 主会话 · 01:26",
+      "topMessage": {
+        "id": "msg-b5e3cf090889b993",
+        "indexInDom": 38,
+        "top": -0.39
+      },
+      "topDeviation": 0,
+      "scrollClampable": true
+    },
+    {
+      "y": 718.48,
+      "note": "below-last-12",
+      "x": 380,
+      "expectedIndex": 74,
+      "expectedDistance": 12,
+      "svTargets": [
+        {
+          "index": 74,
+          "id": "msg-209d9734abe8be7a"
+        }
+      ],
+      "svIndex": 74,
+      "attributionOK": true,
+      "dead": false,
+      "beforeScrollTop": 3355,
+      "scrollTop": 6351,
+      "activeIndex": 68,
+      "activeLabel": "司墨 · 主会话 · 00:30",
+      "topMessage": {
+        "id": "msg-ae186270cca9a2f3",
+        "indexInDom": 68,
+        "top": -27.52
+      },
+      "topDeviation": -6,
+      "scrollClampable": false
+    },
+    {
+      "y": 736.48,
+      "note": "below-last-30",
+      "x": 380,
+      "expectedIndex": 74,
+      "expectedDistance": 30,
+      "svTargets": [
+        {
+          "index": 74,
+          "id": "msg-209d9734abe8be7a"
+        }
+      ],
+      "svIndex": 74,
+      "attributionOK": true,
+      "dead": false,
+      "beforeScrollTop": 6351,
+      "scrollTop": 6351,
+      "activeIndex": 74,
+      "activeLabel": "司墨 · 主会话 · 01:54",
+      "topMessage": {
+        "id": "msg-ae186270cca9a2f3",
+        "indexInDom": 68,
+        "top": -27.52
+      },
+      "topDeviation": -6,
+      "scrollClampable": false
+    }
+  ],
+  "hoverChecks": [
+    {
+      "y": 274.484,
+      "note": "top-center",
+      "expect": 2,
+      "expectedBar": "司墨 · 主会话 · 21:22",
+      "expectedTime": "21:22",
+      "tip": {
+        "exists": true,
+        "state": "visible",
+        "text": "司墨·主会话·进度汇报·21:22我会按本周（11/09–11/15）整理，请确认范围。",
+        "rect": {
+          "x": 399.984375,
+          "y": 227.484375,
+          "w": 236,
+          "h": 93.6875
+        },
+        "pointerEvents": "none"
+      },
+      "tipTime": "21:22",
+      "timeConsistent": true,
+      "svIndex": 2,
+      "activeIndex": 2,
+      "activeLabel": "司墨 · 主会话 · 21:22",
+      "topMessage": {
+        "id": "msg-a2",
+        "indexInDom": 2,
+        "top": -0.44
+      },
+      "clickConsistent": true
+    },
+    {
+      "y": 484.484,
+      "note": "mid-center",
+      "expect": 37,
+      "expectedBar": "司墨 · 主会话 · 01:22",
+      "expectedTime": "01:22",
+      "tip": {
+        "exists": true,
+        "state": "visible",
+        "text": "司墨·主会话·信息咨询·01:22（M2 Mock 模型）收到你的消息：多标签B-only-1794504169786。真实模型在 -model real / SIMO_LLM=deepseek 时启用。",
+        "rect": {
+          "x": 399.984375,
+          "y": 437.484375,
+          "w": 236,
+          "h": 93.6875
+        },
+        "pointerEvents": "none"
+      },
+      "tipTime": "01:22",
+      "timeConsistent": true,
+      "svIndex": 37,
+      "activeIndex": 37,
+      "activeLabel": "司墨 · 主会话 · 01:22",
+      "topMessage": {
+        "id": "msg-0e4a594577d612d7",
+        "indexInDom": 37,
+        "top": 0.08
+      },
+      "clickConsistent": true
+    },
+    {
+      "y": 487.484,
+      "note": "mid-37-38-tie",
+      "expect": 37,
+      "expectedBar": "司墨 · 主会话 · 01:22",
+      "expectedTime": "01:22",
+      "tip": {
+        "exists": true,
+        "state": "visible",
+        "text": "司墨·主会话·信息咨询·01:22（M2 Mock 模型）收到你的消息：多标签B-only-1794504169786。真实模型在 -model real / SIMO_LLM=deepseek 时启用。",
+        "rect": {
+          "x": 400,
+          "y": 437.484375,
+          "w": 236,
+          "h": 93.6875
+        },
+        "pointerEvents": "none"
+      },
+      "tipTime": "01:22",
+      "timeConsistent": true,
+      "svIndex": 37,
+      "activeIndex": 37,
+      "activeLabel": "司墨 · 主会话 · 01:22",
+      "topMessage": {
+        "id": "msg-0e4a594577d612d7",
+        "indexInDom": 37,
+        "top": 0.08
+      },
+      "clickConsistent": true
+    },
+    {
+      "y": 488.084,
+      "note": "mid-37-38+0.6",
+      "expect": 38,
+      "expectedBar": "你 · 主会话 · 01:26",
+      "expectedTime": "01:26",
+      "tip": {
+        "exists": true,
+        "state": "visible",
+        "text": "你·主会话·01:26M88多标签-1794504415797",
+        "rect": {
+          "x": 399.984375,
+          "y": 452.984375,
+          "w": 236,
+          "h": 74.84375
+        },
+        "pointerEvents": "none"
+      },
+      "tipTime": "01:26",
+      "timeConsistent": true,
+      "svIndex": 38,
+      "activeIndex": 38,
+      "activeLabel": "你 · 主会话 · 01:26",
+      "topMessage": {
+        "id": "msg-b5e3cf090889b993",
+        "indexInDom": 38,
+        "top": -0.39
+      },
+      "clickConsistent": true
+    },
+    {
+      "y": 652.484,
+      "note": "bottom-center",
+      "expect": 65,
+      "expectedBar": "你 · 主会话 · 00:16",
+      "expectedTime": "00:16",
+      "tip": {
+        "exists": true,
+        "state": "visible",
+        "text": "你·主会话·00:16成功发送清空测试",
+        "rect": {
+          "x": 400,
+          "y": 614.984375,
+          "w": 236,
+          "h": 74.84375
+        },
+        "pointerEvents": "none"
+      },
+      "tipTime": "00:16",
+      "timeConsistent": true,
+      "svIndex": 65,
+      "activeIndex": 65,
+      "activeLabel": "你 · 主会话 · 00:16",
+      "topMessage": {
+        "id": "msg-f97d8b5c2c15565b",
+        "indexInDom": 65,
+        "top": 0.42
+      },
+      "clickConsistent": true
+    }
+  ],
+  "scanPlan": [
+    {
+      "y": 222.48399999999998,
+      "note": "above-first-40"
+    },
+    {
+      "y": 250.48399999999998,
+      "note": "above-first-12"
+    },
+    {
+      "y": 277.484,
+      "note": "mid-2-3"
+    },
+    {
+      "y": 325.484,
+      "note": "mid-10-11"
+    },
+    {
+      "y": 385.484,
+      "note": "mid-20-21"
+    },
+    {
+      "y": 445.484,
+      "note": "mid-30-31"
+    },
+    {
+      "y": 487.484,
+      "note": "mid-37-38"
+    },
+    {
+      "y": 565.484,
+      "note": "mid-50-51"
+    },
+    {
+      "y": 625.484,
+      "note": "mid-60-61"
+    },
+    {
+      "y": 661.484,
+      "note": "mid-66-67"
+    },
+    {
+      "y": 292.484,
+      "note": "center-5"
+    },
+    {
+      "y": 412.484,
+      "note": "center-25"
+    },
+    {
+      "y": 532.484,
+      "note": "center-45"
+    },
+    {
+      "y": 622.484,
+      "note": "center-60"
+    },
+    {
+      "y": 670.484,
+      "note": "center-68"
+    },
+    {
+      "y": 694.484,
+      "note": "center-72"
+    },
+    {
+      "y": 488.084,
+      "note": "mid-37-38+0.6"
+    },
+    {
+      "y": 718.484,
+      "note": "below-last-12"
+    },
+    {
+      "y": 736.484,
+      "note": "below-last-30"
+    }
+  ],
+  "hoverShotTip": {
+    "exists": true,
+    "state": "visible",
+    "text": "司墨·主会话·信息咨询·01:22（M2 Mock 模型）收到你的消息：多标签B-only-1794504169786。真实模型在 -model real / SIMO_LLM=deepseek 时启用。",
+    "rect": {
+      "x": 400,
+      "y": 437.484375,
+      "w": 236,
+      "h": 93.6875
+    },
+    "pointerEvents": "none"
+  },
+  "screenshots": {
+    "hover": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\browser-evidence-20261122\\conv7-01-timeline-hover-1600.png",
+    "afterClick": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\browser-evidence-20261122\\conv7-02-after-click-1600.png"
+  },
+  "deadZoneDiag": {
+    "at": "2026-11-22T05:03:10.707Z",
+    "x": 380,
+    "timeline": {
+      "top": 153,
+      "bottom": 815.953125,
+      "left": 358,
+      "right": 402,
+      "overflowY": "auto",
+      "pointerEvents": "auto",
+      "zIndex": "auto",
+      "position": "absolute"
+    },
+    "tip": null,
+    "out": [
+      {
+        "y": 650,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 65,
+            "cy": 652.48,
+            "d": 2.48
+          },
+          {
+            "i": 64,
+            "cy": 646.48,
+            "d": 3.52
+          }
+        ]
+      },
+      {
+        "y": 652,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 65,
+            "cy": 652.48,
+            "d": 0.48
+          },
+          {
+            "i": 64,
+            "cy": 646.48,
+            "d": 5.52
+          }
+        ]
+      },
+      {
+        "y": 654,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 65,
+            "cy": 652.48,
+            "d": 1.52
+          },
+          {
+            "i": 66,
+            "cy": 658.48,
+            "d": 4.48
+          }
+        ]
+      },
+      {
+        "y": 656,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 66,
+            "cy": 658.48,
+            "d": 2.48
+          },
+          {
+            "i": 65,
+            "cy": 652.48,
+            "d": 3.52
+          }
+        ]
+      },
+      {
+        "y": 658,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 66,
+            "cy": 658.48,
+            "d": 0.48
+          },
+          {
+            "i": 65,
+            "cy": 652.48,
+            "d": 5.52
+          }
+        ]
+      },
+      {
+        "y": 660,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 66,
+            "cy": 658.48,
+            "d": 1.52
+          },
+          {
+            "i": 67,
+            "cy": 664.48,
+            "d": 4.48
+          }
+        ]
+      },
+      {
+        "y": 662,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 67,
+            "cy": 664.48,
+            "d": 2.48
+          },
+          {
+            "i": 66,
+            "cy": 658.48,
+            "d": 3.52
+          }
+        ]
+      },
+      {
+        "y": 664,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 67,
+            "cy": 664.48,
+            "d": 0.48
+          },
+          {
+            "i": 66,
+            "cy": 658.48,
+            "d": 5.52
+          }
+        ]
+      },
+      {
+        "y": 666,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 67,
+            "cy": 664.48,
+            "d": 1.52
+          },
+          {
+            "i": 68,
+            "cy": 670.48,
+            "d": 4.48
+          }
+        ]
+      },
+      {
+        "y": 668,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 68,
+            "cy": 670.48,
+            "d": 2.48
+          },
+          {
+            "i": 67,
+            "cy": 664.48,
+            "d": 3.52
+          }
+        ]
+      },
+      {
+        "y": 670,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 68,
+            "cy": 670.48,
+            "d": 0.48
+          },
+          {
+            "i": 67,
+            "cy": 664.48,
+            "d": 5.52
+          }
+        ]
+      },
+      {
+        "y": 672,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 68,
+            "cy": 670.48,
+            "d": 1.52
+          },
+          {
+            "i": 69,
+            "cy": 676.48,
+            "d": 4.48
+          }
+        ]
+      },
+      {
+        "y": 674,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 69,
+            "cy": 676.48,
+            "d": 2.48
+          },
+          {
+            "i": 68,
+            "cy": 670.48,
+            "d": 3.52
+          }
+        ]
+      },
+      {
+        "y": 676,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 69,
+            "cy": 676.48,
+            "d": 0.48
+          },
+          {
+            "i": 68,
+            "cy": 670.48,
+            "d": 5.52
+          }
+        ]
+      },
+      {
+        "y": 678,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 69,
+            "cy": 676.48,
+            "d": 1.52
+          },
+          {
+            "i": 70,
+            "cy": 682.48,
+            "d": 4.48
+          }
+        ]
+      },
+      {
+        "y": 680,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 70,
+            "cy": 682.48,
+            "d": 2.48
+          },
+          {
+            "i": 69,
+            "cy": 676.48,
+            "d": 3.52
+          }
+        ]
+      },
+      {
+        "y": 682,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 70,
+            "cy": 682.48,
+            "d": 0.48
+          },
+          {
+            "i": 69,
+            "cy": 676.48,
+            "d": 5.52
+          }
+        ]
+      },
+      {
+        "y": 684,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 70,
+            "cy": 682.48,
+            "d": 1.52
+          },
+          {
+            "i": 71,
+            "cy": 688.48,
+            "d": 4.48
+          }
+        ]
+      },
+      {
+        "y": 686,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 71,
+            "cy": 688.48,
+            "d": 2.48
+          },
+          {
+            "i": 70,
+            "cy": 682.48,
+            "d": 3.52
+          }
+        ]
+      },
+      {
+        "y": 688,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 71,
+            "cy": 688.48,
+            "d": 0.48
+          },
+          {
+            "i": 70,
+            "cy": 682.48,
+            "d": 5.52
+          }
+        ]
+      },
+      {
+        "y": 690,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 71,
+            "cy": 688.48,
+            "d": 1.52
+          },
+          {
+            "i": 72,
+            "cy": 694.48,
+            "d": 4.48
+          }
+        ]
+      },
+      {
+        "y": 692,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 72,
+            "cy": 694.48,
+            "d": 2.48
+          },
+          {
+            "i": 71,
+            "cy": 688.48,
+            "d": 3.52
+          }
+        ]
+      },
+      {
+        "y": 694,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 72,
+            "cy": 694.48,
+            "d": 0.48
+          },
+          {
+            "i": 71,
+            "cy": 688.48,
+            "d": 5.52
+          }
+        ]
+      },
+      {
+        "y": 696,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 72,
+            "cy": 694.48,
+            "d": 1.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 4.48
+          }
+        ]
+      },
+      {
+        "y": 698,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 2.48
+          },
+          {
+            "i": 72,
+            "cy": 694.48,
+            "d": 3.52
+          }
+        ]
+      },
+      {
+        "y": 700,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 0.48
+          },
+          {
+            "i": 72,
+            "cy": 694.48,
+            "d": 5.52
+          }
+        ]
+      },
+      {
+        "y": 702,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 1.52
+          },
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 4.48
+          }
+        ]
+      },
+      {
+        "y": 704,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 2.48
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 3.52
+          }
+        ]
+      },
+      {
+        "y": 706,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 0.48
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 5.52
+          }
+        ]
+      },
+      {
+        "y": 708,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 1.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 7.52
+          }
+        ]
+      },
+      {
+        "y": 710,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 3.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 9.52
+          }
+        ]
+      },
+      {
+        "y": 712,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 5.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 11.52
+          }
+        ]
+      },
+      {
+        "y": 714,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 7.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 13.52
+          }
+        ]
+      },
+      {
+        "y": 716,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 9.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 15.52
+          }
+        ]
+      },
+      {
+        "y": 718,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 11.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 17.52
+          }
+        ]
+      },
+      {
+        "y": 720,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 13.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 19.52
+          }
+        ]
+      },
+      {
+        "y": 722,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 15.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 21.52
+          }
+        ]
+      },
+      {
+        "y": 724,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 17.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 23.52
+          }
+        ]
+      },
+      {
+        "y": 726,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 19.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 25.52
+          }
+        ]
+      },
+      {
+        "y": 728,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 21.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 27.52
+          }
+        ]
+      },
+      {
+        "y": 730,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 23.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 29.52
+          }
+        ]
+      },
+      {
+        "y": 732,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 25.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 31.52
+          }
+        ]
+      },
+      {
+        "y": 734,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 27.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 33.52
+          }
+        ]
+      },
+      {
+        "y": 736,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 29.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 35.52
+          }
+        ]
+      },
+      {
+        "y": 738,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 31.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 37.52
+          }
+        ]
+      },
+      {
+        "y": 740,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 33.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 39.52
+          }
+        ]
+      },
+      {
+        "y": 742,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 35.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 41.52
+          }
+        ]
+      },
+      {
+        "y": 744,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 37.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 43.52
+          }
+        ]
+      },
+      {
+        "y": 746,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 39.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 45.52
+          }
+        ]
+      },
+      {
+        "y": 748,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 41.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 47.52
+          }
+        ]
+      },
+      {
+        "y": 750,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 43.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 49.52
+          }
+        ]
+      },
+      {
+        "y": 752,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 45.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 51.52
+          }
+        ]
+      },
+      {
+        "y": 754,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 47.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 53.52
+          }
+        ]
+      },
+      {
+        "y": 756,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 49.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 55.52
+          }
+        ]
+      },
+      {
+        "y": 758,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 51.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 57.52
+          }
+        ]
+      },
+      {
+        "y": 760,
+        "stack": [
+          {
+            "tag": "NAV",
+            "cls": "timeline timeline-groups",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "absolute"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-body",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "relative"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat-col",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          },
+          {
+            "tag": "DIV",
+            "cls": "chat",
+            "id": null,
+            "pe": "auto",
+            "z": "auto",
+            "pos": "static"
+          }
+        ],
+        "nearest": [
+          {
+            "i": 74,
+            "cy": 706.48,
+            "d": 53.52
+          },
+          {
+            "i": 73,
+            "cy": 700.48,
+            "d": 59.52
+          }
+        ]
+      }
+    ]
+  },
+  "finishedAt": "2026-11-22T05:05:31.059Z",
+  "hoverText": {
+    "checkedAt": "2026-11-22T05:06:43.996Z",
+    "asset": "/assets/app.js?v=mwrdab5a-liehy",
+    "items": [
+      {
+        "tick": 2,
+        "y": 274.48,
+        "tip": {
+          "state": "visible",
+          "meta": "司墨\n·\n主会话\n·\n进度汇报\n·\n21:22",
+          "summary": "我会按本周（11/09–11/15）整理，请确认范围。"
+        },
+        "tipTime": "21:22",
+        "active": 2,
+        "scrollTop": 264,
+        "topIndex": 2,
+        "activeMessage": {
+          "id": "msg-a2",
+          "text": "我会按本周（11/09–11/15）整理，请确认范围。 本周周报 · 确认范围 submitted · v1 我会按本周（11/09–11/15）整理进展、风险和下周计划。 周报范围 请选择… 本周（11/09–11/15） 上周（11/02–11/08） 补充说明（可选） 取消 确认"
+        },
+        "topMessage": {
+          "id": "msg-a2",
+          "text": "我会按本周（11/09–11/15）整理，请确认范围。 本周周报 · 确认范围 submitted · v1 我会按本周（11/09–11/15）整理进展、风险和下周计划。 周报范围 请选择… 本周（11/09–11/15） 上周（11/02–11/08） 补充说明（可选） 取消 确认"
+        },
+        "summaryHead20": "我会按本周（11/09–11/15）整理",
+        "bodyHead20": "我会按本周（11/09–11/15）整理",
+        "summaryInBody": true,
+        "bodyInSummary": true
+      },
+      {
+        "tick": 37,
+        "y": 484.48,
+        "tip": {
+          "state": "visible",
+          "meta": "司墨\n·\n主会话\n·\n信息咨询\n·\n01:22",
+          "summary": "（M2 Mock 模型）收到你的消息：多标签B-only-1794504169786。真实模型在 -model real / SIMO_LLM=deepseek 时启用。"
+        },
+        "tipTime": "01:22",
+        "active": 37,
+        "scrollTop": 3255,
+        "topIndex": 37,
+        "activeMessage": {
+          "id": "msg-0e4a594577d612d7",
+          "text": "（M2 Mock 模型）收到你的消息：多标签B-only-1794504169786。真实模型在 -model real / SIMO_LLM=deepseek 时启用。"
+        },
+        "topMessage": {
+          "id": "msg-0e4a594577d612d7",
+          "text": "（M2 Mock 模型）收到你的消息：多标签B-only-1794504169786。真实模型在 -model real / SIMO_LLM=deepseek 时启用。"
+        },
+        "summaryHead20": "（M2 Mock 模型）收到你的消息：多",
+        "bodyHead20": "（M2 Mock 模型）收到你的消息：多",
+        "summaryInBody": true,
+        "bodyInSummary": true
+      },
+      {
+        "tick": 65,
+        "y": 652.48,
+        "tip": {
+          "state": "visible",
+          "meta": "你\n·\n主会话\n·\n00:16",
+          "summary": "成功发送清空测试"
+        },
+        "tipTime": "00:16",
+        "active": 65,
+        "scrollTop": 6069,
+        "topIndex": 65,
+        "activeMessage": {
+          "id": "msg-f97d8b5c2c15565b",
+          "text": "成功发送清空测试"
+        },
+        "topMessage": {
+          "id": "msg-f97d8b5c2c15565b",
+          "text": "成功发送清空测试"
+        },
+        "summaryHead20": "成功发送清空测试",
+        "bodyHead20": "成功发送清空测试",
+        "summaryInBody": true,
+        "bodyInSummary": true
+      }
+    ]
+  },
+  "edgeChecks": {
+    "checkedAt": "2026-11-22T05:07:48.617Z",
+    "geom": {
+      "tl": {
+        "x": 358,
+        "y": 153,
+        "w": 44,
+        "h": 662.953125,
+        "right": 402,
+        "bottom": 815.953125
+      },
+      "centers": [
+        262.48,
+        268.48,
+        274.48,
+        280.48,
+        286.48,
+        292.48,
+        298.48,
+        304.48,
+        310.48,
+        316.48,
+        322.48,
+        328.48,
+        334.48,
+        340.48,
+        346.48,
+        352.48,
+        358.48,
+        364.48,
+        370.48,
+        376.48,
+        382.48,
+        388.48,
+        394.48,
+        400.48,
+        406.48,
+        412.48,
+        418.48,
+        424.48,
+        430.48,
+        436.48,
+        442.48,
+        448.48,
+        454.48,
+        460.48,
+        466.48,
+        472.48,
+        478.48,
+        484.48,
+        490.48,
+        496.48,
+        502.48,
+        508.48,
+        514.48,
+        520.48,
+        526.48,
+        532.48,
+        538.48,
+        544.48,
+        550.48,
+        556.48,
+        562.48,
+        568.48,
+        574.48,
+        580.48,
+        586.48,
+        592.48,
+        598.48,
+        604.48,
+        610.48,
+        616.48,
+        622.48,
+        628.48,
+        634.48,
+        640.48,
+        646.48,
+        652.48,
+        658.48,
+        664.48,
+        670.48,
+        676.48,
+        682.48,
+        688.48,
+        694.48,
+        700.48,
+        706.48
+      ]
+    },
+    "points": [
+      {
+        "x": 359,
+        "y": 484.48,
+        "note": "left-edge+1",
+        "nearest": {
+          "index": 37,
+          "distance": 0
+        },
+        "hit": {
+          "tag": "NAV",
+          "cls": "timeline timeline-groups",
+          "inTimeline": true
+        },
+        "sv": [
+          {
+            "index": 37,
+            "id": "msg-0e4a594577d612d7"
+          }
+        ],
+        "svIndex": 37,
+        "topIndex": 37,
+        "active": 37,
+        "scrollTop": 3255,
+        "attributionOK": true
+      },
+      {
+        "x": 358.5,
+        "y": 484.48,
+        "note": "left-edge+0.5",
+        "nearest": {
+          "index": 37,
+          "distance": 0
+        },
+        "hit": {
+          "tag": "NAV",
+          "cls": "timeline timeline-groups",
+          "inTimeline": true
+        },
+        "sv": [
+          {
+            "index": 37,
+            "id": "msg-0e4a594577d612d7"
+          }
+        ],
+        "svIndex": 37,
+        "topIndex": 37,
+        "active": 37,
+        "scrollTop": 3255,
+        "attributionOK": true
+      },
+      {
+        "x": 401,
+        "y": 484.48,
+        "note": "right-edge-1",
+        "nearest": {
+          "index": 37,
+          "distance": 0
+        },
+        "hit": {
+          "tag": "NAV",
+          "cls": "timeline timeline-groups",
+          "inTimeline": true
+        },
+        "sv": [
+          {
+            "index": 37,
+            "id": "msg-0e4a594577d612d7"
+          }
+        ],
+        "svIndex": 37,
+        "topIndex": 37,
+        "active": 37,
+        "scrollTop": 3255,
+        "attributionOK": true
+      },
+      {
+        "x": 403,
+        "y": 484.48,
+        "note": "outside-right+1",
+        "nearest": {
+          "index": 37,
+          "distance": 0
+        },
+        "hit": {
+          "tag": "DIV",
+          "cls": "chat-body",
+          "inTimeline": false
+        },
+        "sv": [],
+        "svIndex": -1,
+        "topIndex": 37,
+        "active": 37,
+        "scrollTop": 3255,
+        "attributionOK": false
+      },
+      {
+        "x": 380,
+        "y": 157,
+        "note": "top-edge+4",
+        "nearest": {
+          "index": 0,
+          "distance": 105.48
+        },
+        "hit": {
+          "tag": "NAV",
+          "cls": "timeline timeline-groups",
+          "inTimeline": true
+        },
+        "sv": [
+          {
+            "index": 0,
+            "id": "msg-u1"
+          }
+        ],
+        "svIndex": 0,
+        "topIndex": 0,
+        "active": 0,
+        "scrollTop": 49,
+        "attributionOK": true
+      },
+      {
+        "x": 380,
+        "y": 811.953125,
+        "note": "bottom-edge-4",
+        "nearest": {
+          "index": 74,
+          "distance": 105.47
+        },
+        "hit": {
+          "tag": "NAV",
+          "cls": "timeline timeline-groups",
+          "inTimeline": true
+        },
+        "sv": [
+          {
+            "index": 74,
+            "id": "msg-209d9734abe8be7a"
+          }
+        ],
+        "svIndex": 74,
+        "topIndex": 68,
+        "active": 68,
+        "scrollTop": 6351,
+        "attributionOK": true
+      }
+    ]
+  },
+  "bottomProbe": {
+    "checkedAt": "2026-11-22T05:08:15.643Z",
+    "maxTopAlign": 68,
+    "runs": [
+      {
+        "idx": 68,
+        "y": 670.48,
+        "sv": [
+          68
+        ],
+        "state": {
+          "scrollTop": 6323,
+          "max": 6351,
+          "active": 68,
+          "top": 68
+        }
+      },
+      {
+        "idx": 72,
+        "y": 694.48,
+        "sv": [
+          72
+        ],
+        "state": {
+          "scrollTop": 6351,
+          "max": 6351,
+          "active": 68,
+          "top": 68
+        }
+      },
+      {
+        "idx": 74,
+        "y": 706.48,
+        "sv": [
+          74
+        ],
+        "state": {
+          "scrollTop": 6351,
+          "max": 6351,
+          "active": 74,
+          "top": 68
+        }
+      },
+      {
+        "idx": 72,
+        "y": 694.48,
+        "sv": [
+          72
+        ],
+        "state": {
+          "scrollTop": 6351,
+          "max": 6351,
+          "active": 72,
+          "top": 68
+        }
+      },
+      {
+        "idx": 72,
+        "y": 694.48,
+        "sv": [
+          72
+        ],
+        "state": {
+          "scrollTop": 6351,
+          "max": 6351,
+          "active": 72,
+          "top": 68
+        }
+      },
+      {
+        "idx": 74,
+        "y": 706.48,
+        "sv": [
+          74
+        ],
+        "state": {
+          "scrollTop": 6351,
+          "max": 6351,
+          "active": 74,
+          "top": 68
+        }
+      }
+    ]
+  },
+  "at1280": {
+    "checkedAt": "2026-11-22T05:08:40.609Z",
+    "viewport": 1280,
+    "geom": {
+      "tl": {
+        "x": 260,
+        "y": 153,
+        "w": 44,
+        "h": 662.953125,
+        "right": 304,
+        "bottom": 815.953125
+      },
+      "n": 75,
+      "centers": [
+        262.48,
+        268.48,
+        274.48,
+        280.48,
+        286.48,
+        292.48,
+        298.48,
+        304.48,
+        310.48,
+        316.48,
+        322.48,
+        328.48,
+        334.48,
+        340.48,
+        346.48,
+        352.48,
+        358.48,
+        364.48,
+        370.48,
+        376.48,
+        382.48,
+        388.48,
+        394.48,
+        400.48,
+        406.48,
+        412.48,
+        418.48,
+        424.48,
+        430.48,
+        436.48,
+        442.48,
+        448.48,
+        454.48,
+        460.48,
+        466.48,
+        472.48,
+        478.48,
+        484.48,
+        490.48,
+        496.48,
+        502.48,
+        508.48,
+        514.48,
+        520.48,
+        526.48,
+        532.48,
+        538.48,
+        544.48,
+        550.48,
+        556.48,
+        562.48,
+        568.48,
+        574.48,
+        580.48,
+        586.48,
+        592.48,
+        598.48,
+        604.48,
+        610.48,
+        616.48,
+        622.48,
+        628.48,
+        634.48,
+        640.48,
+        646.48,
+        652.48,
+        658.48,
+        664.48,
+        670.48,
+        676.48,
+        682.48,
+        688.48,
+        694.48,
+        700.48,
+        706.48
+      ]
+    },
+    "mid": 37,
+    "hit": {
+      "tag": "DIV",
+      "cls": "tlg-session is-current-session",
+      "inTimeline": true
+    },
+    "click": {
+      "x": 282,
+      "y": 484.48,
+      "sv": [
+        {
+          "index": 37,
+          "id": "msg-0e4a594577d612d7"
+        }
+      ],
+      "active": 37,
+      "top": 37,
+      "scrollTop": 3255,
+      "maxTopAlign": 68
+    }
+  }
+}

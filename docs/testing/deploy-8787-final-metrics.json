@@ -1,0 +1,303 @@
+{
+  "task": "部署走查 final（127.0.0.1:8787）",
+  "generatedAt": "2026-11-21T17:35:28.453Z",
+  "gitHead": "10270a37d3043b18ab408cca460498df14af72fd",
+  "build": {
+    "method": "frontend/build.mjs 的本体因沙箱管道 EPERM 无法直接跑；用等价步骤执行 tailwind CLI → esbuild → stamp（buildId=`${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`），再复制到 embed 目录并 go build。脚本 .tmp/accept/build-frontend.mjs 仅把 spawnSync 的 stdio 改为 inherit。",
+    "buildId": "mwqo5cyi-ebk9w",
+    "previousBuildId": "mwqnzfys-h7z36",
+    "frontend": {
+      "distDir": "E:\\dsh_home\\workspaces\\agent\\frontend\\dist",
+      "appJs": {
+        "path": "E:\\dsh_home\\workspaces\\agent\\frontend\\dist\\assets\\app.js",
+        "bytes": 309341,
+        "sha256": "07A9474FDD78D07BE055914E9B45110363740F13AAEF1B92A38AF87D54A229B9"
+      },
+      "appCss": {
+        "path": "E:\\dsh_home\\workspaces\\agent\\frontend\\dist\\assets\\app.css",
+        "bytes": 73048,
+        "sha256": "F949C742943D372F132F93C1E3FCF3664F46B6A6ECC5D09C2D8558B6EFC3AF53"
+      },
+      "indexHtmlBuildId": "mwqo5cyi-ebk9w"
+    },
+    "executable": {
+      "path": "E:\\dsh_home\\workspaces\\agent\\backend\\simo-8787-final.exe",
+      "bytes": 15227392,
+      "command": "go build -trimpath -buildvcs=false -ldflags \"-s -w\" -o simo-8787-final.exe ./cmd/simo",
+      "embedDir": "E:\\dsh_home\\workspaces\\agent\\backend\\internal\\webui\\dist",
+      "note": "embed 目录内 index.html/app.js/app.css 与 frontend/dist 三个文件哈希一致"
+    }
+  },
+  "server": {
+    "addr": "http://127.0.0.1:8787",
+    "pid": 11664,
+    "processName": "simo-8787-final",
+    "mode": "real",
+    "llm": "deepseek-flash",
+    "log": "E:\\dsh_home\\workspaces\\agent\\.tmp\\deploy\\serve-final6.log",
+    "startedAt": "2026-11-22T01:33:40+08:00",
+    "launch": "pwsh 后台 job（job pwsh-13a0354432b844af），工作目录为仓库根，SIMO_HOME=...\\data",
+    "health": {
+      "ok": true,
+      "ready": true,
+      "time": 1795282528437,
+      "checks": {
+        "db": "ok",
+        "modules": [
+          "sessions",
+          "chat",
+          "tasks",
+          "memory"
+        ]
+      }
+    },
+    "served": {
+      "buildId": "mwqo5cyi-ebk9w",
+      "appJsBytes": 309341,
+      "appJsSha256": "07A9474FDD78D07BE055914E9B45110363740F13AAEF1B92A38AF87D54A229B9"
+    },
+    "pageState": {
+      "title": "司墨",
+      "status": "已连接",
+      "statusbar": "就绪 V4.1 Flash · 读/写权限按策略",
+      "visibleSessionRows": 14
+    }
+  },
+  "screenshots": [
+    {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-final-01-default-1600.png",
+      "width": 1600,
+      "height": 1000,
+      "bytes": 112195,
+      "sha256": "805143ECC31CA0A7209225221F40F879720BBE8C172267E861A62C76FB4D4CE1",
+      "proves": "默认会话（主会话）在 1600×1000 完整加载：侧栏 13 个活跃会话、消息区 69 条消息与 69 条时间轴条一一对应、docScrollWidth=1600 无横向溢出、右上「已连接」、底部「就绪」。"
+    },
+    {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-final-02-archived-menu-1600.png",
+      "width": 1600,
+      "height": 1000,
+      "bytes": 113957,
+      "sha256": "346C301F3C8006FA415D2AED1901BF2A7C8085E2075414E48512724FBFB68B28",
+      "proves": "点「显示归档」后侧栏 14 行；归档行 probe-archive-mwqn8oz1 的 ⋯ 菜单只有「恢复」一项（没有置顶/归档），元素命中自身、disabled=false、cursor=pointer、opacity=1；点击后 archived 1→0 且菜单变为「置顶/归档」，再点「归档」恢复 archived=1。"
+    },
+    {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-final-03-failed-badge-1600.png",
+      "width": 1600,
+      "height": 1000,
+      "bytes": 91089,
+      "sha256": "A9521D3FC39D91E1BE4B92C1857065CC721416D49E6B403B5F4350FA9222D1AD",
+      "proves": "验收序A 中两条 status=error 的回复各显示红色「失败」徽标、正文「回复生成失败，未返回内容。」与「重试」按钮（badgeCount=2），无需注入数据。"
+    },
+    {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-final-03b-failed-badge@2x.png",
+      "width": null,
+      "height": null,
+      "bytes": 18086,
+      "sha256": "AE5D01220780CA58DDDD749F03B9B4D42D68D5F3932782C61ACA782AF56D4DCB",
+      "proves": "失败徽标的 2 倍局部，用于确认徽标文字、颜色与重试按钮在像素级无缺失。"
+    },
+    {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-final-04-timeline-hit-1600.png",
+      "width": 1600,
+      "height": 1000,
+      "bytes": 117258,
+      "sha256": "4F3D849793F69BF397BAE618406884E8A3EA335E6FD00519F795E3119D5FAE9B",
+      "proves": "鼠标悬停时间轴条（第 3 条，你 · 验收序A · 00:03）弹出 tooltip「你 · 验收序A · 00:03 accept失败徽标检查」；桌面 fine pointer 下命中区就是视觉条 20×4。"
+    },
+    {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-final-04b-timeline-after-click-1600.png",
+      "width": 1600,
+      "height": 1000,
+      "bytes": 132554,
+      "sha256": "D0362B706228DC3C8AF6CC8E598FC92B2822F093EF894D4E844E8EEAC7AD444E",
+      "proves": "点击同一条后会话滚动到对应消息：scrollTop 5725→3178，is-current 高亮条从第 62 条移到第 36 条。"
+    },
+    {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-final-04c-timeline-touch-hit-1600.png",
+      "width": 1600,
+      "height": 1000,
+      "bytes": 125208,
+      "sha256": "A4F6C5C1203611F6457C988C3D1EA767521E4BD17DAB9FE801CEED1665FEB3A2",
+      "proves": "pointer:coarse 仿真下 .tl-bar::after 命中块为 48×44；在视觉条外 18px 处点击仍命中该条并跳转（scrollTop 7409→1459），证明触屏命中块真实可点。"
+    },
+    {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-final-05a-pin-before-1600.png",
+      "width": 1600,
+      "height": 1000,
+      "bytes": 91040,
+      "sha256": "47720425D3B36EDD374EF0B45BBE6505050CA80FEF795B610B967FB34A5B95A9",
+      "proves": "取消验收序A 的置顶后，子会话顺序变为 regress-error-mwqnboie、regress-error-mwqnb5p4、regress-arch-mwqn98a8、验收未读V、验收未读U、验收序C、验收序B、验收序A、研究员…，A 落到第 8 位。"
+    },
+    {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-final-05b-pin-after-1600.png",
+      "width": 1600,
+      "height": 1000,
+      "bytes": 91036,
+      "sha256": "5E11909B4787E02791348B4113CD6DC78E19ADB3821966931FFF5AE093415239",
+      "proves": "重新置顶验收序A 后它回到子会话首位，顺序恢复原状，tree 中 pinned=true。"
+    },
+    {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-final-06-draft-and-panel-1600.png",
+      "width": 1600,
+      "height": 1000,
+      "bytes": 61555,
+      "sha256": "91E0A4F62596843C34BB96F498CA6A62DDBDCB014BA853B6832D5159A1A6A29E",
+      "proves": "点「新建会话」后首行出现草稿「新会话」且不渲染 ⋯ 菜单；右侧 inspector 同时显示占位「目标与执行态待生成 / 发送第一条消息后生成目标与执行态」。草稿是内存态，未发消息、未落库。"
+    },
+    {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-final-06b-draft-right@2x.png",
+      "width": null,
+      "height": null,
+      "bytes": 18095,
+      "sha256": "9DDEAB87982B0010E3F7B57D675DC1E1895FCF765FC1ADFA6E592546C4758C7B",
+      "proves": "右栏草稿占位的 2 倍局部，确认两行占位文案完整。"
+    },
+    {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-final-07-fullpage-1280.png",
+      "width": 1600,
+      "height": 1000,
+      "bytes": 103666,
+      "sha256": "F644C5477CEA6C2AA8456A20827C294F481A646ED6DE59F2BB312676A9432D12",
+      "proves": "1280 宽全页：docW=1280、docH=900、inner 1280×900、overflowX=false，页面高度等于视口，整页截图即视口内容。"
+    },
+    {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-final-08-reconnect-1600.png",
+      "width": 1600,
+      "height": 1000,
+      "bytes": 123153,
+      "sha256": "3978977266A7C4CB28D3D7481D08AF720C5711081E41206436CC0C5AAC1A2C7F",
+      "proves": "真实模式断线重连：停服后界面先显示「重连中」，新实例起来后恢复「已连接/就绪」，但重连后发出的消息回复失败（403）。"
+    },
+    {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-final-08b-reconnect-mock-1600.png",
+      "width": 1600,
+      "height": 1000,
+      "bytes": 111905,
+      "sha256": "35DCF01A5CF9CB2519C3BADBFEF8402BD223B94088D586F392F407DD64388C57",
+      "proves": "mock 辅助重连：同一二进制以 SIMO_LLM=mock 重启后，界面恢复「已连接/就绪」，重连后发送的消息完整收到 15 个 reply.delta 并渲染出回复。"
+    }
+  ],
+  "console": {
+    "errorCount": 0,
+    "warningCount": 0,
+    "exceptionCount": 0,
+    "httpErrorCount": 0,
+    "window": "截图采集全程（buildId mwqo5cyi-ebk9w，同一实例）",
+    "collector": "CDP：Runtime.consoleAPICalled(type=error/warning)、Runtime.exceptionThrown、Log.entryAdded、Network.responseReceived(status>=400) 与 Network.loadingFailed",
+    "selfCheck": {
+      "target": "同源独立 scratch target（不污染被测页面计数）",
+      "injected": [
+        "console.error(\"CAPTURE-SELFTEST error\")",
+        "console.warn(\"CAPTURE-SELFTEST warn\")",
+        "fetch(\"/api/__capture_selftest_404__\")"
+      ],
+      "caught": {
+        "error": 1,
+        "warning": 1,
+        "http404": 1
+      },
+      "passed": true
+    },
+    "interpretation": "四类计数均为 0 且注入自检三类都被捕获，说明采集链路本身有效，0 不是漏采。"
+  },
+  "reconnect": {
+    "conclusions": {
+      "sinceIsNumber": "是。真实模式 since=9029（number、finite），mock 辅助 since=9087（number、finite）；首连不带 since（undefined）。",
+      "deltasContinueAfterReconnect": "mock 辅助下是（重连后 15 个 reply.delta，回复完整渲染）；真实模型下未验证（DeepSeek 接口 403，重连后 deltas=0）。",
+      "uiRecoversFromError": "是。停服后 2.1–2.7s 内显示「重连中」，新实例 ready 后恢复「已连接」且状态栏回到「就绪」。"
+    },
+    "realMode": {
+      "evidence": "E:\\dsh_home\\workspaces\\agent\\.tmp\\deploy\\reconnect-result3.json",
+      "since": 9029,
+      "statuses": {
+        "afterKill": "重连中",
+        "afterRestart": "已连接"
+      },
+      "deltasAfterReconnect": 0,
+      "failure": "回复失败 err=\"请求模型失败: Post \\\"https://api.deepseek.com/chat/completions\\\": Forbidden\"（.tmp/deploy/serve-final3.log、serve-final5.log）",
+      "screenshot": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-final-08-reconnect-1600.png"
+    },
+    "mockAux": {
+      "evidence": "E:\\dsh_home\\workspaces\\agent\\.tmp\\deploy\\reconnect-result4-mock.json",
+      "how": "同一 backend/simo-8787-final.exe，环境变量 SIMO_LLM=mock，日志 .tmp/deploy/serve-mock2.log；仅验证 WS 重连后的传输链路，不代表真实模型可用。",
+      "since": 9087,
+      "sinceType": "number",
+      "sinceFinite": true,
+      "statuses": {
+        "afterKill": "重连中",
+        "afterRestart": "已连接"
+      },
+      "deltasAfterReconnect": 15,
+      "postReplyDone": true,
+      "frames": {
+        "hello": 1,
+        "message.created": 2,
+        "reply.created": 1,
+        "session_unread": 1,
+        "status": 2,
+        "trace.reasoning": 1,
+        "reply.delta": 13,
+        "message.delta": 13,
+        "session_read": 1,
+        "reply.done": 1,
+        "message.done": 1
+      },
+      "screenshot": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-final-08b-reconnect-mock-1600.png",
+      "note": "该 mock 进程为脚本 detached 子进程，脚本退出后被回收；8787 上最终运行的是真实模式实例 PID 11664。"
+    }
+  },
+  "dataCreated": {
+    "sessions": [
+      {
+        "id": "sess-b3b42e8f8de61893",
+        "title": "新会话",
+        "parentId": "main",
+        "createdBy": "断线重连脚本（reconnect-final / reconnect-c / reconnect-d-mock）",
+        "createdAt": 1795281632984,
+        "messages": 16,
+        "messageIds": [
+          "msg-c950b1e7d2583d2d",
+          "msg-053846a4254d5114",
+          "msg-024810274b8db076",
+          "msg-6ea6c2a7f3892a0d",
+          "msg-9a7af695e5289ddc",
+          "msg-51a5588ce31dc9ce",
+          "msg-4a79e0eacd094f70",
+          "msg-97c9a4c4ea2738c6",
+          "msg-4685b89f8db924c6",
+          "msg-14e30920fcfbb463",
+          "msg-ccd4e8bd8a291343",
+          "msg-02851580194f4269",
+          "msg-3486c5005ec31277",
+          "msg-b646b492b31b3567",
+          "msg-886add6f6f4bfb03",
+          "msg-82aa2bd4157080bb"
+        ],
+        "note": "8 条 user + 8 条 agent；agent 中 4 条 error（真实模型 403）、2 条本地 clarify、2 条 mock 回复"
+      }
+    ],
+    "toggles": [
+      "sess-8f146ad51a243c91（probe-archive-mwqn8oz1）：恢复 → 再归档，最终 archived=1（原状态）",
+      "sess-a29cef9ffc38240b（验收序A）：取消置顶 → 重新置顶，最终 pinned=1（原状态）",
+      "草稿「新会话」仅内存，未落库"
+    ],
+    "totalsObserved": {
+      "sessions": 15,
+      "messages": 195,
+      "byStatus": {
+        "done": 157,
+        "error": 38
+      }
+    },
+    "cleanup": "未做任何清理（按任务纪律留待统一处理）"
+  },
+  "failures": [
+    "真实 DeepSeek API 在本环境全部 403 Forbidden，真实模型流式回复从未成功：POST https://api.deepseek.com/chat/completions Forbidden（replyId=msg-14e30920fcfbb463 等）。",
+    "frontend/build.mjs 本体在沙箱下因 spawnSync 管道 EPERM 失败，改用等价分步脚本完成构建。",
+    "taskkill 在本沙箱被拒绝（exit 1），停服改用 job_kill；node detached spawn 的服务器会随 pwsh 包装 job 结束被回收，最终实例改由 pwsh 后台 job 启动。"
+  ],
+  "unverified": [
+    "真实模型断线重连后 reply.delta 继续到达：因 403 无法产生真实流式回复，只有 mock 辅助证据。",
+    "真实模型在本次单二进制实例上的对话/流式能力：本环境 API 403，历史 done 回复均为本地 clarify 或 mock。"
+  ]
+}

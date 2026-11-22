@@ -1,0 +1,417 @@
+{
+  "capturedAt": "2026-11-21T23:09:13+08:00",
+  "timezone": "Asia/Shanghai (UTC+08:00)",
+  "url": "http://127.0.0.1:8787/",
+  "exe": "E:\\dsh_home\\workspaces\\agent\\backend\\simo-8787-2300.exe",
+  "exeBytes": 22071808,
+  "buildId": "mwqjg72o-n8rtk",
+  "gitHead": "10270a37d3043b18ab408cca460498df14af72fd",
+  "health": {
+    "ok": true,
+    "ready": true,
+    "time": 1795273753212,
+    "checks": {
+      "db": "ok",
+      "modules": [
+        "sessions",
+        "chat",
+        "tasks",
+        "memory"
+      ]
+    }
+  },
+  "browser": "Chrome/157.0.8103.80",
+  "viewport1600": {
+    "title": "司墨",
+    "buildId": "mwqjg72o-n8rtk",
+    "sessionTitles": [
+      "主会话",
+      "研究员"
+    ],
+    "activeTitle": "主会话",
+    "counts": {
+      "msg": 52,
+      "tlBar": 52,
+      "session": 2
+    },
+    "rects": {
+      "sidebar": {
+        "x": 0,
+        "y": 0,
+        "w": 240,
+        "h": 976
+      },
+      "chat": {
+        "x": 240,
+        "y": 90,
+        "w": 1060,
+        "h": 886
+      },
+      "inspector": {
+        "x": 1300,
+        "y": 90,
+        "w": 300,
+        "h": 886
+      },
+      "chatBody": {
+        "x": 240,
+        "y": 141,
+        "w": 1060,
+        "h": 663
+      }
+    },
+    "overflowX": false,
+    "innerWidth": 1600,
+    "innerHeight": 1000
+  },
+  "viewport1280": {
+    "innerWidth": 1280,
+    "scrollWidth": 1280,
+    "overflowX": false,
+    "sidebar": {
+      "x": 0,
+      "w": 240,
+      "h": 976
+    },
+    "chat": {
+      "x": 240,
+      "w": 740,
+      "h": 886
+    },
+    "inspector": {
+      "x": 980,
+      "w": 300,
+      "h": 886
+    },
+    "activeTitle": "主会话"
+  },
+  "setup": {
+    "unpinResearcher": {
+      "status": 200,
+      "body": "{\"ok\":true,\"session\":{\"id\":\"sess-fixture-researcher\",\"parentId\":\"main\",\"title\":\"研究员\",\"createdAt\":1794484675094,\"archived\":0,\"pinned\":false,\"ownerAgentId\":\"researcher\",\"hasUnread\":false}}\n"
+    }
+  },
+  "pinFlow": {
+    "rowOrderBefore": [
+      "主会话",
+      "研究员"
+    ],
+    "rowOrderAfter": [
+      "主会话",
+      "研究员"
+    ],
+    "rowMoved": false,
+    "menuBefore": {
+      "items": [
+        "置顶",
+        "归档"
+      ],
+      "rect": {
+        "x": 179.09375,
+        "y": 245.6875,
+        "w": 47.90625,
+        "h": 62.28125
+      },
+      "rowPinnedClass": "session-row child  "
+    },
+    "menuAfter": {
+      "items": [
+        "取消置顶",
+        "归档"
+      ]
+    },
+    "menuClosedBeforeDraft": true,
+    "sessionMore": {
+      "x": 203,
+      "y": 223.6875,
+      "w": 20,
+      "h": 20,
+      "opacity": "1",
+      "aria": "会话操作"
+    },
+    "pinRequests": [
+      {
+        "method": "POST",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/pin",
+        "at": "2026-11-21T15:09:06.933Z"
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/tree",
+        "at": "2026-11-21T15:09:06.936Z"
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:09:06.954Z"
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:09:06.954Z"
+      }
+    ],
+    "pinResponses": [
+      {
+        "id": "7076.17",
+        "status": 200,
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/pin",
+        "mimeType": "application/json"
+      },
+      {
+        "id": "7076.18",
+        "status": 200,
+        "url": "http://127.0.0.1:8787/api/sessions/tree",
+        "mimeType": "application/json"
+      },
+      {
+        "id": "7076.20",
+        "status": 200,
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/spec-projection?taskLimit=1",
+        "mimeType": "application/json"
+      },
+      {
+        "id": "7076.19",
+        "status": 200,
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=1",
+        "mimeType": "application/json"
+      }
+    ],
+    "treePinnedFlag": true,
+    "treeChildrenOrder": [
+      {
+        "id": "sess-fixture-researcher",
+        "title": "研究员",
+        "pinned": true
+      }
+    ],
+    "note": "研究员是主会话唯一的子会话（children 长度 1），置顶后 SQL ORDER BY pinned DESC 无第二个兄弟可超越，因此行序不变；置顶状态由 tree API 的 pinned=true 复核。"
+  },
+  "draft": {
+    "request": {
+      "method": "POST",
+      "url": "http://127.0.0.1:8787/api/sessions",
+      "postData": "{\"parentId\":\"main\",\"title\":\"新会话\"}",
+      "at": "2026-11-21T15:09:09.332Z",
+      "status": 201,
+      "body": "{\"draft\":true,\"ok\":true,\"session\":{\"id\":\"sess-a43dc9a990eef9a7\",\"parentId\":\"main\",\"title\":\"新会话\",\"createdAt\":1795273621056,\"archived\":0,\"pinned\":false,\"ownerAgentId\":\"simo\",\"hasUnread\":false}}\n"
+    },
+    "draftId": "sess-a43dc9a990eef9a7",
+    "dom": {
+      "activeRowTitle": "新会话",
+      "activeRowClass": "session-row  is-active ",
+      "activeRowHasMore": false,
+      "rowOrder": [
+        {
+          "title": "新会话",
+          "cls": "session-row  is-active ",
+          "more": false
+        },
+        {
+          "title": "主会话",
+          "cls": "session-row   ",
+          "more": false
+        },
+        {
+          "title": "研究员",
+          "cls": "session-row child  ",
+          "more": true
+        }
+      ],
+      "inspectorText": "· 目标与执行态待生成 发送第一条消息后生成目标与执行态 ☰ ◷ ▤",
+      "hasPlaceholder": true,
+      "hasPlaceholderDesc": true,
+      "inspectorBlocks": []
+    },
+    "specProjectionRequests": [
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=3",
+        "method": "GET",
+        "at": "2026-11-21T15:09:02.548Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:09:02.606Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:09:02.606Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:09:06.954Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:09:06.954Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:09:09.354Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:09:09.355Z"
+      }
+    ],
+    "specProjectionForDraftId": [],
+    "specProjectionForDraftCount": 0
+  },
+  "console": {
+    "errorCount": 0,
+    "warningCount": 0,
+    "exceptionCount": 0,
+    "httpErrorCount": 0,
+    "errors": [],
+    "warnings": [],
+    "exceptions": [],
+    "httpErrors": [],
+    "logEntries": [],
+    "selftest": {
+      "target": "separate scratch target (8787 同源)",
+      "injected": [
+        "console.error CAPTURE-SELFTEST error",
+        "console.warn CAPTURE-SELFTEST warn",
+        "fetch('/api/__capture_selftest_404__')"
+      ],
+      "counts": {
+        "error": 1,
+        "warning": 1,
+        "http404": 1
+      },
+      "caught": true
+    }
+  },
+  "network": {
+    "total": 25,
+    "apiSessions": [
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/tree",
+        "at": "2026-11-21T15:09:02.547Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=3",
+        "at": "2026-11-21T15:09:02.548Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:09:02.606Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:09:02.606Z",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/pin",
+        "at": "2026-11-21T15:09:06.933Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/tree",
+        "at": "2026-11-21T15:09:06.936Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:09:06.954Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:09:06.954Z",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "url": "http://127.0.0.1:8787/api/sessions",
+        "at": "2026-11-21T15:09:09.332Z",
+        "status": 201
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:09:09.354Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:09:09.355Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=3",
+        "at": "2026-11-21T15:09:10.408Z",
+        "status": 200
+      }
+    ]
+  },
+  "screenshots": {
+    "default1600": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2300-default-1600.png",
+      "bytes": 124844
+    },
+    "full1280": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2300-full-1280.png",
+      "bytes": 120269
+    },
+    "pinMenu1600": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2300-pin-menu-1600.png",
+      "bytes": 126475
+    },
+    "pinMenuLeft2x": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2300-pin-menu-left@2x.png",
+      "bytes": 44614
+    },
+    "pinned1600": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2300-pinned-1600.png",
+      "bytes": 127440
+    },
+    "pinnedLeft2x": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2300-pinned-left@2x.png",
+      "bytes": 47548
+    },
+    "draft1600": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2300-draft-1600.png",
+      "bytes": 50656
+    },
+    "draftRight2x": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2300-draft-right@2x.png",
+      "bytes": 17523
+    },
+    "draftLeft2x": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2300-draft-left@2x.png",
+      "bytes": 42805
+    }
+  },
+  "screenshotPts": {
+    "default-1600": "默认会话：三栏 1600 宽，主会话消息与时间轴、右栏执行态可见",
+    "full-1280": "1280 全页：三栏在 1280 下布局与 1600 一致，无横向溢出",
+    "pin-menu-1600": "子会话 研究员 悬停出现「会话操作」，菜单含「置顶」",
+    "pinned-1600": "点击置顶后重开菜单：「置顶」变「取消置顶」；单子会话场景行序不变（tree API pinned=true 复核）",
+    "draft-1600": "新建草稿会话：侧栏草稿行无「会话操作」，右栏显示「目标与执行态待生成」占位",
+    "draft-right@2x": "右栏占位文案 2x 特写（发送第一条消息后生成目标与执行态）",
+    "pin-menu-left@2x": "侧栏菜单 2x：置顶/归档 与行顺序",
+    "pinned-left@2x": "置顶后侧栏菜单 2x：取消置顶",
+    "draft-left@2x": "草稿行 2x：无会话操作按钮"
+  }
+}

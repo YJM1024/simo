@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from 'vitest'
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { BroadcastChannel as NodeBroadcastChannel } from 'node:worker_threads'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Composer } from '../components'
 
@@ -17,6 +18,11 @@ function setup(overrides: Partial<React.ComponentProps<typeof Composer>> = {}) {
 }
 
 describe('Composer', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    localStorage.clear()
+  })
+
   it('renders placeholder, hint, disabled state and send error', () => {
     setup({ disabled: true, sendError: '网络错误' })
     expect(screen.getByPlaceholderText('给司墨发消息…')).toBeDisabled()
@@ -69,6 +75,31 @@ describe('Composer', () => {
     await user.click(screen.getByRole('button', { name: '发送' }))
     await vi.waitFor(() => expect(onSend).toHaveBeenCalledTimes(2))
     expect(input).toHaveValue('')
+  })
+
+  it('prefills the retry text and focuses the input', () => {
+    const props = { disabled: false, streaming: false, onSend: vi.fn().mockResolvedValue(undefined), onStop: vi.fn(), sendError: '' }
+    const { rerender } = render(<Composer {...props} />)
+    const input = screen.getByLabelText('消息输入框') as HTMLTextAreaElement
+    expect(input).toHaveValue('')
+    rerender(<Composer {...props} prefill={{ text: '触发失败的那句话', seq: 1 }} />)
+    expect(input).toHaveValue('触发失败的那句话')
+    expect(document.activeElement).toBe(input)
+  })
+
+  it('keeps the send-mode hint mounted and leaves visibility to focus/blur CSS', async () => {
+    const user = userEvent.setup()
+    setup()
+    const hint = screen.getByText('Enter 发送，Shift+Enter 换行')
+    expect(hint).toHaveClass('composer-send-mode-hint')
+    expect(hint).not.toHaveClass('is-visible')
+    await user.type(screen.getByLabelText('消息输入框'), '内容')
+    // A5：非空且失焦也必须隐藏；可见性只由 .composer-box 的聚焦/空悬停样式决定，组件不再按内容加类
+    expect(hint).not.toHaveClass('is-visible')
+    expect(hint).toHaveAttribute('aria-live', 'polite')
+    await user.tab()
+    expect(screen.getByLabelText('消息输入框')).not.toHaveFocus()
+    expect(hint).not.toHaveClass('is-visible')
   })
 
   it('shows sending state and prevents duplicate submits', async () => {
@@ -167,6 +198,78 @@ describe('Composer', () => {
     fireEvent.keyDown(input, { key: 'Enter', ctrlKey: true })
     expect(onSend).not.toHaveBeenCalled()
     expect(input).toBeDisabled()
+  })
+
+  it('receives the send mode another composer publishes over a real BroadcastChannel', async () => {
+    vi.stubGlobal('BroadcastChannel', NodeBroadcastChannel)
+    localStorage.clear()
+    const user = userEvent.setup()
+    const props = { disabled: false, streaming: false, onSend: vi.fn().mockResolvedValue(undefined), onStop: vi.fn(), sendError: '' }
+    const { container } = render(<><Composer {...props} /><Composer {...props} /></>)
+    const panels = [...container.querySelectorAll<HTMLElement>('.composer')]
+    expect(panels).toHaveLength(2)
+
+    await user.click(within(panels[0]).getByRole('button', { name: /切换发送方式/ }))
+
+    // 第二个 Composer 相当于另一个标签：只能靠通道收到变更，不会随第一个组件重渲染
+    await waitFor(() => {
+      expect(within(panels[1]).getByText('Enter 换行，Shift+Enter 发送')).toBeInTheDocument()
+    })
+    expect(within(panels[1]).getByRole('button', { name: /切换发送方式/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(panels[1]).getByRole('button', { name: /切换发送方式/ })).toHaveAccessibleName(/当前 Shift\+Enter 发送/)
+    expect(localStorage.getItem('simo.composer.sendMode')).toBe('shift-enter')
+  })
+
+  it('degrades without BroadcastChannel: no throw, still toggles, persists and follows storage events', async () => {
+    vi.stubGlobal('BroadcastChannel', undefined)
+    localStorage.clear()
+    const user = userEvent.setup()
+    const first = render(<Composer disabled={false} streaming={false} onSend={vi.fn()} onStop={vi.fn()} sendError="" />)
+    await user.click(screen.getByRole('button', { name: /切换发送方式/ }))
+    expect(screen.getByText('Enter 换行，Shift+Enter 发送')).toBeInTheDocument()
+    expect(localStorage.getItem('simo.composer.sendMode')).toBe('shift-enter')
+
+    // 没有 BroadcastChannel 时 storage 通道仍是可用退路（事件来自其他标签）
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: 'simo.composer.sendMode', newValue: 'enter' }))
+    })
+    expect(screen.getByText('Enter 发送，Shift+Enter 换行')).toBeInTheDocument()
+
+    first.unmount()
+    // 下次加载以持久化的发送模式为准（storage 事件本身不改写 localStorage）
+    render(<Composer disabled={false} streaming={false} onSend={vi.fn()} onStop={vi.fn()} sendError="" />)
+    expect(screen.getByText('Enter 换行，Shift+Enter 发送')).toBeInTheDocument()
+  })
+
+  it('still mounts and toggles when the BroadcastChannel constructor throws', async () => {
+    // 构造器存在但抛错（隐私模式、沙箱）与“不支持”走同一条降级路径
+    let constructs = 0
+    class ThrowingBroadcastChannel {
+      constructor(_name: string) {
+        constructs += 1
+        throw new DOMException('BroadcastChannel is not available', 'NotSupportedError')
+      }
+    }
+    vi.stubGlobal('BroadcastChannel', ThrowingBroadcastChannel)
+    localStorage.clear()
+    const user = userEvent.setup()
+    const { unmount } = render(<Composer disabled={false} streaming={false} onSend={vi.fn().mockResolvedValue(undefined)} onStop={vi.fn()} sendError="" />)
+
+    const toggle = screen.getByRole('button', { name: /切换发送方式/ })
+    expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    await user.click(toggle)
+    expect(screen.getByText('Enter 换行，Shift+Enter 发送')).toBeInTheDocument()
+    expect(localStorage.getItem('simo.composer.sendMode')).toBe('shift-enter')
+    // 挂载 effect 与 setMode 各尝试构造一次，证明走的是 try/catch 失败分支而非 undefined 分支
+    expect(constructs).toBeGreaterThanOrEqual(2)
+
+    // 通道不可用时 storage 事件仍是可用退路
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: 'simo.composer.sendMode', newValue: 'enter' }))
+    })
+    expect(screen.getByText('Enter 发送，Shift+Enter 换行')).toBeInTheDocument()
+
+    expect(() => unmount()).not.toThrow()
   })
 
   it('ignores Enter within 50ms after an IME composition ends, then accepts it', async () => {

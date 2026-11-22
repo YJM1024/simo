@@ -1,0 +1,139 @@
+{
+  "capturedAt": "2026-11-21T20:59:02+08:00",
+  "timezone": "Asia/Shanghai",
+  "url": "http://127.0.0.1:8787/",
+  "exe": "E:\\dsh_home\\workspaces\\agent\\backend\\simo-8787-2044.exe",
+  "exeBytes": 22029824,
+  "gitHead": "10270a37d3043b18ab408cca460498df14af72fd",
+  "health": {
+    "ok": true,
+    "ready": true,
+    "time": 1795265942753,
+    "checks": {
+      "db": "ok",
+      "modules": [
+        "sessions",
+        "chat",
+        "tasks",
+        "memory"
+      ]
+    }
+  },
+  "browser": "Chrome/157.0.8103.80",
+  "viewport1600": {
+    "title": "司墨",
+    "buildId": "mwqejb7f-61mh5",
+    "contextTitle": "主会话",
+    "counts": {
+      "msg": 52,
+      "tlBar": 52,
+      "session": 2
+    },
+    "rects": {
+      "sidebar": {
+        "x": 0,
+        "y": 0,
+        "w": 240,
+        "h": 976
+      },
+      "chat": {
+        "x": 240,
+        "y": 90,
+        "w": 1060,
+        "h": 886
+      },
+      "chatBody": {
+        "x": 240,
+        "y": 141,
+        "w": 1060,
+        "h": 663
+      },
+      "conversation": {
+        "x": 410,
+        "y": 153,
+        "w": 720,
+        "h": 663
+      },
+      "inspector": {
+        "x": 1300,
+        "y": 90,
+        "w": 300,
+        "h": 886
+      }
+    },
+    "overflowX": false,
+    "scrollWidth": 1600,
+    "innerWidth": 1600
+  },
+  "viewport1280": {
+    "bodyW": 1280,
+    "scrollW": 1280,
+    "innerW": 1280,
+    "overflowX": false,
+    "inspectorVisible": true,
+    "msg": 52
+  },
+  "timeline": {
+    "ok": true,
+    "index": 51,
+    "messageId": "msg-06a058e4ac4b8d95",
+    "msgRect": {
+      "x": 430,
+      "y": 639.453125,
+      "w": 680,
+      "h": 151.0625
+    },
+    "barRect": {
+      "x": 368,
+      "y": 635.484375,
+      "w": 20,
+      "h": 4
+    },
+    "convRect": {
+      "x": 410,
+      "y": 153,
+      "w": 720,
+      "h": 662.953125
+    },
+    "barColor": "rgb(111, 175, 142)",
+    "barHit": {
+      "w": 20,
+      "h": 4
+    },
+    "barAria": "司墨 · 主会话 · 02:56",
+    "msgBg": "rgb(255, 255, 255)",
+    "msgTag": "信息咨询",
+    "tooltip": {
+      "text": "司墨·主会话·信息咨询·02:56收到标识 `FINAL3-1794596208950`，与当前会话 goal 完全一致 —— 这是本轮的最终确认标记。\n\n- 未创建任务\n- 未触发后台操作\n- 会话内此前的标记（CONC1/CONC2、OFFLINE、FE009C）均仅为回显确认\n\n需要结束本轮，还是继续记录下一个标识？",
+      "state": "visible",
+      "x": 400,
+      "y": 590.484375,
+      "w": 236,
+      "h": 93.6875
+    },
+    "timelineRect": {
+      "x": 358,
+      "y": 153,
+      "w": 44,
+      "h": 662.953125
+    }
+  },
+  "console": {
+    "errorCount": 0,
+    "warningCount": 0,
+    "exceptionCount": 0,
+    "errors": [],
+    "warnings": [],
+    "exceptions": [],
+    "logEntries": [],
+    "httpErrors": []
+  },
+  "screenshots": {
+    "left1600": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2044-left-1600.png",
+    "mid1600": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2044-mid-1600.png",
+    "right1600": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2044-right-1600.png",
+    "full1280": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2044-full-1280.png",
+    "timelineCloseup": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2044-timeline-msg-closeup.png",
+    "timelineCloseup2x": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2044-timeline-msg-closeup@2x.png"
+  }
+}

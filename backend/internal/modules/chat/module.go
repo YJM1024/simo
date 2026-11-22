@@ -89,9 +89,16 @@ type Module struct {
 	perms *permissionState
 	reads *readGuard
 
+	// unread 持有所有 WS 连接的发送通道，用于与订阅无关的未读提示广播。
+	unread *unreadHub
+
 	eventCancel context.CancelFunc
 	eventUnsub  func()
 	eventWG     sync.WaitGroup
+
+	// unreadCancel/unreadUnsub 是未读广播的独立事件订阅（与 consumeTaskReports 互不阻塞）。
+	unreadCancel context.CancelFunc
+	unreadUnsub  func()
 
 	schedCancel context.CancelFunc
 	schedWG     sync.WaitGroup
@@ -156,6 +163,7 @@ func New(
 		runtimeCfg:       defaultRuntimeConfig,
 		perms:            newPermissionState(),
 		reads:            newReadGuard(),
+		unread:           newUnreadHub(),
 	}
 }
 
@@ -178,6 +186,7 @@ func (m *Module) Register(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/messages/{id}/correct", m.handleEditDisabled)
 	mux.HandleFunc("PATCH /api/messages/{id}", m.handleEditDisabled)
 	mux.HandleFunc("GET /api/sessions/{id}/files", m.handleSessionFiles)
+	mux.HandleFunc("POST /api/sessions/{id}/read", m.handleSessionRead)
 	mux.HandleFunc("GET /api/agents", m.handleAgents)
 	mux.HandleFunc("GET /api/stats", m.handleStats)
 	mux.HandleFunc("GET /api/metrics", m.handleMetrics)
@@ -226,6 +235,14 @@ func (m *Module) Start(ctx context.Context) error {
 		m.eventUnsub = unsub
 		m.eventWG.Add(1)
 		go m.consumeTaskReports(ch)
+
+		// 未读广播独立订阅：它要做 DB 游标查询，不能和任务汇报的落库串在一条 goroutine 上。
+		unreadCtx, unreadCancel := context.WithCancel(ctx)
+		unreadCh, unreadUnsub := m.events.Subscribe(unreadCtx)
+		m.unreadCancel = unreadCancel
+		m.unreadUnsub = unreadUnsub
+		m.eventWG.Add(1)
+		go m.consumeUnreadEvents(unreadCh)
 	}
 	m.startScheduler(ctx)
 	m.recoverStaleStreaming(ctx)
@@ -243,6 +260,12 @@ func (m *Module) Stop(ctx context.Context) error {
 	}
 	if m.eventUnsub != nil {
 		m.eventUnsub()
+	}
+	if m.unreadCancel != nil {
+		m.unreadCancel()
+	}
+	if m.unreadUnsub != nil {
+		m.unreadUnsub()
 	}
 	m.mu.Lock()
 	for _, active := range m.active {

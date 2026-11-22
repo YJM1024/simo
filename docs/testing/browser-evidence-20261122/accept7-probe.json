@@ -1,0 +1,127 @@
+{
+  "url": "http://127.0.0.1:8787/",
+  "insp": {
+    "session": "main",
+    "w": 300,
+    "h": 886,
+    "html": "<aside class=\"inspector\" aria-label=\"会话概览\" data-session=\"main\"><div class=\"insp-body\"><div class=\"insp-spec-status\"><b>进行中</b><span>rev 34</span></div><section class=\"insp-block\"><h3 class=\"insp-label\">目标</h3><p class=\"insp-text\">本会话未记录目标。</p></section><section class=\"insp-block\"><h3 class=\"insp-label\">输入</h3><p class=\"insp-text\">暂无输入约束。</p></section><section class=\"insp-block\"><div class=\"insp-head insp-head--tight\"><b>执行会话</b><span>共 10 · 本次 6</span></div><div class=\"exec-group \"><button type=\"button\" class=\"exec-head\" aria-expanded=\"false\"><span class=\"exec-toggle\">▸</span><span class=\"exec-name\">已完成</span><span class=\"exec-count\">3/6</span></button><div class=\"exec-list\"><button type=\"button\" class=\"exec-row task-row\" title=\"定位到相关消息\"><i class=\"exec-dot done\" aria-hidden=\"true\"></i><span class=\"exec-title\" title=\"汇总本周进展\">汇总本周进展</span><span class=\"exec-time\">21:25</span></button><button type=\"button\" class=\"exec-row task-row\" title=\"定位到相关消息\"><i class=\"exec-dot done\" aria-hidden=\"true\"></i><span class=\"exec-title\" title=\"整理风险清单\">整理风险清单</span><span class=\"exec-time\">21:25</span></button><button type=\"button\" class=\"exec-row task-row\" title=\"定位到相关消息\"><i class=\"exec-dot done\" aria-hi"
+  },
+  "bodyText": "进行中\nrev 34\n目标\n\n本会话未记录目标。\n\n输入\n\n暂无输入约束。\n\n执行会话\n共 10 · 本次 6\n▸\n已完成\n3/6\n汇总本周进展\n21:25\n整理风险清单\n21:25\n生成下周计划\n21:26\n▸\n进行中\n0/0\n·\n暂无进行中任务\n任务开始后会出现在这里。\n▸\n未开始\n3/4\n生成周报初稿\n21:32\n等待确认交付格式\n21:28\n失败发送保留测试\n00:10\n交付物\n1\nweekly-report.md\n21:27\n下载",
+  "groups": [
+    {
+      "name": "已完成",
+      "count": "3/6",
+      "rows": 3,
+      "expanded": false
+    },
+    {
+      "name": "进行中",
+      "count": "0/0",
+      "rows": 0,
+      "expanded": false
+    },
+    {
+      "name": "未开始",
+      "count": "3/4",
+      "rows": 3,
+      "expanded": false
+    }
+  ],
+  "taskRows": 6,
+  "allRows": 7,
+  "blocks": 4,
+  "loading": 0,
+  "empty": 1,
+  "rows": [
+    {
+      "title": null,
+      "cls": "session-row  is-active ",
+      "text": "主会话",
+      "depth": "0"
+    },
+    {
+      "title": null,
+      "cls": "session-row child  ",
+      "text": "验收序B",
+      "depth": "1"
+    },
+    {
+      "title": null,
+      "cls": "session-row child  ",
+      "text": "验收序A",
+      "depth": "1"
+    },
+    {
+      "title": null,
+      "cls": "session-row child  ",
+      "text": "新会话",
+      "depth": "1"
+    },
+    {
+      "title": null,
+      "cls": "session-row child  ",
+      "text": "regress-error-mwqnboie",
+      "depth": "1"
+    },
+    {
+      "title": null,
+      "cls": "session-row child  ",
+      "text": "regress-error-mwqnb5p4",
+      "depth": "1"
+    },
+    {
+      "title": null,
+      "cls": "session-row child  ",
+      "text": "regress-arch-mwqn98a8",
+      "depth": "1"
+    },
+    {
+      "title": null,
+      "cls": "session-row child  ",
+      "text": "probe-archive-mwqn8oz1",
+      "depth": "1"
+    },
+    {
+      "title": null,
+      "cls": "session-row child  ",
+      "text": "验收未读V",
+      "depth": "1"
+    },
+    {
+      "title": null,
+      "cls": "session-row child  ",
+      "text": "验收未读U",
+      "depth": "1"
+    },
+    {
+      "title": null,
+      "cls": "session-row child  ",
+      "text": "验收序C",
+      "depth": "1"
+    },
+    {
+      "title": null,
+      "cls": "session-row child  ",
+      "text": "研究员",
+      "depth": "1"
+    },
+    {
+      "title": null,
+      "cls": "session-row child  ",
+      "text": "验收链L2",
+      "depth": "2"
+    },
+    {
+      "title": null,
+      "cls": "session-row child  ",
+      "text": "验收链L3",
+      "depth": "3"
+    },
+    {
+      "title": null,
+      "cls": "session-row child  ",
+      "text": "验收链L4",
+      "depth": "4"
+    }
+  ]
+}

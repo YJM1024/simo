@@ -1,8 +1,13 @@
 import '@testing-library/jest-dom/vitest'
-import { afterEach, vi } from 'vitest'
+import { afterEach, beforeEach, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
+import { invalidateSessionListCache, invalidateSpecProjectionCache } from '../api'
 
 afterEach(() => cleanup())
+
+// 会话列表与投影的 ETag 缓存都是模块级的：每个用例开始都清一次，
+// 避免上一个用例的标签让新快照的请求命中 304。
+beforeEach(() => { invalidateSessionListCache(); invalidateSpecProjectionCache() })
 
 class ResizeObserverStub {
   observe(): void {}

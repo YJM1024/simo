@@ -1,0 +1,2487 @@
+{
+  "generatedAt": "2026-11-22T04:34:52.020Z",
+  "url": "http://127.0.0.1:8787/",
+  "browser": "Chrome/157.0.8103.80",
+  "cdp": "127.0.0.1:9223",
+  "ready": {
+    "state": "complete",
+    "bars": 75,
+    "msgs": 75,
+    "title": "对话",
+    "loading": false
+  },
+  "viewport": {
+    "w": 1600,
+    "h": 1000,
+    "dpr": 1,
+    "scrollW": 1600,
+    "scrollH": 1000
+  },
+  "pointer": {
+    "fine": true,
+    "coarse": false,
+    "anyFine": true
+  },
+  "page": {
+    "timeline": {
+      "x": 358,
+      "y": 153,
+      "w": 44,
+      "h": 662.953125,
+      "left": 358,
+      "right": 402,
+      "top": 153,
+      "bottom": 815.953125
+    },
+    "timelineCss": {
+      "width": "44px",
+      "overflowX": "hidden",
+      "overflowY": "auto",
+      "isolation": "isolate",
+      "position": "absolute",
+      "zIndex": "auto"
+    },
+    "scroller": {
+      "x": 410,
+      "y": 153,
+      "w": 720,
+      "h": 662.953125,
+      "left": 410,
+      "right": 1130,
+      "top": 153,
+      "bottom": 815.953125,
+      "scrollTop": 6351,
+      "scrollHeight": 7014,
+      "clientHeight": 663
+    },
+    "barCount": 75,
+    "msgCount": 75,
+    "track": null,
+    "groups": 1
+  },
+  "bars": [
+    {
+      "index": 1,
+      "label": "司墨 · 主会话 · 21:22",
+      "role": "tl-bar is-agent ",
+      "rect": {
+        "x": 368,
+        "y": 266.484375,
+        "w": 20,
+        "h": 4,
+        "left": 368,
+        "right": 388,
+        "top": 266.484375,
+        "bottom": 270.484375,
+        "cx": 378,
+        "cy": 268.484375
+      },
+      "after": {
+        "w": "48px",
+        "h": "44px",
+        "left": "10px",
+        "top": "2px",
+        "zIndex": "-1",
+        "content": "\"\""
+      },
+      "timeline": {
+        "x": 358,
+        "w": 44,
+        "left": 358,
+        "right": 402,
+        "top": 153,
+        "bottom": 815.953125
+      },
+      "center": {
+        "x": 378,
+        "y": 268.48,
+        "tag": "BUTTON",
+        "cls": "tl-bar is-agent ",
+        "isSelf": true,
+        "inSelf": true,
+        "ownerIndex": 1,
+        "ownerLabel": "司墨 · 主会话 · 21:22",
+        "stack": [
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "ownerIndex": 1
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "ownerIndex": -1
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "ownerIndex": -1
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "ownerIndex": 4
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "ownerIndex": 3
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "ownerIndex": 2
+          }
+        ]
+      },
+      "corners": [
+        {
+          "dx": -24,
+          "dy": -22,
+          "x": 354,
+          "y": 246.48,
+          "tag": "DIV",
+          "cls": "chat-body",
+          "isSelf": false,
+          "inSelf": false,
+          "ownerIndex": -1,
+          "ownerLabel": null,
+          "stack": [
+            {
+              "tag": "DIV",
+              "cls": "chat-body",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat-col",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "SECTION",
+              "cls": "page-chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "main",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "app",
+              "ownerIndex": -1
+            }
+          ]
+        },
+        {
+          "dx": 24,
+          "dy": -22,
+          "x": 402,
+          "y": 246.48,
+          "tag": "DIV",
+          "cls": "chat-body",
+          "isSelf": false,
+          "inSelf": false,
+          "ownerIndex": -1,
+          "ownerLabel": null,
+          "stack": [
+            {
+              "tag": "DIV",
+              "cls": "chat-body",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat-col",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "SECTION",
+              "cls": "page-chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "main",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "app",
+              "ownerIndex": -1
+            }
+          ]
+        },
+        {
+          "dx": -24,
+          "dy": 22,
+          "x": 354,
+          "y": 290.48,
+          "tag": "DIV",
+          "cls": "chat-body",
+          "isSelf": false,
+          "inSelf": false,
+          "ownerIndex": -1,
+          "ownerLabel": null,
+          "stack": [
+            {
+              "tag": "DIV",
+              "cls": "chat-body",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat-col",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "SECTION",
+              "cls": "page-chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "main",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "app",
+              "ownerIndex": -1
+            }
+          ]
+        },
+        {
+          "dx": 24,
+          "dy": 22,
+          "x": 402,
+          "y": 290.48,
+          "tag": "DIV",
+          "cls": "chat-body",
+          "isSelf": false,
+          "inSelf": false,
+          "ownerIndex": -1,
+          "ownerLabel": null,
+          "stack": [
+            {
+              "tag": "DIV",
+              "cls": "chat-body",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat-col",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "SECTION",
+              "cls": "page-chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "main",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "app",
+              "ownerIndex": -1
+            }
+          ]
+        }
+      ],
+      "inner44": [
+        {
+          "dx": -21,
+          "dy": -21,
+          "x": 357,
+          "y": 247.48,
+          "tag": "DIV",
+          "cls": "chat-body",
+          "isSelf": false,
+          "inSelf": false,
+          "ownerIndex": -1,
+          "ownerLabel": null,
+          "stack": [
+            {
+              "tag": "DIV",
+              "cls": "chat-body",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat-col",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "SECTION",
+              "cls": "page-chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "main",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "app",
+              "ownerIndex": -1
+            }
+          ]
+        },
+        {
+          "dx": 21,
+          "dy": -21,
+          "x": 399,
+          "y": 247.48,
+          "tag": "BUTTON",
+          "cls": "tl-bar is-agent ",
+          "isSelf": true,
+          "inSelf": true,
+          "ownerIndex": 1,
+          "ownerLabel": "司墨 · 主会话 · 21:22",
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 1
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 0
+            },
+            {
+              "tag": "NAV",
+              "cls": "timeline timeline-groups",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat-body",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat-col",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat",
+              "ownerIndex": -1
+            }
+          ]
+        },
+        {
+          "dx": -21,
+          "dy": 21,
+          "x": 357,
+          "y": 289.48,
+          "tag": "DIV",
+          "cls": "chat-body",
+          "isSelf": false,
+          "inSelf": false,
+          "ownerIndex": -1,
+          "ownerLabel": null,
+          "stack": [
+            {
+              "tag": "DIV",
+              "cls": "chat-body",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat-col",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "SECTION",
+              "cls": "page-chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "main",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "app",
+              "ownerIndex": -1
+            }
+          ]
+        },
+        {
+          "dx": 21,
+          "dy": 21,
+          "x": 399,
+          "y": 289.48,
+          "tag": "BUTTON",
+          "cls": "tl-bar is-user ",
+          "isSelf": false,
+          "inSelf": false,
+          "ownerIndex": 8,
+          "ownerLabel": "你 · 主会话 · 21:42",
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 8
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 7
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 6
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 5
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 4
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 3
+            }
+          ]
+        }
+      ],
+      "selfExtent": {
+        "x": {
+          "neg": 10.5,
+          "pos": 9.5,
+          "total": 20
+        },
+        "y": {
+          "neg": 2.5,
+          "pos": 1.5,
+          "total": 4
+        }
+      }
+    },
+    {
+      "index": 37,
+      "label": "司墨 · 主会话 · 01:22",
+      "role": "tl-bar is-agent ",
+      "rect": {
+        "x": 368.328125,
+        "y": 482.484375,
+        "w": 20,
+        "h": 4,
+        "left": 368.328125,
+        "right": 388.328125,
+        "top": 482.484375,
+        "bottom": 486.484375,
+        "cx": 378.328125,
+        "cy": 484.484375
+      },
+      "after": {
+        "w": "48px",
+        "h": "44px",
+        "left": "10px",
+        "top": "2px",
+        "zIndex": "-1",
+        "content": "\"\""
+      },
+      "timeline": {
+        "x": 358,
+        "w": 44,
+        "left": 358,
+        "right": 402,
+        "top": 153,
+        "bottom": 815.953125
+      },
+      "center": {
+        "x": 378.33,
+        "y": 484.48,
+        "tag": "BUTTON",
+        "cls": "tl-bar is-agent ",
+        "isSelf": true,
+        "inSelf": true,
+        "ownerIndex": 37,
+        "ownerLabel": "司墨 · 主会话 · 01:22",
+        "stack": [
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "ownerIndex": 37
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "ownerIndex": -1
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "ownerIndex": -1
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "ownerIndex": 40
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "ownerIndex": 39
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "ownerIndex": 38
+          }
+        ]
+      },
+      "corners": [
+        {
+          "dx": -24,
+          "dy": -22,
+          "x": 354.33,
+          "y": 462.48,
+          "tag": "DIV",
+          "cls": "chat-body",
+          "isSelf": false,
+          "inSelf": false,
+          "ownerIndex": -1,
+          "ownerLabel": null,
+          "stack": [
+            {
+              "tag": "DIV",
+              "cls": "chat-body",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat-col",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "SECTION",
+              "cls": "page-chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "main",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "app",
+              "ownerIndex": -1
+            }
+          ]
+        },
+        {
+          "dx": 24,
+          "dy": -22,
+          "x": 402.33,
+          "y": 462.48,
+          "tag": "DIV",
+          "cls": "chat-body",
+          "isSelf": false,
+          "inSelf": false,
+          "ownerIndex": -1,
+          "ownerLabel": null,
+          "stack": [
+            {
+              "tag": "DIV",
+              "cls": "chat-body",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat-col",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "SECTION",
+              "cls": "page-chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "main",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "app",
+              "ownerIndex": -1
+            }
+          ]
+        },
+        {
+          "dx": -24,
+          "dy": 22,
+          "x": 354.33,
+          "y": 506.48,
+          "tag": "DIV",
+          "cls": "chat-body",
+          "isSelf": false,
+          "inSelf": false,
+          "ownerIndex": -1,
+          "ownerLabel": null,
+          "stack": [
+            {
+              "tag": "DIV",
+              "cls": "chat-body",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat-col",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "SECTION",
+              "cls": "page-chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "main",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "app",
+              "ownerIndex": -1
+            }
+          ]
+        },
+        {
+          "dx": 24,
+          "dy": 22,
+          "x": 402.33,
+          "y": 506.48,
+          "tag": "DIV",
+          "cls": "chat-body",
+          "isSelf": false,
+          "inSelf": false,
+          "ownerIndex": -1,
+          "ownerLabel": null,
+          "stack": [
+            {
+              "tag": "DIV",
+              "cls": "chat-body",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat-col",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "SECTION",
+              "cls": "page-chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "main",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "app",
+              "ownerIndex": -1
+            }
+          ]
+        }
+      ],
+      "inner44": [
+        {
+          "dx": -21,
+          "dy": -21,
+          "x": 357.33,
+          "y": 463.48,
+          "tag": "BUTTON",
+          "cls": "tl-bar is-agent ",
+          "isSelf": true,
+          "inSelf": true,
+          "ownerIndex": 37,
+          "ownerLabel": "司墨 · 主会话 · 01:22",
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 37
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 36
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 35
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 34
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 33
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 32
+            }
+          ]
+        },
+        {
+          "dx": 21,
+          "dy": -21,
+          "x": 399.33,
+          "y": 463.48,
+          "tag": "BUTTON",
+          "cls": "tl-bar is-agent ",
+          "isSelf": true,
+          "inSelf": true,
+          "ownerIndex": 37,
+          "ownerLabel": "司墨 · 主会话 · 01:22",
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 37
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 36
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 35
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 34
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 33
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 32
+            }
+          ]
+        },
+        {
+          "dx": -21,
+          "dy": 21,
+          "x": 357.33,
+          "y": 505.48,
+          "tag": "BUTTON",
+          "cls": "tl-bar is-user ",
+          "isSelf": false,
+          "inSelf": false,
+          "ownerIndex": 44,
+          "ownerLabel": "你 · 主会话 · 02:55",
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 44
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 43
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 42
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 41
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 40
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 39
+            }
+          ]
+        },
+        {
+          "dx": 21,
+          "dy": 21,
+          "x": 399.33,
+          "y": 505.48,
+          "tag": "BUTTON",
+          "cls": "tl-bar is-user ",
+          "isSelf": false,
+          "inSelf": false,
+          "ownerIndex": 44,
+          "ownerLabel": "你 · 主会话 · 02:55",
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 44
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 43
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 42
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 41
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 40
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 39
+            }
+          ]
+        }
+      ],
+      "selfExtent": {
+        "x": {
+          "neg": 10.5,
+          "pos": 9.5,
+          "total": 20
+        },
+        "y": {
+          "neg": 2.5,
+          "pos": 1.5,
+          "total": 4
+        }
+      }
+    },
+    {
+      "index": 73,
+      "label": "你 · 主会话 · 01:54",
+      "role": "tl-bar is-user ",
+      "rect": {
+        "x": 368.9375,
+        "y": 698.484375,
+        "w": 20,
+        "h": 4,
+        "left": 368.9375,
+        "right": 388.9375,
+        "top": 698.484375,
+        "bottom": 702.484375,
+        "cx": 378.9375,
+        "cy": 700.484375
+      },
+      "after": {
+        "w": "48px",
+        "h": "44px",
+        "left": "10px",
+        "top": "2px",
+        "zIndex": "-1",
+        "content": "\"\""
+      },
+      "timeline": {
+        "x": 358,
+        "w": 44,
+        "left": 358,
+        "right": 402,
+        "top": 153,
+        "bottom": 815.953125
+      },
+      "center": {
+        "x": 378.94,
+        "y": 700.48,
+        "tag": "BUTTON",
+        "cls": "tl-bar is-user ",
+        "isSelf": true,
+        "inSelf": true,
+        "ownerIndex": 73,
+        "ownerLabel": "你 · 主会话 · 01:54",
+        "stack": [
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "ownerIndex": 73
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "ownerIndex": -1
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "ownerIndex": -1
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "ownerIndex": 74
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "ownerIndex": 73
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "ownerIndex": 72
+          }
+        ]
+      },
+      "corners": [
+        {
+          "dx": -24,
+          "dy": -22,
+          "x": 354.94,
+          "y": 678.48,
+          "tag": "DIV",
+          "cls": "chat-body",
+          "isSelf": false,
+          "inSelf": false,
+          "ownerIndex": -1,
+          "ownerLabel": null,
+          "stack": [
+            {
+              "tag": "DIV",
+              "cls": "chat-body",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat-col",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "SECTION",
+              "cls": "page-chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "main",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "app",
+              "ownerIndex": -1
+            }
+          ]
+        },
+        {
+          "dx": 24,
+          "dy": -22,
+          "x": 402.94,
+          "y": 678.48,
+          "tag": "DIV",
+          "cls": "chat-body",
+          "isSelf": false,
+          "inSelf": false,
+          "ownerIndex": -1,
+          "ownerLabel": null,
+          "stack": [
+            {
+              "tag": "DIV",
+              "cls": "chat-body",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat-col",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "SECTION",
+              "cls": "page-chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "main",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "app",
+              "ownerIndex": -1
+            }
+          ]
+        },
+        {
+          "dx": -24,
+          "dy": 22,
+          "x": 354.94,
+          "y": 722.48,
+          "tag": "DIV",
+          "cls": "chat-body",
+          "isSelf": false,
+          "inSelf": false,
+          "ownerIndex": -1,
+          "ownerLabel": null,
+          "stack": [
+            {
+              "tag": "DIV",
+              "cls": "chat-body",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat-col",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "SECTION",
+              "cls": "page-chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "main",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "app",
+              "ownerIndex": -1
+            }
+          ]
+        },
+        {
+          "dx": 24,
+          "dy": 22,
+          "x": 402.94,
+          "y": 722.48,
+          "tag": "DIV",
+          "cls": "chat-body",
+          "isSelf": false,
+          "inSelf": false,
+          "ownerIndex": -1,
+          "ownerLabel": null,
+          "stack": [
+            {
+              "tag": "DIV",
+              "cls": "chat-body",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat-col",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "SECTION",
+              "cls": "page-chat",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "main",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "app",
+              "ownerIndex": -1
+            }
+          ]
+        }
+      ],
+      "inner44": [
+        {
+          "dx": -21,
+          "dy": -21,
+          "x": 357.94,
+          "y": 679.48,
+          "tag": "BUTTON",
+          "cls": "tl-bar is-user ",
+          "isSelf": true,
+          "inSelf": true,
+          "ownerIndex": 73,
+          "ownerLabel": "你 · 主会话 · 01:54",
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 73
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 72
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 71
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 70
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 69
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent is-current",
+              "ownerIndex": 68
+            }
+          ]
+        },
+        {
+          "dx": 21,
+          "dy": -21,
+          "x": 399.94,
+          "y": 679.48,
+          "tag": "BUTTON",
+          "cls": "tl-bar is-user ",
+          "isSelf": true,
+          "inSelf": true,
+          "ownerIndex": 73,
+          "ownerLabel": "你 · 主会话 · 01:54",
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 73
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 72
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 71
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 70
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 69
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent is-current",
+              "ownerIndex": 68
+            }
+          ]
+        },
+        {
+          "dx": -21,
+          "dy": 21,
+          "x": 357.94,
+          "y": 721.48,
+          "tag": "BUTTON",
+          "cls": "tl-bar is-agent ",
+          "isSelf": false,
+          "inSelf": false,
+          "ownerIndex": 74,
+          "ownerLabel": "司墨 · 主会话 · 01:54",
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 74
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 73
+            },
+            {
+              "tag": "NAV",
+              "cls": "timeline timeline-groups",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat-body",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat-col",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat",
+              "ownerIndex": -1
+            }
+          ]
+        },
+        {
+          "dx": 21,
+          "dy": 21,
+          "x": 399.94,
+          "y": 721.48,
+          "tag": "BUTTON",
+          "cls": "tl-bar is-agent ",
+          "isSelf": false,
+          "inSelf": false,
+          "ownerIndex": 74,
+          "ownerLabel": "司墨 · 主会话 · 01:54",
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-agent ",
+              "ownerIndex": 74
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "tl-bar is-user ",
+              "ownerIndex": 73
+            },
+            {
+              "tag": "NAV",
+              "cls": "timeline timeline-groups",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat-body",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat-col",
+              "ownerIndex": -1
+            },
+            {
+              "tag": "DIV",
+              "cls": "chat",
+              "ownerIndex": -1
+            }
+          ]
+        }
+      ],
+      "selfExtent": {
+        "x": {
+          "neg": 10.5,
+          "pos": 9.5,
+          "total": 20
+        },
+        "y": {
+          "neg": 2.5,
+          "pos": 1.5,
+          "total": 4
+        }
+      }
+    }
+  ],
+  "hover": {
+    "exists": true,
+    "state": "visible",
+    "rect": {
+      "x": 400,
+      "y": 437.484375,
+      "w": 236,
+      "h": 93.6875
+    },
+    "text": "司墨·主会话·信息咨询·01:22（M2 Mock 模型）收到你的消息：多标签B-only-1794504169786。真实模型在 -model real / SIMO_LLM=deepseek 时启用。"
+  },
+  "screenshots": {
+    "timelineHover": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\browser-evidence-20261122\\ac007-01-timeline-hover-1600.png",
+    "afterClick": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\browser-evidence-20261122\\ac007-02-after-click-1600.png",
+    "fullpage1280": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\browser-evidence-20261122\\ac007-03-fullpage-1280.png"
+  },
+  "click": {
+    "barIndex": 37,
+    "barLabel": "司墨 · 主会话 · 01:22",
+    "point": {
+      "x": 398.328125,
+      "y": 502.484375
+    },
+    "preHit": {
+      "tag": "BUTTON",
+      "cls": "tl-bar is-agent ",
+      "ownerIndex": 43,
+      "ownerLabel": "司墨 · 主会话 · 02:54"
+    },
+    "before": {
+      "scrollTop": 6351,
+      "activeIndex": 68
+    },
+    "events": [
+      {
+        "type": "pointerdown",
+        "ownerIndex": 43,
+        "ownerLabel": "司墨 · 主会话 · 02:54",
+        "tag": "BUTTON"
+      },
+      {
+        "type": "click",
+        "ownerIndex": 43,
+        "ownerLabel": "司墨 · 主会话 · 02:54",
+        "tag": "BUTTON"
+      }
+    ],
+    "after": {
+      "scrollTop": 3763,
+      "activeIndex": 43,
+      "activeLabel": "司墨 · 主会话 · 02:54",
+      "topMessage": {
+        "id": "msg-903d4e6c0b7616fa",
+        "indexInDom": 43,
+        "text": "墨司墨·信息咨询·02:54复制收到标识 FE009C-179459607678",
+        "top": 0.203125
+      }
+    },
+    "midTooltip": {
+      "exists": true,
+      "state": "visible",
+      "rect": {
+        "x": 400,
+        "y": 437.484375,
+        "w": 236,
+        "h": 93.6875
+      },
+      "text": "司墨·主会话·信息咨询·01:22（M2 Mock 模型）收到你的消息：多标签B-only-1794504169786。真实模型在 -model real / SIMO_LLM=deepseek 时启用。"
+    },
+    "deviation": 6
+  },
+  "at1280": {
+    "viewport": {
+      "w": 1280,
+      "h": 1000
+    },
+    "timeline": {
+      "x": 260,
+      "w": 44
+    },
+    "bar": {
+      "w": 20,
+      "h": 4
+    },
+    "after": {
+      "w": "48px",
+      "h": "44px"
+    },
+    "corners": [
+      {
+        "dx": -24,
+        "dy": -22,
+        "tag": "DIV",
+        "ownerIndex": -1,
+        "isSelf": false
+      },
+      {
+        "dx": 24,
+        "dy": -22,
+        "tag": "DIV",
+        "ownerIndex": -1,
+        "isSelf": false
+      },
+      {
+        "dx": -24,
+        "dy": 22,
+        "tag": "DIV",
+        "ownerIndex": -1,
+        "isSelf": false
+      },
+      {
+        "dx": 24,
+        "dy": 22,
+        "tag": "DIV",
+        "ownerIndex": -1,
+        "isSelf": false
+      }
+    ]
+  },
+  "finishedAt": "2026-11-22T04:34:55.482Z",
+  "supplement": {
+    "at": "2026-11-22T04:35:45.190Z",
+    "note": "44×44 名义命中区（±21px 网格，步长 7px）内 elementFromPoint 归属统计；中心点真实点击对照",
+    "grid": {
+      "barIndex": 37,
+      "label": "司墨 · 主会话 · 01:22",
+      "cx": 378.296875,
+      "cy": 484.484375,
+      "rows": [
+        [
+          {
+            "dx": -21,
+            "dy": -21,
+            "ownerIndex": 37,
+            "state": "self",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": -14,
+            "dy": -21,
+            "ownerIndex": 37,
+            "state": "self",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": -7,
+            "dy": -21,
+            "ownerIndex": -1,
+            "state": "none",
+            "tag": "DIV"
+          },
+          {
+            "dx": 0,
+            "dy": -21,
+            "ownerIndex": -1,
+            "state": "none",
+            "tag": "DIV"
+          },
+          {
+            "dx": 7,
+            "dy": -21,
+            "ownerIndex": -1,
+            "state": "none",
+            "tag": "DIV"
+          },
+          {
+            "dx": 14,
+            "dy": -21,
+            "ownerIndex": 37,
+            "state": "self",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": 21,
+            "dy": -21,
+            "ownerIndex": 37,
+            "state": "self",
+            "tag": "BUTTON"
+          }
+        ],
+        [
+          {
+            "dx": -21,
+            "dy": -14,
+            "ownerIndex": 38,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": -14,
+            "dy": -14,
+            "ownerIndex": 38,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": -7,
+            "dy": -14,
+            "ownerIndex": 35,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": 0,
+            "dy": -14,
+            "ownerIndex": 35,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": 7,
+            "dy": -14,
+            "ownerIndex": 35,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": 14,
+            "dy": -14,
+            "ownerIndex": 38,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": 21,
+            "dy": -14,
+            "ownerIndex": 38,
+            "state": "bar",
+            "tag": "BUTTON"
+          }
+        ],
+        [
+          {
+            "dx": -21,
+            "dy": -7,
+            "ownerIndex": 39,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": -14,
+            "dy": -7,
+            "ownerIndex": 39,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": -7,
+            "dy": -7,
+            "ownerIndex": 36,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": 0,
+            "dy": -7,
+            "ownerIndex": 36,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": 7,
+            "dy": -7,
+            "ownerIndex": 36,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": 14,
+            "dy": -7,
+            "ownerIndex": 39,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": 21,
+            "dy": -7,
+            "ownerIndex": 39,
+            "state": "bar",
+            "tag": "BUTTON"
+          }
+        ],
+        [
+          {
+            "dx": -21,
+            "dy": 0,
+            "ownerIndex": 40,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": -14,
+            "dy": 0,
+            "ownerIndex": 40,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": -7,
+            "dy": 0,
+            "ownerIndex": 37,
+            "state": "self",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": 0,
+            "dy": 0,
+            "ownerIndex": 37,
+            "state": "self",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": 7,
+            "dy": 0,
+            "ownerIndex": 37,
+            "state": "self",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": 14,
+            "dy": 0,
+            "ownerIndex": 40,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": 21,
+            "dy": 0,
+            "ownerIndex": 40,
+            "state": "bar",
+            "tag": "BUTTON"
+          }
+        ],
+        [
+          {
+            "dx": -21,
+            "dy": 7,
+            "ownerIndex": 41,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": -14,
+            "dy": 7,
+            "ownerIndex": 41,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": -7,
+            "dy": 7,
+            "ownerIndex": 38,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": 0,
+            "dy": 7,
+            "ownerIndex": 38,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": 7,
+            "dy": 7,
+            "ownerIndex": 38,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": 14,
+            "dy": 7,
+            "ownerIndex": 41,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": 21,
+            "dy": 7,
+            "ownerIndex": 41,
+            "state": "bar",
+            "tag": "BUTTON"
+          }
+        ],
+        [
+          {
+            "dx": -21,
+            "dy": 14,
+            "ownerIndex": 43,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": -14,
+            "dy": 14,
+            "ownerIndex": 43,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": -7,
+            "dy": 14,
+            "ownerIndex": -1,
+            "state": "none",
+            "tag": "DIV"
+          },
+          {
+            "dx": 0,
+            "dy": 14,
+            "ownerIndex": -1,
+            "state": "none",
+            "tag": "DIV"
+          },
+          {
+            "dx": 7,
+            "dy": 14,
+            "ownerIndex": -1,
+            "state": "none",
+            "tag": "DIV"
+          },
+          {
+            "dx": 14,
+            "dy": 14,
+            "ownerIndex": 43,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": 21,
+            "dy": 14,
+            "ownerIndex": 43,
+            "state": "bar",
+            "tag": "BUTTON"
+          }
+        ],
+        [
+          {
+            "dx": -21,
+            "dy": 21,
+            "ownerIndex": 44,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": -14,
+            "dy": 21,
+            "ownerIndex": 44,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": -7,
+            "dy": 21,
+            "ownerIndex": -1,
+            "state": "none",
+            "tag": "DIV"
+          },
+          {
+            "dx": 0,
+            "dy": 21,
+            "ownerIndex": -1,
+            "state": "none",
+            "tag": "DIV"
+          },
+          {
+            "dx": 7,
+            "dy": 21,
+            "ownerIndex": -1,
+            "state": "none",
+            "tag": "DIV"
+          },
+          {
+            "dx": 14,
+            "dy": 21,
+            "ownerIndex": 44,
+            "state": "bar",
+            "tag": "BUTTON"
+          },
+          {
+            "dx": 21,
+            "dy": 21,
+            "ownerIndex": 44,
+            "state": "bar",
+            "tag": "BUTTON"
+          }
+        ]
+      ],
+      "counts": {
+        "self": 7,
+        "other": 33,
+        "none": 9,
+        "total": 49
+      }
+    },
+    "centerClick": {
+      "activeIndex": 37,
+      "activeLabel": "司墨 · 主会话 · 01:22",
+      "scrollTop": 3255,
+      "topMessage": {
+        "id": "msg-0e4a594577d612d7",
+        "indexInDom": 37,
+        "top": 0.078125
+      }
+    },
+    "centerClickDeviation": 0,
+    "gridRenderedAt": "Chrome/157.0.8103.80"
+  },
+  "occlusion": {
+    "at": "2026-11-22T04:36:53.243Z",
+    "browser": "Chrome/157.0.8103.80",
+    "barIndex": 37,
+    "bar": {
+      "x": 368.59375,
+      "y": 482.484375,
+      "w": 20,
+      "h": 4,
+      "cx": 378.59375,
+      "cy": 484.484375
+    },
+    "track": {
+      "x": 368.59375,
+      "y": 260.484375,
+      "w": 22.8125,
+      "h": 448
+    },
+    "session": {
+      "x": 368.59375,
+      "y": 260.484375,
+      "w": 22.8125,
+      "h": 448
+    },
+    "timeline": {
+      "left": 358,
+      "right": 402
+    },
+    "probes": [
+      {
+        "dx": 0,
+        "dy": -21,
+        "x": 378.59375,
+        "y": 463.484375,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "ownerIndex": -1
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "ownerIndex": -1
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "id": null,
+            "ownerIndex": 37
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 36
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "id": null,
+            "ownerIndex": 35
+          }
+        ],
+        "covers": [
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37
+        ],
+        "topOwner": -1
+      },
+      {
+        "dx": -14,
+        "dy": -21,
+        "x": 364.59375,
+        "y": 463.484375,
+        "stack": [
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "id": null,
+            "ownerIndex": 37
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 36
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "id": null,
+            "ownerIndex": 35
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 34
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "id": null,
+            "ownerIndex": 33
+          }
+        ],
+        "covers": [
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37
+        ],
+        "topOwner": 37
+      },
+      {
+        "dx": 14,
+        "dy": -21,
+        "x": 392.59375,
+        "y": 463.484375,
+        "stack": [
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "id": null,
+            "ownerIndex": 37
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 36
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "id": null,
+            "ownerIndex": 35
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 34
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "id": null,
+            "ownerIndex": 33
+          }
+        ],
+        "covers": [
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37
+        ],
+        "topOwner": 37
+      },
+      {
+        "dx": 0,
+        "dy": -18,
+        "x": 378.59375,
+        "y": 466.484375,
+        "stack": [
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 34
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "ownerIndex": -1
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "ownerIndex": -1
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "id": null,
+            "ownerIndex": 37
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 36
+          }
+        ],
+        "covers": [
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37
+        ],
+        "topOwner": 34
+      },
+      {
+        "dx": 0,
+        "dy": -6,
+        "x": 378.59375,
+        "y": 478.484375,
+        "stack": [
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 36
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "ownerIndex": -1
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "ownerIndex": -1
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "id": null,
+            "ownerIndex": 39
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 38
+          }
+        ],
+        "covers": [
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39
+        ],
+        "topOwner": 36
+      },
+      {
+        "dx": -14,
+        "dy": 0,
+        "x": 364.59375,
+        "y": 484.484375,
+        "stack": [
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 40
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "id": null,
+            "ownerIndex": 39
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 38
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "id": null,
+            "ownerIndex": 37
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 36
+          }
+        ],
+        "covers": [
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40
+        ],
+        "topOwner": 40
+      },
+      {
+        "dx": 14,
+        "dy": 0,
+        "x": 392.59375,
+        "y": 484.484375,
+        "stack": [
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 40
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "id": null,
+            "ownerIndex": 39
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 38
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "id": null,
+            "ownerIndex": 37
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 36
+          }
+        ],
+        "covers": [
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40
+        ],
+        "topOwner": 40
+      },
+      {
+        "dx": 0,
+        "dy": 18,
+        "x": 378.59375,
+        "y": 502.484375,
+        "stack": [
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 40
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "ownerIndex": -1
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "ownerIndex": -1
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "id": null,
+            "ownerIndex": 43
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 42
+          }
+        ],
+        "covers": [
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43
+        ],
+        "topOwner": 40
+      },
+      {
+        "dx": 20,
+        "dy": 18,
+        "x": 398.59375,
+        "y": 502.484375,
+        "stack": [
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "id": null,
+            "ownerIndex": 43
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 42
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "id": null,
+            "ownerIndex": 41
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 40
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "id": null,
+            "ownerIndex": 39
+          }
+        ],
+        "covers": [
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43
+        ],
+        "topOwner": 43
+      },
+      {
+        "dx": 0,
+        "dy": 21,
+        "x": 378.59375,
+        "y": 505.484375,
+        "stack": [
+          {
+            "tag": "DIV",
+            "cls": "tlg-session is-current-session",
+            "id": null,
+            "ownerIndex": -1
+          },
+          {
+            "tag": "DIV",
+            "cls": "tlg-track",
+            "id": null,
+            "ownerIndex": -1
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 44
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "id": null,
+            "ownerIndex": 43
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 42
+          }
+        ],
+        "covers": [
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44
+        ],
+        "topOwner": -1
+      },
+      {
+        "dx": 14,
+        "dy": 21,
+        "x": 392.59375,
+        "y": 505.484375,
+        "stack": [
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 44
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "id": null,
+            "ownerIndex": 43
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 42
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-agent ",
+            "id": null,
+            "ownerIndex": 41
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "tl-bar is-user ",
+            "id": null,
+            "ownerIndex": 40
+          }
+        ],
+        "covers": [
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44
+        ],
+        "topOwner": 44
+      }
+    ]
+  },
+  "files": [
+    {
+      "name": "ac007-01-timeline-hover-1600.png",
+      "bytes": 108660,
+      "sha256": "2522fd5c4e4a9f32106d3fbb2da52289f0726164bd0f4a5e484b9f627e128186",
+      "px": "604x1422"
+    },
+    {
+      "name": "ac007-02-after-click-1600.png",
+      "bytes": 96788,
+      "sha256": "ca7eac9b60fcad0203227c8c50c65de418019a643b3433e5bd028021ebbc21c3",
+      "px": "1080x994"
+    },
+    {
+      "name": "ac007-03-fullpage-1280.png",
+      "bytes": 129064,
+      "sha256": "560dc675b0fd87588d172362606c2aa0bc2c9e89151f883ac255ab9698e0d255",
+      "px": "1280x1000"
+    }
+  ],
+  "timeZone": "Asia/Shanghai",
+  "generatedAtLocal": "2026-11-22T12:34:51+08:00",
+  "device": "headless Chrome CDP 9223, Emulation 1600x1000 dpr1 / 1280x1000 dpr1"
+}

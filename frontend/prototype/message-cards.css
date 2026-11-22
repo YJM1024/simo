@@ -61,9 +61,8 @@
 .message-cards {
   --conversation-card-w: 720px;
   --conversation-gutter-x: 16px;
-  --paper: var(--surface-3);
 }
-.message-cards .chat-body { background: var(--paper); }
+.message-cards .chat-body { background: var(--surface-3); }
 .message-cards .chat-content {
   width: min(var(--conversation-card-w), calc(100% - 2 * var(--conversation-gutter-x)));
   max-width: none;

@@ -4,7 +4,7 @@
 Implements: PRD-SYNC-004、PRD-SYNC-005
 Domains: `SYNC`
 Owner：产品（口径）/ 前端 + 后端（待口径后）；协调：Lead
-design.md：N/A —— 阻塞中，方案不可写（见 `proposal.md` §4）。
+design.md：N/A：阻塞中，方案不可写（见 `proposal.md` §4）。
 
 > 关联：产品 spec [`../../product/P1-CONV/spec.md#prd-sync-004`](../../product/P1-CONV/spec.md#prd-sync-004)、
 > [`#prd-sync-005`](../../product/P1-CONV/spec.md#prd-sync-005)；

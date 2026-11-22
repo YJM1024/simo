@@ -2,6 +2,12 @@
 
 本目录是独立的前端端到端测试包，**不修改** `frontend/` 的单测、构建配置或源码。测试自起一套隔离的 simo 栈（mock 模型、独立端口、空数据目录），用真实浏览器走关键用户路径。
 
+> **证据口径（阶段 1，2026-11-21）**
+>
+> - 阶段 1 唯一 E2E 证据 = **CDP runner 19/19**（`frontend/e2e/report/cdp/summary.md`，07 为 P2 OOS 默认跳过）。
+> - **Playwright 11 例为 legacy，未跑通**：`frontend/e2e/specs/` 下 7 个 spec 文件共 11 个 `test(...)`，在受限会话因 worker `spawn EPERM` 从未成功执行，不得作为阶段 1 的通过证据。本节下文 §4.1 的“16 条”是历史数字，已与现状（11 条）不符，以本口径为准；文件全部保留，未删除。
+> - 处置建议见 `docs/testing/E2E-DUAL-TRACK-20261121.md`。
+
 ## 1. 快速开始
 
 前置：

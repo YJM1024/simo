@@ -15,6 +15,7 @@ import (
 	"simo/internal/core/eventlog"
 	corememory "simo/internal/core/memory"
 	"simo/internal/core/module"
+	coresession "simo/internal/core/session"
 	"simo/internal/core/store"
 	coretask "simo/internal/core/task"
 	"simo/internal/platform/workspace"
@@ -38,6 +39,8 @@ type Module struct {
 	memory    corememory.Service
 	debug     bool
 	workspace *workspace.Policy
+	// unread 是未读投影来源（chat 在启动期注入，之后只读）；nil 表示无未读能力。
+	unread coresession.UnreadSource
 
 	ctx    context.Context
 	cancel context.CancelFunc

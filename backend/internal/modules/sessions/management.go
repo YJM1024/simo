@@ -44,10 +44,14 @@ func (m *Module) SearchSessions(ctx context.Context, query string, pinned *bool)
 	return out, rows.Err()
 }
 
-// SetPinned 设置会话置顶。
+// SetPinned 设置会话置顶。归档会话只读，置顶与取消置顶都被拒绝。
 func (m *Module) SetPinned(ctx context.Context, id string, pinned bool) (Session, error) {
-	if _, err := m.Get(ctx, id); err != nil {
+	current, err := m.Get(ctx, id)
+	if err != nil {
 		return Session{}, err
+	}
+	if current.Archived != 0 {
+		return Session{}, fmt.Errorf("%w: 归档会话不能置顶或取消置顶", ErrArchived)
 	}
 	if err := m.store.Write(ctx, func(tx *sql.Tx) error {
 		_, err := tx.ExecContext(ctx, `UPDATE sessions SET pinned = ? WHERE id = ?`, boolInt(pinned), strings.TrimSpace(id))

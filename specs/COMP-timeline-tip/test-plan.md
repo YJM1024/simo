@@ -1,6 +1,6 @@
 # COMP-timeline-tip · 测试计划
 
-> 证据见 `docs/tasks/acceptance.md`「COMP-timeline-tip · 8787 线上 smoke」；组件已实现并线上闭环。
+> 状态：**已实现未签收**——实现已通过组件单测与 `docs/tasks/acceptance.md`「COMP-timeline-tip · 8787 线上 smoke」（`:210-230`），未走签收流程；证据截图早于当前源码，待重拍。
 
 | A | 场景 | 证据/状态 |
 |---|---|---|

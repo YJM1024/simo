@@ -81,13 +81,28 @@ func TestM81AllSessionMessagesOrderAndShape(t *testing.T) {
 	if len(users) != 3 || users[0] != "全量消息一" || users[2] != "全量消息三" {
 		t.Fatalf("用户消息顺序错误: %+v", users)
 	}
-	// 归档只读：仍允许读取全量历史。
-	if status, body := postJSON(t, ts.URL+"/api/sessions/main/archive", map[string]any{}); status != http.StatusOK {
-		t.Fatalf("archive = %d %s", status, body)
+	// 主会话不可归档：归档请求被拒绝，且不会把 main 变成只读。
+	if status, body := postJSON(t, ts.URL+"/api/sessions/main/archive", map[string]any{}); status != http.StatusConflict {
+		t.Fatalf("主会话归档应被拒绝 = %d %s", status, body)
 	}
 	status, body = httpGet(t, ts.URL+"/api/sessions/main/messages/all")
 	_ = json.Unmarshal(body, &payload)
-	if status != http.StatusOK || !payload.Archived || payload.Total < 6 {
-		t.Fatalf("archived all messages = %d %+v", status, payload)
+	if status != http.StatusOK || payload.Archived || payload.Total < 6 {
+		t.Fatalf("main all messages = %d %+v", status, payload)
+	}
+
+	// 归档只读：仍允许读取全量历史。main 不可归档，改用子会话覆盖。
+	child := postSession(t, ts.URL, "m81-archived-all", "main")
+	if status := postChatSession(t, ts.URL, child, "子会话全量消息"); status != http.StatusAccepted {
+		t.Fatalf("child chat = %d", status)
+	}
+	waitForReplyDone(t, ts.URL, child)
+	if status, body := postJSON(t, ts.URL+"/api/sessions/"+child+"/archive", map[string]any{}); status != http.StatusOK {
+		t.Fatalf("child archive = %d %s", status, body)
+	}
+	status, body = httpGet(t, ts.URL+"/api/sessions/"+child+"/messages/all")
+	_ = json.Unmarshal(body, &payload)
+	if status != http.StatusOK || !payload.Archived || payload.Total != 2 {
+		t.Fatalf("archived child all messages = %d %+v", status, payload)
 	}
 }

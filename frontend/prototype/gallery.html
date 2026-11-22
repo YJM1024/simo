@@ -26,6 +26,7 @@
         <a href="#spec-card">卡片</a>
         <a href="#spec-overview">右栏概览</a>
         <a href="#spec-states">空/加载/错误</a>
+        <a href="#spec-conversation">会话面板</a>
         <a href="#spec-dialog">弹窗</a>
         <a href="#spec-tokens">Tokens</a>
         <a href="#spec-statusbar">Statusbar</a>
@@ -121,6 +122,15 @@
   </section>
 
   
+
+  <section class="spec" id="spec-conversation">
+    <h2>会话面板 ConversationPanel（empty / loading / error）</h2>
+    <div class="stage split">
+      <div class="empty"><div class="empty-mark empty-mark--gallery"></div><h3>暂无消息</h3><p>发送第一条消息开始对话。</p></div>
+      <div><div class="skeleton skeleton--w60"></div><div class="skeleton skeleton--w90"></div><div class="skeleton skeleton--w75"></div><p class="loading loading--gallery">消息加载中…</p></div>
+      <div><p class="err-text">消息加载失败：接口不可用，可重试。</p><button class="btn sm btn--mt8">重试</button></div>
+    </div>
+  </section>
 
   <section class="spec" id="spec-dialog">
     <h2>弹窗 Dialog</h2>

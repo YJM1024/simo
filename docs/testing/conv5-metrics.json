@@ -1,0 +1,272 @@
+{
+  "capturedAt": "2026-11-22T02:35:17+08:00",
+  "exe": {
+    "path": "E:\\dsh_home\\workspaces\\agent\\backend\\simo-8787-conv5.exe",
+    "bytes": 22097920,
+    "sha256": "7F43C0211AFECD5B5906E17FC5CE3E0E319FE33E27266372F9E12B7D6D76032A",
+    "lastWriteTime": "2026-11-21T18:29:58.062Z"
+  },
+  "buildId": "mwqqswzw-13dcl",
+  "health": {
+    "status": 200,
+    "body": {
+      "ok": true,
+      "ready": true,
+      "time": 1795286117384,
+      "checks": {
+        "db": "ok",
+        "modules": [
+          "sessions",
+          "chat",
+          "tasks",
+          "memory"
+        ]
+      }
+    }
+  },
+  "api": {
+    "mainSessionId": "main",
+    "mainSessionTitle": "主会话",
+    "mainMessageCount": 75,
+    "globalMessages": 209,
+    "projectionTotals": {
+      "done": 6,
+      "running": 0,
+      "pending": 4
+    }
+  },
+  "sessionRow": {
+    "title": "主会话",
+    "count": "75",
+    "cls": "session-row  is-active "
+  },
+  "groups": {
+    "done": {
+      "before": {
+        "name": "已完成",
+        "text": "3/6",
+        "aria": "false",
+        "rows": 3
+      },
+      "after": {
+        "name": "已完成",
+        "text": "6/6",
+        "aria": "true",
+        "rows": 6
+      }
+    },
+    "pending": {
+      "before": {
+        "name": "未开始",
+        "text": "3/4",
+        "aria": "false",
+        "rows": 3
+      },
+      "after": {
+        "name": "未开始",
+        "text": "4/4",
+        "aria": "true",
+        "rows": 4
+      }
+    },
+    "expanded": true
+  },
+  "requests": {
+    "all": [
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=3",
+        "taskLimit": "3"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=1",
+        "taskLimit": "1"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-38497934b31bfc0a/spec-projection?taskLimit=1",
+        "taskLimit": "1"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-a29cef9ffc38240b/spec-projection?taskLimit=1",
+        "taskLimit": "1"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-b3b42e8f8de61893/spec-projection?taskLimit=1",
+        "taskLimit": "1"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-113620f22f401a4d/spec-projection?taskLimit=1",
+        "taskLimit": "1"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-c0523a7d1f021d70/spec-projection?taskLimit=1",
+        "taskLimit": "1"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-78c4b19fc491990f/spec-projection?taskLimit=1",
+        "taskLimit": "1"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-8f146ad51a243c91/spec-projection?taskLimit=1",
+        "taskLimit": "1"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-0616173059099cf2/spec-projection?taskLimit=1",
+        "taskLimit": "1"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-3b0725cf6ca7c8c2/spec-projection?taskLimit=1",
+        "taskLimit": "1"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-cbb0858dc72e5e27/spec-projection?taskLimit=1",
+        "taskLimit": "1"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/spec-projection?taskLimit=1",
+        "taskLimit": "1"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-6b1e04ca8543af98/spec-projection?taskLimit=1",
+        "taskLimit": "1"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-a0eb1f1ae07141ce/spec-projection?taskLimit=1",
+        "taskLimit": "1"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-16be368dd5160c1a/spec-projection?taskLimit=1",
+        "taskLimit": "1"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=50",
+        "taskLimit": "50"
+      }
+    ],
+    "initialCount": 16,
+    "expansionCount": 1,
+    "expansionTaskLimit": 50,
+    "breakdown": {
+      "inspectorInitial": [
+        "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=3"
+      ],
+      "sidebarPrefetch": 15,
+      "expansion50": [
+        "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=50"
+      ]
+    },
+    "failed": []
+  },
+  "console": {
+    "baseline": {
+      "errors": 0,
+      "warnings": 0,
+      "exceptions": 0,
+      "http4xx5xx": 0
+    },
+    "baselineDetail": {
+      "errors": [],
+      "warnings": [],
+      "exceptions": [],
+      "http": []
+    },
+    "selfcheck": {
+      "injected": [
+        "console.error",
+        "console.warn",
+        "throw in setTimeout",
+        "fetch /api/__conv5_selfcheck__404__"
+      ],
+      "fetchStatus": 404,
+      "after": {
+        "errors": 1,
+        "warnings": 1,
+        "exceptions": 1,
+        "http4xx5xx": 1
+      },
+      "deltas": {
+        "errors": 1,
+        "warnings": 1,
+        "exceptions": 1,
+        "http4xx5xx": 1
+      },
+      "captured": {
+        "consoleError": true,
+        "consoleWarn": true,
+        "exception": true,
+        "http": true
+      }
+    },
+    "final": {
+      "errors": 1,
+      "warnings": 1,
+      "exceptions": 1,
+      "http4xx5xx": 1
+    },
+    "detail": {
+      "errors": [
+        {
+          "type": "error",
+          "text": "conv5-selfcheck-console-error",
+          "url": "",
+          "at": "2026-11-21T18:35:22.382Z"
+        }
+      ],
+      "warnings": [
+        {
+          "type": "warning",
+          "text": "conv5-selfcheck-console-warn",
+          "url": "",
+          "at": "2026-11-21T18:35:22.382Z"
+        }
+      ],
+      "exceptions": [
+        {
+          "text": "Error: conv5-selfcheck-exception\n    at <anonymous>:4:30",
+          "url": "",
+          "line": 3,
+          "at": "2026-11-21T18:35:22.382Z"
+        }
+      ],
+      "http": [
+        {
+          "status": 404,
+          "url": "http://127.0.0.1:8787/api/__conv5_selfcheck__404__",
+          "type": "Fetch",
+          "at": "2026-11-21T18:35:22.384Z"
+        }
+      ]
+    }
+  },
+  "screenshots": {
+    "initial": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\conv5-01-initial-1600.png",
+      "bytes": 111418,
+      "sha256": "2941487FF4FB4F471312679E8C6BA510D93B37DC6995443834F93F3926F3CBE9"
+    },
+    "expanded": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\conv5-02-expanded-1600.png",
+      "bytes": 120432,
+      "sha256": "113D9887005A9C178BC048B03B4397B8562EBEBC15B3E1DDD282C41478A0AB6B"
+    },
+    "sidebarCrop": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\conv5-03-sidebar-1600.png",
+      "bytes": 166377,
+      "sha256": "2A9882C2F0BCA6904EB2190B9DEA5C71CE3260837C38C2BE3D2F0C63B559B850"
+    },
+    "inspectorCrop": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\conv5-04-inspector-1600.png",
+      "bytes": 83041,
+      "sha256": "B68FF166E962EEAAA62BCB90054BFBB861CAF93FC10C02F8A47EF16DBBDBC4CF"
+    }
+  },
+  "checks": {
+    "rowEqualsApi": true,
+    "rowDiffersFromGlobal": true,
+    "quotaShowsGlobal": true,
+    "doneAfterEqual": true,
+    "pendingAfterEqual": true,
+    "oneExpansionRequest": true,
+    "selfcheckAllCaptured": true,
+    "noBaselineConsoleErrors": true
+  }
+}

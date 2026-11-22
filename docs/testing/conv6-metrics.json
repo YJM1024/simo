@@ -1,0 +1,199 @@
+{
+  "capturedAt": "2026-11-22T12:18:24+08:00",
+  "buildId": "mwrbrxnl-x7x5a",
+  "exe": {
+    "path": "E:\\dsh_home\\workspaces\\agent\\backend\\simo-8787-conv6.exe",
+    "bytes": 22099456,
+    "sha256": "05CD6EC1A7F5A9DFC7FFD29A16BD1C55DB5C9882B3F5D10F081F2A5AFEDF2D49",
+    "lastWriteTime": "2026-11-22T12:17:03.8903224+08:00"
+  },
+  "frontend": {
+    "dist": "E:\\dsh_home\\workspaces\\agent\\frontend\\dist",
+    "appJs": {
+      "bytes": 314377,
+      "sha256": "2F47A1F620362B2B614E75155B2A2365666A8F1B3FE164D9099B55BA96AAB4DF"
+    },
+    "appCss": {
+      "bytes": 74281,
+      "sha256": "2D6D4542889AC22C28392E63F70AF016AC3FF2C320005292E29A3780F898465B"
+    },
+    "indexHtml": {
+      "bytes": 406,
+      "sha256": "9E88B5443298262A2BFCCE574D486BF29240EA71BB56240B8CFBDDAA2963C334"
+    },
+    "embeddedCopy": "E:\\dsh_home\\workspaces\\agent\\backend\\internal\\webui\\dist",
+    "embeddedCopyMatchesFrontendDist": true
+  },
+  "server": {
+    "pid": 1836,
+    "addr": "127.0.0.1:8787",
+    "log": "E:\\dsh_home\\workspaces\\agent\\.tmp\\deploy\\serve-conv6.log",
+    "command": "backend\\simo-8787-conv6.exe serve -addr 127.0.0.1:8787",
+    "simoHome": "E:\\dsh_home\\workspaces\\agent\\data",
+    "startedAt": "2026-11-22T12:17:39+08:00",
+    "listenerOwnedByPid": true
+  },
+  "health": {
+    "request": "GET http://127.0.0.1:8787/api/health",
+    "status": 200,
+    "body": {
+      "ok": true,
+      "ready": true,
+      "time": 1795321104300,
+      "checks": {
+        "db": "ok",
+        "modules": [
+          "sessions",
+          "chat",
+          "tasks",
+          "memory"
+        ]
+      }
+    }
+  },
+  "http": {
+    "sessions": {
+      "request": "GET http://127.0.0.1:8787/api/sessions",
+      "status": 200,
+      "responseHeaders": {
+        "cache-control": "no-cache",
+        "content-type": "application/json; charset=utf-8",
+        "etag": "\"sess-09191dc83997c092\""
+      },
+      "bodyBytes": 2824,
+      "rowCount": 15,
+      "rowsWithIntegerMessageCount": 15,
+      "mainRow": {
+        "id": "main",
+        "title": "主会话",
+        "ownerAgentId": "simo",
+        "messageCount": 75,
+        "pinned": false,
+        "hasUnread": false
+      },
+      "sampleRows": [
+        {
+          "id": "sess-38497934b31bfc0a",
+          "messageCount": 2
+        },
+        {
+          "id": "sess-a29cef9ffc38240b",
+          "messageCount": 4
+        },
+        {
+          "id": "sess-b3b42e8f8de61893",
+          "messageCount": 16
+        }
+      ],
+      "conclusion": "PASS: every session row carries an integer messageCount; main reports 75."
+    },
+    "projectionConditional": {
+      "first": {
+        "request": "GET http://127.0.0.1:8787/api/sessions/main/spec-projection",
+        "status": 200,
+        "responseHeaders": {
+          "cache-control": "no-cache",
+          "content-type": "application/json; charset=utf-8",
+          "etag": "\"spec-c5a2d772dd1d5d88\"",
+          "content-length": "1455"
+        },
+        "bodyBytes": 1455,
+        "bodySha256": "f01cb5670b503e5b06a66abae03c1dd93dcdacfe6372c8c4f5231fe932afa63e",
+        "bodyHead": "{\"sessionId\":\"main\",\"status\":\"active\",\"revision\":34,\"updatedAt\":1795277763987,\"goal\":null,\"constraints\":[],\"inputs\":[],\"tasks\":{\"done\":{\"total\":6,\"items\":["
+      },
+      "second": {
+        "request": "GET http://127.0.0.1:8787/api/sessions/main/spec-projection",
+        "requestHeaders": {
+          "If-None-Match": "\"spec-c5a2d772dd1d5d88\""
+        },
+        "status": 304,
+        "responseHeaders": {
+          "cache-control": "no-cache",
+          "etag": "\"spec-c5a2d772dd1d5d88\""
+        },
+        "bodyBytes": 0,
+        "bodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bodyEmpty": true
+      },
+      "conclusion": "PASS: first 200 with ETag, same value in If-None-Match returns 304 with a zero-byte body."
+    },
+    "taskLimit": {
+      "limit3": {
+        "request": "GET http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=3",
+        "status": 200,
+        "responseHeaders": {
+          "cache-control": "no-cache",
+          "content-type": "application/json; charset=utf-8",
+          "etag": "\"spec-c5a2d772dd1d5d88\"",
+          "content-length": "1455"
+        },
+        "bodyBytes": 1455
+      },
+      "limit50": {
+        "request": "GET http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=50",
+        "status": 200,
+        "responseHeaders": {
+          "cache-control": "no-cache",
+          "content-type": "application/json; charset=utf-8",
+          "etag": "\"spec-e217d5acfbc1ba18\"",
+          "content-length": "1969"
+        },
+        "bodyBytes": 1969
+      },
+      "etagDiffers": true,
+      "conclusion": "PASS: ETag differs between taskLimit=3 (spec-c5a2d772dd1d5d88) and taskLimit=50 (spec-e217d5acfbc1ba18)."
+    },
+    "pageBuildId": {
+      "request": "GET http://127.0.0.1:8787/",
+      "status": 200,
+      "responseHeaders": {
+        "content-type": "text/html; charset=utf-8",
+        "content-length": "406"
+      },
+      "buildIdInMeta": "mwrbrxnl-x7x5a",
+      "assetVersionCss": "mwrbrxnl-x7x5a",
+      "assetVersionJs": "mwrbrxnl-x7x5a",
+      "matchesRecordedBuildId": true
+    },
+    "servedAssets": {
+      "appJs": {
+        "request": "GET http://127.0.0.1:8787/assets/app.js",
+        "status": 200,
+        "bytes": 314377,
+        "sha256": "2F47A1F620362B2B614E75155B2A2365666A8F1B3FE164D9099B55BA96AAB4DF",
+        "matchesFrontendDist": true
+      },
+      "appCss": {
+        "request": "GET http://127.0.0.1:8787/assets/app.css",
+        "status": 200,
+        "bytes": 74281,
+        "sha256": "2D6D4542889AC22C28392E63F70AF016AC3FF2C320005292E29A3780F898465B",
+        "matchesFrontendDist": true
+      },
+      "conclusion": "PASS: the running binary serves byte-identical app.js/app.css to the fresh frontend build."
+    }
+  },
+  "checks": {
+    "sessionsHasMessageCount": true,
+    "mainSessionMessageCount": 75,
+    "projectionEtag304": true,
+    "taskLimitEtagDiffers": true,
+    "health200": true,
+    "pageBuildIdMatches": true
+  },
+  "buildDeviations": [
+    "frontend/build.mjs was not executed because its child_process pipes hit sandbox EPERM; its steps were run separately (Tailwind v4.3.5 CLI, esbuild 0.28.2 win32-x64 binary, an equivalent node stamp script at .tmp/deploy/stamp-conv6.mjs).",
+    "build.mjs removes frontend/dist first; deletion outside the trash directory is forbidden here, so the three build outputs (index.html, assets/app.css, assets/app.js) were overwritten in place instead.",
+    "An extra sync step copied frontend/dist into backend/internal/webui/dist because //go:embed all:dist embeds that package directory; hashes verified identical after the copy.",
+    "A Start-Process-launched server was reaped when the parent pwsh exited; the server was relaunched as a managed background job (pwsh-709847c178e548f6, PID 1836). The log is UTF-16LE because the shell *>> redirect wrote it that way."
+  ],
+  "failures": [],
+  "skipped": [
+    "Browser-based validation was not attempted by instruction; no browser was launched, so no browser failure exists to record."
+  ],
+  "artifacts": {
+    "httpProbeJson": "E:\\dsh_home\\workspaces\\agent\\.tmp\\deploy\\conv6-http.json",
+    "sessionsRaw": "E:\\dsh_home\\workspaces\\agent\\.tmp\\deploy\\conv6-sessions.json",
+    "projectionRaw": "E:\\dsh_home\\workspaces\\agent\\.tmp\\deploy\\conv6-projection-main.json"
+  }
+}

@@ -590,5 +590,42 @@ func migrations() []sqlite.Migration {
 				return nil
 			},
 		},
+		{
+			Version: 22,
+			Name:    "chat client mutation idempotency",
+			Up: func(ctx context.Context, tx *sql.Tx) error {
+				if _, err := tx.ExecContext(ctx, `CREATE TABLE IF NOT EXISTS client_mutations (
+					id TEXT PRIMARY KEY,
+					session_id TEXT NOT NULL,
+					message_id TEXT NOT NULL DEFAULT '',
+					created_at INTEGER NOT NULL,
+					updated_at INTEGER NOT NULL
+				)`); err != nil {
+					return err
+				}
+				_, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS idx_client_mutations_created
+					ON client_mutations(created_at)`)
+				return err
+			},
+		},
+		{
+			Version: 23,
+			Name:    "session read cursors",
+			Up: func(ctx context.Context, tx *sql.Tx) error {
+				// 会话级未读游标：last_read_at 与 messages.at 同为 Unix 毫秒，
+				// 判定直接比较消息时间，口径唯一（跨时区/时钟由同一时钟源写入）。
+				if _, err := tx.ExecContext(ctx, `CREATE TABLE IF NOT EXISTS session_read_cursors (
+					session_id TEXT PRIMARY KEY REFERENCES sessions(id) ON DELETE CASCADE,
+					last_read_at INTEGER NOT NULL,
+					last_read_message_id TEXT,
+					updated_at TEXT NOT NULL
+				)`); err != nil {
+					return err
+				}
+				_, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS idx_session_read_cursors_updated
+					ON session_read_cursors(updated_at)`)
+				return err
+			},
+		},
 	}
 }

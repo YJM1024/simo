@@ -1,0 +1,653 @@
+{
+  "capturedAt": "2026-11-21T23:30:18+08:00",
+  "timezone": "Asia/Shanghai (UTC+08:00)",
+  "url": "http://127.0.0.1:8787/",
+  "exe": "E:\\dsh_home\\workspaces\\agent\\backend\\simo-8787-2330.exe",
+  "exeBytes": 22070784,
+  "buildId": "mwqk8u1u-8eli7",
+  "gitHead": "10270a37d3043b18ab408cca460498df14af72fd",
+  "health": {
+    "ok": true,
+    "ready": true,
+    "time": 1795275018979,
+    "checks": {
+      "db": "ok",
+      "modules": [
+        "sessions",
+        "chat",
+        "tasks",
+        "memory"
+      ]
+    }
+  },
+  "browser": "Chrome/157.0.8103.80",
+  "viewport1600": {
+    "title": "司墨",
+    "buildId": "mwqk8u1u-8eli7",
+    "sessionTitles": [
+      "主会话",
+      "周报复核",
+      "数据核对",
+      "研究员"
+    ],
+    "counts": {
+      "msg": 52,
+      "tlBar": 52,
+      "session": 4
+    },
+    "rects": {
+      "sidebar": {
+        "x": 0,
+        "y": 0,
+        "w": 240,
+        "h": 976
+      },
+      "chat": {
+        "x": 240,
+        "y": 90,
+        "w": 1060,
+        "h": 886
+      },
+      "inspector": {
+        "x": 1300,
+        "y": 90,
+        "w": 300,
+        "h": 886
+      },
+      "chatBody": {
+        "x": 240,
+        "y": 141,
+        "w": 1060,
+        "h": 663
+      }
+    },
+    "overflowX": false,
+    "innerWidth": 1600,
+    "innerHeight": 1000
+  },
+  "tree": {
+    "children": [
+      {
+        "id": "sess-2330-alpha",
+        "title": "周报复核",
+        "pinned": false,
+        "createdAt": 1795274818505
+      },
+      {
+        "id": "sess-2330-beta",
+        "title": "数据核对",
+        "pinned": false,
+        "createdAt": 1795274788505
+      },
+      {
+        "id": "sess-fixture-researcher",
+        "title": "研究员",
+        "pinned": false,
+        "createdAt": 1794484675094
+      }
+    ],
+    "researcherPinnedNow": false,
+    "note": "两个真子会话由 .tmp/deploy/seed-2330.mjs 直接写入 data/simo.db 的 sessions 表（POST /api/sessions 只产生内存草稿、不落库，无法造真会话）；研究员 created_at 最早。"
+  },
+  "order": {
+    "default": [
+      "主会话",
+      "周报复核",
+      "数据核对",
+      "研究员"
+    ],
+    "pinned": [
+      "主会话",
+      "研究员",
+      "周报复核",
+      "数据核对"
+    ],
+    "unpinned": [
+      "主会话",
+      "周报复核",
+      "数据核对",
+      "研究员"
+    ],
+    "defaultNewestFirst": true,
+    "pinnedResearcherFirst": true,
+    "siblingsRelativeOrderKeptWhenPinned": true,
+    "unpinnedRestored": true,
+    "restoredScreenshotSha256": {
+      "defaultLeft": "10ab758f8a1bb27126735e66546bfca17048390675597c8079f7f41ded2c6bff",
+      "restoredLeft": "10ab758f8a1bb27126735e66546bfca17048390675597c8079f7f41ded2c6bff",
+      "identical": true
+    }
+  },
+  "pinFlow": {
+    "menuBefore": {
+      "items": [
+        "置顶",
+        "归档"
+      ],
+      "rect": {
+        "x": 179.09375,
+        "y": 309.6875,
+        "w": 47.90625,
+        "h": 62.28125
+      }
+    },
+    "menuAfterPin": {
+      "items": [
+        "取消置顶",
+        "归档"
+      ],
+      "rect": {
+        "x": 157.203125,
+        "y": 245.6875,
+        "w": 69.796875,
+        "h": 62.28125
+      }
+    },
+    "menuAfterUnpin": {
+      "items": [
+        "置顶",
+        "归档"
+      ],
+      "rect": {
+        "x": 179.09375,
+        "y": 309.6875,
+        "w": 47.90625,
+        "h": 62.28125
+      }
+    },
+    "pinRequests": [
+      {
+        "method": "POST",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/pin",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/tree",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=1",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/spec-projection?taskLimit=1",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-2330-alpha/spec-projection?taskLimit=1",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-2330-beta/spec-projection?taskLimit=1",
+        "status": 200
+      }
+    ]
+  },
+  "etag304": {
+    "first": {
+      "method": "GET",
+      "url": "http://127.0.0.1:8787/api/sessions?q=%E6%A0%B8",
+      "headers": {
+        "sec-ch-ua-platform": "\"Windows\"",
+        "Referer": "http://127.0.0.1:8787/?capture=1795275002980",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Not-A.Brand\";v=\"99\", \"Google Chrome\";v=\"157\", \"Chromium\";v=\"157\"",
+        "Content-Type": "application/json",
+        "sec-ch-ua-mobile": "?0"
+      },
+      "status": 200,
+      "responseHeaders": {
+        "Cache-Control": "no-cache",
+        "Content-Length": "334",
+        "Etag": "\"sess-50aeaf884e2e0701\"",
+        "Date": "Sat, 21 Nov 2026 15:30:11 GMT",
+        "Content-Type": "application/json; charset=utf-8"
+      }
+    },
+    "second": {
+      "method": "GET",
+      "url": "http://127.0.0.1:8787/api/sessions?q=%E6%A0%B8",
+      "headers": {
+        "If-None-Match": "\"sess-50aeaf884e2e0701\"",
+        "sec-ch-ua-platform": "\"Windows\"",
+        "Referer": "http://127.0.0.1:8787/?capture=1795275002980",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Not-A.Brand\";v=\"99\", \"Google Chrome\";v=\"157\", \"Chromium\";v=\"157\"",
+        "Content-Type": "application/json",
+        "sec-ch-ua-mobile": "?0"
+      },
+      "status": 304,
+      "responseHeaders": {
+        "Etag": "\"sess-50aeaf884e2e0701\"",
+        "Date": "Sat, 21 Nov 2026 15:30:12 GMT",
+        "Cache-Control": "no-cache"
+      }
+    },
+    "conditionalHeaderSent": true,
+    "domAfter": {
+      "count": 2,
+      "titles": [
+        "周报复核",
+        "数据核对"
+      ],
+      "marks": [
+        "row-0",
+        "row-1"
+      ],
+      "marksKept": true,
+      "stats": {
+        "removals": 0,
+        "minRows": 2,
+        "samples": 28,
+        "emptyFlashes": 0
+      },
+      "loadingShown": false,
+      "errorShown": false
+    },
+    "noRebuild": true,
+    "noEmptyFlash": true
+  },
+  "draft": {
+    "request": {
+      "method": "POST",
+      "url": "http://127.0.0.1:8787/api/sessions",
+      "postData": "{\"parentId\":\"main\",\"title\":\"新会话\"}",
+      "at": "2026-11-21T15:30:15.109Z",
+      "status": 201,
+      "body": "{\"draft\":true,\"ok\":true,\"session\":{\"id\":\"sess-2a3c4496fba29fb2\",\"parentId\":\"main\",\"title\":\"新会话\",\"createdAt\":1795274930870,\"archived\":0,\"pinned\":false,\"ownerAgentId\":\"simo\",\"hasUnread\":false}}\n"
+    },
+    "draftId": "sess-2a3c4496fba29fb2",
+    "dom": {
+      "activeRowTitle": "新会话",
+      "activeRowHasMore": false,
+      "rowOrder": [
+        {
+          "title": "新会话",
+          "cls": "session-row  is-active ",
+          "more": false
+        },
+        {
+          "title": "主会话",
+          "cls": "session-row   ",
+          "more": false
+        },
+        {
+          "title": "周报复核",
+          "cls": "session-row child  ",
+          "more": true
+        },
+        {
+          "title": "数据核对",
+          "cls": "session-row child  ",
+          "more": true
+        },
+        {
+          "title": "研究员",
+          "cls": "session-row child  ",
+          "more": true
+        }
+      ],
+      "inspectorText": "· 目标与执行态待生成 发送第一条消息后生成目标与执行态 ☰ ◷ ▤",
+      "hasPlaceholder": true,
+      "hasPlaceholderDesc": true
+    },
+    "specProjectionRequests": [
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=3",
+        "method": "GET",
+        "at": "2026-11-21T15:30:03.254Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:30:03.276Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-2330-alpha/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:30:03.277Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-2330-beta/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:30:03.277Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:30:03.277Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:30:05.926Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:30:05.926Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-2330-alpha/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:30:05.926Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-2330-beta/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:30:05.926Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:30:08.336Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-2330-alpha/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:30:08.336Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-2330-beta/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:30:08.336Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:30:08.337Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:30:15.126Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-2330-alpha/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:30:15.127Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-2330-beta/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:30:15.127Z"
+      },
+      {
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/spec-projection?taskLimit=1",
+        "method": "GET",
+        "at": "2026-11-21T15:30:15.127Z"
+      }
+    ],
+    "specProjectionForDraftCount": 0
+  },
+  "console": {
+    "errorCount": 0,
+    "warningCount": 0,
+    "exceptionCount": 0,
+    "httpErrorCount": 0,
+    "errors": [],
+    "warnings": [],
+    "exceptions": [],
+    "httpErrors": [],
+    "logEntries": [],
+    "selftest": {
+      "target": "separate scratch target (8787 同源)",
+      "injected": [
+        "console.error CAPTURE-SELFTEST error",
+        "console.warn CAPTURE-SELFTEST warn",
+        "fetch('/api/__capture_selftest_404__')"
+      ],
+      "counts": {
+        "error": 1,
+        "warning": 1,
+        "http404": 1
+      },
+      "caught": true
+    }
+  },
+  "network": {
+    "total": 39,
+    "apiSessions": [
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/tree",
+        "at": "2026-11-21T15:30:03.253Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=3",
+        "at": "2026-11-21T15:30:03.254Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:30:03.276Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-2330-alpha/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:30:03.277Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-2330-beta/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:30:03.277Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:30:03.277Z",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/pin",
+        "at": "2026-11-21T15:30:05.905Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/tree",
+        "at": "2026-11-21T15:30:05.907Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:30:05.926Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:30:05.926Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-2330-alpha/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:30:05.926Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-2330-beta/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:30:05.926Z",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/unpin",
+        "at": "2026-11-21T15:30:08.305Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/tree",
+        "at": "2026-11-21T15:30:08.308Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:30:08.336Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-2330-alpha/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:30:08.336Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-2330-beta/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:30:08.336Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:30:08.337Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions?q=%E6%A0%B8",
+        "at": "2026-11-21T15:30:11.617Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions?q=%E6%A0%B8",
+        "at": "2026-11-21T15:30:12.538Z",
+        "status": 304
+      },
+      {
+        "method": "POST",
+        "url": "http://127.0.0.1:8787/api/sessions",
+        "at": "2026-11-21T15:30:15.109Z",
+        "status": 201
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:30:15.126Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-2330-alpha/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:30:15.127Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-2330-beta/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:30:15.127Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/sess-fixture-researcher/spec-projection?taskLimit=1",
+        "at": "2026-11-21T15:30:15.127Z",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=3",
+        "at": "2026-11-21T15:30:16.168Z",
+        "status": 200
+      }
+    ]
+  },
+  "screenshots": {
+    "default1600": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2330-default-1600.png",
+      "bytes": 126465
+    },
+    "defaultLeft2x": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2330-order-default-left@2x.png",
+      "bytes": 47264
+    },
+    "pinMenu1600": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2330-pin-menu-1600.png",
+      "bytes": 128106
+    },
+    "pinMenuLeft2x": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2330-pin-menu-left@2x.png",
+      "bytes": 51137
+    },
+    "pinned1600": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2330-pinned-1600.png",
+      "bytes": 129065
+    },
+    "pinnedLeft2x": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2330-pinned-left@2x.png",
+      "bytes": 54051
+    },
+    "unpinned1600": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2330-unpinned-1600.png",
+      "bytes": 128106
+    },
+    "unpinnedLeft2x": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2330-unpinned-left@2x.png",
+      "bytes": 51137
+    },
+    "search3041600": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2330-search-304-1600.png",
+      "bytes": 124139
+    },
+    "draft1600": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2330-draft-1600.png",
+      "bytes": 52559
+    },
+    "draftRight2x": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2330-draft-right@2x.png",
+      "bytes": 17523
+    },
+    "draftLeft2x": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2330-draft-left@2x.png",
+      "bytes": 49321
+    },
+    "orderRestored1600": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2330-order-restored-1600.png",
+      "bytes": 126754
+    },
+    "orderRestoredLeft2x": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\deploy-8787-2330-order-restored-left@2x.png",
+      "bytes": 47264
+    }
+  },
+  "screenshotPts": {
+    "default-1600": "默认树序（新→旧）：主会话 → 周报复核（最新）→ 数据核对 → 研究员（最早）",
+    "order-default-left@2x": "默认树序侧栏 2x 特写",
+    "pin-menu-1600": "悬停最早子会话 研究员，菜单含「置顶」",
+    "pin-menu-left@2x": "菜单「置顶」与行序 2x 特写",
+    "pinned-1600": "点置顶后：研究员排到子会话第一，菜单变「取消置顶」，其余兄弟相对顺序不变",
+    "pinned-left@2x": "置顶后侧栏 2x：行序 + 菜单文案",
+    "unpinned-1600": "取消置顶后：恢复默认顺序（周报复核→数据核对→研究员），菜单回到「置顶」",
+    "unpinned-left@2x": "取消置顶后侧栏 2x",
+    "search-304-1600": "搜索态下刷新触发 304：列表保持筛选结果，未闪空/重建",
+    "draft-1600": "草稿会话：侧栏草稿行无「会话操作」，右栏「目标与执行态待生成」占位",
+    "draft-right@2x": "右栏占位 2x",
+    "draft-left@2x": "草稿行无 ⋯ 的 2x 特写",
+    "order-restored-1600": "取消置顶后、菜单已关闭的树序：与默认顺序一致，无菜单遮挡",
+    "order-restored-left@2x": "恢复顺序侧栏 2x；与 order-default-left@2x 像素一致（sha256 相同）即证明回到原序"
+  },
+  "notes": [
+    "unpinned-1600 与 pin-menu-1600 像素一致是场景相同（默认序 + 研究员悬停菜单「置顶」）；恢复顺序另外用 order-restored-1600 佐证。",
+    "两个真子会话写入方式：.tmp/deploy/seed-2330.mjs 直接 INSERT 到 data/simo.db 的 sessions（POST /api/sessions 只产生内存草稿，不落库）。",
+    "304 触发路径：搜索框输入「核」→ 200；再输入「核 」（q trim 后同一 URL）→ 前端带 If-None-Match → 304，列表数组与 DOM 行均未重建。"
+  ]
+}

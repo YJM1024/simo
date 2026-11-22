@@ -328,6 +328,11 @@ func TestWebSocketSinceContinuation(t *testing.T) {
 	sawCreated := false
 	for {
 		frame := readWS(t, ctx, conn2)
+		// session_unread 是进程内广播的临时帧，不落库、无事件游标（id=0），
+		// 不属于 since 续接的事件流；它与持久化事件的回放无关。
+		if frame.Type == "session_unread" {
+			continue
+		}
 		if frame.ID <= lastID {
 			t.Fatalf("since 续接不应重发旧事件 id=%d（last=%d）", frame.ID, lastID)
 		}

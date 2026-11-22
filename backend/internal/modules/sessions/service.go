@@ -28,6 +28,8 @@ var (
 	ErrInvalid        = errors.New("会话参数非法")
 	ErrArchived       = errors.New("会话已归档（只读）")
 	ErrArchiveBlocked = errors.New("归档被 blockers 拒绝")
+	// ErrSessionProtected 表示该会话受产品规则保护，不允许归档（目前只有主会话 main）。
+	ErrSessionProtected = errors.New("主会话不可归档")
 )
 
 var _ coresession.Service = (*Module)(nil)
@@ -242,12 +244,19 @@ func listSessions(ctx context.Context, st *store.Store) ([]Session, error) {
 	return out, nil
 }
 
+// sortSessions 只重排同一父级下的兄弟会话，排序键与扁平列表一致：
+// pinned DESC, created_at DESC, id DESC。置顶只在兄弟之间生效，
+// 不改变父子归属，也不把子会话提升到父级之前。
 func sortSessions(sessions []Session) {
 	sort.SliceStable(sessions, func(i, j int) bool {
-		if sessions[i].CreatedAt != sessions[j].CreatedAt {
-			return sessions[i].CreatedAt < sessions[j].CreatedAt
+		a, b := &sessions[i], &sessions[j]
+		if a.Pinned != b.Pinned {
+			return a.Pinned
 		}
-		return sessions[i].ID < sessions[j].ID
+		if a.CreatedAt != b.CreatedAt {
+			return a.CreatedAt > b.CreatedAt
+		}
+		return a.ID > b.ID
 	})
 	for i := range sessions {
 		sortSessions(sessions[i].Children)

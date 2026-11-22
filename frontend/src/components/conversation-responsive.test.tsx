@@ -138,6 +138,18 @@ describe('375px 无横向溢出（A4 / PRD-CONV-004）', () => {
     expect(effective('.msg-text code', 'overflow-wrap', MOBILE_375)).toBe('anywhere')
   })
 
+  it('keeps inline-code chrome out of fenced code blocks so block text stays readable', () => {
+    // .msg-text pre>code 会同时命中 .msg-text code：行内码的浅色背景/内边距会盖在深色
+    // pre 上，而 pre 又把文字设成浅色，结果浅底浅字（实测 #E9E9F0 on #F4F3EF，~1.04:1）。
+    // 块级 code 必须只继承 pre 的配色，不画自己的底。
+    for (const width of [MOBILE_375, DESKTOP_1440]) {
+      expect(effective('.msg-text pre code', 'background', width)).toBe('none')
+      expect(effective('.msg-text pre code', 'color', width)).toBe('inherit')
+      expect(effective('.msg-text pre code', 'padding', width)).toBe('0')
+      expect(effective('.msg-text pre code', 'border-radius', width)).toBe('0')
+    }
+  })
+
   it('drops the fixed-width timeline gutter on narrow screens and restores it on desktop', () => {
     // 时间轴是 52px 定宽 gutter，窄屏保留等于白占宽度
     expect(effective('.conversation-panel > .timeline', 'display', MOBILE_375)).toBe('none')
@@ -152,5 +164,51 @@ describe('375px 无横向溢出（A4 / PRD-CONV-004）', () => {
     expect(effective('html', 'overflow-x', 760)).toBe('hidden')
     expect(effective('html', 'overflow-x', 761)).toBeNull()
     expect(effective('.composer', 'margin-inline', 481)).toBeNull()
+  })
+})
+
+/**
+ * A5/A13 的样式契约。jsdom 没有布局，这里只断言"最后一条命中规则"，
+ * 真实像素（卡内是否只剩一道边、标签差 0）由 CDP 在 8787 同源构建上量取。
+ */
+describe('会话面板与 Composer 基线样式（A5 / A13）', () => {
+  const tokens = readFileSync(resolve(process.cwd(), 'src/styles/tokens.css'), 'utf8')
+
+  it('A5：卡片内层不再叠白底，只保留 1px line 与 10px 圆角', () => {
+    for (const width of [1600, 1180, MOBILE_375]) {
+      expect(effective('.conversation-panel .card-block', 'background', width)).toBe('transparent')
+      expect(effective('.conversation-panel .card-block', 'border', width)).toBe('1px solid var(--line)')
+      expect(effective('.conversation-panel .card-block', 'border-radius', width)).toBe('var(--r-10)')
+    }
+  })
+
+  it('A13：1180 档标签行左内距按时间轴 gutter 复算，chip 内缩与卡内容同宽', () => {
+    expect(effective('.chat-tabs', 'padding-left', 1600)).toBe('calc(max((100% - var(--conversation-card-w)) / 2, var(--conversation-gutter-x)) + 20px)')
+    expect(effective('.chat-tabs', 'padding-left', 1180)).toBe('calc(var(--gutter-timeline) + var(--sp-8) + 20px)')
+    expect(effective('.chat-tabs .chat-chip', 'padding', 1600)).toBe('0 var(--space-14)')
+    expect(effective('.chat-tabs .chat-chip', 'padding', 1180)).toBe('0 var(--space-14)')
+    // 窄屏卡内边距收到 12px，chip 必须同步，否则 375 档又出现 2px 错位
+    expect(effective('.chat-tabs .chat-chip', 'padding', MOBILE_375)).toBe('0 var(--sp-12)')
+  })
+
+  it('A13：右栏首块与消息列同起于标签行下 12px', () => {
+    expect(effective('.insp-body', 'padding-top', 1600)).toBe('calc(var(--sp-12) + var(--chat-tabs-h))')
+    expect(effective('.insp-body', 'padding-top', 1180)).toBe('calc(var(--sp-12) + var(--chat-tabs-h))')
+    expect(tokens).toContain('--chat-tabs-h: calc(var(--sp-8) + var(--size-30) + var(--sp-12) + 1px)')
+  })
+
+  it('A5（composer）：模式文案默认透明，聚焦或空输入悬停时显示，失焦即隐藏', () => {
+    expect(effective('.composer-send-mode-hint', 'opacity', 1600)).toBe('0')
+    expect(effective('.composer-send-mode-hint', 'opacity', MOBILE_375)).toBe('0')
+    expect(effective('.composer-box:focus-within .composer-send-mode-hint', 'opacity', 1600)).toBe('1')
+    // 悬停只在输入为空时生效：非空失焦后指针停在提示区也不能把文案带回来
+    expect(effective('.composer-box:has(textarea:placeholder-shown) .composer-right:hover .composer-send-mode-hint', 'opacity', 1600)).toBe('1')
+    // 不用 visibility:hidden，避免占位跳动
+    expect(effective('.composer-send-mode-hint', 'visibility', 1600)).toBeNull()
+  })
+
+  it('A5（panel）：density=compact 收紧消息内边距，默认 normal 不动现有视觉', () => {
+    expect(effective('.conversation-panel.is-compact .chat-inner', 'padding', 1600)).toBe('var(--sp-12)')
+    expect(effective('.conversation-panel .chat-inner', 'padding', 1600)).toBe('var(--sp-16) var(--sp-20)')
   })
 })

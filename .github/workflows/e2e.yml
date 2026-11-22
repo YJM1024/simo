@@ -1,0 +1,109 @@
+name: e2e
+
+# Frontend end-to-end tests (Playwright + system Chrome).
+# Isolated stack: empty SIMO_HOME, port 19201, mock model; never touches live 8787.
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+      - 'deploy/ci.ps1'
+      - '.github/workflows/e2e.yml'
+  pull_request:
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+      - 'deploy/ci.ps1'
+      - '.github/workflows/e2e.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GO_VERSION: '1.27.x'
+  NODE_VERSION: '24'
+
+jobs:
+  e2e:
+    name: windows / playwright + system chrome
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: backend/go.sum
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        shell: pwsh
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+          pnpm --version
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        shell: pwsh
+        run: pnpm install --frozen-lockfile
+
+      - name: Install E2E dependencies
+        working-directory: frontend\e2e
+        shell: pwsh
+        run: pnpm install --frozen-lockfile --ignore-scripts --node-linker=hoisted
+
+      # Builds frontend (embedded into backend) + simo.exe at .tmp\ci-<GUID>\simo.exe.
+      # Evals/package/docker are skipped: this job only needs a runnable binary.
+      - name: Build web + backend
+        shell: pwsh
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File deploy\ci.ps1 -SkipEvals -SkipPackage -SkipDocker
+
+      - name: Locate built exe
+        id: exe
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem .tmp\ci-*\simo.exe | Sort-Object LastWriteTime | Select-Object -Last 1
+          if (-not $exe) { throw 'simo.exe not found under .tmp\ci-*' }
+          "path=$($exe.FullName)" >> $env:GITHUB_OUTPUT
+          Write-Host "E2E_BACKEND_EXE=$($exe.FullName)"
+
+      - name: Run Playwright E2E
+        working-directory: frontend
+        shell: pwsh
+        env:
+          E2E_BACKEND_EXE: ${{ steps.exe.outputs.path }}
+          # windows-latest has Chrome at this path; override here if the image changes.
+          E2E_CHROME: C:\Program Files\Google\Chrome\Application\chrome.exe
+        run: pnpm test:e2e
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-report
+          path: |
+            frontend/e2e/report/html
+            frontend/e2e/report/results.json
+            frontend/e2e/report/test-results
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload stack logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-stack-logs
+          path: .tmp/e2e-run-*/api.log
+          if-no-files-found: warn
+          retention-days: 7

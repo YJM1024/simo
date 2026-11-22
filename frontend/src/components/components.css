@@ -6,7 +6,7 @@ body {
   margin: 0;
   background: var(--paper);
   color: var(--ink);
-  font: 400 var(--font-14)/1.65 var(--sans);
+  font: 400 var(--font-13-5)/1.65 var(--sans);
   letter-spacing: -0.004em;
   -webkit-font-smoothing: antialiased;
 }
@@ -115,7 +115,7 @@ a { color: inherit; text-decoration: none; }
 .tl-bar { width: var(--size-20); height: var(--size-4); flex: none; border-radius: var(--r-2); background: #C9C7C0; border: 0; padding: 0; transition: width .12s ease, background .12s ease, opacity .12s ease; }
 .tl-bar.is-user { background: var(--accent); opacity: .78; }
 .tl-bar.is-agent { background: #8F8D87; opacity: .62; }
-.tl-bar:hover { width: var(--size-24); opacity: 1; }
+.tl-bar:hover, .tl-bar.is-hover { width: var(--size-24); opacity: 1; }
 .tl-bar.active { width: var(--size-24); opacity: 1; background: var(--ink); }
 .tl-tip { position: fixed; z-index: 90; width: var(--size-236); padding: var(--sp-8) var(--space-10); border-radius: var(--r-8); background: var(--surface); color: var(--ink); border: 1px solid var(--line); box-shadow: var(--shadow-pop); pointer-events: none; }
 .tl-tip-top { display: flex; align-items: center; gap: var(--sp-4); font-size: var(--font-10); color: var(--muted); white-space: nowrap; overflow: hidden; }
@@ -141,13 +141,29 @@ a { color: inherit; text-decoration: none; }
 .msg-meta { display: flex; align-items: center; gap: var(--sp-8); height: var(--size-20); font-size: var(--font-10); color: var(--faint); }
 .msg-meta b { color: var(--ink-2); font-weight: 600; }
 .msg-meta .tag { font-size: var(--font-10); padding: 1px var(--sp-4); border-radius: var(--r-4); background: var(--surface-2); color: var(--muted); }
-.msg-text { max-width: var(--msg-width); font-size: var(--font-14); line-height: 1.65; color: var(--ink-2); overflow-wrap: anywhere; }
+.msg-text { max-width: var(--msg-width); font-size: var(--font-13-5); line-height: 1.65; color: var(--ink-2); overflow-wrap: anywhere; }
 .msg-text p { margin: 0 0 var(--sp-8); }
 .msg-text p:last-child { margin-bottom: 0; }
 .msg-text h3 { font-size: var(--font-14); margin: var(--space-10) 0 var(--sp-4); color: var(--ink); }
 .msg-text ul { margin: var(--sp-4) 0 var(--sp-8); padding-left: var(--sp-20); }
 .msg-text code { font: var(--font-12) var(--mono); background: var(--surface-2); padding: 1px var(--sp-4); border-radius: var(--r-4); }
 .msg-text pre { background: #101218; color: #E9E9F0; border-radius: var(--r-8); padding: var(--space-10) var(--sp-12); overflow: auto; font: var(--font-12)/1.6 var(--mono); }
+/* 围栏代码块内的 code 同时命中 .msg-text code：必须去掉行内码的浅底/内边距，否则浅底浅字（D4） */
+.msg-text pre code { background: none; color: inherit; padding: 0; border-radius: 0; font: inherit; }
+/* 正文链接：全局 a 重置只保留 color:inherit / 无下划线，消息里的链接需要恢复可点击外观；
+   规则限定在 .msg-text 内，侧栏、右栏与 Composer 的链接仍走全局重置 */
+.msg-text a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; word-break: break-word; }
+.msg-text a:hover { text-decoration-thickness: 2px; }
+.msg-text a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* 表格只在包裹层内部横向滚动：页面上过多的列不会撑开消息列或视口（COMP-conversation-panel A3） */
+.msg-table-wrap { max-width: 100%; margin: 0 0 var(--sp-8); overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r-8); background: var(--surface); }
+.msg-table-wrap:last-child { margin-bottom: 0; }
+.msg-table-wrap:focus-visible { outline: none; box-shadow: var(--focus); }
+.msg-table { width: 100%; border-collapse: collapse; font-size: var(--font-13); line-height: 1.5; }
+/* 每列保底 4.5em：短表在窄屏仍逐行可读，多列宽表超过卡片时交给包裹层滚动，而不是把单元格压成单字一行 */
+.msg-table th, .msg-table td { min-width: 4.5em; padding: var(--sp-4) var(--sp-8); text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.msg-table thead th { background: transparent; color: var(--muted); font-size: var(--font-12); font-weight: 600; white-space: nowrap; }
+.msg-table tbody tr:last-child td { border-bottom: 0; }
 .typing { display: inline-flex; align-items: center; gap: var(--sp-4); color: var(--accent); font-size: var(--font-10); padding-left: var(--space-36); }
 .typing::after { content: "▍"; animation: blink 1s steps(2) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
@@ -286,7 +302,7 @@ a { color: inherit; text-decoration: none; }
 .kv:last-child { border-bottom: 0; }
 .kv span { color: var(--faint); }
 .kv b { font-weight: 500; color: var(--ink-2); text-align: right; }
-.toast { position: fixed; right: var(--space-22); bottom: var(--sp-40); background: var(--ink); color: #fff; font-size: var(--font-12); padding: var(--sp-8) var(--sp-12); border-radius: var(--r-8); box-shadow: var(--shadow-pop); z-index: 80; }
+.toast { position: fixed; right: var(--space-22); bottom: var(--sp-40); background: var(--ink); color: #fff; font-size: var(--font-12); padding: var(--sp-8) var(--sp-12); border-radius: var(--r-8); box-shadow: var(--shadow-pop); z-index: 80; border: 0; cursor: pointer; font-family: inherit; }
 
 
 /* ============ Gallery shell（独立滚动 + 固定导航） ============ */
@@ -358,10 +374,11 @@ a { color: inherit; text-decoration: none; }
   :root { --sidebar: var(--size-220); }
   .nav { gap: 0; }
   .nav button { padding: 0 var(--sp-8); }
-  .timeline { display: none; }
   .chat-tabs { max-width: none; padding-left: var(--sp-16); }
   .context .muted { display: none; }
 }
+/* 900px 整点归入显示档：窄档用 min-width 的补集精确取反，避免与宽档之间留下 0.16em 缝隙。 */
+@media not all and (min-width: 56.25em) { .timeline { display: none; } }
 @media (max-width: 47.5em) {
   html, body { overflow-x: hidden; }
   .seg { display: none; }
@@ -397,7 +414,7 @@ a { color: inherit; text-decoration: none; }
   .chat-tabs { height: auto; padding-left: var(--sp-16); padding-bottom: var(--sp-12); font-size: var(--font-10-5); }
   .chat-inner { padding: var(--sp-12) var(--sp-12) var(--space-10); }
   .msg { gap: var(--space-10); padding: var(--space-10) 0; }
-  .msg-text { max-width: 100%; font-size: var(--font-14); }
+  .msg-text { max-width: 100%; font-size: var(--font-13-5); }
   .composer { padding: var(--space-6) var(--space-10) var(--space-10); }
   .composer textarea { min-height: var(--size-60); padding: var(--space-10) var(--sp-12) var(--sp-24); }
   .composer-hint { display: none; }
@@ -437,14 +454,22 @@ a { color: inherit; text-decoration: none; }
 .composer { padding-left: calc(var(--gutter-timeline) + var(--chat-pad-x)); }
 .composer textarea { padding-left: calc(var(--avatar-size) + var(--sp-12) - 1px); }
 .chat-tabs { padding-left: calc(max((100% - var(--chat-width)) / 2, 0px) + var(--gutter-timeline) + var(--chat-pad-x) + var(--avatar-size) + var(--sp-12)); }
-.chat-tabs .chat-chip { height: var(--size-30); padding: 0 var(--sp-12); border: 1px solid var(--line); border-radius: var(--r-8); background: var(--surface); color: var(--ink); font-size: var(--font-12-5); font-weight: 500; box-shadow: var(--shadow-float); display: inline-flex; align-items: center; }
+/* 标签文字左基线 = 消息卡内容左基线：chip 盒对齐卡盒，内缩 1px border + 14px padding = 卡内 15px */
+.chat-tabs .chat-chip { height: var(--size-30); padding: 0 var(--space-14); border: 1px solid var(--line); border-radius: var(--r-8); background: var(--surface); color: var(--ink); font-size: var(--font-12-5); font-weight: 500; box-shadow: var(--shadow-float); display: inline-flex; align-items: center; }
 .side-empty { padding: var(--sp-12); font-size: var(--font-11); color: var(--faint); }
 .sidebar-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 0 var(--sp-8) var(--sp-12); }
 .session-row { display: flex; align-items: center; gap: var(--sp-8); min-height: var(--size-32); padding: 0 var(--sp-8); border: 0; border-left: 2px solid transparent; border-radius: var(--r-4); background: transparent; color: var(--ink-2); font-size: var(--font-12); text-align: left; width: 100%; cursor: pointer; }
 .session-row:hover { background: var(--surface-2); }
 .session-row.is-active { background: var(--accent-soft); color: var(--accent); border-left-color: var(--accent); font-weight: 500; }
 .session-row.child { padding-left: var(--sp-24); }
+/* 树展开/折叠：占位与按钮同宽，保证有无子会话的行标题左对齐一致。 */
+.session-row .session-toggle, .session-toggle-spacer { width: var(--size-16); height: var(--size-16); flex: none; }
+.session-row .session-toggle { display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: var(--r-4); background: transparent; color: var(--faint); font-size: var(--font-10); line-height: 1; cursor: pointer; }
+.session-row .session-toggle:hover { background: var(--surface-2); color: var(--ink); }
 .session-row .session-dot { width: var(--size-4); height: var(--size-4); border-radius: 50%; background: var(--accent); flex: none; }
+/* 未读徽标：只有有/无两种态，不显示数字（P1-CONV 未读持久化）。 */
+.session-row .session-unread { width: 6px; height: 6px; border-radius: 50%; background: var(--danger); flex: none; }
+.session-row.is-active .session-unread { background: var(--accent); }
 .session-row .session-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .session-rename { width: 100%; height: var(--size-24); border: 1px solid var(--accent); border-radius: var(--r-4); background: var(--surface); font-size: var(--font-12); padding: 0 var(--sp-4); outline: 0; box-shadow: var(--focus); }
 .topbar .nav .nav-chip { height: var(--size-26); min-width: var(--size-56); padding: 0 var(--space-10); border: 1px solid transparent; border-radius: var(--r-6); background: transparent; color: var(--muted); font-size: var(--font-12); display: inline-flex; align-items: center; justify-content: center; }
@@ -475,6 +500,7 @@ body { overflow: hidden; }
 .insp-block:last-child { border-bottom: 0; }
 .insp-label { margin: 0 0 var(--space-6); font-size: var(--font-11); font-weight: 600; letter-spacing: .04em; color: var(--muted); }
 .insp-text { margin: 0; font-size: var(--font-12); line-height: 1.55; color: var(--ink-2); }
+.insp-placeholder { margin: 0; font-size: var(--font-11); line-height: 1.55; color: var(--faint); }
 .insp-head--tight { margin-bottom: var(--sp-8); }
 .exec-group { margin-top: var(--space-10); }
 .exec-head { display: flex; align-items: center; gap: var(--space-6); margin-bottom: 2px; padding: 3px 0; font-size: var(--font-11); color: var(--muted); cursor: pointer; user-select: none; width: 100%; border: 0; background: transparent; text-align: left; }
@@ -514,6 +540,7 @@ body { overflow: hidden; }
 @keyframes blink { 50% { opacity: 0; } }
 .connection-dot { width: var(--size-6); height: var(--size-6); border-radius: 50%; background: var(--warning); }
 .connection-dot.open { background: var(--success); }
+.connection-dot.closed { background: var(--danger); }
 .topbar .status { display: inline-flex; align-items: center; gap: var(--space-6); font-size: var(--font-10); color: var(--muted); }
 
 @media (max-width: 73.75em) {
@@ -770,11 +797,19 @@ body { overflow: hidden; }
 .composer-stop { flex: none; }
 
 .session-row { position: relative; }
-.session-row.is-archived { opacity: .55; }
+/* 归档行只降文字与圆点的颜色/局部透明度：整行 opacity 会生成层叠上下文，把绝对定位的
+   .session-menu 困在行内并被后续行覆盖（AC-CONV-002-01 的「恢复」点不到）。 */
+.session-row.is-archived { color: var(--faint); }
+.session-row.is-archived .session-title,
+.session-row.is-archived .session-count,
+.session-row.is-archived .session-unread,
+.session-row.is-archived .session-dot { opacity: .55; }
+/* 菜单打开时把整行提到后续行之上，菜单本身再给一层更高的 z-index。 */
+.session-row:has(.session-menu) { z-index: 30; }
 .session-more { flex: none; width: var(--size-20); height: var(--size-20); border-radius: var(--r-4); color: var(--faint); opacity: 0; }
 .session-row:hover .session-more, .session-row:focus-within .session-more { opacity: 1; }
 .session-more:hover { background: var(--surface); color: var(--ink); }
-.session-menu { position: absolute; right: var(--sp-4); top: var(--size-28); z-index: 20; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-6); box-shadow: var(--shadow-pop); padding: var(--sp-4); min-width: var(--size-80); }
+.session-menu { position: absolute; right: var(--sp-4); top: var(--size-28); z-index: 40; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-6); box-shadow: var(--shadow-pop); padding: var(--sp-4); min-width: var(--size-80); }
 .session-menu button { display: block; width: 100%; text-align: left; padding: var(--sp-4) var(--sp-8); border-radius: var(--r-4); font-size: var(--font-11); color: var(--ink-2); }
 .session-menu button:hover { background: var(--surface-2); }
 .task-row, .deliverable-row { width: 100%; text-align: left; background: transparent; cursor: pointer; }
@@ -852,6 +887,7 @@ body { overflow: hidden; }
 }
 .conversation-scroll { height: 100%; min-height: 0; border-radius: 0; }
 .conversation-panel .chat-inner { padding: var(--sp-16) var(--sp-20); }
+.conversation-panel.is-compact .chat-inner { padding: var(--sp-12); }
 .conversation-panel .msg {
   padding: 12px 14px;
   margin: 0 0 9px;
@@ -864,7 +900,8 @@ body { overflow: hidden; }
 .conversation-panel .msg-text { max-width: none; }
 .conversation-panel .card-block {
   margin: 8px 0 0;
-  background: var(--surface);
+  /* V-CP-1：消息卡内不再叠第二层白底，只保留 1px line 边界（spec §5.1） */
+  background: transparent;
   border: 1px solid var(--line);
   border-radius: var(--r-10);
   box-shadow: none;
@@ -886,6 +923,8 @@ body { overflow: hidden; }
   .conversation-panel { width: calc(100% - var(--sp-16)); border-radius: 0; }
   .conversation-panel .chat-inner { padding: 12px 0; }
   .chat-tabs { padding-left: 8px; }
+  /* 窄屏卡内边距收到 12px，chip 同步收窄，标签文字仍落在卡内容左基线 */
+  .chat-tabs .chat-chip { padding: 0 var(--sp-12); }
   .composer { width: calc(100% - var(--sp-16)); }
 }
 
@@ -903,14 +942,19 @@ body { overflow: hidden; }
 .insp-spec-status em { margin-left: auto; padding-left: 8px; }
 .conversation-scroll { scrollbar-width: none; -ms-overflow-style: none; }
 .conversation-scroll::-webkit-scrollbar { display: none; }
-@media (min-width: 56.26em) and (max-width: 93.75em) { .conversation-panel > .timeline { display: flex; } }
-@media (max-width: 56.25em) { .conversation-panel > .timeline { display: none; } }
+/* 899 隐藏、900/901 显示；56.25em 两侧互补，不在断点之间留缝隙。 */
+@media not all and (min-width: 56.25em) { .conversation-panel > .timeline { display: none; } }
+@media (min-width: 56.25em) and (max-width: 93.75em) { .conversation-panel > .timeline { display: flex; } }
 
-/* 1280/1180：为时间轴留出 52px gutter，卡列/Composer 同步收窄，不裁切 */
-@media (min-width: 56.26em) and (max-width: 93.75em) {
+/* 1280/1180：为时间轴留出 52px gutter，卡列/Composer/标签同宽同缩，标签文字落在卡内容左基线 */
+@media (min-width: 56.25em) and (max-width: 93.75em) {
   .conversation-panel { width: calc(100% - 104px); }
   .composer { width: calc(100% - 144px); }
+  .chat-tabs { padding-left: calc(var(--gutter-timeline) + var(--sp-8) + 20px); }
 }
+
+/* A13 右栏基线：右栏首块与消息列同起于标签行下 12px（= 标签行高 + 12），差值 0 */
+.insp-body { padding-top: calc(var(--sp-12) + var(--chat-tabs-h)); }
 
 .timeline-groups { width: var(--gutter-timeline); }
 .timeline-groups .tlg-track { margin-block: auto; }
@@ -935,7 +979,7 @@ body { overflow: hidden; }
 .msg-meta { flex-wrap: nowrap; white-space: nowrap; min-width: 0; }
 .msg-meta .tag { flex: none; }
 
-@media (max-width: 85.375em) and (min-width: 56.26em) { .conversation-panel > .timeline { left: calc(-1 * var(--gutter-timeline) + 12px); } }
+@media (max-width: 85.375em) and (min-width: 56.25em) { .conversation-panel > .timeline { left: calc(-1 * var(--gutter-timeline) + 12px); } }
 @media (max-width: 30em) {
   .conversation-panel .chat-inner { padding: var(--sp-12) 31px; }
   .conversation-panel .msg { padding: 10px 12px; }
@@ -962,7 +1006,7 @@ body { overflow: hidden; }
 .timeline-groups .tl-bar.is-user { background: var(--timeline-user); opacity: 1; }
 .timeline-groups .tl-bar.is-agent { background: var(--timeline-agent); opacity: 1; }
 .timeline-groups .tl-bar.is-current { background: var(--timeline-selected); width: var(--size-24); opacity: 1; }
-.timeline-groups .tl-bar:hover { width: var(--size-24); }
+.timeline-groups .tl-bar:hover, .timeline-groups .tl-bar.is-hover { width: var(--size-24); }
 
 .msg.is-flash { border-color: var(--accent-line); background: var(--accent-soft); transition: background .18s ease, border-color .18s ease; }
 
@@ -1015,3 +1059,33 @@ body { overflow: hidden; }
 }
 
 .composer-hint-group { display: inline-flex; align-items: center; gap: var(--sp-2); min-width: 0; }
+
+/* A5 模式文案默认隐藏（保留 20px 槽与宽度，不跳动）：聚焦时出现，空输入悬停提示区时出现；
+   失焦即隐藏，非空内容失焦后即使指针停在提示区也不显示。 */
+.composer-send-mode-hint { opacity: 0; transition: opacity .14s ease; }
+.composer-box:focus-within .composer-send-mode-hint,
+.composer-box:has(textarea:placeholder-shown) .composer-right:hover .composer-send-mode-hint { opacity: 1; }
+
+/* 时间轴命中区（C-06 / C-11）：整条 44px 轨道列是一个命中面，不再逐条做热区。
+   6px 间距下一条 44×44 的热区必然覆盖 7 层，命中就由兄弟元素的叠放顺序决定，真机
+   实测偏移点击最多会跳到 +7 条（docs/testing/browser-evidence-20261122）。因此命中
+   判定改在轨道容器上按 clientY 找最近刻度（library.tsx 的 nearestTickIndex），刻度
+   自身 pointer-events:none，只负责视觉：20×4，current/hover 24×4。这样列内任意点都
+   能映射到唯一一条，越界取首末刻度，没有"点了没反应"的死区。 */
+.timeline { isolation: isolate; cursor: pointer; }
+.timeline .tl-bar { pointer-events: none; }
+@media (pointer: coarse) {
+  .send { min-height: 44px; }
+  .session-row { min-height: 44px; }
+  .exec-row { min-height: 44px; }
+  .session-more { width: 44px; height: 44px; opacity: 1; }
+  .msg-copy { height: 44px; min-width: 44px; opacity: 1; }
+  .insp-rail { width: 48px; gap: 16px; }
+  .insp-rail button { width: 44px; height: 44px; }
+  .composer-hint-icon { width: 44px; height: 44px; opacity: 1; pointer-events: auto; justify-content: center; }
+}
+
+@media (pointer: coarse) {
+  .msg-meta { height: auto; min-height: 44px; }
+  .composer-right { min-height: 44px; }
+}

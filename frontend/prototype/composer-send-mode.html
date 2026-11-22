@@ -1,0 +1,75 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>司墨 · Composer 发送模式</title>
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./components.css">
+<link rel="stylesheet" href="./message-cards.css">
+<link rel="stylesheet" href="./composer-send-mode.css">
+</head>
+<body class="message-cards composer-send-mode">
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><span class="mark"></span><b>司墨</b><span>v4.1</span></div>
+    <div class="ws"><i>S</i><div><b>主工作区</b><span>本地环境</span></div><button title="新建会话">+</button></div>
+    <div class="search"><span>⌕</span><input placeholder="搜索会话、消息…"><kbd>⌘K</kbd></div>
+    <div class="side-scroll">
+      <div class="side-label"><span class="grow">会话</span><span>3</span><button>显示归档</button></div>
+      <div class="session active"><span class="dot"></span><span class="title">主会话</span><span class="count">4</span></div>
+      <div class="session child"><span class="dot"></span><span class="title">研究员</span></div>
+    </div>
+    <div class="user"><span class="avatar">Y</span><div><b>本地用户</b><span>主工作区 · Owner</span></div></div>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <div class="crumb">司墨 / <b>主会话</b></div>
+      <nav class="nav"><button class="active">对话</button><button>工作台</button></nav>
+      <div class="top-right"><span class="status"><i class="dot"></i>已连接</span><button class="icon-btn" title="设置">⚙</button><span class="ok-avatar">Y</span></div>
+    </header>
+    <section id="page-chat">
+      <div class="context"><h1>主会话</h1><span class="muted">主窗口 · 聚合视图</span><div class="context-actions"><button>重命名</button><button>归档</button></div></div>
+      <div class="chat">
+        <div class="chat-col">
+          <div class="chat-tabs"><button class="active">对话</button></div>
+          <div class="chat-body"><div class="chat-content"><div class="chat-inner">
+            <article class="msg from-user"><span class="msg-avatar">你</span><div class="msg-body"><div class="msg-meta"><b>你</b><span>·</span><span>主会话</span><span>·</span><span>10:24</span></div><div class="msg-text"><p>我想确定一下发送方式，避免误触。</p></div></div></article>
+            <article class="msg from-agent"><span class="msg-avatar">墨</span><div class="msg-body"><div class="msg-meta"><b>司墨</b><span>·</span><span class="tag">需求澄清</span><span>·</span><span>10:25</span></div><div class="msg-text"><p>默认 Enter 发送，Shift+Enter 换行；悬停或聚焦输入框时，可以在右下角切换为 Enter 换行、Shift+Enter 发送。</p></div></div></article>
+            <article class="msg from-user"><span class="msg-avatar">你</span><div class="msg-body"><div class="msg-meta"><b>你</b><span>·</span><span>主会话</span><span>·</span><span>10:31</span></div><div class="msg-text"><p>好，切换入口需要不打扰写作。</p></div></div></article>
+          </div></div></div>
+          <div class="composer">
+            <div class="composer-box">
+              <textarea placeholder="给司墨发消息…" aria-label="消息输入框"></textarea>
+              <div class="composer-foot">
+                <div class="composer-left">◇ <span>支持 Markdown 格式</span></div>
+                <div class="composer-right">
+                  <button class="hint-icon" type="button" aria-label="切换 Enter 发送模式" aria-pressed="false" title="切换发送模式">
+                    <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M3 3v5.2c0 1.2 1 2.1 2.1 2.1H12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M9.5 7.5 12 10l-2.5 2.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                  <span class="composer-hint" id="send-hint">Enter 发送，Shift+Enter 换行</span>
+                  <button class="send">发送</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+<script>
+(function () {
+  var icon = document.querySelector('.hint-icon');
+  var hint = document.getElementById('send-hint');
+  var flipped = false;
+  icon.addEventListener('click', function () {
+    flipped = !flipped;
+    icon.setAttribute('aria-pressed', String(flipped));
+    hint.textContent = flipped ? 'Enter 换行，Shift+Enter 发送' : 'Enter 发送，Shift+Enter 换行';
+  });
+})();
+</script>
+</body>
+</html>
+

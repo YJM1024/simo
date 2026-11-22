@@ -294,6 +294,11 @@ func (m *Module) Archive(ctx context.Context, id string) (Session, error) {
 	if err != nil {
 		return Session{}, err
 	}
+	// 主会话是应用入口，归档后没有 UI 入口可以恢复（AC-CONV-001 的会话树约束）；
+	// 在读写层硬拒绝，而不是只依赖前端隐藏按钮。
+	if session.ID == DefaultSessionID {
+		return Session{}, ErrSessionProtected
+	}
 	if session.Archived != 0 {
 		return session, nil
 	}

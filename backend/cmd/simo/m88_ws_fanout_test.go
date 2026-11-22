@@ -8,11 +8,17 @@ import (
 	"github.com/coder/websocket"
 )
 
+// collectWSUntilDone 收集到 message.done 为止的持久化事件帧。
+// session_unread 是未读广播的临时帧：不落库、没有事件 id，也不进入 since 回放，
+// 因此不能参与 fan-out 计数与回放前缀比较（它由 p1_conv_unread_broadcast_test.go 覆盖）。
 func collectWSUntilDone(t *testing.T, ctx context.Context, conn *websocket.Conn) []wsFrame {
 	t.Helper()
 	frames := make([]wsFrame, 0, 16)
 	for {
 		frame := readWS(t, ctx, conn)
+		if frame.Type == "session_unread" {
+			continue
+		}
 		frames = append(frames, frame)
 		if frame.Type == "message.done" {
 			return frames

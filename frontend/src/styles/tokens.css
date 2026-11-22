@@ -50,9 +50,10 @@
   --timeline-user: #AEBDF7;
   --timeline-agent: #6FAF8E;
   --timeline-selected: #232A8C;
-  --paper: var(--surface-3);
   --conversation-card-w: 720px;
   --conversation-gutter-x: 16px;
+  /* 标签行总高：上 8 + chip 30 + 下 12 + 1px 分割线；右栏首块与之共用同一 12px 基线 */
+  --chat-tabs-h: calc(var(--sp-8) + var(--size-30) + var(--sp-12) + 1px);
   --radius-panel: 12px;
   --radius-tip: 8px;
   --tip-width: 236px;
@@ -101,6 +102,7 @@
   --font-12: 12px;
   --font-12-5: 12.5px;
   --font-13: 13px;
+  --font-13-5: 13.5px;
   --font-14: 14px;
   --font-18: 18px;
   --font-24: 24px;

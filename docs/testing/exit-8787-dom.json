@@ -1,0 +1,491 @@
+{
+  "startedAt": "2026-11-22T06:34:13.557Z",
+  "startedAtLocal": "Sun Nov 22 2026 14:34:13 GMT+0800 (中国标准时间)",
+  "timezone": "Asia/Shanghai",
+  "viewport": {
+    "desktop": {
+      "width": 1180,
+      "height": 900
+    },
+    "mobile": {
+      "width": 375,
+      "height": 812
+    }
+  },
+  "checks": {
+    "health": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "ready": true,
+        "time": 1795329253596,
+        "checks": {
+          "db": "ok",
+          "modules": [
+            "sessions",
+            "chat",
+            "tasks",
+            "memory"
+          ]
+        }
+      },
+      "seconds": 0.045
+    },
+    "boot": {
+      "sessionRows": 15,
+      "countsWithMessageCount": 15,
+      "activeSession": "main",
+      "buildTag": null,
+      "h1": "主会话"
+    },
+    "timeline": {
+      "gutterWidth": 44,
+      "rect": {
+        "x": 248,
+        "y": 153,
+        "w": 44,
+        "h": 563
+      },
+      "samples": [
+        {
+          "fraction": 0.05,
+          "y": 181.1,
+          "tag": "NAV",
+          "cls": "timeline timeline-groups",
+          "inTimeline": true
+        },
+        {
+          "fraction": 0.25,
+          "y": 293.7,
+          "tag": "DIV",
+          "cls": "tlg-session is-current-session",
+          "inTimeline": true
+        },
+        {
+          "fraction": 0.5,
+          "y": 434.5,
+          "tag": "DIV",
+          "cls": "tlg-session is-current-session",
+          "inTimeline": true
+        },
+        {
+          "fraction": 0.75,
+          "y": 575.2,
+          "tag": "DIV",
+          "cls": "tlg-session is-current-session",
+          "inTimeline": true
+        },
+        {
+          "fraction": 0.95,
+          "y": 687.8,
+          "tag": "NAV",
+          "cls": "timeline timeline-groups",
+          "inTimeline": true
+        }
+      ],
+      "barCount": 75,
+      "msgCount": 75,
+      "centers": [
+        212.5,
+        218.5,
+        224.5,
+        230.5,
+        236.5,
+        242.5,
+        248.5,
+        254.5,
+        260.5,
+        266.5,
+        272.5,
+        278.5,
+        284.5,
+        290.5,
+        296.5,
+        302.5,
+        308.5,
+        314.5,
+        320.5,
+        326.5,
+        332.5,
+        338.5,
+        344.5,
+        350.5,
+        356.5,
+        362.5,
+        368.5,
+        374.5,
+        380.5,
+        386.5,
+        392.5,
+        398.5,
+        404.5,
+        410.5,
+        416.5,
+        422.5,
+        428.5,
+        434.5,
+        440.5,
+        446.5,
+        452.5,
+        458.5,
+        464.5,
+        470.5,
+        476.5,
+        482.5,
+        488.5,
+        494.5,
+        500.5,
+        506.5,
+        512.5,
+        518.5,
+        524.5,
+        530.5,
+        536.5,
+        542.5,
+        548.5,
+        554.5,
+        560.5,
+        566.5,
+        572.5,
+        578.5,
+        584.5,
+        590.5,
+        596.5,
+        602.5,
+        608.5,
+        614.5,
+        620.5,
+        626.5,
+        632.5,
+        638.5,
+        644.5,
+        650.5,
+        656.5
+      ],
+      "scrollY": 0,
+      "click": {
+        "plan": {
+          "x": 270,
+          "y": 395.484375,
+          "nearest": 30,
+          "i": 30,
+          "centersAround": [
+            392.484375,
+            398.484375
+          ]
+        },
+        "beforeClick": {
+          "active": 70,
+          "scrollTop": 6852,
+          "msgCount": 75
+        },
+        "afterClickEarly": {
+          "activeIndex": 30,
+          "msgCount": 75,
+          "scrollTop": 6154,
+          "inViewport": false,
+          "msgTop": -3041.9,
+          "msgBottom": -2973.6,
+          "scrollRect": {
+            "top": 153,
+            "bottom": 716
+          }
+        },
+        "afterClickSettled": {
+          "activeIndex": 30,
+          "scrollTop": 2979,
+          "inViewport": true
+        }
+      },
+      "activeMatchesNearest": true,
+      "jumpInViewport": false,
+      "allSamplesHit": true,
+      "widthIs44": true
+    },
+    "projectionBrowser": {
+      "inspectorC": {
+        "session": "sess-cbb0858dc72e5e27",
+        "execRows": 0,
+        "text": "进行中rev 7"
+      },
+      "sampleCount": 97,
+      "mainSamples": 88,
+      "mainRowsMin": 7,
+      "mainRowsMax": 7,
+      "mainSkeletonFrames": 0,
+      "mainPlaceholderFrames": 0,
+      "firstMainSample": {
+        "t": 2641,
+        "session": "main",
+        "rows": 7,
+        "skel": false,
+        "placeholder": false
+      },
+      "lastMainSample": {
+        "t": 4078,
+        "session": "main",
+        "rows": 7,
+        "skel": false,
+        "placeholder": false
+      },
+      "specRequests": [
+        {
+          "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=3",
+          "status": 200,
+          "etag": null,
+          "ifNoneMatch": null,
+          "phaseAtRequest": 1795329253995
+        },
+        {
+          "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=1",
+          "status": 200,
+          "etag": null,
+          "ifNoneMatch": null,
+          "phaseAtRequest": 1795329254078
+        },
+        {
+          "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=3",
+          "status": 304,
+          "etag": null,
+          "ifNoneMatch": "\"spec-c5a2d772dd1d5d88\"",
+          "phaseAtRequest": 1795329256581
+        }
+      ],
+      "conditional304": {
+        "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=3",
+        "status": 304,
+        "etag": null,
+        "ifNoneMatch": "\"spec-c5a2d772dd1d5d88\"",
+        "phaseAtRequest": 1795329256581
+      },
+      "stableAfter304": true
+    },
+    "table1180": {
+      "injected": true,
+      "cols": 14,
+      "rows": 4,
+      "tableClientWidth": 819,
+      "tableScrollWidth": 819,
+      "tableOverflowsItself": false,
+      "wrapClientWidth": 496,
+      "wrapScrollWidth": 819,
+      "wrapScrollsInternally": true,
+      "wrapOverflowX": "auto",
+      "scClientWidth": 568,
+      "scScrollWidth": 568,
+      "conversationScrollOverflow": false,
+      "docScrollWidth": 1180,
+      "viewportWidth": 1180,
+      "docOverflow": false,
+      "wrapScrollLeftAfterSet": 323,
+      "after": {
+        "wrapScrollLeft": 323,
+        "canScrollInternally": true
+      }
+    },
+    "composer375": {
+      "innerWidth": 375,
+      "innerHeight": 812,
+      "composer": {
+        "x": 8,
+        "y": 630,
+        "w": 359,
+        "h": 144,
+        "visibleRatio": 1
+      },
+      "composerBox": {
+        "x": 8,
+        "y": 638,
+        "w": 359,
+        "h": 122,
+        "visibleRatio": 1
+      },
+      "textarea": {
+        "x": 9,
+        "y": 639,
+        "w": 357,
+        "h": 78.8,
+        "visibleRatio": 1
+      },
+      "send": {
+        "x": 302,
+        "y": 723,
+        "w": 54,
+        "h": 28,
+        "visibleRatio": 1
+      },
+      "sidebar": {
+        "display": "none",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "visibleRatio": 0
+        }
+      },
+      "inspector": {
+        "display": "none",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "visibleRatio": 0
+        }
+      },
+      "intersectsSidebar": false,
+      "intersectsInspector": false,
+      "sendDisabled": true,
+      "docScrollWidth": 375,
+      "docClientWidth": 375,
+      "bodyScrollWidth": 375,
+      "docOverflow": false,
+      "timelineDisplay": "none",
+      "composerWithinViewport": true
+    },
+    "table375": {
+      "injected": true,
+      "tableClientWidth": 819,
+      "tableScrollWidth": 819,
+      "tableOverflowsItself": false,
+      "wrapClientWidth": 331,
+      "wrapScrollWidth": 819,
+      "wrapScrollsInternally": true,
+      "wrapOverflowX": "auto",
+      "wrapScrollLeft": 488,
+      "scClientWidth": 359,
+      "scScrollWidth": 359,
+      "conversationScrollOverflow": false,
+      "docScrollWidth": 375,
+      "viewportWidth": 375,
+      "docOverflow": false,
+      "tableRectWidth": 819
+    }
+  },
+  "console": {
+    "error": 1,
+    "warning": 1,
+    "exception": 0,
+    "errorsExcludingSelfTest": 0,
+    "warningsExcludingSelfTest": 0,
+    "errorDetail": [
+      {
+        "type": "error",
+        "text": "EXIT_SELFTEST_CONSOLE_ERROR",
+        "at": 1795329259552,
+        "phase": "selftest"
+      }
+    ],
+    "warningDetail": [
+      {
+        "type": "warning",
+        "text": "EXIT_SELFTEST_CONSOLE_WARN",
+        "at": 1795329259552,
+        "phase": "selftest"
+      }
+    ],
+    "exceptionDetail": []
+  },
+  "http": {
+    "statusGte400Count": 1,
+    "statusGte400ExcludingSelfTest": 0,
+    "detail": [
+      {
+        "url": "http://127.0.0.1:8787/api/__exit_selftest_404_probe",
+        "status": 404,
+        "at": 1795329259556,
+        "phase": "selftest"
+      }
+    ],
+    "totalRequests": 41,
+    "totalResponses": 33
+  },
+  "selfTest": {
+    "before": {
+      "consoleErrors": 0,
+      "warnings": 0,
+      "exceptions": 0,
+      "httpErrors": 0,
+      "networkRequests": 40
+    },
+    "after": {
+      "consoleErrors": 1,
+      "warnings": 1,
+      "exceptions": 0,
+      "httpErrors": 1,
+      "networkRequests": 41
+    },
+    "consoleErrorDelta": 1,
+    "warningDelta": 1,
+    "httpErrorDelta": 1,
+    "lastConsoleError": {
+      "type": "error",
+      "text": "EXIT_SELFTEST_CONSOLE_ERROR",
+      "at": 1795329259552,
+      "phase": "selftest"
+    },
+    "lastHttpError": {
+      "url": "http://127.0.0.1:8787/api/__exit_selftest_404_probe",
+      "status": 404,
+      "at": 1795329259556,
+      "phase": "selftest"
+    },
+    "selfTestEntries": 1
+  },
+  "screenshots": {
+    "mobile": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\exit-8787-375.png",
+      "bytes": 36751
+    },
+    "desktop": {
+      "file": "E:\\dsh_home\\workspaces\\agent\\docs\\testing\\exit-8787-1180.png",
+      "bytes": 104306
+    }
+  },
+  "phases": [
+    {
+      "name": "health_probe",
+      "seconds": 0.04
+    },
+    {
+      "name": "setup_cdp",
+      "seconds": 1.11
+    },
+    {
+      "name": "check4_timeline",
+      "seconds": 0.94
+    },
+    {
+      "name": "check3_projection_browser",
+      "seconds": 2.38
+    },
+    {
+      "name": "check6_table_1180",
+      "seconds": 0.22
+    },
+    {
+      "name": "check5_375_composer",
+      "seconds": 0.65
+    },
+    {
+      "name": "screenshots",
+      "seconds": 0.64
+    },
+    {
+      "name": "selftest",
+      "seconds": 0.62
+    }
+  ],
+  "marks": [
+    {
+      "name": "node_start",
+      "at": "2026-11-22T06:34:13.557Z",
+      "offsetMs": 0
+    }
+  ],
+  "errors": [],
+  "finishedAt": "2026-11-22T06:34:20.166Z",
+  "capturedAt": "2026-11-22T06:34:20.166Z",
+  "phasesTotal": 6.61
+}

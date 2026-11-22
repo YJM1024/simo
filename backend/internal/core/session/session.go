@@ -13,6 +13,8 @@ type Session struct {
 	Pinned       bool      `json:"pinned"`
 	OwnerAgentID string    `json:"ownerAgentId,omitempty"`
 	Children     []Session `json:"children,omitempty"`
+	// HasUnread 是会话级未读标记（服务端游标判定）；false 也输出，前端据此清除未读点。
+	HasUnread bool `json:"hasUnread"`
 }
 
 // Service 是 chat 可见的会话端口。
@@ -31,4 +33,10 @@ type DraftService interface {
 	CreateDraft(ctx context.Context, parentID, title string) (Session, error)
 	MaterializeDraft(ctx context.Context, id string) (Session, bool, error)
 	IsDraft(ctx context.Context, id string) bool
+}
+
+// UnreadSource 提供会话级未读投影（chat 实现，sessions 列表/树读取）。
+// 返回值是"有未读的会话 id"集合；不含在集合里的会话视为已读。
+type UnreadSource interface {
+	UnreadSessionIDs(ctx context.Context) (map[string]bool, error)
 }

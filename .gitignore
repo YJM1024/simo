@@ -50,3 +50,52 @@ node_modules/
 .pnpm-store/
 **/.pnpm-store/
 *.ignored_*
+
+# ==== hygiene: toolchain & sandbox homes ====
+.tools/
+.*-home/
+.tmp-compfix/
+
+# ==== hygiene: runtime databases & sidecars ====
+*.db
+*.db-shm
+*.db-wal
+*.db.lock
+backend/.tmp*
+
+# ==== hygiene: one-off probe & dump artifacts in repo root ====
+/.*-allow*.json
+/.allow-*.json
+/.*-probe*.json
+/.probe-*.json
+/.chat-probe*.json
+/.d-d-*.json
+/.da-d-*.json
+/.g-g-*.json
+/.ga-g-*.json
+/.g2.json
+/.sch*.json
+/.ui1-*.json
+/*.bin
+
+# ==== hygiene: pre-op data snapshots ====
+data-backup-*/
+data-preprod-*/
+
+# ==== hygiene: scratch workspace ====
+scratch/
+
+# ==== hygiene: frontend generated output & review screenshots ====
+frontend/coverage/
+frontend/coverage-threshold-check/
+frontend/review/**/*.png
+frontend/e2e/report/
+
+# ==== hygiene: backend generated output ====
+backend/internal/webui/dist.bak-*/
+backend/*.err
+backend/*.out
+
+# ==== hygiene: archived experiments (keep the index) ====
+archive/*
+!archive/README.md

@@ -62,6 +62,10 @@ const (
 	TypeCardUpdated = "card.updated"
 	TypeCardAction  = "card.action"
 
+	// 会话已读（广播到 WS）：任一标签页标记已读后，其它标签页刷新会话列表未读点。
+	// 载荷 {"sessionId":"..."}；帧结构仍是 wsEnvelope{type,data,id}。
+	TypeSessionRead = "session_read"
+
 	// M43 消息自动路由（审计）。
 	TypeMessageRouted = "message.routed"
 
@@ -117,6 +121,7 @@ var persistedTypes = map[string]struct{}{
 	TypeCardUpdated:        {},
 	TypeCardAction:         {},
 	TypeMessageRouted:      {},
+	TypeSessionRead:        {},
 
 	TypeTeamCreated:          {},
 	TypeTeamArchived:         {},

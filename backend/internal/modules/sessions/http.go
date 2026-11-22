@@ -62,7 +62,25 @@ func (m *Module) handleList(w http.ResponseWriter, r *http.Request) {
 	if list == nil {
 		list = []Session{}
 	}
-	httpserver.WriteJSON(w, http.StatusOK, map[string]any{"sessions": list})
+	applyUnread(list, m.unreadFlags(r.Context()))
+	counts, err := messageCounts(r.Context(), m.store)
+	if err != nil {
+		m.log.Error("统计会话消息数失败", "err", err)
+		httpserver.WriteError(w, http.StatusInternalServerError, "读取会话失败")
+		return
+	}
+	views := toSessionViews(list, counts)
+	// ETag 在 hasUnread 与 messageCount 现算之后生成，304 与 200 共用同一次计算结果：
+	// 未读状态或消息数一变摘要就变，不会用旧摘要把新内容判成 304。
+	etag := listETag(views)
+	w.Header().Set("ETag", etag)
+	w.Header().Set("Cache-Control", "no-cache")
+	if etagMatches(r.Header.Get("If-None-Match"), etag) {
+		// 304 不带 body，但必须保留 ETag，客户端据此继续复用本地副本。
+		w.WriteHeader(http.StatusNotModified)
+		return
+	}
+	httpserver.WriteJSON(w, http.StatusOK, map[string]any{"sessions": views})
 }
 
 func (m *Module) handleDelete(w http.ResponseWriter, r *http.Request) {
@@ -70,21 +88,28 @@ func (m *Module) handleDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (m *Module) handlePin(w http.ResponseWriter, r *http.Request) {
-	session, err := m.SetPinned(r.Context(), r.PathValue("id"), true)
-	if err != nil {
-		m.writeSessionError(w, err)
-		return
-	}
-	httpserver.WriteJSON(w, http.StatusOK, map[string]any{"ok": true, "session": session})
+	m.handleSetPinned(w, r, true)
 }
 
 func (m *Module) handleUnpin(w http.ResponseWriter, r *http.Request) {
-	session, err := m.SetPinned(r.Context(), r.PathValue("id"), false)
+	m.handleSetPinned(w, r, false)
+}
+
+func (m *Module) handleSetPinned(w http.ResponseWriter, r *http.Request, pinned bool) {
+	session, err := m.SetPinned(r.Context(), r.PathValue("id"), pinned)
 	if err != nil {
+		if errors.Is(err, ErrArchived) {
+			// 归档会话的拒绝沿用 chat 模块已有的 code；blockers 给可读原因（AC-CONV-001-04）。
+			httpserver.WriteJSON(w, http.StatusConflict, map[string]any{
+				"ok": false, "error": "会话已归档（只读）", "code": "session_archived",
+				"blockers": []string{"归档会话不能置顶或取消置顶"},
+			})
+			return
+		}
 		m.writeSessionError(w, err)
 		return
 	}
-	httpserver.WriteJSON(w, http.StatusOK, map[string]any{"ok": true, "session": session})
+	httpserver.WriteJSON(w, http.StatusOK, map[string]any{"ok": true, "session": m.viewOf(r.Context(), session)})
 }
 
 func (m *Module) handleOwnerGet(w http.ResponseWriter, r *http.Request) {
@@ -134,23 +159,15 @@ func (m *Module) handleTree(w http.ResponseWriter, r *http.Request) {
 	if tree == nil {
 		tree = []Session{}
 	}
-	flat := flattenSessions(tree)
-	httpserver.WriteJSON(w, http.StatusOK, map[string]any{"sessions": flat, "tree": tree})
-}
-
-func flattenSessions(nodes []Session) []Session {
-	out := make([]Session, 0, len(nodes))
-	var walk func([]Session)
-	walk = func(items []Session) {
-		for _, item := range items {
-			out = append(out, item)
-			if len(item.Children) > 0 {
-				walk(item.Children)
-			}
-		}
+	applyUnread(tree, m.unreadFlags(r.Context()))
+	counts, err := messageCounts(r.Context(), m.store)
+	if err != nil {
+		m.log.Error("统计会话消息数失败", "err", err)
+		httpserver.WriteError(w, http.StatusInternalServerError, "读取会话树失败")
+		return
 	}
-	walk(nodes)
-	return out
+	views := toSessionViewTree(tree, counts)
+	httpserver.WriteJSON(w, http.StatusOK, map[string]any{"sessions": flattenSessionViews(views), "tree": views})
 }
 
 func (m *Module) handleCreate(w http.ResponseWriter, r *http.Request) {
@@ -180,7 +197,7 @@ func (m *Module) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpserver.WriteJSON(w, http.StatusCreated, map[string]any{
-		"ok": true, "session": session, "draft": req.Draft == nil || *req.Draft,
+		"ok": true, "session": m.viewOf(r.Context(), session), "draft": req.Draft == nil || *req.Draft,
 	})
 }
 
@@ -202,7 +219,7 @@ func (m *Module) handleRename(w http.ResponseWriter, r *http.Request) {
 		m.writeSessionError(w, err)
 		return
 	}
-	httpserver.WriteJSON(w, http.StatusOK, map[string]any{"ok": true, "session": session})
+	httpserver.WriteJSON(w, http.StatusOK, map[string]any{"ok": true, "session": m.viewOf(r.Context(), session)})
 }
 
 func (m *Module) handleArchive(w http.ResponseWriter, r *http.Request) {
@@ -218,7 +235,7 @@ func (m *Module) handleArchive(w http.ResponseWriter, r *http.Request) {
 		m.writeSessionError(w, err)
 		return
 	}
-	httpserver.WriteJSON(w, http.StatusOK, map[string]any{"ok": true, "session": session})
+	httpserver.WriteJSON(w, http.StatusOK, map[string]any{"ok": true, "session": m.viewOf(r.Context(), session)})
 }
 
 func (m *Module) handleUnarchive(w http.ResponseWriter, r *http.Request) {
@@ -227,7 +244,7 @@ func (m *Module) handleUnarchive(w http.ResponseWriter, r *http.Request) {
 		m.writeSessionError(w, err)
 		return
 	}
-	httpserver.WriteJSON(w, http.StatusOK, map[string]any{"ok": true, "session": session})
+	httpserver.WriteJSON(w, http.StatusOK, map[string]any{"ok": true, "session": m.viewOf(r.Context(), session)})
 }
 
 func (m *Module) handleDebugSpec(w http.ResponseWriter, r *http.Request) {
@@ -341,6 +358,13 @@ func (m *Module) writeSessionError(w http.ResponseWriter, err error) {
 		httpserver.WriteError(w, http.StatusConflict, "会话已归档（只读）")
 	case errors.Is(err, ErrArchiveBlocked):
 		httpserver.WriteError(w, http.StatusConflict, "归档被拒绝")
+	case errors.Is(err, ErrSessionProtected):
+		// code 保持不变（既有调用方按它分支）；blockers 是 AC-CONV-001-03 要求的
+		// 结构化拒绝原因，取值按产品 spec 定义（人类可读原因），与 archive_blocked 信封同形。
+		httpserver.WriteJSON(w, http.StatusConflict, map[string]any{
+			"ok": false, "error": "主会话不可归档", "code": "main_session_protected",
+			"blockers": []string{"主会话不可归档"},
+		})
 	default:
 		m.log.Error("会话操作失败", "err", err)
 		httpserver.WriteError(w, http.StatusInternalServerError, "会话操作失败")

@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { setupServer } from 'msw/node'
+import { http, HttpResponse } from 'msw'
 import App from './app'
 import {
   appHandlers,
@@ -9,8 +10,11 @@ import {
   createSnapshot,
   deltaFrame,
   eventFrame,
+  findSession,
   flush,
   MockWebSocket,
+  readFrame,
+  unreadFrame,
   type AppSnapshot,
 } from './App.test-utils'
 
@@ -80,6 +84,79 @@ describe('App session lifecycle (PRD-CONV-002)', () => {
     expect(sessionRow('新会话')).toHaveClass('is-active')
   })
 
+  it('keeps a draft session out of the archive menu until its first message materializes it', async () => {
+    const user = await renderApp()
+    await user.click(createSessionButton())
+    await waitFor(() => expect(snap.createBodies).toHaveLength(1))
+    // 草稿只存在于服务端内存（POST /api/sessions 返回 draft=true，不进 /tree）：
+    // 不渲染「会话操作」菜单，归档请求也就无从发出（此前点归档必然 404 not_found）。
+    expect(within(sessionRow('新会话')).queryByRole('button', { name: '会话操作' })).not.toBeInTheDocument()
+    expect(snap.archiveCalls).toEqual([])
+
+    await user.type(messageInput(), '第一条消息{Enter}')
+    await waitFor(() => expect(snap.chatBodies).toHaveLength(1))
+    expect(snap.chatBodies[0]).toMatchObject({ sessionId: 'session-new', text: '第一条消息' })
+    // 首条消息触发 MaterializeDraft 后，侧栏菜单恢复
+    await waitFor(() => expect(within(sessionRow('新会话')).getByRole('button', { name: '会话操作' })).toBeInTheDocument())
+    expect(snap.archiveCalls).toEqual([])
+  })
+
+  it('pins a session and shows 取消置顶 after refreshing the list from the backend', async () => {
+    const user = await renderApp()
+    const listCalls = snap.listCalls
+    await user.click(within(sessionRow('子会话')).getByRole('button', { name: '会话操作' }))
+    await user.click(await screen.findByRole('button', { name: '置顶' }))
+    await waitFor(() => expect(snap.pinCalls).toEqual(['pin:child']))
+    await waitFor(() => expect(findSession(snap, 'child')?.pinned).toBe(true))
+    await waitFor(() => expect(snap.listCalls).toBeGreaterThan(listCalls))
+    await user.click(within(sessionRow('子会话')).getByRole('button', { name: '会话操作' }))
+    expect(await screen.findByRole('button', { name: '取消置顶' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '置顶' })).not.toBeInTheDocument()
+  })
+
+  it('unpins a session and shows 置顶 again', async () => {
+    findSession(snap, 'child')!.pinned = true
+    const user = await renderApp()
+    await user.click(within(sessionRow('子会话')).getByRole('button', { name: '会话操作' }))
+    await user.click(await screen.findByRole('button', { name: '取消置顶' }))
+    await waitFor(() => expect(snap.pinCalls).toEqual(['unpin:child']))
+    await waitFor(() => expect(findSession(snap, 'child')?.pinned).toBe(false))
+    await flush(30)
+    await user.click(within(sessionRow('子会话')).getByRole('button', { name: '会话操作' }))
+    expect(await screen.findByRole('button', { name: '置顶' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '取消置顶' })).not.toBeInTheDocument()
+  })
+
+  it('does not request spec projection for a draft and shows the right-panel placeholder', async () => {
+    const user = await renderApp()
+    await user.click(createSessionButton())
+    await waitFor(() => expect(snap.createBodies).toHaveLength(1))
+    expect(await screen.findByRole('heading', { name: '新会话' })).toBeInTheDocument()
+    expect(await screen.findByText('发送第一条消息后生成目标与执行态')).toBeInTheDocument()
+    await flush(30)
+    expect(snap.projectionCalls.filter((call) => call.sessionId === 'session-new')).toEqual([])
+    expect(screen.queryByText('右栏加载失败')).not.toBeInTheDocument()
+  })
+
+  it('loads the projection after the first message materializes the draft', async () => {
+    const user = await renderApp()
+    await user.click(createSessionButton())
+    await waitFor(() => expect(snap.createBodies).toHaveLength(1))
+    expect(await screen.findByText('发送第一条消息后生成目标与执行态')).toBeInTheDocument()
+
+    await user.type(messageInput(), '第一条消息{Enter}')
+    await waitFor(() => expect(snap.chatBodies).toHaveLength(1))
+    await waitFor(() => expect(snap.projectionCalls).toContainEqual({ sessionId: 'session-new', taskLimit: '3' }))
+    await waitFor(() => expect(screen.queryByText('发送第一条消息后生成目标与执行态')).not.toBeInTheDocument())
+  })
+
+  it('keeps loading spec projection for a non-draft session', async () => {
+    const user = await renderApp()
+    await user.click(screen.getByTitle('子会话'))
+    await waitFor(() => expect(snap.projectionCalls).toContainEqual({ sessionId: 'child', taskLimit: '3' }))
+    expect(screen.queryByText('发送第一条消息后生成目标与执行态')).not.toBeInTheDocument()
+  })
+
   it('surfaces a create-session failure and keeps the previous active session', async () => {
     const user = await renderApp()
     snap.createFail = true
@@ -104,60 +181,165 @@ describe('App session lifecycle (PRD-CONV-002)', () => {
     expect(screen.queryByTitle('主会话')).not.toBeInTheDocument()
   })
 
-  it('archives the active session, hides it by default and renders it read-only when shown', async () => {
+  it('archives a non-main session, hides it by default and renders it read-only when shown', async () => {
     const user = await renderApp()
-    await user.click(within(sessionRow('主会话')).getByRole('button', { name: '会话操作' }))
+    await user.click(screen.getByTitle('子会话'))
+    await screen.findByText('子会话消息')
+    await user.click(within(sessionRow('子会话')).getByRole('button', { name: '会话操作' }))
     await user.click(await screen.findByRole('button', { name: '归档' }))
-    await waitFor(() => expect(snap.archiveCalls).toEqual(['archive:main']))
-    await waitFor(() => expect(screen.queryByTitle('主会话')).not.toBeInTheDocument())
+    await waitFor(() => expect(snap.archiveCalls).toEqual(['archive:child']))
+    await waitFor(() => expect(screen.queryByTitle('子会话')).not.toBeInTheDocument())
     expect(screen.getByRole('button', { name: '显示归档' })).toHaveAttribute('aria-pressed', 'false')
 
     await user.click(screen.getByRole('button', { name: '显示归档' }))
-    expect(sessionRow('主会话')).toHaveClass('is-archived')
+    expect(sessionRow('子会话')).toHaveClass('is-archived')
     expect(screen.getByText('已归档 · 只读')).toBeInTheDocument()
     expect(messageInput()).toBeDisabled()
     expect(screen.getByRole('button', { name: '发送' })).toBeDisabled()
   })
 
-  it('restores an archived session through the row menu', async () => {
-    snap.tree[0].archived = 1
-    const user = userEvent.setup()
-    render(<App />)
-    await screen.findByText('主会话消息')
-    expect(screen.queryByTitle('主会话')).not.toBeInTheDocument()
+  it('never offers archive for the main session', async () => {
+    await renderApp()
+    expect(within(sessionRow('主会话')).queryByRole('button', { name: '会话操作' })).not.toBeInTheDocument()
+    expect(snap.archiveCalls).toEqual([])
+  })
+
+  it('restores an archived non-main session through the row menu', async () => {
+    const child = snap.tree[0].children?.[0]
+    if (!child) throw new Error('fixture missing child session')
+    child.archived = 1
+    const user = await renderApp()
+    expect(screen.queryByTitle('子会话')).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: '显示归档' }))
-    await user.click(within(sessionRow('主会话')).getByRole('button', { name: '会话操作' }))
+    await user.click(within(sessionRow('子会话')).getByRole('button', { name: '会话操作' }))
     await user.click(await screen.findByRole('button', { name: '恢复' }))
-    await waitFor(() => expect(snap.archiveCalls).toEqual(['unarchive:main']))
-    await waitFor(() => expect(screen.queryByText('已归档 · 只读')).not.toBeInTheDocument())
-    expect(sessionRow('主会话')).not.toHaveClass('is-archived')
-    expect(messageInput()).not.toBeDisabled()
+    await waitFor(() => expect(snap.archiveCalls).toEqual(['unarchive:child']))
+    // 恢复后重新回到默认（未归档）列表
+    await waitFor(() => expect(sessionRow('子会话')).not.toHaveClass('is-archived'))
   })
 })
 
-describe('App session search (PRD-CONV-003 / A5 真实数据)', () => {
-  it('keeps sessions whose messages match the server-side search, even when titles do not', async () => {
+describe('App unread badge (P1-CONV 未读持久化)', () => {
+  it('renders the persisted unread dot and clears it after entering the session', async () => {
+    const child = snap.tree[0].children?.[0]
+    if (!child) throw new Error('fixture missing child session')
+    child.hasUnread = true
     const user = await renderApp()
-    expect(screen.getByTitle('主会话')).toBeInTheDocument()
-    expect(screen.getByTitle('子会话')).toBeInTheDocument()
+    expect(within(sessionRow('子会话')).getByLabelText('未读')).toHaveAttribute('data-unread', 'true')
+    expect(sessionRow('子会话').querySelector('[data-unread="true"]')?.textContent).toBe('')
 
-    snap.searchHold = true
-    snap.searchIds = ['main']
-    await user.type(screen.getByLabelText('搜索会话'), 'token')
-    await waitFor(() => expect(snap.searchQueries).toContain('token'), { timeout: 2000 })
-    // 服务端检索未返回前只显示"搜索中…"，不能展示未过滤的假结果
-    expect(screen.getByText('搜索中…')).toBeInTheDocument()
-
-    act(() => { snap.releaseSearch?.() })
-    await waitFor(() => expect(screen.queryByTitle('子会话')).not.toBeInTheDocument())
-    expect(screen.getByTitle('主会话')).toBeInTheDocument()
+    await user.click(screen.getByTitle('子会话'))
+    await waitFor(() => expect(snap.readCalls).toEqual(['child']))
+    await waitFor(() => expect(within(sessionRow('子会话')).queryByLabelText('未读')).not.toBeInTheDocument())
   })
 
-  it('shows the no-match empty state when the server finds nothing', async () => {
+  it('refreshes the session list on a session_read WS event and trusts server state', async () => {
     const user = await renderApp()
-    snap.searchIds = []
-    await user.type(screen.getByLabelText('搜索会话'), '不存在的关键字')
+    expect(screen.queryByLabelText('未读')).not.toBeInTheDocument()
+    const before = snap.listCalls
+    const child = snap.tree[0].children?.[0]
+    if (!child) throw new Error('fixture missing child session')
+    child.hasUnread = true
+    act(() => { MockWebSocket.instances[0].emit('message', { data: readFrame('child') }) })
+    await waitFor(() => expect(snap.listCalls).toBeGreaterThan(before))
+    expect(await screen.findByLabelText('未读')).toBeInTheDocument()
+
+    // 进入该会话 → 服务端已读 → 本地即时清除，且刷新后不再出现
+    await user.click(screen.getByTitle('子会话'))
+    await waitFor(() => expect(snap.readCalls).toEqual(['child']))
+    await waitFor(() => expect(screen.queryByLabelText('未读')).not.toBeInTheDocument())
+    expect(snap.tree[0].children?.[0]?.hasUnread).toBe(false)
+  })
+
+  it('coalesces a session_unread burst into one list refresh and keeps the active search query', async () => {
+    const user = await renderApp()
+    const input = screen.getByLabelText('搜索会话')
+    await user.type(input, '子')
+    await waitFor(() => expect(snap.titleQueries).toContain('子'), { timeout: 3000 })
+    expect(await screen.findByTitle('子会话', {}, { timeout: 3000 })).toBeInTheDocument()
+    await flush(40)
+
+    const child = snap.tree[0].children?.[0]
+    if (!child) throw new Error('fixture missing child session')
+    child.hasUnread = true
+    const listsBefore = snap.listCalls
+    const queriesBefore = snap.titleQueries.length
+    act(() => {
+      MockWebSocket.instances[0].emit('message', { data: unreadFrame('child') })
+      MockWebSocket.instances[0].emit('message', { data: unreadFrame('grand') })
+    })
+
+    // 300ms 合并窗口内不得刷新（两帧同批只留一个定时器）
+    await flush(150)
+    expect(snap.listCalls).toBe(listsBefore)
+
+    await waitFor(() => expect(snap.listCalls).toBe(listsBefore + 1), { timeout: 3000 })
+    // 搜索态下按当前 q 重查，未读点出现在搜索结果里，且输入词未被冲掉
+    await waitFor(() => expect(snap.titleQueries.length).toBe(queriesBefore + 1), { timeout: 3000 })
+    expect(await screen.findByLabelText('未读')).toBeInTheDocument()
+    expect(input).toHaveValue('子')
+
+    // 合并窗口结束后也不得重复刷新
+    await flush(400)
+    expect(snap.listCalls).toBe(listsBefore + 1)
+    expect(snap.titleQueries.length).toBe(queriesBefore + 1)
+  })
+
+  it('surfaces a visible error and keeps the unread dot when marking read fails', async () => {
+    const child = snap.tree[0].children?.[0]
+    if (!child) throw new Error('fixture missing child session')
+    child.hasUnread = true
+    snap.readFail = true
+    const user = await renderApp()
+    await user.click(screen.getByTitle('子会话'))
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('标记已读失败：请求失败（500），请稍后重试')
+    expect(within(sessionRow('子会话')).getByLabelText('未读')).toBeInTheDocument()
+  })
+})
+
+describe('App session title search (P1-CONV 标题搜索)', () => {
+  it('filters by title through GET /api/sessions?q= without calling message search', async () => {
+    const user = await renderApp()
+    expect(screen.getByTitle('主会话')).toBeInTheDocument()
+    await user.type(screen.getByLabelText('搜索会话'), '子')
+    await waitFor(() => expect(snap.titleQueries).toContain('子'), { timeout: 3000 })
+    await waitFor(() => expect(screen.queryByTitle('主会话')).not.toBeInTheDocument())
+    expect(screen.getByTitle('子会话')).toBeInTheDocument()
+    // 消息正文搜索已降为 P2：左栏搜索不得触发 /api/messages/search
+    expect(snap.searchQueries).toEqual([])
+  })
+
+  it('shows the no-match empty state and restores the full list when cleared', async () => {
+    const user = await renderApp()
+    const input = screen.getByLabelText('搜索会话')
+    await user.type(input, '不存在的关键字')
     expect(await screen.findByText('没有匹配的会话', {}, { timeout: 3000 })).toBeInTheDocument()
+    await user.clear(input)
+    expect(await screen.findByTitle('主会话')).toBeInTheDocument()
+    expect(screen.getByTitle('子会话')).toBeInTheDocument()
+  })
+
+  it('distinguishes a failed search from an empty result and retries in place', async () => {
+    const user = await renderApp()
+    const input = screen.getByLabelText('搜索会话')
+    snap.searchFail = true
+    await user.type(input, '子')
+
+    expect(await screen.findByText('搜索失败，请重试', {}, { timeout: 3000 })).toBeInTheDocument()
+    // 失败绝不能落到空态；错误原因单独展示，并提供重试入口
+    expect(screen.queryByText('没有匹配的会话')).not.toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent('请求失败（500），请稍后重试')
+    expect(input).toHaveValue('子')
+
+    const queriesBefore = snap.titleQueries.length
+    snap.searchFail = false
+    await user.click(screen.getByRole('button', { name: '重试' }))
+    await waitFor(() => expect(snap.titleQueries.length).toBeGreaterThan(queriesBefore), { timeout: 3000 })
+    expect(await screen.findByTitle('子会话', {}, { timeout: 3000 })).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText('搜索失败，请重试')).not.toBeInTheDocument())
+    expect(screen.queryByText('没有匹配的会话')).not.toBeInTheDocument()
+    expect(input).toHaveValue('子')
   })
 
   it('never renders a fake zero when the stats endpoint fails', async () => {
@@ -174,6 +356,17 @@ describe('App session search (PRD-CONV-003 / A5 真实数据)', () => {
 })
 
 describe('App message sending (PRD-CONV-005)', () => {
+  it('maps a persisted error reply to the failure badge and refills the composer on retry', async () => {
+    snap.messages.main.push({ id: 'main-error', sessionId: 'main', sessionTitle: '主会话', role: 'agent', text: '', at: at + 10, status: 'error' })
+    const user = await renderApp()
+    expect(screen.getByText('失败')).toBeInTheDocument()
+    expect(screen.getByText('回复生成失败，未返回内容。')).toBeInTheDocument()
+    // 重试只回填原文、不自动发送：后端没有回复级重试接口，直接重发会多落一条用户消息。
+    await user.click(screen.getByRole('button', { name: '重试' }))
+    await waitFor(() => expect(messageInput()).toHaveValue('主会话消息'))
+    expect(snap.chatBodies).toHaveLength(0)
+  })
+
   it('sends with a client mutation id and appends the persisted message', async () => {
     const user = await renderApp()
     await user.type(messageInput(), '你好{Enter}')
@@ -195,11 +388,21 @@ describe('App message sending (PRD-CONV-005)', () => {
     expect(within(document.querySelector('.composer') as HTMLElement).getByRole('alert')).toHaveTextContent('请求失败（500），请稍后重试')
 
     snap.chatFail = false
-    await user.clear(messageInput())
-    await user.type(messageInput(), '需要重试{Enter}')
+    // A8：失败保留输入，重发不用重打（契约 COMP-composer-send-mode §5）
+    expect(messageInput()).toHaveValue('需要重试')
+    await user.type(messageInput(), '{Enter}')
     await waitFor(() => expect(snap.chatBodies).toHaveLength(2))
+    // 同一次发送的失败重发必须复用同一幂等键（C-16）
+    expect(snap.chatBodies[1].clientMutationId).toBe(snap.chatBodies[0].clientMutationId)
     await waitFor(() => expect(screen.getAllByText('需要重试')).toHaveLength(1))
     expect(snap.messages.main.filter((message) => message.text === '需要重试')).toHaveLength(1)
+    // 成功后清空
+    expect(messageInput()).toHaveValue('')
+
+    // 新消息才生成新幂等键
+    await user.type(messageInput(), '另一条新消息{Enter}')
+    await waitFor(() => expect(snap.chatBodies).toHaveLength(3))
+    expect(snap.chatBodies[2].clientMutationId).not.toBe(snap.chatBodies[0].clientMutationId)
   })
 
   it('accumulates stream deltas once per sequence and closes the stream on reply.done', async () => {
@@ -247,6 +450,37 @@ describe('App message sending (PRD-CONV-005)', () => {
     await flush(30)
     expect(screen.queryByText('生成中追加')).not.toBeInTheDocument()
     expect(screen.getByText('生成中')).toBeInTheDocument()
+  })
+
+  it('sends one correct frame per streaming message with its own messageId', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await screen.findByText('主会话消息')
+    const socket = MockWebSocket.instances[0]
+    await waitFor(() => expect(socket.readyState).toBe(MockWebSocket.OPEN))
+    // Composer 的「停止」是全局停止：同时有两条流时只渲染一个按钮，
+    // 点击后必须对每条流各发一帧，否则后端只能退化为“停最新一条”。
+    act(() => { socket.emit('message', { data: deltaFrame('stream-1', '第一条', 1) }) })
+    act(() => { socket.emit('message', { data: deltaFrame('stream-2', '第二条', 1) }) })
+    expect(await screen.findByText('第一条')).toBeInTheDocument()
+    expect(await screen.findByText('第二条')).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: '停止' })).toHaveLength(1)
+
+    await user.click(screen.getByRole('button', { name: '停止' }))
+    await waitFor(() => expect(document.querySelector('.stream-caret')).not.toBeInTheDocument())
+
+    const correctFrames = socket.sent
+      .map((raw) => JSON.parse(raw) as { type?: string; data?: { sessionId?: string; messageId?: string } })
+      .filter((frame) => frame.type === 'correct')
+    expect(correctFrames).toHaveLength(2)
+    expect(correctFrames.map((frame) => frame.data?.sessionId)).toEqual(['main', 'main'])
+    expect(correctFrames.map((frame) => frame.data?.messageId).sort()).toEqual(['stream-1', 'stream-2'])
+
+    act(() => { socket.emit('message', { data: deltaFrame('stream-1', '追加', 2) }) })
+    act(() => { socket.emit('message', { data: deltaFrame('stream-2', '追加', 2) }) })
+    await flush(30)
+    expect(screen.queryByText('第一条追加')).not.toBeInTheDocument()
+    expect(screen.queryByText('第二条追加')).not.toBeInTheDocument()
   })
 
   it('reconnects after a socket close, reports the status and reloads missed messages', async () => {
@@ -366,23 +600,69 @@ describe('App ancestor chain (PRD-CONV-007)', () => {
 })
 
 describe('App timeline and message states (PRD-CONV-004 / A2)', () => {
-  it('jumps to a message from the timeline bar and marks it current', async () => {
+  it('jumps to the clicked message from the timeline bar and marks it current', async () => {
     snap.messages.main = [
       { id: 'main-1', sessionId: 'main', sessionTitle: '主会话', role: 'user', text: '主会话消息', at: at + 1, status: 'done' },
       { id: 'main-2', sessionId: 'main', sessionTitle: '主会话', role: 'agent', text: '第二条消息', at: at + 10, status: 'done', agentId: 'simo' },
+      { id: 'main-3', sessionId: 'main', sessionTitle: '主会话', role: 'user', text: '第三条消息', at: at + 20, status: 'done' },
+      { id: 'main-4', sessionId: 'main', sessionTitle: '主会话', role: 'agent', text: '第四条消息', at: at + 30, status: 'done', agentId: 'simo' },
     ]
-    const scrollIntoView = vi.fn()
+    const targets: Element[] = []
+    const scrollIntoView = vi.fn(function (this: Element) { targets.push(this) })
     Object.defineProperty(Element.prototype, 'scrollIntoView', { configurable: true, writable: true, value: scrollIntoView })
     const user = await renderApp()
     const bars = [...document.querySelectorAll<HTMLElement>('.tl-bar')]
-    expect(bars).toHaveLength(2)
+    expect(bars).toHaveLength(4)
     expect(bars[0]).toHaveAttribute('aria-current', 'true')
 
-    await user.click(bars[1])
-    expect(scrollIntoView).toHaveBeenCalledTimes(1)
-    expect(scrollIntoView).toHaveBeenCalledWith(expect.objectContaining({ block: 'start' }))
-    expect(bars[1]).toHaveAttribute('aria-current', 'true')
-    expect(bars[0]).not.toHaveAttribute('aria-current')
+    // 点第 N 个刻度必须落在第 N 条消息上：scrollIntoView 的 this 是滚动目标节点，
+    // 用 data-message-id 锁定它是被点的那一条，而不是前后相邻的那条。
+    for (const [index, id] of [[2, 'main-3'], [0, 'main-1'], [3, 'main-4']] as const) {
+      await user.click(bars[index])
+      expect(scrollIntoView).toHaveBeenLastCalledWith(expect.objectContaining({ block: 'start' }))
+      expect(targets.at(-1)?.getAttribute('data-message-id'), `第 ${index + 1} 个刻度`).toBe(id)
+      expect(bars[index]).toHaveAttribute('aria-current', 'true')
+      expect(bars.filter((bar) => bar.getAttribute('aria-current') === 'true')).toHaveLength(1)
+    }
+    expect(targets.map((node) => node.getAttribute('data-message-id'))).toEqual(['main-3', 'main-1', 'main-4'])
+  })
+
+  it('keeps the clicked tick active while the jump scroll settles and hands back on the next manual scroll', async () => {
+    snap.messages.main = Array.from({ length: 6 }, (_, index) => ({
+      id: `main-${index + 1}`,
+      sessionId: 'main',
+      sessionTitle: '主会话',
+      role: index % 2 === 0 ? 'user' as const : 'agent' as const,
+      text: index === 0 ? '主会话消息' : `第 ${index + 1} 条消息`,
+      at: at + index * 10,
+      status: 'done' as const,
+    }))
+    const scrollIntoView = vi.fn()
+    Object.defineProperty(Element.prototype, 'scrollIntoView', { configurable: true, writable: true, value: scrollIntoView })
+    const user = await renderApp()
+    const scroller = document.querySelector<HTMLElement>('.conversation-scroll')
+    expect(scroller).not.toBeNull()
+    // 末尾两条到不了视口顶部：只有前四条能落在 64px 阈值之上。
+    // 没有钉住时，跳转后平滑滚动触发的 onScroll 会把 active 重算成第 4 条。
+    document.querySelectorAll<HTMLElement>('.conversation-scroll .msg').forEach((node, index) => {
+      Object.defineProperty(node, 'getBoundingClientRect', {
+        configurable: true,
+        value: () => ({ top: index < 4 ? 0 : 500, bottom: 540, left: 0, right: 600, width: 600, height: 40, x: 0, y: index < 4 ? 0 : 500, toJSON: () => ({}) }) as DOMRect,
+      })
+    })
+    const bars = [...document.querySelectorAll<HTMLElement>('.tl-bar')]
+    await user.click(bars[5])
+    expect(bars[5]).toHaveAttribute('aria-current', 'true')
+
+    // 平滑滚动的收尾滚动事件可能晚于任何固定时间窗，钉住不能靠计时结束。
+    fireEvent.scroll(scroller as HTMLElement)
+    expect(bars[5]).toHaveAttribute('aria-current', 'true')
+
+    // 用户下一次手动滚动（滚轮）立即交还：随后的滚动事件按最近消息重算 active。
+    fireEvent.wheel(scroller as HTMLElement, { deltaY: 200 })
+    fireEvent.scroll(scroller as HTMLElement)
+    expect(bars[3]).toHaveAttribute('aria-current', 'true')
+    expect(bars.filter((bar) => bar.getAttribute('aria-current') === 'true')).toHaveLength(1)
   })
 
   it('retries after a message load failure', async () => {
@@ -416,5 +696,74 @@ describe('App timeline and message states (PRD-CONV-004 / A2)', () => {
     expect(screen.getByText('发送第一条消息')).toBeInTheDocument()
     expect(document.querySelector('.conversation-panel')).toHaveClass('is-empty')
     expect(messageInput()).not.toBeDisabled()
+  })
+})
+
+describe('App session list ETag (AC-CONV-008-04)', () => {
+  it('keeps the search rows and the active session when the list request is answered with 304', async () => {
+    const etag = '"sess-304"'
+    const conditionalHeaders: Array<string | null> = []
+    server.use(http.get('/api/sessions', ({ request }) => {
+      const header = request.headers.get('If-None-Match')
+      conditionalHeaders.push(header)
+      if (header === etag) return new HttpResponse(null, { status: 304, headers: { ETag: etag } })
+      return HttpResponse.json({ sessions: [findSession(snap, 'child')] }, { headers: { ETag: etag } })
+    }))
+    const user = await renderApp()
+    await user.type(screen.getByLabelText('搜索会话'), '子')
+    expect(await screen.findByTitle('子会话', {}, { timeout: 3000 })).toBeInTheDocument()
+    await waitFor(() => expect(conditionalHeaders).toEqual([null]))
+
+    await user.click(screen.getByTitle('子会话'))
+    expect(await screen.findByText('子会话消息')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '子会话' })).toBeInTheDocument()
+
+    // 未读事件走 refreshSessions：先刷会话树，再按当前 q 重查搜索 → 命中 304
+    act(() => { MockWebSocket.instances.at(-1)?.emit('message', { data: unreadFrame('child') }) })
+    await waitFor(() => expect(conditionalHeaders).toEqual([null, etag]), { timeout: 3000 })
+
+    // 304 不替换状态：搜索结果与选中会话都还在，没有闪成空列表或错误态
+    expect(screen.getByTitle('子会话')).toBeInTheDocument()
+    expect(screen.queryByText('主会话')).not.toBeInTheDocument()
+    expect(screen.queryByText('没有匹配的会话')).not.toBeInTheDocument()
+    expect(screen.queryByText('搜索失败，请重试')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '子会话' })).toBeInTheDocument()
+    expect(screen.getByText('子会话消息')).toBeInTheDocument()
+  })
+
+  it('rejects pinning a session archived in the tree but still shown by stale search results', async () => {
+    let searchRequests = 0
+    server.use(http.get('/api/sessions', () => {
+      searchRequests += 1
+      const child = findSession(snap, 'child')
+      if (!child) return HttpResponse.json({ sessions: [] })
+      // 搜索结果按请求时刻快照（真实后端每次都返回新解析的对象）：
+      // 会话随后被归档，这份旧快照仍停在未归档状态，用来复现“旧列表触发置顶”。
+      return HttpResponse.json({ sessions: [{ ...child }] })
+    }))
+    const user = await renderApp()
+    await user.type(screen.getByLabelText('搜索会话'), '子')
+    // 等搜索请求真正完成并把快照写进状态（首屏那行来自会话树，不代表搜索已返回）
+    await waitFor(() => expect(searchRequests).toBe(1), { timeout: 3000 })
+    await flush(20)
+    expect(await screen.findByTitle('子会话', {}, { timeout: 3000 })).toBeInTheDocument()
+    await user.click(screen.getByTitle('子会话'))
+    expect(await screen.findByText('子会话消息')).toBeInTheDocument()
+
+    const child = findSession(snap, 'child')
+    if (!child) throw new Error('fixture missing child session')
+    child.archived = 1
+    // 「刷新会话」只刷会话树，不重查搜索，旧搜索结果行因此仍显示为未归档
+    await user.click(screen.getByRole('button', { name: '刷新会话' }))
+    expect(await screen.findByText('已归档 · 只读')).toBeInTheDocument()
+
+    const staleRow = screen.getByTitle('子会话').closest('.session-row') as HTMLElement
+    expect(staleRow).not.toHaveClass('is-archived')
+    await user.click(within(staleRow).getByRole('button', { name: '会话操作' }))
+    await user.click(within(staleRow).getByRole('button', { name: '置顶' }))
+
+    // AC-CONV-001-04：App 守卫拦下并提示，置顶请求一条都不发
+    expect(await screen.findByRole('alert')).toHaveTextContent('归档会话不可置顶')
+    expect(snap.pinCalls).toEqual([])
   })
 })

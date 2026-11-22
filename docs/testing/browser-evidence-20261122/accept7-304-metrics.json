@@ -1,0 +1,555 @@
+{
+  "generatedAt": "2026-11-22T05:47:36.115Z",
+  "ac": "AC-CONV-008-04",
+  "url": "http://127.0.0.1:8787/",
+  "buildId": "mwre6y3x-cwfir",
+  "health": {
+    "ok": true,
+    "ready": true,
+    "time": 1795326453674,
+    "checks": {
+      "db": "ok",
+      "modules": [
+        "sessions",
+        "chat",
+        "tasks",
+        "memory"
+      ]
+    }
+  },
+  "browser": "Chrome/157.0.8103.80",
+  "cdp": "127.0.0.1:9223",
+  "viewport": {
+    "w": 1600,
+    "h": 1000
+  },
+  "scenario": "主会话(main) 首次加载 → 切到 验收序B(sess-38497934b31bfc0a) → 切回主会话，触发右侧 spec-projection 条件请求",
+  "initial": {
+    "session": "main",
+    "groups": [
+      {
+        "name": "已完成",
+        "count": "3/6",
+        "rows": 3,
+        "expanded": false
+      },
+      {
+        "name": "进行中",
+        "count": "0/0",
+        "rows": 0,
+        "expanded": false
+      },
+      {
+        "name": "未开始",
+        "count": "3/4",
+        "rows": 3,
+        "expanded": false
+      }
+    ],
+    "taskRows": 6,
+    "allRows": 7,
+    "blocks": 4,
+    "statusText": "进行中\nrev 34"
+  },
+  "attempts": [
+    {
+      "attempt": 1,
+      "status": 304,
+      "ifNoneMatch": "\"spec-c5a2d772dd1d5d88\"",
+      "etag": "\"spec-c5a2d772dd1d5d88\"",
+      "bodyLen": 0
+    }
+  ],
+  "four": {
+    "status304": true,
+    "requestHasIfNoneMatch": true,
+    "responseEtag": "\"spec-c5a2d772dd1d5d88\"",
+    "ifNoneMatch": "\"spec-c5a2d772dd1d5d88\"",
+    "bodyLen": 0,
+    "minRows": 6,
+    "firstRows": 6,
+    "rowDropFrames": 0,
+    "skeletonFrames": 0,
+    "rootEmptyFrames": 0,
+    "bodyEmptyFrames": 0,
+    "minBlocks": 4,
+    "firstBlocks": 4,
+    "clearMutationCount": 0,
+    "blockRemovalMutations": 0,
+    "sessionAttributeMutations": 1,
+    "fetch200Count": 0,
+    "sampleCount": 32,
+    "requestSpanMs": 359.6
+  },
+  "windowRange": {
+    "tReq": 1421.9000000059605,
+    "tResp": 1781.5,
+    "from": 1421.9000000059605,
+    "to": 2081.5
+  },
+  "rowDropSamples": [],
+  "clearMutationDetail": [],
+  "winMutations": [
+    {
+      "t": 1431.5,
+      "type": "attributes",
+      "target": "inspector",
+      "removed": 0,
+      "added": 0,
+      "removedClasses": [],
+      "addedClasses": [],
+      "after": {
+        "session": "main",
+        "taskRows": 6,
+        "allRows": 7,
+        "blocks": 4,
+        "bodyChildren": 5,
+        "loading": 0,
+        "emptyRoot": 0,
+        "hasSpecStatus": true,
+        "missingText": false,
+        "statusText": "进行中\nrev 34",
+        "groups": [
+          {
+            "name": "已完成",
+            "count": "3/6",
+            "rows": 3,
+            "expanded": false
+          },
+          {
+            "name": "进行中",
+            "count": "0/0",
+            "rows": 0,
+            "expanded": false
+          },
+          {
+            "name": "未开始",
+            "count": "3/4",
+            "rows": 3,
+            "expanded": false
+          }
+        ],
+        "t": 1431.5
+      }
+    },
+    {
+      "t": 1431.5,
+      "type": "childList",
+      "target": "exec-group ",
+      "removed": 1,
+      "added": 0,
+      "removedClasses": [
+        "overview-empty"
+      ],
+      "addedClasses": [],
+      "after": {
+        "session": "main",
+        "taskRows": 6,
+        "allRows": 7,
+        "blocks": 4,
+        "bodyChildren": 5,
+        "loading": 0,
+        "emptyRoot": 0,
+        "hasSpecStatus": true,
+        "missingText": false,
+        "statusText": "进行中\nrev 34",
+        "groups": [
+          {
+            "name": "已完成",
+            "count": "3/6",
+            "rows": 3,
+            "expanded": false
+          },
+          {
+            "name": "进行中",
+            "count": "0/0",
+            "rows": 0,
+            "expanded": false
+          },
+          {
+            "name": "未开始",
+            "count": "3/4",
+            "rows": 3,
+            "expanded": false
+          }
+        ],
+        "t": 1431.5
+      }
+    },
+    {
+      "t": 1431.5,
+      "type": "childList",
+      "target": "exec-group ",
+      "removed": 0,
+      "added": 1,
+      "removedClasses": [],
+      "addedClasses": [
+        "exec-list"
+      ],
+      "after": {
+        "session": "main",
+        "taskRows": 6,
+        "allRows": 7,
+        "blocks": 4,
+        "bodyChildren": 5,
+        "loading": 0,
+        "emptyRoot": 0,
+        "hasSpecStatus": true,
+        "missingText": false,
+        "statusText": "进行中\nrev 34",
+        "groups": [
+          {
+            "name": "已完成",
+            "count": "3/6",
+            "rows": 3,
+            "expanded": false
+          },
+          {
+            "name": "进行中",
+            "count": "0/0",
+            "rows": 0,
+            "expanded": false
+          },
+          {
+            "name": "未开始",
+            "count": "3/4",
+            "rows": 3,
+            "expanded": false
+          }
+        ],
+        "t": 1431.5
+      }
+    },
+    {
+      "t": 1431.5,
+      "type": "childList",
+      "target": "exec-group ",
+      "removed": 1,
+      "added": 0,
+      "removedClasses": [
+        "overview-empty"
+      ],
+      "addedClasses": [],
+      "after": {
+        "session": "main",
+        "taskRows": 6,
+        "allRows": 7,
+        "blocks": 4,
+        "bodyChildren": 5,
+        "loading": 0,
+        "emptyRoot": 0,
+        "hasSpecStatus": true,
+        "missingText": false,
+        "statusText": "进行中\nrev 34",
+        "groups": [
+          {
+            "name": "已完成",
+            "count": "3/6",
+            "rows": 3,
+            "expanded": false
+          },
+          {
+            "name": "进行中",
+            "count": "0/0",
+            "rows": 0,
+            "expanded": false
+          },
+          {
+            "name": "未开始",
+            "count": "3/4",
+            "rows": 3,
+            "expanded": false
+          }
+        ],
+        "t": 1431.5
+      }
+    },
+    {
+      "t": 1431.5,
+      "type": "childList",
+      "target": "exec-group ",
+      "removed": 0,
+      "added": 1,
+      "removedClasses": [],
+      "addedClasses": [
+        "exec-list"
+      ],
+      "after": {
+        "session": "main",
+        "taskRows": 6,
+        "allRows": 7,
+        "blocks": 4,
+        "bodyChildren": 5,
+        "loading": 0,
+        "emptyRoot": 0,
+        "hasSpecStatus": true,
+        "missingText": false,
+        "statusText": "进行中\nrev 34",
+        "groups": [
+          {
+            "name": "已完成",
+            "count": "3/6",
+            "rows": 3,
+            "expanded": false
+          },
+          {
+            "name": "进行中",
+            "count": "0/0",
+            "rows": 0,
+            "expanded": false
+          },
+          {
+            "name": "未开始",
+            "count": "3/4",
+            "rows": 3,
+            "expanded": false
+          }
+        ],
+        "t": 1431.5
+      }
+    },
+    {
+      "t": 1431.5,
+      "type": "childList",
+      "target": "insp-block",
+      "removed": 1,
+      "added": 0,
+      "removedClasses": [
+        "overview-empty"
+      ],
+      "addedClasses": [],
+      "after": {
+        "session": "main",
+        "taskRows": 6,
+        "allRows": 7,
+        "blocks": 4,
+        "bodyChildren": 5,
+        "loading": 0,
+        "emptyRoot": 0,
+        "hasSpecStatus": true,
+        "missingText": false,
+        "statusText": "进行中\nrev 34",
+        "groups": [
+          {
+            "name": "已完成",
+            "count": "3/6",
+            "rows": 3,
+            "expanded": false
+          },
+          {
+            "name": "进行中",
+            "count": "0/0",
+            "rows": 0,
+            "expanded": false
+          },
+          {
+            "name": "未开始",
+            "count": "3/4",
+            "rows": 3,
+            "expanded": false
+          }
+        ],
+        "t": 1431.5
+      }
+    },
+    {
+      "t": 1431.6000000089407,
+      "type": "childList",
+      "target": "insp-block",
+      "removed": 0,
+      "added": 1,
+      "removedClasses": [],
+      "addedClasses": [
+        "exec-list"
+      ],
+      "after": {
+        "session": "main",
+        "taskRows": 6,
+        "allRows": 7,
+        "blocks": 4,
+        "bodyChildren": 5,
+        "loading": 0,
+        "emptyRoot": 0,
+        "hasSpecStatus": true,
+        "missingText": false,
+        "statusText": "进行中\nrev 34",
+        "groups": [
+          {
+            "name": "已完成",
+            "count": "3/6",
+            "rows": 3,
+            "expanded": false
+          },
+          {
+            "name": "进行中",
+            "count": "0/0",
+            "rows": 0,
+            "expanded": false
+          },
+          {
+            "name": "未开始",
+            "count": "3/4",
+            "rows": 3,
+            "expanded": false
+          }
+        ],
+        "t": 1431.5
+      }
+    }
+  ],
+  "fetches": [
+    {
+      "t": 786.5,
+      "url": "/api/sessions/sess-38497934b31bfc0a/spec-projection?taskLimit=3",
+      "headers": {
+        "content-type": "application/json"
+      },
+      "status": 200,
+      "etag": "\"spec-dd2f6a0c05332a1e\"",
+      "endT": 1144.7999999970198
+    },
+    {
+      "t": 1421.9000000059605,
+      "url": "/api/sessions/main/spec-projection?taskLimit=3",
+      "headers": {
+        "content-type": "application/json",
+        "if-none-match": "\"spec-c5a2d772dd1d5d88\""
+      },
+      "status": 304,
+      "etag": "\"spec-c5a2d772dd1d5d88\"",
+      "endT": 1781.5,
+      "bodyLen": 0
+    }
+  ],
+  "network": [
+    {
+      "requestId": "37796.12",
+      "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=3",
+      "phase": "sent",
+      "wallTime": 1795326454.121237,
+      "timestamp": 105153.652777,
+      "headers": {
+        "sec-ch-ua-platform": "\"Windows\"",
+        "Referer": "http://127.0.0.1:8787/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Not-A.Brand\";v=\"99\", \"Google Chrome\";v=\"157\", \"Chromium\";v=\"157\"",
+        "Content-Type": "application/json",
+        "sec-ch-ua-mobile": "?0"
+      },
+      "headersWire": {
+        "Accept": "*/*",
+        "Accept-Encoding": "gzip, deflate, br, zstd",
+        "Accept-Language": "zh-CN,zh;q=0.9",
+        "Connection": "keep-alive",
+        "Content-Type": "application/json",
+        "Host": "127.0.0.1:8787",
+        "If-None-Match": "\"spec-c5a2d772dd1d5d88\"",
+        "Referer": "http://127.0.0.1:8787/",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-origin",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Not-A.Brand\";v=\"99\", \"Google Chrome\";v=\"157\", \"Chromium\";v=\"157\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"Windows\""
+      },
+      "status": 200,
+      "responseHeaders": {
+        "Cache-Control": "no-cache",
+        "Content-Length": "1455",
+        "Date": "Sun, 22 Nov 2026 05:47:34 GMT",
+        "Etag": "\"spec-c5a2d772dd1d5d88\"",
+        "Content-Type": "application/json; charset=utf-8"
+      },
+      "mimeType": "application/json",
+      "fromDiskCache": false,
+      "encodedDataLength": 122,
+      "loadingOk": true
+    },
+    {
+      "requestId": "37796.15",
+      "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=1",
+      "phase": "sent",
+      "wallTime": 1795326454.22081,
+      "timestamp": 105153.75231,
+      "headers": {
+        "sec-ch-ua-platform": "\"Windows\"",
+        "Referer": "http://127.0.0.1:8787/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Not-A.Brand\";v=\"99\", \"Google Chrome\";v=\"157\", \"Chromium\";v=\"157\"",
+        "Content-Type": "application/json",
+        "sec-ch-ua-mobile": "?0"
+      },
+      "status": 200,
+      "responseHeaders": {
+        "Cache-Control": "no-cache",
+        "Content-Length": "985",
+        "Date": "Sun, 22 Nov 2026 05:47:34 GMT",
+        "Etag": "\"spec-2c43992c56c8de9a\"",
+        "Content-Type": "application/json; charset=utf-8"
+      },
+      "mimeType": "application/json",
+      "fromDiskCache": false,
+      "encodedDataLength": 122,
+      "loadingOk": true
+    },
+    {
+      "requestId": "37796.36",
+      "url": "http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=3",
+      "phase": "sent",
+      "wallTime": 1795326455.224246,
+      "timestamp": 105154.755762,
+      "headers": {
+        "If-None-Match": "\"spec-c5a2d772dd1d5d88\"",
+        "sec-ch-ua-platform": "\"Windows\"",
+        "Referer": "http://127.0.0.1:8787/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Not-A.Brand\";v=\"99\", \"Google Chrome\";v=\"157\", \"Chromium\";v=\"157\"",
+        "Content-Type": "application/json",
+        "sec-ch-ua-mobile": "?0"
+      },
+      "status": 304,
+      "responseHeaders": {
+        "Etag": "\"spec-c5a2d772dd1d5d88\"",
+        "Date": "Sun, 22 Nov 2026 05:47:35 GMT",
+        "Cache-Control": "no-cache"
+      },
+      "mimeType": "",
+      "fromDiskCache": false,
+      "encodedDataLength": 122,
+      "loadingOk": true
+    }
+  ],
+  "finalRead": {
+    "session": "main",
+    "taskRows": 6,
+    "groups": [
+      {
+        "name": "已完成",
+        "count": "3/6",
+        "rows": 3,
+        "expanded": false
+      },
+      {
+        "name": "进行中",
+        "count": "0/0",
+        "rows": 0,
+        "expanded": false
+      },
+      {
+        "name": "未开始",
+        "count": "3/4",
+        "rows": 3,
+        "expanded": false
+      }
+    ],
+    "loading": 0
+  },
+  "files": {
+    "before": "E:/dsh_home/workspaces/agent/docs/testing/accept7-before-304.png",
+    "during": "E:/dsh_home/workspaces/agent/docs/testing/accept7-during-304.png",
+    "after": "E:/dsh_home/workspaces/agent/docs/testing/accept7-after-304.png"
+  },
+  "samplesAll": 77,
+  "mutationsAll": 20
+}

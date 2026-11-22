@@ -1,0 +1,78 @@
+# Storybook 静态构建（可选、非阻塞）
+#
+# 定位：只验证 archive/labs/storybook PoC 能否在干净 CI 环境 build 出静态站点，用于评估后续是否引入 Storybook。
+# - 只 build，不启动 dev server，不接 Chromatic/任何外部视觉服务；
+# - 路径过滤（仅 archive/labs/storybook/** 与本文件变更时触发），不会影响主 CI ci.yml；
+# - **不要把它设为 required check**：先观察若干次运行稳定后，再由仓库管理员决定是否提升为必过项。
+# - 本工作流未在本机实际运行：当前会话沙箱禁止子进程管道 spawn（esbuild 启动即 EPERM），
+#   详见 docs/process/research/storybook-spike.md §3/§11。
+#
+# 注意：CI 用 `pnpm install --ignore-scripts` 安装依赖——pnpm 11 在未批准 build script 时
+# 会以 ERR_PNPM_IGNORED_BUILDS 退出 1；esbuild 的平台二进制由 @esbuild/win32-x64 包提供，
+# 无需 postinstall 即可使用（本机实测二进制存在，见 spike 报告）。
+
+name: storybook-build
+
+on:
+  pull_request:
+    paths:
+      - 'archive/labs/storybook/**'
+      - '.github/workflows/storybook.yml'
+  push:
+    branches: [main, master]
+    paths:
+      - 'archive/labs/storybook/**'
+      - '.github/workflows/storybook.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: storybook-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: archive/labs/storybook
+
+jobs:
+  storybook-build:
+    name: build storybook static (optional, non-blocking)
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '11'
+          run_install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts --node-linker=hoisted
+
+      - name: Build static Storybook
+        run: pnpm exec storybook build -c .storybook -o storybook-static
+
+      - name: Verify build output
+        shell: pwsh
+        run: |
+          if (-not (Test-Path 'storybook-static/index.html')) {
+            throw 'storybook-static/index.html missing after build'
+          }
+
+      - name: Upload static Storybook
+        uses: actions/upload-artifact@v4
+        with:
+          name: storybook-static
+          path: archive/labs/storybook/storybook-static
+          if-no-files-found: error
+          retention-days: 7

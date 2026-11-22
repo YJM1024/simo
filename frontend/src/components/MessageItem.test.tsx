@@ -68,11 +68,80 @@ describe('MessageItem', () => {
     expect(screen.getByText(long)).toBeInTheDocument()
   })
 
+  it('renders a GFM table with header, body and per-column alignment', () => {
+    const text = ['| 名称 | 状态 | 数量 |', '| :--- | :---: | ---: |', '| 甲 | 完成 | 12 |', '| 乙 | 进行中 | 3 |'].join('\n')
+    render(<MessageItem message={message({ text })} onCardAction={vi.fn()} />)
+    const region = screen.getByRole('region', { name: '表格' })
+    expect(region).toHaveClass('msg-table-wrap')
+    expect(region).toHaveAttribute('tabindex', '0')
+    expect(region.querySelector('.msg-table')).toBeInTheDocument()
+    expect(region.querySelectorAll('thead tr')).toHaveLength(1)
+    expect(region.querySelectorAll('thead th')).toHaveLength(3)
+    expect(region.querySelectorAll('tbody tr')).toHaveLength(2)
+    expect(region.querySelectorAll('tbody td')).toHaveLength(6)
+    expect(screen.getByRole('columnheader', { name: '名称' })).toHaveStyle({ textAlign: 'left' })
+    expect(screen.getByRole('columnheader', { name: '状态' })).toHaveStyle({ textAlign: 'center' })
+    expect(screen.getByRole('columnheader', { name: '数量' })).toHaveStyle({ textAlign: 'right' })
+    expect(screen.getByRole('cell', { name: '12' })).toHaveStyle({ textAlign: 'right' })
+    // 表格行不再作为段落整行输出
+    expect(region.textContent).not.toContain('| 名称 |')
+    expect(document.querySelectorAll('.msg-text p')).toHaveLength(0)
+  })
+
+  it('renders inline code inside a table cell', () => {
+    const text = ['| 参数 | 说明 |', '| --- | --- |', '| `rps` | 每秒请求数 |'].join('\n')
+    render(<MessageItem message={message({ text })} onCardAction={vi.fn()} />)
+    expect(screen.getByRole('cell', { name: 'rps' }).querySelector('code')).toHaveTextContent('rps')
+  })
+
+  it('keeps escaped pipes inside a table cell', () => {
+    const text = ['| 表达式 | 含义 |', '| --- | --- |', '| a \\| b | 按位或 |'].join('\n')
+    render(<MessageItem message={message({ text })} onCardAction={vi.fn()} />)
+    expect(screen.getByRole('cell', { name: 'a | b' })).toBeInTheDocument()
+    expect(screen.getByRole('cell', { name: '按位或' })).toBeInTheDocument()
+  })
+
+  it('renders prose before a table in the same block as a paragraph', () => {
+    const text = ['汇总如下', '| a | b |', '| --- | --- |', '| 1 | 2 |'].join('\n')
+    render(<MessageItem message={message({ text })} onCardAction={vi.fn()} />)
+    expect(screen.getByRole('region', { name: '表格' })).toBeInTheDocument()
+    expect(document.querySelector('.msg-text p')).toHaveTextContent('汇总如下')
+    expect(screen.getByRole('cell', { name: '1' })).toBeInTheDocument()
+  })
+
+  it.each([
+    ['参数形如 a | b，不要当成表格', '参数形如 a | b，不要当成表格'],
+    ['| 只有表头 | 没有分隔行 |\n| 甲 | 乙 |', '| 只有表头 | 没有分隔行 |\n| 甲 | 乙 |'],
+    ['| 名称 | 状态 |\n| --- |\n| 甲 | 完成 |', '| 名称 | 状态 |\n| --- |\n| 甲 | 完成 |'],
+  ])('keeps pipe text that is not a valid table as paragraph text: %s', (text, expected) => {
+    render(<MessageItem message={message({ text })} onCardAction={vi.fn()} />)
+    expect(screen.queryByRole('region', { name: '表格' })).not.toBeInTheDocument()
+    expect(document.querySelector('.msg-text table')).not.toBeInTheDocument()
+    // 原文按现有段落逻辑输出，一个字都不能丢
+    expect(document.querySelector('.msg-text p')?.textContent).toBe(expected)
+  })
+
   it('renders streaming caret and failed badge', () => {
     render(<MessageItem message={message({ text: '', status: 'streaming' })} onCardAction={vi.fn()} />)
     expect(document.querySelector('.stream-caret')).toBeInTheDocument()
     render(<MessageItem message={message({ id: 'm2', status: 'failed' })} onCardAction={vi.fn()} />)
     expect(screen.getByText('失败')).toBeInTheDocument()
+  })
+
+  it('treats a persisted error reply as failure and offers a retry entry', async () => {
+    const user = userEvent.setup()
+    const onRetry = vi.fn()
+    const { rerender } = render(<MessageItem message={message({ status: 'error', text: '' })} onCardAction={vi.fn()} onRetry={onRetry} />)
+    // 后端落库 status:"error" 且 text 为空：必须仍是失败徽标 + 可读说明，不能是空气泡。
+    expect(screen.getByText('失败')).toBeInTheDocument()
+    expect(screen.getByText('回复生成失败，未返回内容。')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '重试' }))
+    expect(onRetry).toHaveBeenCalledTimes(1)
+    expect(onRetry.mock.calls[0][0]).toMatchObject({ status: 'error' })
+
+    // 只读（归档/跨会话）时重试入口不可用：Composer 本身是禁用的。
+    rerender(<MessageItem message={message({ status: 'error', text: '' })} onCardAction={vi.fn()} onRetry={onRetry} readOnly />)
+    expect(screen.queryByRole('button', { name: '重试' })).not.toBeInTheDocument()
   })
 
   it('submits card values and shows submitted state', async () => {
@@ -113,6 +182,81 @@ describe('MessageItem', () => {
     await user.selectOptions(screen.getByLabelText('数据来源'), 'A')
     await user.click(screen.getByRole('button', { name: '取消' }))
     expect(screen.getByLabelText('数据来源')).toHaveValue('')
+  })
+
+  it('renders **bold** as strong', () => {
+    render(<MessageItem message={message({ text: '前文 **加粗内容** 后文' })} onCardAction={vi.fn()} />)
+    const strong = screen.getByText('加粗内容')
+    expect(strong.tagName).toBe('STRONG')
+    expect(document.querySelector('.msg-text p')).toHaveTextContent('前文 加粗内容 后文')
+  })
+
+  it('renders *italic* and _italic_ as em', () => {
+    render(<MessageItem message={message({ text: '前文 *星号斜体* 与 _下划线斜体_ 后文' })} onCardAction={vi.fn()} />)
+    expect(screen.getByText('星号斜体').tagName).toBe('EM')
+    expect(screen.getByText('下划线斜体').tagName).toBe('EM')
+    expect(document.querySelector('.msg-text p')).toHaveTextContent('前文 星号斜体 与 下划线斜体 后文')
+  })
+
+  it('renders ~~struck~~ as del', () => {
+    render(<MessageItem message={message({ text: '前文 ~~删除内容~~ 后文' })} onCardAction={vi.fn()} />)
+    const del = screen.getByText('删除内容')
+    expect(del.tagName).toBe('DEL')
+    expect(document.querySelector('.msg-text p')).toHaveTextContent('前文 删除内容 后文')
+  })
+
+  it('renders allowed links with safe target and rel, and keeps link text plain', () => {
+    const text = '[官网](https://example.com/a) [文档](http://example.com/docs) [邮件](mailto:hi@example.com) [**强调**](https://example.com/bold)'
+    render(<MessageItem message={message({ text })} onCardAction={vi.fn()} />)
+    for (const [name, href] of [['官网', 'https://example.com/a'], ['文档', 'http://example.com/docs'], ['邮件', 'mailto:hi@example.com'], ['**强调**', 'https://example.com/bold']]) {
+      const link = screen.getByRole('link', { name })
+      expect(link).toHaveAttribute('href', href)
+      expect(link).toHaveAttribute('target', '_blank')
+      expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+    }
+    // 链接文字不二次解析加粗：星号原样保留，链接内没有 strong。
+    expect(screen.getByRole('link', { name: '**强调**' }).querySelector('strong')).toBeNull()
+  })
+
+  it('parses inline code inside bold without breaking the bold range', () => {
+    const text = '**加粗里有 `const a = 1` 代码**'
+    render(<MessageItem message={message({ text })} onCardAction={vi.fn()} />)
+    const strong = document.querySelector('.msg-text strong')
+    expect(strong).not.toBeNull()
+    expect(strong?.querySelector('code')).toHaveTextContent('const a = 1')
+    expect(strong).toHaveTextContent('加粗里有 const a = 1 代码')
+  })
+
+  it('does not parse markdown inside inline code', () => {
+    const text = '行内 `**不是加粗** *不是斜体* ~~不是删除~~` 结束'
+    render(<MessageItem message={message({ text })} onCardAction={vi.fn()} />)
+    expect(document.querySelector('.msg-text strong')).toBeNull()
+    expect(document.querySelector('.msg-text em')).toBeNull()
+    expect(document.querySelector('.msg-text del')).toBeNull()
+    expect(document.querySelector('.msg-text code')).toHaveTextContent('**不是加粗** *不是斜体* ~~不是删除~~')
+  })
+
+  it('does not turn snake_case underscores into emphasis', () => {
+    const text = '变量 snake_case_identifier 与 foo_bar_baz 保持原样'
+    render(<MessageItem message={message({ text })} onCardAction={vi.fn()} />)
+    expect(document.querySelector('.msg-text em')).toBeNull()
+    expect(document.querySelector('.msg-text p')).toHaveTextContent(text)
+  })
+
+  it('does not render javascript: links as anchors', () => {
+    const text = '危险链接 [点我](javascript:alert(1)) 不生成锚点'
+    render(<MessageItem message={message({ text })} onCardAction={vi.fn()} />)
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+    expect(document.querySelector('.msg-text a')).toBeNull()
+    // 非法协议按纯文本输出，原文一个字都不丢。
+    expect(document.querySelector('.msg-text p')).toHaveTextContent(text)
+  })
+
+  it('keeps unclosed markers as literal text', () => {
+    const text = '未闭合的 **加粗 与 *单星 _单下划线 以及 ~~删除'
+    render(<MessageItem message={message({ text })} onCardAction={vi.fn()} />)
+    expect(document.querySelector('.msg-text strong, .msg-text em, .msg-text del')).toBeNull()
+    expect(document.querySelector('.msg-text p')).toHaveTextContent(text)
   })
 })
 

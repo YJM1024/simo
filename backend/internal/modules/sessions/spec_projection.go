@@ -2,6 +2,7 @@ package sessions
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -117,19 +118,47 @@ func (m *Module) handleSpecProjection(w http.ResponseWriter, r *http.Request) {
 		}
 		limit = value
 	}
-	projection, revision, err := m.buildSpecProjection(r.Context(), session, limit)
+	projection, err := m.buildSpecProjection(r.Context(), session, limit)
 	if err != nil {
 		m.log.Error("构建 spec projection 失败", "err", err, "sessionId", sessionID)
 		httpserver.WriteError(w, http.StatusInternalServerError, "读取会话规格失败")
 		return
 	}
-	etag := fmt.Sprintf(`"spec-%s-%d"`, sessionID, revision)
-	w.Header().Set("ETag", etag)
-	if r.Header.Get("If-None-Match") == etag {
-		w.WriteHeader(http.StatusNotModified)
-		return
+	etag, etagErr := projectionETag(projection, limit)
+	if etagErr != nil {
+		// 摘要算不出来（当前结构不会发生）时不发条件请求语义，直接回 200：
+		// 宁可让客户端多拉一次，也不能用错误验证器造成 304 误命中。
+		m.log.Error("计算投影 ETag 失败", "err", etagErr, "sessionId", sessionID)
+	} else {
+		w.Header().Set("ETag", etag)
+		w.Header().Set("Cache-Control", "no-cache")
+		if etagMatches(r.Header.Get("If-None-Match"), etag) {
+			// 304 不带 body，但保留 ETag 与 Cache-Control，客户端据此继续复用本地投影。
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 	}
 	httpserver.WriteJSON(w, http.StatusOK, projection)
+}
+
+// projectionETag 计算会话投影响应的强验证器，形如 "spec-<16 位十六进制>"。
+//
+// 摘要取投影响应的规范化 JSON 与本次生效的 taskLimit：目标、约束、输入、
+// 三组任务（total/items/hasMore）、交付物、待确认项、status、revision、
+// updatedAt 与 links 全部参与，响应里任一字段变化都会让旧 If-None-Match 失效，
+// 不再依赖 spec.version（消息、任务、交付物变化不写 spec.version）。
+// json.Marshal 对同一结构是确定性的，因此同一状态的重复请求、不同实例之间
+// 得到同一 ETag；如果序列化失败则返回错误，调用方跳过 304 分支。
+func projectionETag(projection specProjection, limit int) (string, error) {
+	payload, err := json.Marshal(struct {
+		TaskLimit  int            `json:"taskLimit"`
+		Projection specProjection `json:"projection"`
+	}{TaskLimit: limit, Projection: projection})
+	if err != nil {
+		return "", err
+	}
+	sum := sha256.Sum256(payload)
+	return fmt.Sprintf(`"spec-%x"`, sum[:8]), nil
 }
 
 func (m *Module) taskMessageIDs(ctx context.Context, sessionID string) map[string]string {
@@ -152,7 +181,7 @@ func (m *Module) taskMessageIDs(ctx context.Context, sessionID string) map[strin
 	return out
 }
 
-func (m *Module) buildSpecProjection(ctx context.Context, session Session, limit int) (specProjection, int, error) {
+func (m *Module) buildSpecProjection(ctx context.Context, session Session, limit int) (specProjection, error) {
 	status := "draft"
 	revision := 1
 	updatedAt := int64(0)
@@ -179,7 +208,7 @@ func (m *Module) buildSpecProjection(ctx context.Context, session Session, limit
 			})
 		}
 	} else if !errors.Is(err, ErrSpecNotFound) {
-		return specProjection{}, 0, err
+		return specProjection{}, err
 	}
 	if session.Archived != 0 {
 		status = "archived"
@@ -295,7 +324,7 @@ func (m *Module) buildSpecProjection(ctx context.Context, session Session, limit
 			Self:     fmt.Sprintf("/api/sessions/%s/spec-projection?taskLimit=%d", url.PathEscape(session.ID), limit),
 		},
 	}
-	return projection, revision, nil
+	return projection, nil
 }
 
 func projectionStatus(status string) string {

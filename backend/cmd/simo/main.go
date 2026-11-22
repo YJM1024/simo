@@ -198,6 +198,8 @@ func buildAppWithProvider(ctx context.Context, cfg config.Config, logger *slog.L
 		},
 	)
 	candidates = append(candidates, chatMod)
+	// 会话列表/树的 hasUnread 由 chat 的游标表判定（sessions 只读投影，不反向依赖 chat）。
+	sessionsMod.SetUnreadSource(chatMod)
 	if tasksMod != nil {
 		candidates = append(candidates, tasksMod)
 	}

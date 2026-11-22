@@ -57,12 +57,15 @@ type chatPayload struct {
 	Text             string   `json:"text"`
 	Attachments      []string `json:"attachments"`
 	ReplyToMessageID string   `json:"replyToMessageId"`
+	ClientMutationID string   `json:"clientMutationId"`
 }
 
 type correctPayload struct {
 	SessionID       string `json:"sessionId"`
 	TargetMessageID string `json:"targetMessageId"`
-	Text            string `json:"text"`
+	// MessageID 指定要停止的那条流式回复；旧客户端不带该字段时退化为“停该会话最新一条”。
+	MessageID string `json:"messageId"`
+	Text      string `json:"text"`
 }
 
 // requestError 是可直接映射为 error 帧/HTTP 400 的错误。
@@ -210,6 +213,7 @@ func (m *Module) handleChat(w http.ResponseWriter, r *http.Request) {
 		Text             string   `json:"text"`
 		Attachments      []string `json:"attachments"`
 		ReplyToMessageID string   `json:"replyToMessageId"`
+		ClientMutationID string   `json:"clientMutationId"`
 	}
 	dec := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxBodyBytes))
 	if err := dec.Decode(&req); err != nil {
@@ -220,18 +224,23 @@ func (m *Module) handleChat(w http.ResponseWriter, r *http.Request) {
 		httpserver.WriteError(w, http.StatusBadRequest, "请求体不是合法 JSON")
 		return
 	}
-	user, err := m.startTurnExplicit(r.Context(), req.SessionID, req.Text, ClassRefine, req.Attachments, req.ReplyToMessageID,
-		strings.TrimSpace(req.SessionID) != "")
+	messageID, duplicated, err := m.startTurnIdempotent(r.Context(), req.ClientMutationID, req.SessionID, req.Text, ClassRefine,
+		req.Attachments, req.ReplyToMessageID, strings.TrimSpace(req.SessionID) != "")
 	if err != nil {
 		m.writeRequestError(w, err)
 		return
 	}
 	// 契约字段是 messageId；同时保留 id 兼容旧前端/旧评测。
-	httpserver.WriteJSON(w, http.StatusAccepted, map[string]any{
+	payload := map[string]any{
 		"ok":        true,
-		"messageId": user.ID,
-		"id":        user.ID,
-	})
+		"messageId": messageID,
+		"id":        messageID,
+	}
+	if duplicated {
+		// 可加字段：客户端据此知道本次没有产生新消息（响应形状保持向后兼容）。
+		payload["idempotent"] = true
+	}
+	httpserver.WriteJSON(w, http.StatusAccepted, payload)
 }
 
 func (m *Module) writeRequestError(w http.ResponseWriter, err error) {
@@ -256,6 +265,9 @@ func (m *Module) writeRequestError(w http.ResponseWriter, err error) {
 		case "invalid_path":
 			httpserver.WriteErrorCode(w, http.StatusBadRequest, "invalid_path", reqErr.message)
 			return
+		case codeMutationInProgress:
+			httpserver.WriteErrorCode(w, http.StatusConflict, codeMutationInProgress, reqErr.message)
+			return
 		}
 	}
 	httpserver.WriteError(w, http.StatusInternalServerError, "发送消息失败")
@@ -279,6 +291,9 @@ func (m *Module) handleWS(w http.ResponseWriter, r *http.Request) {
 	if !m.wsSend(ctx, out, wsEnvelope{Type: "hello", Data: helloPayload{At: time.Now().UnixMilli()}}) {
 		return
 	}
+	// 未读提示与"订阅了哪个会话"无关：连接建立即登记，断开时注销。
+	unreadSubscriber := m.unread.register(out)
+	defer m.unread.unregister(unreadSubscriber)
 
 	query := r.URL.Query()
 	sessionID := strings.TrimSpace(query.Get("sessionId"))
@@ -343,7 +358,7 @@ func (m *Module) handleWS(w http.ResponseWriter, r *http.Request) {
 			}
 			// 兼容：客户端先 chat 后 subscribe 时，先起流，避免丢自己的事件。
 			startSubscription(0, false)
-			if _, err := m.startTurnExplicit(ctx, payload.SessionID, payload.Text, ClassRefine, payload.Attachments, payload.ReplyToMessageID, explicitSession); err != nil {
+			if _, _, err := m.startTurnIdempotent(ctx, payload.ClientMutationID, payload.SessionID, payload.Text, ClassRefine, payload.Attachments, payload.ReplyToMessageID, explicitSession); err != nil {
 				code, message := codeInternal, "发送失败"
 				var reqErr *requestError
 				if errors.As(err, &reqErr) {
@@ -366,7 +381,7 @@ func (m *Module) handleWS(w http.ResponseWriter, r *http.Request) {
 				payload.SessionID = sessionID
 			}
 			startSubscription(0, false)
-			if err := m.correct(ctx, payload.SessionID, payload.TargetMessageID, payload.Text); err != nil {
+			if err := m.correct(ctx, payload.SessionID, payload.TargetMessageID, payload.MessageID, payload.Text); err != nil {
 				m.wsError(ctx, out, codeInternal, "修正失败")
 			}
 		case "ping":
@@ -470,7 +485,7 @@ func isWSEventType(typ string) bool {
 		eventlog.TypeTeamMemberAdded, eventlog.TypeTeamMemberStatus, eventlog.TypeTeamOwnerChanged,
 		eventlog.TypeTeamMessageQueued, eventlog.TypeTeamMessageDelivered, eventlog.TypeTeamMessageFailed,
 		eventlog.TypeTeamTriggerFired, eventlog.TypeTeamTriggerFailed, eventlog.TypeTeamDeliverableReady,
-		eventlog.TypeCardUpdated, eventlog.TypeCardAction:
+		eventlog.TypeCardUpdated, eventlog.TypeCardAction, eventlog.TypeSessionRead:
 		return true
 	}
 	return false

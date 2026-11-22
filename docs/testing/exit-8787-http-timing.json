@@ -1,0 +1,104 @@
+{
+  "capturedAt": "2026-11-22T06:37:32.288Z",
+  "timezone": "Asia/Shanghai",
+  "startedAtLocal": "Sun Nov 22 2026 14:37:32 GMT+0800 (中国标准时间)",
+  "base": "http://127.0.0.1:8787",
+  "steps": [
+    {
+      "check": "1",
+      "name": "health",
+      "ms": 33.5,
+      "value": {
+        "status": 200,
+        "ok": true,
+        "ready": true
+      }
+    },
+    {
+      "check": "1",
+      "name": "index buildId",
+      "ms": 2.6,
+      "value": {
+        "status": 200,
+        "buildId": "mwrgkenj-4xh98",
+        "bytes": 406
+      }
+    },
+    {
+      "check": "1",
+      "name": "app.js bytes+sha",
+      "ms": 3,
+      "value": {
+        "status": 200,
+        "bytes": 316072,
+        "sha256": "53624c4755bd758b0701f3eb5d0901a213dfa99cea604e38f3707f62e55a25d8"
+      }
+    },
+    {
+      "check": "1",
+      "name": "app.css bytes+sha",
+      "ms": 1.3,
+      "value": {
+        "status": 200,
+        "bytes": 79712,
+        "sha256": "169613e2541bf86ae066fe7a0bebb7468bbb6c75eb0b85747114747fb08954df"
+      }
+    },
+    {
+      "check": "2",
+      "name": "sessions rows/messageCount",
+      "ms": 2.1,
+      "value": {
+        "status": 200,
+        "count": 15,
+        "allInteger": true,
+        "main": 75
+      }
+    },
+    {
+      "check": "3",
+      "name": "projection first 200 + ETag",
+      "ms": 2.2,
+      "value": {
+        "status": 200,
+        "etag": "\"spec-c5a2d772dd1d5d88\"",
+        "bytes": 1455
+      }
+    },
+    {
+      "check": "3",
+      "name": "projection If-None-Match 304",
+      "ms": 2.4,
+      "value": {
+        "status": 304,
+        "bytes": 0,
+        "empty": true
+      }
+    },
+    {
+      "check": "3",
+      "name": "projection taskLimit=3 ETag",
+      "ms": 2.3,
+      "value": {
+        "status": 200,
+        "etag": "\"spec-c5a2d772dd1d5d88\""
+      }
+    },
+    {
+      "check": "3",
+      "name": "projection taskLimit=50 ETag",
+      "ms": 2.4,
+      "value": {
+        "status": 200,
+        "etag": "\"spec-e217d5acfbc1ba18\""
+      }
+    }
+  ],
+  "checkTotalsSeconds": {
+    "check1": 0.0404,
+    "check2": 0.0021000000000000003,
+    "check3_http": 0.009300000000000001
+  },
+  "taskLimitEtagsDiffer": true,
+  "totalMs": 51.8
+}

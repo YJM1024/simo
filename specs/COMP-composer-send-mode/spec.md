@@ -1,9 +1,10 @@
 # COMP-composer-send-mode · Composer 发送方式
 
-状态：**spec ready（待实现/待验收；只文档，不改代码）**
+状态：**spec ready（2026-11-21 按事实更正：已实现、8787 线上 smoke 通过且有签字记录；缺六件套门禁，未归档）**。未签收：2026-11-21 组件验收判 **rejected**（报告 `docs/testing/COMP-SIGN-20261121.md` §5）；缺口为 A5 模式提示文案默认常显、与“默认隐藏/移出消失”相反，A8 发送失败清空输入、与“失败保留输入”冲突。修复或先修订契约文字后重验，不得改状态为 accepted。
 Owner：前端（实现）/ 产品（交互口径）/ 验收
 范围：Composer 输入区的发送/换行快捷键、发送方式切换提示、持久化与多标签同步。
 视觉基线：`DESIGN.md`；相关组件：`Composer`、`Button/IconButton`、`Tooltip`。
+证据：签字 `docs/tasks/acceptance.md:1109-1122`（2026-11-14，build `mwfzyf8u-h9f0d`，A1–A8 通过，A5 间距实测 2px）；8787 线上 smoke `:1124-1133`（`aria-pressed=true`、hint「Enter 换行，Shift+Enter 发送」、localStorage `shift-enter`、375 无横向溢出、console 0）。截图早于当前源码（`library.tsx` 2026-11-21 20:20），**截图待重拍**。
 
 ## 1. 目标
 
@@ -58,6 +59,7 @@ Owner：前端（实现）/ 产品（交互口径）/ 验收
 - composing 期间：Enter/Shift+Enter/Ctrl/Cmd+Enter **都不发送、不切换模式**；键盘事件不触发切换按钮；
 - `compositionend` 本身不发送、不切换；
 - 浏览器在 compositionend 后补发 Enter 的，必须被抑制（不得“选词回车直接发消息”）；
+- **组合结束 50ms 抑制窗口（2026-11-21 按实现补入契约）**：`compositionend` 之后 **50ms 内的 Enter 一律不发送**，判定为 `Date.now() - compositionEndAt < 50`（`library.tsx:569-578`）。理由：浏览器在选词确认后补发 keydown 的时序不可靠，仅靠 `isComposing` 标志会漏掉选词回车；50ms 是契约值，改动需走本 spec 修订；抑制期间输入不丢字符、不误切换；
 - 组词中提示区可保持现状，但不得抢焦点/切换。
 
 ## 7. 提示区与切换控件
@@ -75,6 +77,7 @@ Owner：前端（实现）/ 产品（交互口径）/ 验收
 ## 8. 持久化与多标签
 
 - key：`simo.composer.sendMode`，值仅 `enter` / `shift-enter`；
+- **旧 key 迁移（2026-11-21 按实现补入契约）**：历史 key 为 `simo.composer.send-mode`（连字符），旧值不是 `enter`/`shift-enter`，而是 **`enter-send` / `enter-newline`**。初始化时：新 key 合法则直接用（**新 key 优先**）；新 key 缺失/非法且旧 key 合法时，映射 `enter-send → enter`、`enter-newline → shift-enter`，写入新 key 并**删除旧 key**（`library.tsx:518-529`）；迁移不广播、不写脏值；旧值非法则忽略并回退 `enter`；
 - 初始化：读取 localStorage；缺失/非法 → `enter`，不写脏值；
 - 切换：先本地更新 UI，再写 localStorage，再广播；
 - 多标签：优先 `BroadcastChannel('simo.composer.sendMode.v1')`；不支持时监听 `storage` 事件兜底；
@@ -94,6 +97,7 @@ Owner：前端（实现）/ 产品（交互口径）/ 验收
 | 375 | focus-within 显示提示；文字省略/缩小间距但图标 2px 不变；不横向溢出 |
 | disabled | 不显示/不响应切换；不改变现有禁用样式 |
 | preference-unavailable | 内存态生效，提示“未保存”；发送仍可用 |
+| legacy-key | 新 key 优先；旧 key 合法时映射 `enter-send`/`enter-newline` → 写新 key 并删旧 key（一次，不广播）；旧值非法则回退默认 |
 
 ## 10. 影响范围
 
@@ -109,10 +113,10 @@ Owner：前端（实现）/ 产品（交互口径）/ 验收
 | A1 | 默认快捷键 | Enter 发送；Shift+Enter 换行且不发送；空输入不产生消息 |
 | A2 | 反转快捷键 | 切换后 Enter 换行；Shift+Enter 发送；与默认模式互斥 |
 | A3 | 始终发送 | Ctrl/Cmd+Enter 在默认/反转模式都发送；不额外插入换行 |
-| A4 | IME | composing 中 Enter/Shift+Enter/Ctrl/Cmd 均不发送/不切换；compositionend 不误发 |
+| A4 | IME | composing 中 Enter/Shift+Enter/Ctrl/Cmd 均不发送/不切换；compositionend 不误发；**compositionend 后 50ms 内 Enter 不发送**（实测：选词回车被抑制，字符不丢） |
 | A5 | 提示区 | hover/focus 显示，移出/失焦消失；2px 间距；20px 槽保留；显示/隐藏不造成布局跳动；文案精确为 `Enter 发送，Shift+Enter 换行` / `Enter 换行，Shift+Enter 发送`（中文逗号） |
 | A6 | 切换语义 | 点击/Enter/Space 可切换；`aria-pressed`/`aria-label` 正确；键盘焦点可见 |
-| A7 | 持久化/多标签 | 刷新恢复；localStorage 非法值回退；两标签同步；无回环/无旧值覆盖新值 |
+| A7 | 持久化/多标签 | 刷新恢复；localStorage 非法值回退；两标签同步；无回环/无旧值覆盖新值；**旧 key `simo.composer.send-mode` 的 `enter-send`/`enter-newline` 被映射、写新 key 并删旧 key，一次且不广播；新 key 优先** |
 | A8 | 375/回归 | focus 显示不溢出；无横向滚动；Composer 高度/按钮布局/发送失败重试不回归；console 0 |
 
 ## 12. 待确认
@@ -124,4 +128,4 @@ Owner：前端（实现）/ 产品（交互口径）/ 验收
 
 ---
 
-*本文件只定义组件 spec，不改代码；实现前需确认 Composer 现有键盘/IME 事件边界。*
+*本文件只定义组件 spec，不改代码；实现已落地（`library.tsx:514-597`），后续改动须先修订本 spec 再动代码。*

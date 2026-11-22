@@ -6,6 +6,19 @@ export interface Session {
   archived: number | boolean
   pinned: boolean
   ownerAgentId?: string
+  /** 服务端持久化的未读标记：true 表示有未读（侧栏显示未读点，不显示数字）。 */
+  hasUnread?: boolean
+  /**
+   * 该会话自身的消息数（不含子会话与内部消息，草稿为 0），由 GET /api/sessions、`?q=` 搜索、
+   * /api/sessions/tree 与写接口的 session 对象返回。侧栏行数字以它为准，不再按消息列表条数推算，
+   * 因此不受单次消息接口 100 条上限影响。旧服务端或本地草稿没有该字段时不显示行数字。
+   */
+  messageCount?: number
+  /**
+   * 仅前端乐观插入的草稿会话（POST /api/sessions 返回 draft=true）。
+   * 服务端把草稿放在内存里，首条消息才落库，因此它不能归档、也不进列表接口。
+   */
+  draft?: boolean
   children?: Session[]
 }
 

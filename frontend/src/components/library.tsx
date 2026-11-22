@@ -47,7 +47,20 @@ export function Segmented({ value, onChange }: { value: 'chat' | 'workbench'; on
   )
 }
 
-export function Sidebar({ sessions, activeId, onSelect, onRename, onCreate, onRefresh, connection, usageTotal, quotaPct, sessionCount, messageCount, statsError, loading, error, searchQuery, onSearch, searching, searchIds, onArchive }: {
+/** DefaultSessionID：主会话固定为 'main'，产品口径规定它不可归档（也不提供删除）。 */
+export const MAIN_SESSION_ID = 'main'
+
+/** 侧栏计数与树渲染共用同一棵（已按可见性过滤的）树，避免“计数”和“行数”各算一套。 */
+function countTree(nodes: Session[]): number {
+  let count = 0
+  for (const node of nodes) {
+    count += 1
+    count += countTree(node.children ?? [])
+  }
+  return count
+}
+
+export function Sidebar({ sessions, activeId, onSelect, onRename, onCreate, onRefresh, connection, usageTotal, quotaPct, sessionCount, archivedCount, messageCount, statsError, loading, error, searchQuery, onSearch, searching, searchError, onRetrySearch, onArchive, onPin }: {
   sessions: Session[]
   activeId: string
   onSelect: (id: string) => void
@@ -57,7 +70,11 @@ export function Sidebar({ sessions, activeId, onSelect, onRename, onCreate, onRe
   connection: string
   usageTotal: number | null
   quotaPct: number
+  /** 全部会话数（含归档与任意深度），由 app 以去重后的整棵树统计。 */
   sessionCount: number
+  /** 归档会话数：与 sessionCount 分开显示，避免“可见行数”和“总数”两个口径互相冒充。 */
+  archivedCount: number
+  /** 底部汇总的全局消息数（GET /api/stats 的 totals.messages），与单行数字不是同一口径。 */
   messageCount: number | null
   statsError: string
   loading: boolean
@@ -65,31 +82,66 @@ export function Sidebar({ sessions, activeId, onSelect, onRename, onCreate, onRe
   searchQuery: string
   onSearch: (value: string) => void
   searching: boolean
-  searchIds: Set<string> | null
+  /** 搜索请求失败的原因；非空即错误态（与“真的没有结果”区分）。 */
+  searchError: string
+  onRetrySearch: () => void
   onArchive: (id: string, archived: boolean) => void
+  /** 置顶入口：草稿与主会话不渲染菜单，因此不会触发；成功与否由上层刷新列表/toast 呈现。 */
+  onPin: (id: string, pinned: boolean) => void
 }): React.ReactNode {
   const [editing, setEditing] = useState<string | null>(null)
   const [showArchived, setShowArchived] = useState(false)
   const [menuId, setMenuId] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
+  // 展开/折叠沿用既有树的交互语义：默认全展开，折叠只影响后代行，不改变选中态和数据。
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set())
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { if (editing) inputRef.current?.focus() }, [editing])
 
   async function commit(id: string): Promise<void> {
     const value = draft.trim()
-    if (value) await onRename(id, value)
-    setEditing(null)
+    if (!value) { setEditing(null); return }
+    try {
+      await onRename(id, value)
+      setEditing(null)
+    } catch {
+      // 重命名失败：保留编辑框与用户输入（错误提示由上层 app.tsx 的全局提示负责），也不产生未捕获拒绝
+    }
   }
 
-  const renderRow = (session: Session, child = false): React.ReactNode => (
-    <div key={session.id} className={`session-row ${child ? 'child' : ''} ${activeId === session.id ? 'is-active' : ''} ${session.archived ? 'is-archived' : ''}`}
+  const toggleCollapse = (id: string): void => {
+    setCollapsed((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const renderRow = (session: Session, depth = 0): React.ReactNode => {
+    const isMain = session.id === MAIN_SESSION_ID
+    // 草稿会话（POST /api/sessions 的 draft=true）没落库，归档请求只会得到 404：菜单整体不出现，
+    // 等首条消息触发 MaterializeDraft 后由 app.tsx 清掉 draft 标记再恢复菜单。
+    const isDraft = session.draft === true
+    const hasChildren = (session.children?.length ?? 0) > 0
+    return (
+    <div key={session.id} className={`session-row ${depth > 0 ? 'child' : ''} ${activeId === session.id ? 'is-active' : ''} ${session.archived ? 'is-archived' : ''}`}
+      data-depth={depth}
+      style={depth > 0 ? { paddingLeft: `calc(var(--sp-8) + ${depth * 16}px)` } : undefined}
       onDoubleClick={() => { setEditing(session.id); setDraft(session.title) }}
       onClick={() => onSelect(session.id)}
       role="button"
       tabIndex={0}
       onKeyDown={(event) => { if (event.key === 'Enter') onSelect(session.id) }}
     >
+      {hasChildren ? (
+        <button type="button" className="session-toggle" aria-expanded={!collapsed.has(session.id)}
+          aria-label={`${collapsed.has(session.id) ? '展开' : '折叠'}子会话：${session.title}`}
+          onClick={(event) => { event.stopPropagation(); toggleCollapse(session.id) }}>
+          {collapsed.has(session.id) ? '▸' : '▾'}
+        </button>
+      ) : <span className="session-toggle-spacer" aria-hidden="true" />}
       <span className="session-dot" aria-hidden="true" />
       {editing === session.id ? (
         <input
@@ -106,58 +158,332 @@ export function Sidebar({ sessions, activeId, onSelect, onRename, onCreate, onRe
           onDoubleClick={(event) => event.stopPropagation()}
           aria-label="重命名会话"
         />
-      ) : <><span className="session-title" title={session.title}>{session.title}</span>{activeId === session.id && messageCount !== null && <span className="session-count">{messageCount}</span>}<button type="button" className="session-more" aria-label="会话操作" onClick={(event) => { event.stopPropagation(); setMenuId((value) => value === session.id ? null : session.id) }}>⋯</button></>}
-      {menuId === session.id && <div className="session-menu"><button type="button" onClick={(event) => { event.stopPropagation(); onArchive(session.id, !session.archived); setMenuId(null) }}>{session.archived ? '恢复' : '归档'}</button></div>}
+      ) : <><span className="session-title" title={session.title}>{session.title}</span>{typeof session.messageCount === 'number' && <span className="session-count">{session.messageCount}</span>}{session.hasUnread === true && <span className="session-unread" data-unread="true" aria-label="未读" />}{!isMain && !isDraft && <button type="button" className="session-more" aria-label="会话操作" onClick={(event) => { event.stopPropagation(); setMenuId((value) => value === session.id ? null : session.id) }}>⋯</button>}</>}
+      {/* 主会话不可归档：菜单整体不出现（本轮也没有删除入口——产品裁决只允许归档）。 */}
+      {/* AC-CONV-001-04：仅未归档会话可置顶，归档行菜单只保留「恢复」。 */}
+      {menuId === session.id && !isMain && !isDraft && <div className="session-menu">{!session.archived && <button type="button" onClick={(event) => { event.stopPropagation(); onPin(session.id, !session.pinned); setMenuId(null) }}>{session.pinned ? '取消置顶' : '置顶'}</button>}<button type="button" onClick={(event) => { event.stopPropagation(); onArchive(session.id, !session.archived); setMenuId(null) }}>{session.archived ? '恢复' : '归档'}</button></div>}
     </div>
   )
+  }
 
   const term = searchQuery.trim().toLowerCase()
-  const matches = (session: Session): boolean => !term || session.title.toLowerCase().includes(term) || Boolean(searchIds?.has(session.id))
-  const visibleSessions: Session[] = []
-  for (const session of sessions.filter((item) => showArchived || !item.archived)) {
-    const allChildren = (session.children ?? []).filter((child) => showArchived || !child.archived)
-    const children = term ? allChildren.filter((child) => matches(child)) : allChildren
-    if (!term || matches(session) || children.length > 0) visibleSessions.push({ ...session, children })
+  // 标题过滤在服务端完成（GET /api/sessions?q=）；这里只对已返回的结果做大小写无关的本地过滤兜底，
+  // 不再并集消息搜索命中（消息正文搜索已降为 P2，侧栏不默认触发）。
+  const matches = (session: Session): boolean => !term || session.title.toLowerCase().includes(term)
+  // 递归过滤整棵树：深度不再截断，归档过滤与标题过滤对每一层都生效；祖先因后代命中而保留。
+  const filterTree = (nodes: Session[]): Session[] => {
+    const next: Session[] = []
+    for (const node of nodes) {
+      if (!showArchived && node.archived) continue
+      const children = node.children ? filterTree(node.children) : []
+      if (term && !matches(node) && children.length === 0) continue
+      next.push(node.children ? { ...node, children } : node)
+    }
+    return next
   }
+  const visibleTree = filterTree(sessions)
+  const visibleCount = countTree(visibleTree)
+  // 搜索失败 ≠ 没有结果：失败只显示错误态（可重试），绝不落到「没有匹配的会话」。
+  const searchFailed = Boolean(term && searchError)
+
+  // 递归渲染整棵树；折叠只影响该节点的后代，展开/收起沿用 aria-expanded 语义。
+  const renderTree = (nodes: Session[], depth: number): React.ReactNode =>
+    nodes.map((session) => (
+      <div key={session.id}>
+        {renderRow(session, depth)}
+        {!collapsed.has(session.id) && (session.children?.length ?? 0) > 0 ? renderTree(session.children ?? [], depth + 1) : null}
+      </div>
+    ))
 
   return (
     <>
       <div className="ws">
         <i>S</i>
-        <div><b>主工作区</b><span>{connection === 'open' ? '本地环境' : connection === 'reconnecting' ? '重连中…' : '连接中…'}</span></div>
+        <div><b>主工作区</b><span>{connection === 'open' ? '本地环境' : connection === 'reconnecting' ? '重连中…' : connection === 'error' ? '订阅失败' : connection === 'closed' ? '已关闭' : '连接中…'}</span></div>
         <button type="button" title="新建会话" aria-label="新建会话" onClick={onCreate}><Icon name="plus" /></button>
       </div>
       <div className="search">
         <Icon name="search" />
-        <input value={searchQuery} onChange={(event) => onSearch(event.target.value)} placeholder="搜索会话、消息…" aria-label="搜索会话" />
+        <input value={searchQuery} onChange={(event) => onSearch(event.target.value)} placeholder="搜索会话标题…" aria-label="搜索会话" />
         <kbd>⌘K</kbd>
       </div>
       <div className="sidebar-scroll">
         <div className="side-label">
           <span className="grow">会话</span>
-          <span>{loading || error ? '—' : sessions.reduce((count, session) => count + 1 + (session.children?.length ?? 0), 0)}</span>
+          {/* 口径：这里只报“当前可见行数”（已按归档/标题过滤、含任意深度）；总数与归档数在底部 quota-note 分开报。 */}
+          <span title={`当前可见 ${visibleCount} 个会话（归档 ${archivedCount} 个）`} aria-label={`当前可见 ${visibleCount} 个会话`}>{loading || error ? '—' : visibleCount}</span>
           <button type="button" aria-pressed={showArchived} onClick={() => setShowArchived((value) => !value)}>显示归档</button>
           <button type="button" title="刷新会话" aria-label="刷新会话" onClick={onRefresh}><Icon name="refresh" size={12} /></button>
           <button type="button" title="新建会话" aria-label="新建会话" onClick={onCreate}>＋</button>
         </div>
-        {loading && visibleSessions.length === 0 && <LoadingState label="会话加载中…" />}
+        {loading && visibleTree.length === 0 && <LoadingState label="会话加载中…" />}
         {!loading && error && <ErrorState title="会话加载失败" description={error} onRetry={onRefresh} />}
-        {!loading && !error && visibleSessions.length === 0 && <div className="side-empty">{searching ? '搜索中…' : term ? '没有匹配的会话' : '暂无会话'}</div>}
-        {visibleSessions.map((session) => (
-          <div key={session.id}>
-            {renderRow(session)}
-            {(session.children ?? []).filter((child) => showArchived || !child.archived).map((child) => renderRow(child, true))}
-          </div>
-        ))}
+        {!loading && !error && searchFailed && <ErrorState title="搜索失败，请重试" description={searchError} onRetry={onRetrySearch} />}
+        {!loading && !error && !searchFailed && visibleTree.length === 0 && <div className="side-empty">{searching ? '搜索中…' : term ? '没有匹配的会话' : '暂无会话'}</div>}
+        {!searchFailed && renderTree(visibleTree, 0)}
       </div>
-      <div className="quota"><div className="quota-row"><span>本月用量</span><span>{usageTotal === null ? '—' : formatTokens(usageTotal)}</span></div><div className="quota-bar"><i className={`q${quotaPct}`} /></div><div className="quota-note">{statsError ? '统计加载失败' : `${sessionCount} 个会话 · ${messageCount === null ? '—' : messageCount} 条消息`}</div></div>
+      <div className="quota"><div className="quota-row"><span>本月用量</span><span>{usageTotal === null ? '—' : formatTokens(usageTotal)}</span></div><div className="quota-bar"><i className={`q${quotaPct}`} /></div><div className="quota-note">{statsError ? '统计加载失败' : `${sessionCount} 个会话 · 归档 ${archivedCount} · ${messageCount === null ? '—' : messageCount} 条消息`}</div></div>
       <div className="user"><span className="avatar">Y</span><div><b>本地用户</b><span>主工作区 · Owner</span></div></div>
     </>
   )
 }
 
 export function StatusBar({ connection }: { connection: string }): React.ReactNode {
-  return <footer className="statusbar"><span>{connection === 'open' ? '就绪' : connection === 'reconnecting' ? '重连中' : '连接中'}</span><span>V4.1 Flash · 读/写权限按策略</span></footer>
+  return <footer className="statusbar"><span>{connection === 'open' ? '就绪' : connection === 'reconnecting' ? '重连中' : connection === 'error' ? '订阅失败' : connection === 'closed' ? '连接已关闭' : '连接中'}</span><span>V4.1 Flash · 读/写权限按策略</span></footer>
+}
+
+type TableAlign = 'left' | 'center' | 'right'
+
+// GFM 分隔行单元格：可选冒号 + 至少一个短横线 + 可选冒号，冒号同时决定该列对齐。
+const TABLE_SEPARATOR_CELL = /^:?-+:?$/
+
+function isTableLine(line: string): boolean {
+  return line.trim().startsWith('|')
+}
+
+/** 拆一行表格：去掉首尾竖线，按未转义的 | 切格；\| 还原成单元格里的竖线。 */
+function splitTableRow(line: string): string[] {
+  let body = line.trim()
+  if (body.startsWith('|')) body = body.slice(1)
+  if (body.endsWith('|') && !body.endsWith('\\|')) body = body.slice(0, -1)
+  const cells: string[] = []
+  let current = ''
+  for (let i = 0; i < body.length; i += 1) {
+    if (body[i] === '\\' && body[i + 1] === '|') { current += '|'; i += 1; continue }
+    if (body[i] === '|') { cells.push(current.trim()); current = ''; continue }
+    current += body[i]
+  }
+  cells.push(current.trim())
+  return cells
+}
+
+function tableAlignments(separator: string[]): TableAlign[] | null {
+  const aligns: TableAlign[] = []
+  for (const cell of separator) {
+    if (!TABLE_SEPARATOR_CELL.test(cell)) return null
+    const left = cell.startsWith(':')
+    const right = cell.endsWith(':')
+    aligns.push(left && right ? 'center' : right ? 'right' : 'left')
+  }
+  return aligns
+}
+
+type InlineToken =
+  | { kind: 'text'; value: string }
+  | { kind: 'code'; value: string }
+  | { kind: 'strong'; children: InlineToken[] }
+  | { kind: 'em'; children: InlineToken[] }
+  | { kind: 'del'; children: InlineToken[] }
+  | { kind: 'link'; href: string; label: string }
+
+// 链接只放行 http、https、mailto 三种协议；其它协议按纯文本输出，不生成可点击元素。
+const SAFE_LINK_PROTOCOL = /^(?:https?:\/\/|mailto:)/i
+const WORD_CHAR = /[A-Za-z0-9]/
+
+function isBlank(char: string | undefined): boolean {
+  return char === undefined || /\s/.test(char)
+}
+
+/** 找右括号：允许地址内部成对括号（例如维基链接），避免在第一个 ) 处截断。 */
+function findLinkClose(text: string, from: number): number {
+  let depth = 1
+  for (let cursor = from; cursor < text.length; cursor += 1) {
+    if (text[cursor] === '(') depth += 1
+    else if (text[cursor] === ')') {
+      depth -= 1
+      if (depth === 0) return cursor
+    }
+  }
+  return -1
+}
+
+/**
+ * 找结束分隔符。跳过行内码内部，避免代码里的 * 或 _ 提前截断；
+ * 结束符前必须是实字符，`_` 还要求后面不是字母数字（排除 snake_case 的第二处下划线）。
+ */
+function findInlineClose(text: string, from: number, delimiter: string, intraWord: boolean): number {
+  let cursor = from
+  while (cursor < text.length) {
+    if (text[cursor] === '`') {
+      const codeEnd = text.indexOf('`', cursor + 1)
+      if (codeEnd !== -1) { cursor = codeEnd + 1; continue }
+    }
+    if (text.startsWith(delimiter, cursor) && !isBlank(text[cursor - 1])) {
+      if (intraWord || !WORD_CHAR.test(text[cursor + delimiter.length] ?? '')) return cursor
+    }
+    cursor += 1
+  }
+  return -1
+}
+
+/**
+ * 行内 Markdown 解析：优先级为行内码 > 链接 > 加粗/删除线（双字符）> 斜体（单字符）。
+ * 反引号内的内容整体成为 code token，不再二次解析；链接文字保持纯文本，不解析加粗。
+ */
+function parseInline(text: string): InlineToken[] {
+  const tokens: InlineToken[] = []
+  let plain = ''
+  const flush = (): void => {
+    if (plain) { tokens.push({ kind: 'text', value: plain }); plain = '' }
+  }
+  let index = 0
+  while (index < text.length) {
+    const char = text[index]
+    if (char === '`') {
+      const end = text.indexOf('`', index + 1)
+      if (end !== -1) {
+        flush()
+        tokens.push({ kind: 'code', value: text.slice(index + 1, end) })
+        index = end + 1
+        continue
+      }
+      plain += char
+      index += 1
+      continue
+    }
+    if (char === '[') {
+      const bracket = text.indexOf(']', index + 1)
+      if (bracket !== -1 && text[bracket + 1] === '(') {
+        const end = findLinkClose(text, bracket + 2)
+        if (end !== -1) {
+          const label = text.slice(index + 1, bracket)
+          const href = text.slice(bracket + 2, end).trim()
+          if (label && SAFE_LINK_PROTOCOL.test(href)) {
+            flush()
+            tokens.push({ kind: 'link', href, label })
+          } else {
+            // 协议不在白名单：连标记一起按原文输出，不产生可点击元素。
+            plain += text.slice(index, end + 1)
+          }
+          index = end + 1
+          continue
+        }
+      }
+      plain += char
+      index += 1
+      continue
+    }
+    // 两个连续星号优先判加粗，双下划线同理；内容不能为空。
+    if (text.startsWith('**', index) || text.startsWith('__', index)) {
+      const delimiter = text.startsWith('**', index) ? '**' : '__'
+      const intraWord = delimiter === '__' && WORD_CHAR.test(text[index - 1] ?? '')
+      const end = intraWord || isBlank(text[index + 2]) ? -1 : findInlineClose(text, index + 2, delimiter, true)
+      if (end > index + 2) {
+        flush()
+        tokens.push({ kind: 'strong', children: parseInline(text.slice(index + 2, end)) })
+        index = end + 2
+        continue
+      }
+      plain += delimiter
+      index += 2
+      continue
+    }
+    if (text.startsWith('~~', index)) {
+      const end = isBlank(text[index + 2]) ? -1 : findInlineClose(text, index + 2, '~~', true)
+      if (end > index + 2) {
+        flush()
+        tokens.push({ kind: 'del', children: parseInline(text.slice(index + 2, end)) })
+        index = end + 2
+        continue
+      }
+      plain += '~~'
+      index += 2
+      continue
+    }
+    // 单个 * 必须后面有实字符才算斜体起始，单独一个 * 原样输出。
+    if (char === '*' && !isBlank(text[index + 1])) {
+      const end = findInlineClose(text, index + 1, '*', true)
+      if (end > index + 1) {
+        flush()
+        tokens.push({ kind: 'em', children: parseInline(text.slice(index + 1, end)) })
+        index = end + 1
+        continue
+      }
+    }
+    // _ 只在不位于单词内部时作为斜体起始，snake_case_identifier 保持原样。
+    if (char === '_' && !WORD_CHAR.test(text[index - 1] ?? '') && !isBlank(text[index + 1])) {
+      const end = findInlineClose(text, index + 1, '_', false)
+      if (end > index + 1) {
+        flush()
+        tokens.push({ kind: 'em', children: parseInline(text.slice(index + 1, end)) })
+        index = end + 1
+        continue
+      }
+    }
+    plain += char
+    index += 1
+  }
+  flush()
+  return tokens
+}
+
+function renderInlineTokens(tokens: InlineToken[]): React.ReactNode[] {
+  return tokens.map((token, index) => {
+    switch (token.kind) {
+      case 'text': return token.value
+      case 'code': return <code key={index}>{token.value}</code>
+      case 'strong': return <strong key={index}>{renderInlineTokens(token.children)}</strong>
+      case 'em': return <em key={index}>{renderInlineTokens(token.children)}</em>
+      case 'del': return <del key={index}>{renderInlineTokens(token.children)}</del>
+      case 'link': return <a key={index} href={token.href} target="_blank" rel="noopener noreferrer">{token.label}</a>
+    }
+  })
+}
+
+function renderInline(text: string): React.ReactNode[] {
+  return renderInlineTokens(parseInline(text))
+}
+
+function renderTable(rows: string[][], aligns: TableAlign[], key: string): React.ReactNode {
+  const [header, ...body] = rows
+  const alignOf = (column: number): React.CSSProperties => ({ textAlign: aligns[column] ?? 'left' })
+  // 外层滚动容器：宽表格在卡片内部横向滚动，消息列与页面不被撑出横向溢出（COMP-conversation-panel A3）。
+  return (
+    <div className="msg-table-wrap" key={key} tabIndex={0} role="region" aria-label="表格">
+      <table className="msg-table">
+        <thead><tr>{header.map((cell, column) => <th key={column} scope="col" style={alignOf(column)}>{renderInline(cell)}</th>)}</tr></thead>
+        <tbody>{body.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, column) => <td key={column} style={alignOf(column)}>{renderInline(cell)}</td>)}</tr>)}</tbody>
+      </table>
+    </div>
+  )
+}
+
+function renderTextBlocks(part: string, partIndex: number): React.ReactNode[] {
+  const lines = part.split('\n')
+  const nodes: React.ReactNode[] = []
+  let paragraph: string[] = []
+  let count = 0
+  const flushParagraph = (): void => {
+    const chunk = paragraph.join('\n').trim()
+    paragraph = []
+    if (!chunk) return
+    nodes.push(<p key={`${partIndex}-p${count++}`}>{renderInline(chunk)}</p>)
+  }
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i]
+    if (isTableLine(line) && i + 1 < lines.length && isTableLine(lines[i + 1])) {
+      const header = splitTableRow(line)
+      const separator = splitTableRow(lines[i + 1])
+      const aligns = separator.length === header.length ? tableAlignments(separator) : null
+      if (aligns) {
+        flushParagraph()
+        const rows: string[][] = [header]
+        let cursor = i + 2
+        while (cursor < lines.length && isTableLine(lines[cursor])) {
+          const cells = splitTableRow(lines[cursor])
+          rows.push(header.map((_, column) => cells[column] ?? ''))
+          cursor += 1
+        }
+        nodes.push(renderTable(rows, aligns, `${partIndex}-t${count++}`))
+        i = cursor - 1
+        continue
+      }
+    }
+    if (line.trim() === '') { flushParagraph(); continue }
+    paragraph.push(line)
+  }
+  flushParagraph()
+  return nodes
 }
 
 function renderMessageText(text: string): React.ReactNode {
@@ -167,15 +493,15 @@ function renderMessageText(text: string): React.ReactNode {
       const code = part.replace(/^```[^\n]*\n?/, '').replace(/```$/, '')
       return <pre key={index}><code>{code}</code></pre>
     }
-    return part.split(/\n{2,}/).filter(Boolean).map((paragraph, pIndex) => (
-      <p key={`${index}-${pIndex}`}>{paragraph.split(/(`[^`]+`)/g).map((piece, cIndex) => piece.startsWith('`') && piece.endsWith('`') ? <code key={cIndex}>{piece.slice(1, -1)}</code> : <span key={cIndex}>{piece}</span>)}</p>
-    ))
+    return renderTextBlocks(part, index)
   })
 }
 
-export function MessageItem({ message, onCardAction, readOnly = false }: { message: Message; onCardAction: (card: Card, action: string, payload: Record<string, unknown>) => Promise<void>; readOnly?: boolean }): React.ReactNode {
+export function MessageItem({ message, onCardAction, readOnly = false, onRetry }: { message: Message; onCardAction: (card: Card, action: string, payload: Record<string, unknown>) => Promise<void>; readOnly?: boolean; onRetry?: (message: Message) => void }): React.ReactNode {
   const [streaming, setStreaming] = useState(false)
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle')
+  // 复制态 1.5s 复位：卸载时必须清掉，否则 jsdom 环境回收后定时器仍触发 setState（window is not defined）。
+  const copyResetTimer = useRef<number | null>(null)
   const copy = async (): Promise<void> => {
     try {
       await navigator.clipboard.writeText(message.text)
@@ -191,12 +517,19 @@ export function MessageItem({ message, onCardAction, readOnly = false }: { messa
         setCopyState(ok ? 'copied' : 'error')
       } catch { setCopyState('error') }
     }
-    window.setTimeout(() => setCopyState('idle'), 1500)
+    if (copyResetTimer.current !== null) window.clearTimeout(copyResetTimer.current)
+    copyResetTimer.current = window.setTimeout(() => setCopyState('idle'), 1500)
   }
+  useEffect(() => () => {
+    if (copyResetTimer.current !== null) window.clearTimeout(copyResetTimer.current)
+  }, [])
   useEffect(() => {
     setStreaming(message.status === 'streaming')
   }, [message.status])
   const isUser = message.role === 'user'
+  // 后端把回复失败落成 status:"error"（chat/model.go:67 StatusError），历史数据里还有 StatusFailed。
+  // 两种都按失败处理，否则界面只剩一个空气泡，既没有徽标也没有重试入口（AC-CONV-004-01）。
+  const failed = message.status === 'failed' || message.status === 'error'
   const rawCategory = message.category === 'delivery' ? 'progress' : message.category
   const categoryKey = isUser ? '' : (rawCategory && CATEGORY_LABEL[rawCategory] ? rawCategory : 'consultation')
   const category = categoryKey ? CATEGORY_LABEL[categoryKey] : ''
@@ -204,9 +537,10 @@ export function MessageItem({ message, onCardAction, readOnly = false }: { messa
     <article className={`msg ${isUser ? 'from-user' : 'from-agent'}`} data-message-id={message.id} data-task-id={message.taskId} data-session-id={message.sessionId}>
       <span className="msg-avatar">{isUser ? '你' : '墨'}</span>
       <div className="msg-body">
-        <div className="msg-meta"><b>{isUser ? '你' : '司墨'}</b><span>·</span>{category && <><span className={`tag msg-tag msg-tag-${categoryKey}`}>{category}</span><span>·</span></>}<span>{formatTime(message.at)}</span>{message.status === 'failed' && <span className="badge danger">失败</span>}{message.text.trim() && <button type="button" className="msg-copy" onClick={() => void copy()} aria-label="复制消息">{copyState === 'copied' ? '已复制' : copyState === 'error' ? '复制失败' : '复制'}</button>}</div>
+        <div className="msg-meta"><b>{isUser ? '你' : '司墨'}</b><span>·</span>{category && <><span className={`tag msg-tag msg-tag-${categoryKey}`}>{category}</span><span>·</span></>}<span>{formatTime(message.at)}</span>{failed && <span className="badge danger">失败</span>}{message.text.trim() && <button type="button" className="msg-copy" onClick={() => void copy()} aria-label="复制消息">{copyState === 'copied' ? '已复制' : copyState === 'error' ? '复制失败' : '复制'}</button>}</div>
         <div className="msg-text">
-          {message.text.trim() ? <>{renderMessageText(message.text)}{streaming && <p><span className="stream-caret" aria-hidden="true" /></p>}</> : streaming ? <p><span className="stream-caret" aria-hidden="true" /></p> : null}
+          {message.text.trim() ? <>{renderMessageText(message.text)}{streaming && <p><span className="stream-caret" aria-hidden="true" /></p>}</> : streaming ? <p><span className="stream-caret" aria-hidden="true" /></p> : failed ? <p className="err-text">回复生成失败，未返回内容。</p> : null}
+          {failed && onRetry && !readOnly && <button className="btn sm" type="button" onClick={() => onRetry(message)}>重试</button>}
           {(message.cards ?? []).map((card) => <CardBlock key={card.id} card={card} onSubmit={onCardAction} readOnly={readOnly} />)}
         </div>
       </div>
@@ -352,9 +686,32 @@ export function TimelineTip({ open, anchorRef, sender, sessionTitle, timeLabel, 
   )
 }
 
+/**
+ * 时间轴整列命中：把指针的 clientY 映射到纵向最近的刻度下标。
+ *
+ * 刻度自身 pointer-events:none，命中判定完全由轨道容器按各刻度的真实布局中心
+ * （getBoundingClientRect，客户区坐标）计算，不使用 elementFromPoint。原因是 6px
+ * 间距下逐条 44×44 热区必然重叠 7 层，物理覆盖判定谁在上谁赢，点击会跳到相邻条。
+ * 两个刻度正中间时取下标较小者（上方），同一坐标的归属因此是确定的。
+ * 列内越界（高于首条/低于末条）由最近端点兜底，分别返回首/末下标。
+ */
+export function nearestTickIndex(bars: ReadonlyArray<HTMLElement | null>, clientY: number): number {
+  let best = -1
+  let bestDistance = Number.POSITIVE_INFINITY
+  for (let index = 0; index < bars.length; index += 1) {
+    const bar = bars[index]
+    if (!bar) continue
+    const rect = bar.getBoundingClientRect()
+    const distance = Math.abs(rect.top + rect.height / 2 - clientY)
+    if (distance < bestDistance) { bestDistance = distance; best = index }
+  }
+  return best
+}
+
 export function Timeline({ messages, active, onJump }: { messages: Message[]; active: number; onJump: (index: number) => void }): React.ReactNode {
   const [tipIndex, setTipIndex] = useState<number | null>(null)
   const [tipOpen, setTipOpen] = useState(false)
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null)
   const barsRef = useRef<Array<HTMLButtonElement | null>>([])
   const anchorRef = useRef<HTMLElement | null>(null)
   const showTimer = useRef<number | null>(null)
@@ -379,10 +736,22 @@ export function Timeline({ messages, active, onJump }: { messages: Message[]; ac
     clearClose()
     closeTimer.current = window.setTimeout(() => setTipOpen(false), 200)
   }
+  const jumpTo = (index: number): void => { if (index >= 0 && index < messages.length) onJump(index) }
+  const onRailPointerMove = (event: React.PointerEvent<HTMLDivElement>): void => {
+    // 触摸没有悬停语义：只在鼠标/笔下更新映射与浮层；点击仍按 clientY 映射。
+    if (event.pointerType === 'touch') return
+    const index = nearestTickIndex(barsRef.current, event.clientY)
+    if (index < 0 || index === hoverIndex) return
+    setHoverIndex(index)
+    scheduleOpen(index)
+  }
+  const onRailClick = (event: React.MouseEvent<HTMLDivElement>): void => {
+    jumpTo(nearestTickIndex(barsRef.current, event.clientY))
+  }
   useEffect(() => () => { clearShow(); clearClose() }, [])
   const tipMessage = tipIndex !== null ? messages[tipIndex] : null
   return (
-    <div className="timeline" aria-label="消息时间轴" onMouseLeave={scheduleClose} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node)) scheduleClose() }} onKeyDown={(event) => { if (event.key === 'Escape') { clearShow(); clearClose(); setTipOpen(false) } }}>
+    <div className="timeline" aria-label="消息时间轴" onMouseLeave={() => { setHoverIndex(null); scheduleClose() }} onPointerMove={onRailPointerMove} onClick={onRailClick} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node)) scheduleClose() }} onKeyDown={(event) => { if (event.key === 'Escape') { clearShow(); clearClose(); setTipOpen(false) } }}>
       <div className="tl-track">
         {first && <span className="tl-date">{formatDate(first.at)}</span>}
         {messages.map((message, index) => (
@@ -390,9 +759,8 @@ export function Timeline({ messages, active, onJump }: { messages: Message[]; ac
             key={message.id}
             ref={(element) => { barsRef.current[index] = element }}
             type="button"
-            className={`tl-bar ${message.role === 'user' ? 'is-user' : 'is-agent'} ${index === active ? 'is-current' : ''}`}
-            onClick={() => onJump(index)}
-            onMouseEnter={() => scheduleOpen(index)}
+            className={`tl-bar ${message.role === 'user' ? 'is-user' : 'is-agent'} ${index === active ? 'is-current' : ''} ${index === hoverIndex ? 'is-hover' : ''}`}
+            onClick={(event) => { event.stopPropagation(); jumpTo(index) }}
             onFocus={() => openTip(index)}
             onBlur={scheduleClose}
             aria-describedby={tipOpen && tipIndex === index ? 'timeline-tip' : undefined}
@@ -438,6 +806,7 @@ export function TimelineGroups({ messages, currentSessionId, activeMessageId, on
 }): React.ReactNode {
   const [tipIndex, setTipIndex] = useState<number | null>(null)
   const [tipOpen, setTipOpen] = useState(false)
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null)
   const barsRef = useRef<Array<HTMLButtonElement | null>>([])
   const anchorRef = useRef<HTMLElement | null>(null)
   const showTimer = useRef<number | null>(null)
@@ -449,6 +818,18 @@ export function TimelineGroups({ messages, currentSessionId, activeMessageId, on
   const openTip = (index: number): void => { clearShow(); clearClose(); anchorRef.current = barsRef.current[index] ?? null; setTipIndex(index); setTipOpen(true) }
   const scheduleOpen = (index: number): void => { clearClose(); clearShow(); showTimer.current = window.setTimeout(() => openTip(index), 120) }
   const scheduleClose = (): void => { clearShow(); clearClose(); closeTimer.current = window.setTimeout(() => setTipOpen(false), 200) }
+  const jumpTo = (index: number): void => { const message = flat[index]; if (message) onJump(message.id) }
+  const onRailPointerMove = (event: React.PointerEvent<HTMLElement>): void => {
+    // 整列一个命中面：按 clientY 映射到最近刻度，触摸没有悬停语义所以只处理鼠标/笔。
+    if (event.pointerType === 'touch') return
+    const index = nearestTickIndex(barsRef.current, event.clientY)
+    if (index < 0 || index === hoverIndex) return
+    setHoverIndex(index)
+    scheduleOpen(index)
+  }
+  const onRailClick = (event: React.MouseEvent<HTMLElement>): void => {
+    jumpTo(nearestTickIndex(barsRef.current, event.clientY))
+  }
   useEffect(() => () => { clearShow(); clearClose() }, [])
   const categoryLabel = (category?: string): string => category ? (CATEGORY_LABEL[category] ?? category) : ''
   const groups: Array<{ sessionId: string; title: string; current: boolean; messages: Array<{ message: TimelineGroupMessage; index: number }> }> = []
@@ -477,7 +858,7 @@ export function TimelineGroups({ messages, currentSessionId, activeMessageId, on
     barsRef.current[next]?.focus()
   }
   return (
-    <nav className="timeline timeline-groups" aria-label={ariaLabel} onMouseLeave={scheduleClose} onKeyDown={onTimelineKeyDown} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node)) scheduleClose() }}>
+    <nav className="timeline timeline-groups" aria-label={ariaLabel} onMouseLeave={() => { setHoverIndex(null); scheduleClose() }} onPointerMove={onRailPointerMove} onClick={onRailClick} onKeyDown={onTimelineKeyDown} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node)) scheduleClose() }}>
       <div className="tlg-track">
         {groups.map((group) => (
           <div className={`tlg-session ${group.current ? 'is-current-session' : 'is-ancestor-session'}`} key={group.sessionId} aria-label={`${group.current ? '当前会话' : '上级会话'}：${group.title}`}>
@@ -486,12 +867,11 @@ export function TimelineGroups({ messages, currentSessionId, activeMessageId, on
                 key={message.id}
                 ref={(element) => { barsRef.current[index] = element }}
                 type="button"
-                className={`tl-bar ${message.role === 'user' ? 'is-user' : 'is-agent'} ${message.id === activeMessageId ? 'is-current' : ''}`}
+                className={`tl-bar ${message.role === 'user' ? 'is-user' : 'is-agent'} ${message.id === activeMessageId ? 'is-current' : ''} ${index === hoverIndex ? 'is-hover' : ''}`}
                 aria-current={message.id === activeMessageId ? 'true' : undefined}
                 aria-describedby={tipOpen && tipIndex === index ? 'timeline-tip' : undefined}
                 aria-label={`${message.role === 'user' ? '你' : '司墨'} · ${message.sessionTitle} · ${formatTime(message.at)}`}
-                onClick={() => onJump(message.id)}
-                onMouseEnter={() => scheduleOpen(index)}
+                onClick={(event) => { event.stopPropagation(); jumpTo(index) }}
                 onFocus={() => openTip(index)}
                 onBlur={scheduleClose}
               />
@@ -506,10 +886,23 @@ export function TimelineGroups({ messages, currentSessionId, activeMessageId, on
   )
 }
 
-export function Composer({ disabled, streaming, onSend, onStop, sendError }: { disabled: boolean; streaming: boolean; onSend: (text: string) => Promise<void>; onStop: () => void; sendError: string }): React.ReactNode {
+export function Composer({ disabled, streaming, onSend, onStop, sendError, prefill }: { disabled: boolean; streaming: boolean; onSend: (text: string) => Promise<void>; onStop: () => void; sendError?: string; prefill?: { text: string; seq: number } }): React.ReactNode {
   const [text, setText] = useState('')
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const [sending, setSending] = useState(false)
   const [localError, setLocalError] = useState('')
+  // 失败消息的「重试」只把上一条用户消息填回输入框：后端没有回复级重试接口，
+  // 直接重发 /api/chat 会多落一条用户消息（chat/loop.go startTurn 每次新建），所以交给用户确认后发送。
+  useEffect(() => {
+    if (!prefill) return
+    setText(prefill.text)
+    setLocalError('')
+    const area = textareaRef.current
+    if (area) {
+      area.focus()
+      area.setSelectionRange(prefill.text.length, prefill.text.length)
+    }
+  }, [prefill])
   const [sendMode, setSendMode] = useState<'enter' | 'shift-enter'>(() => {
     const storageKey = 'simo.composer.sendMode'
     const legacyKey = 'simo.composer.send-mode'
@@ -525,7 +918,11 @@ export function Composer({ disabled, streaming, onSend, onStop, sendError }: { d
   const composingRef = useRef(false)
   const compositionEndAtRef = useRef(0)
   useEffect(() => {
-    const channel = typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel('simo.composer.sendMode.v1')
+    let channel: BroadcastChannel | null = null
+    try {
+      // 构造器存在也可能抛错（隐私模式、沙箱）：与“不支持”同一条降级路径，只保留 storage 事件。
+      channel = typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel('simo.composer.sendMode.v1')
+    } catch { channel = null }
     const apply = (value: string | null): void => { if (value === 'enter' || value === 'shift-enter') setSendMode(value) }
     const onMessage = (event: MessageEvent): void => apply(String(event.data))
     const onStorage = (event: StorageEvent): void => { if (event.key === 'simo.composer.sendMode') apply(event.newValue) }
@@ -558,7 +955,7 @@ export function Composer({ disabled, streaming, onSend, onStop, sendError }: { d
   return (
     <div className="composer">
       <div className="composer-box">
-        <textarea value={text} onChange={(event) => setText(event.target.value)} placeholder="给司墨发消息…" aria-label="消息输入框" disabled={disabled}
+        <textarea ref={textareaRef} value={text} onChange={(event) => setText(event.target.value)} placeholder="给司墨发消息…" aria-label="消息输入框" disabled={disabled}
           onCompositionStart={() => { composingRef.current = true }}
           onCompositionEnd={() => { composingRef.current = false; compositionEndAtRef.current = Date.now() }}
           onKeyDown={(event) => {
@@ -647,14 +1044,21 @@ export function DeliverableItem({ artifact, onOpen, downloadUrl }: { artifact: A
   )
 }
 
-export function ExecutionGroup({ title, tasks, defaultCount, tone, emptyTitle, emptyDescription, onTaskClick }: { title: string; tasks: Task[]; defaultCount: number; tone: 'done' | 'running' | 'pending'; emptyTitle: string; emptyDescription: string; onTaskClick?: (task: Task) => void }): React.ReactNode {
+export function ExecutionGroup({ title, tasks, total, defaultCount, tone, emptyTitle, emptyDescription, onTaskClick, onExpandAll }: { title: string; tasks: Task[]; total?: number; defaultCount: number; tone: 'done' | 'running' | 'pending'; emptyTitle: string; emptyDescription: string; onTaskClick?: (task: Task) => void; onExpandAll?: () => void }): React.ReactNode {
   const [expanded, setExpanded] = useState(false)
+  const totalCount = Math.max(total ?? tasks.length, tasks.length)
   const visible = expanded ? tasks : tasks.slice(0, defaultCount)
   const shown = expanded ? tasks.length : Math.min(defaultCount, tasks.length)
+  // 展开时若接口只返回了首页（total > items），先请上层按合同上限补取；补取后展开态沿用，计数随 items 变为 n/n。
+  const toggle = (): void => {
+    const next = !expanded
+    setExpanded(next)
+    if (next && tasks.length < totalCount) onExpandAll?.()
+  }
   return (
     <div className={`exec-group ${expanded ? 'is-expanded' : ''}`}>
-      <button type="button" className="exec-head" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
-        <span className="exec-toggle">{expanded ? '▾' : '▸'}</span><span className="exec-name">{title}</span><span className="exec-count">{`${shown}/${tasks.length}`}</span>
+      <button type="button" className="exec-head" aria-expanded={expanded} onClick={toggle}>
+        <span className="exec-toggle">{expanded ? '▾' : '▸'}</span><span className="exec-name">{title}</span><span className="exec-count">{`${shown}/${totalCount}`}</span>
       </button>
       {visible.length === 0 ? <EmptyState title={emptyTitle} description={emptyDescription} /> : (
         <List>{visible.map((task) => <TaskItem key={task.id} task={task} tone={tone} onClick={onTaskClick ? () => onTaskClick(task) : undefined} />)}</List>
@@ -663,7 +1067,7 @@ export function ExecutionGroup({ title, tasks, defaultCount, tone, emptyTitle, e
   )
 }
 
-export function ConversationPanel({ timeline, children, state = 'ready', empty, error, onRetry, scrollRef, onScroll }: {
+export function ConversationPanel({ timeline, children, state = 'ready', empty, error, onRetry, scrollRef, onScroll, density = 'normal', ariaLabel = '当前会话消息' }: {
   timeline?: React.ReactNode
   children: React.ReactNode
   state?: 'ready' | 'loading' | 'empty' | 'error'
@@ -672,16 +1076,18 @@ export function ConversationPanel({ timeline, children, state = 'ready', empty, 
   onRetry?: () => void
   scrollRef?: React.RefObject<HTMLDivElement | null>
   onScroll?: () => void
+  density?: 'normal' | 'compact'
+  ariaLabel?: string
 }): React.ReactNode {
   return (
-    <section className={`conversation-panel is-${state}`} aria-label="当前会话消息">
+    <section className={`conversation-panel is-${state}${density === 'compact' ? ' is-compact' : ''}`} aria-label={ariaLabel}>
       {state === 'ready' && <>{timeline}<div className="conversation-scroll" ref={scrollRef} onScroll={onScroll}>{children}</div></>}
       {state !== 'ready' && <div className="conversation-state">{state === 'loading' ? <LoadingState label="消息加载中…" /> : state === 'empty' ? (empty ?? <EmptyState title="暂无消息" description="发送第一条消息开始对话。" />) : (error ?? <ErrorState title="消息加载失败" onRetry={onRetry} />)}</div>}
     </section>
   )
 }
 
-export function OverviewPanel({ session, projection, loading, error = '', onRetry, onTaskClick, onArtifactOpen }: {
+export function OverviewPanel({ session, projection, loading, error = '', onRetry, onTaskClick, onArtifactOpen, onExpandGroup }: {
   session: Session | null
   projection: import('../types').SessionSpecProjection | null
   loading: boolean
@@ -689,18 +1095,25 @@ export function OverviewPanel({ session, projection, loading, error = '', onRetr
   onRetry?: () => void
   onTaskClick?: (task: { id: string; title: string; messageId?: string }) => void
   onArtifactOpen?: (id: string) => void
+  /** 某个任务组首次展开且接口只返回了首页时触发，用于按合同上限补取该会话的投影。 */
+  onExpandGroup?: () => void
 }): React.ReactNode {
   const statusLabel = projection ? ({ completed: '已完成', active: '进行中', draft: '草稿', blocked: '阻塞', done: '已完成' }[projection.status] ?? projection.status) : ''
   const mapTasks = (items: Array<{ id: string; title: string; state: string; updatedAt: number; messageId?: string }>): Task[] => items.map((item) => ({ id: item.id, sessionId: projection?.sessionId ?? session?.id ?? '', title: item.title, status: item.state, createdAt: item.updatedAt, updatedAt: item.updatedAt, messageId: item.messageId }))
   const groups = {
     done: mapTasks(projection?.tasks.done.items ?? []),
-    running: mapTasks([...(projection?.tasks.running.items ?? []), ...(projection?.tasks.pending.items ?? [])]),
-    queued: mapTasks([]),
+    running: mapTasks(projection?.tasks.running.items ?? []),
+    queued: mapTasks(projection?.tasks.pending.items ?? []),
   }
   const deliverables = projection?.deliverables.items ?? []
+  // 草稿会话尚未落库，spec-projection 只会 404；右栏直接给占位，不发请求（请求守卫在 app.tsx）。
+  const isDraft = session?.draft === true
   return (
-    <aside className="inspector" aria-label="会话概览" data-session={session?.id ?? ''}>
+    // 无会话时不渲染 data-session，避免伪造一个不存在的会话 id。
+    <aside className="inspector" aria-label="会话概览" data-session={session ? session.id : undefined}>
       <div className="insp-body">
+        {!session && <p className="insp-placeholder">未选择会话</p>}
+        {session && (isDraft ? <EmptyState title="目标与执行态待生成" description="发送第一条消息后生成目标与执行态" /> : <>
         {loading && <LoadingState label="右栏加载中…" />}
         {!loading && error && <ErrorState title="右栏加载失败" description={error} onRetry={onRetry} />}
         {!loading && !error && !projection && <EmptyState title="暂无会话投影" description="当前会话还没有可用的 SessionSpec。" />}
@@ -710,9 +1123,9 @@ export function OverviewPanel({ session, projection, loading, error = '', onRetr
           <Section title="输入"><p className="insp-text">{projection.constraints.length || projection.inputs.length ? [...projection.constraints, ...projection.inputs].join(' · ') : '暂无输入约束。'}</p></Section>
           <section className="insp-block">
             <SectionHeader title="执行会话" meta={`共 ${projection.tasks.done.total + projection.tasks.running.total + projection.tasks.pending.total} · 本次 ${projection.tasks.done.items.length + projection.tasks.running.items.length + projection.tasks.pending.items.length}`} />
-            <ExecutionGroup title="已完成" tasks={groups.done} defaultCount={3} tone="done" emptyTitle="暂无已完成任务" emptyDescription="任务完成后会出现在这里。" onTaskClick={(task) => onTaskClick?.({ id: task.id, title: task.title, messageId: task.messageId })} />
-            <ExecutionGroup title="进行中" tasks={groups.running} defaultCount={3} tone="running" emptyTitle="暂无进行中任务" emptyDescription="任务开始后会出现在这里。" onTaskClick={(task) => onTaskClick?.({ id: task.id, title: task.title, messageId: task.messageId })} />
-            <ExecutionGroup title="未开始" tasks={groups.queued} defaultCount={3} tone="pending" emptyTitle="暂无未开始任务" emptyDescription="新任务会先排在这里。" />
+            <ExecutionGroup title="已完成" tasks={groups.done} total={projection.tasks.done.total} defaultCount={3} tone="done" emptyTitle="暂无已完成任务" emptyDescription="任务完成后会出现在这里。" onTaskClick={(task) => onTaskClick?.({ id: task.id, title: task.title, messageId: task.messageId })} onExpandAll={onExpandGroup} />
+            <ExecutionGroup title="进行中" tasks={groups.running} total={projection.tasks.running.total} defaultCount={3} tone="running" emptyTitle="暂无进行中任务" emptyDescription="任务开始后会出现在这里。" onTaskClick={(task) => onTaskClick?.({ id: task.id, title: task.title, messageId: task.messageId })} onExpandAll={onExpandGroup} />
+            <ExecutionGroup title="未开始" tasks={groups.queued} total={projection.tasks.pending.total} defaultCount={3} tone="pending" emptyTitle="暂无未开始任务" emptyDescription="新任务会先排在这里。" onTaskClick={(task) => onTaskClick?.({ id: task.id, title: task.title, messageId: task.messageId })} onExpandAll={onExpandGroup} />
           </section>
           <section className="insp-block">
             <SectionHeader title="交付物" meta={deliverables.length} />
@@ -721,6 +1134,7 @@ export function OverviewPanel({ session, projection, loading, error = '', onRetr
             )}
           </section>
         </>}
+        </>)}
       </div>
       <div className="insp-rail" aria-label="概览导航">
         <button type="button" className="active" title="概览">☰</button>

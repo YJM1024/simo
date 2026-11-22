@@ -1,0 +1,171 @@
+{
+  "capturedAt": "2026-11-22T06:36:00.353Z",
+  "timezone": "Asia/Shanghai",
+  "tzOffsetMinutes": 480,
+  "base": "http://127.0.0.1:8787",
+  "checks": {
+    "health": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "ready": true,
+        "time": 1795329360404,
+        "checks": {
+          "db": "ok",
+          "modules": [
+            "sessions",
+            "chat",
+            "tasks",
+            "memory"
+          ]
+        }
+      },
+      "contentType": "application/json; charset=utf-8"
+    },
+    "index": {
+      "status": 200,
+      "buildId": "mwrgkenj-4xh98",
+      "script": "/assets/app.js?v=mwrgkenj-4xh98",
+      "css": "/assets/app.css?v=mwrgkenj-4xh98",
+      "bytes": 406,
+      "etag": null
+    },
+    "appjs": {
+      "status": 200,
+      "url": "/assets/app.js?v=mwrgkenj-4xh98",
+      "bytes": 316072,
+      "sha256": "53624c4755bd758b0701f3eb5d0901a213dfa99cea604e38f3707f62e55a25d8",
+      "diskBytes": 316072,
+      "diskSha256": "53624c4755bd758b0701f3eb5d0901a213dfa99cea604e38f3707f62e55a25d8",
+      "matchesDisk": true,
+      "contentType": "text/javascript; charset=utf-8",
+      "cacheControl": null
+    },
+    "appcss": {
+      "status": 200,
+      "url": "/assets/app.css?v=mwrgkenj-4xh98",
+      "bytes": 79712,
+      "sha256": "169613e2541bf86ae066fe7a0bebb7468bbb6c75eb0b85747114747fb08954df",
+      "diskBytes": 79712,
+      "diskSha256": "169613e2541bf86ae066fe7a0bebb7468bbb6c75eb0b85747114747fb08954df",
+      "matchesDisk": true
+    },
+    "sessions": {
+      "status": 200,
+      "count": 15,
+      "allMessageCountInteger": true,
+      "badRows": [],
+      "main": {
+        "id": "main",
+        "title": "主会话",
+        "messageCount": 75
+      },
+      "counts": [
+        {
+          "id": "sess-38497934b31bfc0a",
+          "title": "验收序B",
+          "messageCount": 2
+        },
+        {
+          "id": "sess-a29cef9ffc38240b",
+          "title": "验收序A",
+          "messageCount": 4
+        },
+        {
+          "id": "sess-b3b42e8f8de61893",
+          "title": "新会话",
+          "messageCount": 16
+        },
+        {
+          "id": "sess-113620f22f401a4d",
+          "title": "regress-error-mwqnboie",
+          "messageCount": 2
+        },
+        {
+          "id": "sess-c0523a7d1f021d70",
+          "title": "regress-error-mwqnb5p4",
+          "messageCount": 2
+        },
+        {
+          "id": "sess-78c4b19fc491990f",
+          "title": "regress-arch-mwqn98a8",
+          "messageCount": 2
+        },
+        {
+          "id": "sess-8f146ad51a243c91",
+          "title": "probe-archive-mwqn8oz1",
+          "messageCount": 2
+        },
+        {
+          "id": "sess-16be368dd5160c1a",
+          "title": "验收链L4",
+          "messageCount": 2
+        },
+        {
+          "id": "sess-a0eb1f1ae07141ce",
+          "title": "验收链L3",
+          "messageCount": 2
+        },
+        {
+          "id": "sess-6b1e04ca8543af98",
+          "title": "验收链L2",
+          "messageCount": 2
+        },
+        {
+          "id": "sess-0616173059099cf2",
+          "title": "验收未读V",
+          "messageCount": 14
+        },
+        {
+          "id": "sess-3b0725cf6ca7c8c2",
+          "title": "验收未读U",
+          "messageCount": 10
+        },
+        {
+          "id": "sess-cbb0858dc72e5e27",
+          "title": "验收序C",
+          "messageCount": 36
+        },
+        {
+          "id": "main",
+          "title": "主会话",
+          "messageCount": 75
+        },
+        {
+          "id": "sess-fixture-researcher",
+          "title": "研究员",
+          "messageCount": 38
+        }
+      ]
+    },
+    "projection": {
+      "first": {
+        "status": 200,
+        "etag": "\"spec-c5a2d772dd1d5d88\"",
+        "bytes": 1455,
+        "bodyHash": "f01cb5670b503e5b06a66abae03c1dd93dcdacfe6372c8c4f5231fe932afa63e",
+        "body": "{\"sessionId\":\"main\",\"status\":\"active\",\"revision\":34,\"updatedAt\":1795277763987,\"goal\":null,\"constraints\":[],\"inputs\":[],\"tasks\":{\"done\":{\"total\":6,\"items\":[{\"id\":\"task-seed-done-1\",\"title\":\"汇总本周进展\",\"state\":\"done\",\"updatedAt\":1794489947453,\"messageId\":\"msg-a1\"},{\"id\":\"task-seed-done-2\",\"title\":\"整理风险清单\",\"state\":\"done\",\"updatedAt\":1794489957453,\"messageId\":\"\"},{\"id\":\"task-seed-done-3\",\"title\":\"生成下周计划\",\"state\":\"done\",\"updatedAt\":1794489967453,\"messageId\":\"\"}],\"hasMore\":true},\"running\":{\"total\":0,\"items\":[],\"hasMore\":false},\"pending\":{\"total\":4,\"items\":[{\"id\":\"task-seed-run-1\",\"title\":\"生成周报初稿\",\"state\":\"pending\",\"updatedAt\":1794490352693,\"messageId\":\"\"},{\"id\":\"task-seed-pending-1\",\"title\":\"等待确认交付格式\",\"state\":\"pending\",\"updatedAt\":1794490097453,\"messageId\":\"\"},{\"id\":\"task-719f7e499dd7ee0c\",\"title\":\"失败发送保留测试\",\"state\":\"pending\",\"updatedAt\":1795277414138,\"messageId\":\"\"}],\"hasMore\":true}},\"deliverables\":{\"total\":1,\"items\":[{\"id\":\"art-weekly-report\",\"name\":\"weekly-report.md\",\"kind\":\"text\",\"size\":101,\"createdAt\":1794490047453,\"downloadRef\":\"artifact:art-weekly-report\",\"previewUrl\":\"/api/artifacts/art-weekly-report/content\",\"downloadUrl\":\"/api/artifacts/art-weekly-report/content?download=1\"}],\"hasMore\":false},\"pendingConfirmations\":{\"total\":0,\"items\":[],\"hasMore\":false},\"links\":{\"fullSpec\":\"/sessions/main/spec\",\"self\":\"/api/sessions/main/spec-projection?taskLimit=3\"}}\n"
+      },
+      "second": {
+        "status": 304,
+        "etag": "\"spec-c5a2d772dd1d5d88\"",
+        "bytes": 0,
+        "bodyHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "body": null
+      },
+      "taskLimit3": {
+        "status": 200,
+        "etag": "\"spec-c5a2d772dd1d5d88\"",
+        "bytes": 1455
+      },
+      "taskLimit50": {
+        "status": 200,
+        "etag": "\"spec-e217d5acfbc1ba18\"",
+        "bytes": 1969
+      },
+      "taskLimitEtagsDiffer": true,
+      "secondEmpty": true
+    }
+  },
+  "errors": []
+}

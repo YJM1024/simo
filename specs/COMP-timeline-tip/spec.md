@@ -1,9 +1,10 @@
 # COMP-timeline-tip · TimelineTip（时间轴消息预览）
 
-状态：**spec ready（待 Lead/设计确认；未实现）**
+状态：**accepted（组件验收签收，2026-11-21；报告 `docs/testing/COMP-SIGN-20261121.md` §3，A1–A8 全 pass）**
 Owner：前端（实现）/ 产品（本 spec）/ 验收（截图与走查）
 流程：`docs/process/component-system.md` §6.8 COMP spec；本文件只定义组件，不改代码/页面。
-视觉基线：`DESIGN.md`（当前唯一视觉基准）；**前端等本 spec 确认后再实现，不得先改页面**。
+视觉基线：`DESIGN.md`（当前唯一视觉基准）；本组件已实现并接入页面（`frontend/src/components/library.tsx:286-358`、`app.tsx:676`），本文件按实现回写。
+证据：`docs/tasks/acceptance.md:210-230` 为 8787 线上 smoke 记录（tip `236×74.84`、`role=tooltip`、`state visible`）；`frontend/review/timeline-tip-*.png` mtime 2026-11-12，早于当前源码（`components.css` 2026-11-21 20:29），**截图待重拍**。
 
 ---
 
@@ -36,7 +37,7 @@ Owner：前端（实现）/ 产品（本 spec）/ 验收（截图与走查）
 ```text
 TimelineTip（portal 到 body，position: fixed）
 ├─ TipSurface                 surface 白底 + 1px line + 圆角 8 + 轻阴影；宽 236
-│   ├─ TipMetaRow             上栏：发送方 · 会话 · 时间
+│   ├─ TipMetaRow             上栏：发送方 · 会话 ·（分类，可选） · 时间
 │   │   ├─ SenderText         “你” / “司墨”
 │   │   ├─ DotSeparator       “·”
 │   │   ├─ SessionText        当前会话标题（单行省略）
@@ -74,6 +75,9 @@ interface TimelineTipProps {
   summary: string
   /** 可选：无正文时的附件/图片标签 */
   fallbackLabel?: string
+  /** 可选：分类中文标签（需求澄清/进度汇报/确认/结果/失败）；仅当存在时渲染为纯文本，不参与颜色/形状
+   *  现状已由 TimelineGroups 传入（library.tsx:508），本项为 2026-11-21 按实现补入契约 */
+  category?: string
   /** 关闭回调（移出/Esc/blur）；不负责跳转 */
   onClose: () => void
   /** 位置/边界状态变化（测试与样式用） */
@@ -95,7 +99,7 @@ interface TimelineTipProps {
 | 表面 | `--surface` / `--surface-solid` | `#FFFFFF`；浮层必须不透明 |
 | 边框 | `--line` | 1px |
 | 圆角 | `--radius-tip`（本组件新增） | **8px** |
-| 阴影 | `--shadow-overlay` / `--shadow-tip` | 轻阴影，只用 DESIGN 的浮层阴影；禁止重阴影 |
+| 阴影 | `--shadow-pop` | 现状实现：`components.css:798` 用 `--shadow-pop`（`tokens.css:80`）。**原写的 `--shadow-overlay`/`--shadow-tip` 在 tokens 中不存在**，本版改为现实 token；禁止重阴影 |
 | 字体 | `--font-sans` | 上栏 12px/1.4；摘要 13px/1.45 |
 | 等宽 | `--font-mono` | 时间可用 `tabular-nums`；不整段 mono |
 | 间距 | `--space-2` / `--space-3` | 上下 8、左右 10–12；上栏与摘要 6–8 |
@@ -103,9 +107,9 @@ interface TimelineTipProps {
 | 层级 | `--z-jump` 或浮层层级 | 高于消息/时间轴，低于弹窗/命令面板 |
 | 颜色 | ink / ink-secondary / muted | 上栏 meta `--ink-secondary`；摘要 `--ink`；辅助 `--muted` |
 
-- 新增 `--radius-tip:8px` 与 `--tip-width:236px` 必须登记 tokens 单一来源；页面不得写死；
-- 若 DESIGN owner 拒绝新增 token，回退到已批准的浮层圆角/宽度并重走本 spec，不得页面内覆盖；
-- 轻阴影复用 DESIGN 现有浮层阴影；不新增第二套阴影。
+- `--radius-tip:8px` 与 `--tip-width:236px` 已在 tokens 单一来源登记（`tokens.css:56`、`:57`），页面不得写死；
+- 圆角/宽度若需调整，走 tokens + 本 spec 版本升级，不在页面内覆盖；
+- 阴影只用 `--shadow-pop`（现状）；不新增第二套阴影 token。
 
 ## 5. 尺寸与定位
 
@@ -165,12 +169,12 @@ interface TimelineTipProps {
 
 | # | 场景 | 通过标准 |
 |---|---|---|
-| A1 | hover tick | 120ms 内出现；白底/1px line/圆角 8/轻阴影/宽约 236；无原生 tooltip |
+| A1 | hover tick | 120ms 内出现；白底/1px line/圆角 8/阴影 `--shadow-pop`/宽约 236；无原生 tooltip |
 | A2 | 键盘 focus | Tab 到 tick 立即显示；`aria-describedby` 指向 tooltip；无 title 属性 |
 | A3 | 滚动 | 滚动消息区/窗口时 tooltip 跟随锚点，**不消失**；位置不抖到视口外 |
 | A4 | 移出/Esc/blur | 200ms grace 后隐藏；Esc 隐藏；blur 隐藏；焦点仍在 tick；无残影 |
 | A5 | 视口边界 | 右侧不足翻左/上下越界平移；任何位置不越出视口；内容不裁切 |
-| A6 | 内容 | 上栏发送方/会话/时间正确；下栏最多两行；长文字省略；不展示工具 JSON/内部路径 |
+| A6 | 内容 | 上栏发送方/会话/（分类，有值时）/时间正确；下栏最多两行；长文字省略；不展示工具 JSON/内部路径；分类为纯文本、无颜色/badge，缺失时不占位 |
 | A7 | 交互/层级 | tooltip 不可点击、不抢焦点、不遮挡关键操作；同一时刻仅一张；不造成布局跳动 |
 | A8 | 截图/工程 | DPR2 的 1600/1180/375 截图；画廊已登记；页面无定制 CSS/内联 style；既有时间轴点击/键盘回归通过 |
 

@@ -4,7 +4,7 @@
 Implements: PRD-CONV-004、PRD-CONV-007
 Domains: `CONV`
 Owner：产品（AC 口径）/ 前端（MessageItem、Timeline、App 集成）/ 后端（chat 消息流、all_messages、cards）
-design.md：N/A —— 无新方案；本包把既有渲染/加载契约写成可验收描述。
+design.md：N/A：无新方案；本包把既有渲染/加载契约写成可验收描述。
 
 > 关联：产品 spec [`../../product/P1-CONV/spec.md#prd-conv-004`](../../product/P1-CONV/spec.md#prd-conv-004)；
 > 域计划 [`../../test/P1-CONV/test-plan.md#tc-p1-004`](../../test/P1-CONV/test-plan.md#tc-p1-004)；
@@ -22,7 +22,7 @@ design.md：N/A —— 无新方案；本包把既有渲染/加载契约写成�
 | CHANGE | 本包 | 有 | — |
 | 前端开发 spec | [`frontend.md`](frontend.md) | 有 | — |
 | 后端开发 spec | [`backend.md`](backend.md) | 有 | all-messages 的游标语义未在产品 AC 中定义 |
-| 组件 spec | COMP-message-colors / COMP-timeline-groups / COMP-timeline-tip | **partial** | 状态为 `approved 待实现` / `spec ready`，**均未签收**（`specs/COMP-*/spec.md` 第 2 行） |
+| 组件 spec | COMP-message-colors / COMP-timeline-groups / COMP-timeline-tip | 有（已按现状契约化） | 三份契约已按实现与 Lead 裁决对齐（见 `specs/COMP-*/spec.md`，2026-11-21）；仍未走独立签收流程 |
 | 任务卡 | [`tasks.md`](tasks.md) | 有 | 未派发 |
 | 测试 spec / 用例 | [`test-plan.md`](test-plan.md) + TC-P1-004/005 | 有 | 见 §4 |
 | 执行证据 | [`evidence.md`](evidence.md) | partial | 引用 2026-11-20 报告，未重跑 |
@@ -52,13 +52,13 @@ design.md：N/A —— 无新方案；本包把既有渲染/加载契约写成�
 | `AC-CONV-004-01` | MessageItem 18/18；E2E 01a；`TestChatPersistsAndFiltersBySession` | 有证据 | 无"消息纯度"独立 AC；渲染分类只在组件级 |
 | `AC-CONV-004-02` | failed 徽标、流式光标、只读禁用、卡片重试（MessageItem 用例 6/7/8/9）；413/403 映射见 CONV-007 | 部分 | 空/加载/权限的域级 E1/E2/E3 仍 partial |
 | `AC-CONV-007-01` | App.integration 祖先 4 用例；`M81*`；E2E 04a–04d | 有证据 | 真实后端 + 生产部署未验证（"已签未部署"） |
-| `AC-CONV-007-02` | 413/无重试、403/空祖先、重复 id 去重、切会话清链 | 部分 | 时间轴点击目标尺寸（≥44px）无断言；长祖先链深度上限（16）未在 UI 断言 |
+| `AC-CONV-007-02` | 413/无重试、403/空祖先、重复 id 去重、切会话清链 | 部分 | 时间轴点击目标尺寸（≥44px）有 coarse 指针实测 44×44（`docs/testing/20261121-123009-after-metrics.json`），细指针无断言；长祖先链深度上限（16）未在 UI 断言 |
 
 ## 5. 文档漂移（重要）
 
-- `specs/COMP-message-colors/spec.md` 状态为 "approved（…未实现/未改代码）"，但 `MessageItem.test.tsx` 已有分类标签渲染与 8 类映射断言 → **组件 spec 状态滞后于实现**。
-- `COMP-timeline-groups` / `COMP-timeline-tip` 为 `spec ready（待确认/未实现）`，而 `TimelineGroups.test.tsx` 8 条已跑通 → **"未实现"表述不成立**。
-- 处理：本包不擅自改 COMP 状态（需设计与独立验收签字），在 `CONV-CLOSURE.md` 记录为待办。
+- 2026-11-21 起：`COMP-message-colors` / `COMP-timeline-groups` / `COMP-timeline-tip` 契约**已按现状契约化**（见 `specs/COMP-*/spec.md`），此前"未实现/白卡旧模型"的表述已作废；契约与实现不再漂移。
+- 仍未走独立签收流程：组件层通过不等于产品 AC 通过（见 §2 结论）。
+- 处理：COMP 契约回写由设计完成；签收仍待独立验收角色。
 
 ## 6. 需求（R）
 

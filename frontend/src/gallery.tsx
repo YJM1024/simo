@@ -74,6 +74,14 @@ export default function ComponentGallery(): React.ReactNode {
       <Section title="EmptyState"><EmptyState title="暂无进行中任务" description="任务开始后会出现在这里。" /></Section>
       <Section title="DeliverableItem"><List><DeliverableItem artifact={sampleArtifact} /></List></Section>
       <Section title="ConversationPanel"><ConversationPanel timeline={<Timeline messages={sampleMessages} active={1} onJump={() => undefined} />}><div className="chat-inner"><MessageItem message={sampleMessages[0]} onCardAction={async () => undefined} /><MessageItem message={sampleMessages[1]} onCardAction={async () => undefined} /></div></ConversationPanel></Section>
+      <Section title="ConversationPanel loading"><ConversationPanel state="loading" timeline={<Timeline messages={sampleMessages} active={1} onJump={() => undefined} />}><div className="chat-inner" /></ConversationPanel></Section>
+      <Section title="ConversationPanel empty"><ConversationPanel state="empty" timeline={<Timeline messages={sampleMessages} active={1} onJump={() => undefined} />}><div className="chat-inner" /></ConversationPanel></Section>
+      <Section title="ConversationPanel error"><ConversationPanel state="error" onRetry={() => undefined} timeline={<Timeline messages={sampleMessages} active={1} onJump={() => undefined} />}><div className="chat-inner" /></ConversationPanel></Section>
+      <Section title="ConversationPanel 基线标注（A13 / §7）">
+        <p className="insp-text">四档：1600/1920 面板 720、卡片 680、居中；1180 面板 568、卡片 528、居中（时间轴 gutter 52）；375 卡片左右各 8。</p>
+        <p className="insp-text">A13 标签：Header 标签文字左基线 = 消息卡内容左基线（1600 与 1180 实测差 0px，判据 ≤1px）。</p>
+        <p className="insp-text">A13 右栏：右栏首块与消息列顶部同起于标签行下 12px（标签行 51 + 12），实测差 0px。</p>
+      </Section>
       <Section title="TimelineGroups 单会话"><span className="insp-text">onJump: {lastJump || '—'}</span>
         <TimelineGroups currentSessionId="main" activeMessageId={singleActive} onJump={(id) => { setLastJump(id); setSingleActive(id) }} messages={[
           { id: 'g1', sessionId: 'main', sessionTitle: '主会话', sessionOrder: 0, isCurrentSession: true, role: 'user', at: 1, dateKey: '2026-11-12', summary: '单会话样例 1' },

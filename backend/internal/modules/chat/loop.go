@@ -1104,7 +1104,9 @@ func (m *Module) finishActive(active *activeTurn) {
 }
 
 // correct 处理客户端显式修正/停止：只影响流式回复，不取消后台任务。
-func (m *Module) correct(ctx context.Context, sessionID, targetReplyID, text string) error {
+// messageID 非空表示按消息精确停止（多流并发时只停点中的那条）；为空时保留旧行为，
+// 停该会话最近开始的 active turn。
+func (m *Module) correct(ctx context.Context, sessionID, targetReplyID, messageID, text string) error {
 	if strings.TrimSpace(targetReplyID) != "" {
 		return newRequestError("edit_disabled", "消息编辑/修改已禁用")
 	}
@@ -1112,7 +1114,22 @@ func (m *Module) correct(ctx context.Context, sessionID, targetReplyID, text str
 	if sessionID == "" {
 		sessionID = defaultSessionID
 	}
-	active := m.findActive(sessionID, targetReplyID)
+	messageID = strings.TrimSpace(messageID)
+	var active *activeTurn
+	if messageID != "" {
+		active = m.findActive(sessionID, messageID)
+		if active == nil {
+			// 目标已结束或不属于本会话：不得扩大到同会话的其它流式回复，否则多流并发会停错。
+			m.log.Warn("correct 指定的 messageId 不在流式回复中，忽略停止请求", "sessionId", sessionID, "messageId", messageID)
+			if strings.TrimSpace(text) == "" {
+				return nil
+			}
+			_, err := m.startTurn(ctx, sessionID, text, ClassCorrect, nil, "")
+			return err
+		}
+	} else {
+		active = m.findActive(sessionID, "")
+	}
 	if active == nil {
 		if strings.TrimSpace(text) == "" {
 			return nil

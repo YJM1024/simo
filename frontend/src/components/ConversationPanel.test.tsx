@@ -86,6 +86,24 @@ describe('ConversationPanel (PRD-CONV-004 / A2 四态)', () => {
     expect(onRetry).toHaveBeenCalledTimes(1)
   })
 
+  it('exposes the full API gate: density and ariaLabel default without changing current output', () => {
+    const { container } = render(<ConversationPanel>{null}</ConversationPanel>)
+    const section = screen.getByRole('region', { name: '当前会话消息' })
+    expect(section).not.toHaveClass('is-compact')
+    expect(container.querySelector('.conversation-panel')).toBe(section)
+  })
+
+  it('renders density=compact and a custom ariaLabel when provided', () => {
+    render(
+      <ConversationPanel density="compact" ariaLabel="主会话消息">
+        <p>消息内容</p>
+      </ConversationPanel>,
+    )
+    const section = screen.getByRole('region', { name: '主会话消息' })
+    expect(section).toHaveClass('conversation-panel', 'is-ready', 'is-compact')
+    expect(screen.queryByRole('region', { name: '当前会话消息' })).not.toBeInTheDocument()
+  })
+
   it('prefers the caller-provided error node', () => {
     render(
       <ConversationPanel

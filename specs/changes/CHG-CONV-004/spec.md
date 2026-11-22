@@ -4,7 +4,7 @@
 Implements: PRD-SYNC-001、PRD-SYNC-002、PRD-SYNC-003
 Domains: `SYNC`
 Owner：产品（AC 口径）/ 前端（`tabsync.ts`、`app.tsx`、Composer）/ 后端（WS）
-design.md：N/A —— 无新方案。
+design.md：N/A：无新方案。
 
 > 关联：产品 spec [`../../product/P1-CONV/spec.md#prd-sync-001`](../../product/P1-CONV/spec.md#prd-sync-001)；
 > 域计划 [`../../test/P1-CONV/test-plan.md#tc-p1-008`](../../test/P1-CONV/test-plan.md#tc-p1-008)；

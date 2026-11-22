@@ -4,7 +4,7 @@
 Implements: PRD-CONV-005、PRD-CONV-006
 Domains: `CONV`
 Owner：产品（AC 口径）/ 前端（`frontend/src/components/library.tsx` Composer 509–590、`frontend/src/app.tsx` 发送流水线）/ 后端（`POST /api/chat`、WS）
-design.md：N/A —— 无新方案。
+design.md：N/A：无新方案。
 
 > 关联：产品 spec [`../../product/P1-CONV/spec.md#prd-conv-005`](../../product/P1-CONV/spec.md#prd-conv-005)；
 > 域计划 [`../../test/P1-CONV/test-plan.md#tc-p1-006`](../../test/P1-CONV/test-plan.md#tc-p1-006)；

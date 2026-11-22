@@ -4,7 +4,7 @@
 Implements: PRD-CONV-001、PRD-CONV-002、PRD-CONV-003
 Domains: `CONV`
 Owner：产品（AC 口径）/ 前端（`frontend/src/app.tsx`、`frontend/src/components/library.tsx`）/ 后端（`backend/internal/modules/sessions`）
-design.md：N/A —— 本轮只把既有实现写成契约，不引入新方案。
+design.md：N/A：本轮只把既有实现写成契约，不引入新方案。
 
 > 关联：产品 spec [`../../product/P1-CONV/spec.md#prd-conv-001`](../../product/P1-CONV/spec.md#prd-conv-001)；
 > 域测试计划 [`../../test/P1-CONV/test-plan.md#tc-p1-001`](../../test/P1-CONV/test-plan.md#tc-p1-001)；
