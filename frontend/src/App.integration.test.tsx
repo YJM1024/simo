@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
 import App from './app'
-import type { Message, Session, SessionSpecProjection } from './types'
+import type { Message, Session, SessionSpecProjection, TaskCounts, TaskDetailPayload, TaskGraphPayload, TaskView } from './types'
 
 const at = 1_760_000_000_000
 
@@ -111,6 +111,7 @@ async function openChild(): Promise<ReturnType<typeof userEvent.setup>> {
   const user = userEvent.setup()
   render(<App />)
   await screen.findByText('主会话消息')
+  await screen.findByTitle('子会话')
   await user.click(screen.getByTitle('子会话').closest('.session-row') as HTMLElement)
   await screen.findByText('子会话消息')
   return user
@@ -129,11 +130,11 @@ describe('App ancestor loading integration (FE-007)', () => {
     const user = await openChild()
     ancestorMode = '413'
     await user.click(screen.getByRole('button', { name: /显示上级会话/ }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('消息过多，暂不能完整加载')
+    expect(await screen.findByText('消息过多，暂不能完整加载')).toBeInTheDocument()
 
     ancestorMode = 'ok'
     await user.click(screen.getByRole('button', { name: /显示上级会话/ }))
-    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument())
+    await waitFor(() => expect(screen.queryByText('消息过多，暂不能完整加载')).not.toBeInTheDocument())
     expect(screen.getByText('父会话消息')).toBeInTheDocument()
   })
 
@@ -141,12 +142,14 @@ describe('App ancestor loading integration (FE-007)', () => {
     const user = await openChild()
     ancestorMode = '403'
     await user.click(screen.getByRole('button', { name: /显示上级会话/ }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('无权读取该上级会话')
+    expect(await screen.findByText('无权读取该上级会话')).toBeInTheDocument()
 
     ancestorMode = 'empty'
     await user.click(screen.getByRole('button', { name: /显示上级会话/ }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('上级没有消息')
-    expect(screen.queryByRole('button', { name: /显示上级会话/ })).not.toBeInTheDocument()
+    // 空上级只记入已访问，不渲染提示；入口消失，消息不重复。
+    await waitFor(() => expect(screen.queryByRole('button', { name: /显示上级会话/ })).not.toBeInTheDocument())
+    expect(screen.queryByText('无权读取该上级会话')).not.toBeInTheDocument()
+    expect(screen.getAllByText('子会话消息')).toHaveLength(1)
   })
 
   it('clears the ancestor chain when switching sessions', async () => {
@@ -259,99 +262,87 @@ describe('App sidebar counts and task group top-up (CONV-008-02 / CONV-001-05)',
     expect(row('子会话').querySelector('.session-count')).toHaveTextContent('42')
   })
 
-  it('requests taskLimit=50 on first expand and renders the full group with matching counts', async () => {
-    const taskLimits: string[] = []
-    const empty = { total: 0, items: [], hasMore: false }
-    const doneItem = (n: number) => ({ id: `done-${n}`, title: `完成任务 ${n}`, state: 'done', updatedAt: at + n, messageId: `msg-${n}` })
-    server.use(http.get('/api/sessions/:id/spec-projection', ({ request, params }) => {
-      const limit = new URL(request.url).searchParams.get('taskLimit') ?? ''
-      taskLimits.push(limit)
-      const count = limit === '50' ? 6 : 3
-      return HttpResponse.json({
-        ...projection(String(params.id)),
-        tasks: { done: { total: 6, items: [0, 1, 2, 3, 4, 5].slice(0, count).map(doneItem), hasMore: count < 6 }, running: empty, pending: empty },
-      })
+})
+
+function taskView(overrides: Partial<TaskView> = {}): TaskView {
+  return {
+    id: 'task-1', sessionId: 'main', title: '任务一', mode: 'plan', status: 'running', displayStatus: 'running',
+    createdAt: at, updatedAt: at + 1, stepCount: 4, doneStepCount: 1, outputCount: 1, ...overrides,
+  }
+}
+
+const taskCounts = (overrides: Partial<TaskCounts> = {}): TaskCounts => ({ all: 3, pending: 0, running: 2, failed: 0, done: 1, ...overrides })
+
+describe('App task panel and graph (F-CONV-009)', () => {
+  it('opens the tasks tab and refilters through /api/sessions/:id/tasks', async () => {
+    const queries: Array<Record<string, string>> = []
+    server.use(http.get('/api/sessions/:id/tasks', ({ request }) => {
+      const search = Object.fromEntries(new URL(request.url).searchParams)
+      queries.push(search)
+      const status = search.status
+      const tasks = status === 'done' ? [taskView({ id: 'task-3', title: '已完成任务', displayStatus: 'done' })] : [taskView(), taskView({ id: 'task-2', title: '任务二' })]
+      return HttpResponse.json({ tasks, counts: taskCounts(), total: 3, hasMore: false })
     }))
     const user = userEvent.setup()
     render(<App />)
     await screen.findByText('主会话消息')
-    const doneHead = await screen.findByRole('button', { name: /已完成/ })
-    await waitFor(() => expect(doneHead).toHaveTextContent('3/6'))
-    expect(screen.queryByText('完成任务 5')).not.toBeInTheDocument()
+    const aside = screen.getByRole('complementary', { name: '会话右栏' })
+    await user.click(await within(aside).findByRole('button', { name: '任务，2 个进行中' }))
+    expect(aside).toHaveAttribute('data-tab', 'tasks')
+    expect(await screen.findByText('任务二')).toBeInTheDocument()
+    expect(queries[0]).toEqual({ limit: '50' })
 
-    await user.click(doneHead)
-    await waitFor(() => expect(taskLimits).toContain('50'))
-    await waitFor(() => expect(doneHead).toHaveTextContent('6/6'))
-    expect(screen.getByText('完成任务 5')).toBeInTheDocument()
-    expect(taskLimits.filter((limit) => limit === '50')).toHaveLength(1)
+    await user.click(within(aside).getByRole('button', { name: /已完成/ }))
+    await waitFor(() => expect(queries.some((query) => query.status === 'done')).toBe(true))
+    expect(await screen.findByText('已完成任务')).toBeInTheDocument()
+    expect(screen.queryByText('任务二')).not.toBeInTheDocument()
   })
 
-  it('tops up a pending group from 3 to its total of 4', async () => {
-    const taskLimits: string[] = []
-    const empty = { total: 0, items: [], hasMore: false }
-    const pendingItem = (n: number) => ({ id: `pending-${n}`, title: `待开始任务 ${n}`, state: 'pending', updatedAt: at + n, messageId: `msg-pending-${n}` })
-    server.use(http.get('/api/sessions/:id/spec-projection', ({ request, params }) => {
-      const limit = new URL(request.url).searchParams.get('taskLimit') ?? ''
-      taskLimits.push(limit)
-      const items = [0, 1, 2, 3].slice(0, limit === '50' ? 4 : 3).map(pendingItem)
-      return HttpResponse.json({
-        ...projection(String(params.id)),
-        tasks: { done: empty, running: empty, pending: { total: 4, items, hasMore: items.length < 4 } },
-      })
+  it('appends the next page with the before cursor without duplicating rows', async () => {
+    const befores: Array<string | undefined> = []
+    server.use(http.get('/api/sessions/:id/tasks', ({ request }) => {
+      const before = new URL(request.url).searchParams.get('before') ?? undefined
+      befores.push(before)
+      return HttpResponse.json(before
+        ? { tasks: [taskView({ id: 'task-3', title: '第三页任务' })], counts: taskCounts(), total: 3, hasMore: false }
+        : { tasks: [taskView(), taskView({ id: 'task-2', title: '任务二' })], counts: taskCounts(), total: 3, hasMore: true, nextBefore: 'cursor-1' })
     }))
     const user = userEvent.setup()
     render(<App />)
     await screen.findByText('主会话消息')
-    const queuedHead = await screen.findByRole('button', { name: /未开始/ })
-    await waitFor(() => expect(queuedHead).toHaveTextContent('3/4'))
-    expect(screen.queryByText('待开始任务 3')).not.toBeInTheDocument()
-
-    await user.click(queuedHead)
-    await waitFor(() => expect(taskLimits).toContain('50'))
-    await waitFor(() => expect(queuedHead).toHaveTextContent('4/4'))
-    expect(screen.getByText('待开始任务 3')).toBeInTheDocument()
+    const aside = screen.getByRole('complementary', { name: '会话右栏' })
+    await user.click(await within(aside).findByRole('button', { name: '任务，2 个进行中' }))
+    await user.click(await screen.findByRole('button', { name: '加载更多' }))
+    expect(await screen.findByText('第三页任务')).toBeInTheDocument()
+    expect(befores).toEqual([undefined, 'cursor-1'])
+    expect(screen.getAllByText('任务一')).toHaveLength(1)
   })
 
-  it('shows a visible error when the top-up fails and retries the request', async () => {
-    const taskLimits: string[] = []
-    const empty = { total: 0, items: [], hasMore: false }
-    const doneItem = (n: number) => ({ id: `retry-done-${n}`, title: `重试任务 ${n}`, state: 'done', updatedAt: at + n, messageId: `msg-retry-${n}` })
-    let failTopUp = true
-    server.use(http.get('/api/sessions/:id/spec-projection', ({ request, params }) => {
-      const limit = new URL(request.url).searchParams.get('taskLimit') ?? ''
-      taskLimits.push(limit)
-      if (limit === '50' && failTopUp) return HttpResponse.json({ code: 'INTERNAL' }, { status: 500 })
-      const count = limit === '50' ? 6 : 3
-      return HttpResponse.json({
-        ...projection(String(params.id)),
-        tasks: { done: { total: 6, items: [0, 1, 2, 3, 4, 5].slice(0, count).map(doneItem), hasMore: count < 6 }, running: empty, pending: empty },
-      })
-    }))
+  it('opens the task graph from the topbar and a node opens its detail', async () => {
+    const graph: TaskGraphPayload = {
+      nodes: [
+        { id: 'task-1', title: '任务一', mode: 'plan', status: 'running', displayStatus: 'running' },
+        { id: 'task-2', title: '任务二', mode: 'plan', status: 'failed', displayStatus: 'failed' },
+      ],
+      edges: [{ from: 'task-1', to: 'task-2' }],
+      layers: [{ index: 0, nodeIds: ['task-1'] }, { index: 1, nodeIds: ['task-2'] }],
+      total: 2,
+    }
+    const detail: TaskDetailPayload = { task: taskView(), steps: [{ id: 's-1', seq: 1, title: '收集素材', status: 'done', traceCount: 0, traces: [] }], currentStepId: 's-1', traces: [], tracesHasMore: false, deliverables: [] }
+    server.use(
+      http.get('/api/sessions/:id/tasks', () => HttpResponse.json({ tasks: [taskView(), taskView({ id: 'task-2', title: '任务二', displayStatus: 'failed' })], counts: taskCounts(), total: 2, hasMore: false })),
+      http.get('/api/sessions/:id/task-graph', () => HttpResponse.json(graph)),
+      http.get('/api/tasks/:id', () => HttpResponse.json(detail)),
+    )
     const user = userEvent.setup()
     render(<App />)
     await screen.findByText('主会话消息')
-    const doneHead = await screen.findByRole('button', { name: /已完成/ })
-    await waitFor(() => expect(doneHead).toHaveTextContent('3/6'))
-
-    await user.click(doneHead)
-    expect(await screen.findByText('右栏加载失败')).toBeInTheDocument()
-    expect(screen.getByText('重试')).toBeInTheDocument()
-    expect(taskLimits).toContain('50')
-
-    failTopUp = false
-    const beforeRetry = taskLimits.length
-    await user.click(screen.getByRole('button', { name: '重试' }))
-    await waitFor(() => expect(taskLimits.length).toBeGreaterThan(beforeRetry))
-    await waitFor(() => expect(screen.queryByText('右栏加载失败')).not.toBeInTheDocument())
-    expect(await screen.findByText('重试任务 0')).toBeInTheDocument()
-
-    // 重试先取回首屏 3 条；再展开同组时补取成功，恢复到 6/6（两条 AC-008-05 路径都走通）。
-    const retriedHead = screen.getByRole('button', { name: /已完成/ })
-    expect(retriedHead).toHaveTextContent('3/6')
-    await user.click(retriedHead)
-    await waitFor(() => expect(taskLimits.filter((limit) => limit === '50')).toHaveLength(2))
-    await waitFor(() => expect(retriedHead).toHaveTextContent('6/6'))
-    expect(screen.getByText('重试任务 5')).toBeInTheDocument()
+    await user.click(await screen.findByRole('button', { name: '任务图' }))
+    const graphDialog = await screen.findByRole('dialog', { name: '任务图' })
+    expect(within(graphDialog).getByText('任务二')).toBeInTheDocument()
+    await user.click(within(graphDialog).getByRole('button', { name: /任务一/ }))
+    const detailDialog = await screen.findByRole('dialog', { name: '任务详情' })
+    expect(within(detailDialog).getByText('收集素材')).toBeInTheDocument()
   })
 })
 
@@ -377,7 +368,7 @@ describe('App empty tree empty states (CONV-008-03)', () => {
     await waitFor(() => expect(screen.queryByText('主会话消息')).not.toBeInTheDocument())
     expect(await screen.findByText('开始和司墨对话')).toBeInTheDocument()
 
-    const aside = screen.getByRole('complementary', { name: '会话概览' })
+    const aside = screen.getByRole('complementary', { name: '会话右栏' })
     expect(aside).not.toHaveAttribute('data-session')
     await waitFor(() => expect(screen.queryByText('主会话目标')).not.toBeInTheDocument())
     expect(screen.queryByText('进行中')).not.toBeInTheDocument()

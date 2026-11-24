@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "kind": "simo.task-fixture",
+  "name": "tools-403",
+  "description": "工具调用被拒：第一次 read_file 成功，第二次越权返回 403，任务仍能收尾。",
+  "usage": "以 mock-llm --mode react 启动假上游；POST 一次 N1，N3 轨迹里应有 1 条 403 observe 且状态为 done。",
+  "generatedAt": "2026-11-24T10:09:57.647Z",
+  "generatedBy": "scripts/ac/lib/task-fixtures.mjs",
+  "sessions": [
+    {
+      "id": "s1",
+      "createSession": false,
+      "mock": {
+        "mode": "react",
+        "toolSequence": [
+          {
+            "seq": 1,
+            "tool": "read_file",
+            "args": {
+              "path": "workspace/notes/ok.md"
+            },
+            "result": "ok"
+          },
+          {
+            "seq": 2,
+            "tool": "read_file",
+            "args": {
+              "path": "..\\..\\secret.txt"
+            },
+            "result": "denied",
+            "status": 403,
+            "code": "permission_denied"
+          },
+          {
+            "seq": 3,
+            "tool": null,
+            "result": "final",
+            "text": "越权路径被拒绝，按允许范围给出结论。"
+          }
+        ]
+      },
+      "requests": [
+        {
+          "label": "tools-403-create",
+          "request": {
+            "mode": "plan",
+            "goal": "验证工具越权返回 403 后不崩溃、不重试。",
+            "inputs": [
+              "上周的指标快照：新增会话 1280、消息 9640、平均首响 1.8 秒。",
+              "目标：把平均首响压到 1.2 秒以内。",
+              "允许范围只有 workspace/notes。"
+            ],
+            "constraints": [
+              "403 后不得自动重试同一路径。"
+            ],
+            "tasks": [
+              {
+                "key": "denied",
+                "title": "越权读文件被拒后收尾",
+                "mode": "plan",
+                "goal": "读取允许范围内文件并给出结论。",
+                "joinMode": "all"
+              }
+            ],
+            "clientMutationId": "fx-tools-403-001"
+          }
+        }
+      ],
+      "expect": {
+        "accepted": 1,
+        "traces": 3,
+        "denied": 1,
+        "finalStatus": "done",
+        "executedActions": 1,
+        "observeWith403": 1
+      }
+    }
+  ],
+  "expect": {
+    "notes": [
+      "403 只记一条 observe，不重试。",
+      "任务最终状态为 done，不是 failed。"
+    ]
+  }
+}

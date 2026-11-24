@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"simo/internal/platform/sqlite"
 )
 
@@ -143,6 +144,144 @@ func migrations() []sqlite.Migration {
 				} {
 					if _, err := tx.ExecContext(ctx, stmt); err != nil {
 						return err
+					}
+				}
+				return nil
+			},
+		},
+		{
+			Version: 8,
+			Name:    "P1-CONV-009 task session fields",
+			Up: func(ctx context.Context, tx *sql.Tx) error {
+				for _, stmt := range []string{
+					`ALTER TABLE tasks ADD COLUMN mode TEXT NOT NULL DEFAULT 'plan'`,
+					`ALTER TABLE tasks ADD COLUMN batch_id TEXT NOT NULL DEFAULT ''`,
+					`ALTER TABLE tasks ADD COLUMN goal TEXT NOT NULL DEFAULT ''`,
+					`ALTER TABLE tasks ADD COLUMN inputs_json TEXT NOT NULL DEFAULT '[]'`,
+					`ALTER TABLE tasks ADD COLUMN constraints_json TEXT NOT NULL DEFAULT '[]'`,
+					`ALTER TABLE tasks ADD COLUMN context_json TEXT NOT NULL DEFAULT '{}'`,
+					`ALTER TABLE tasks ADD COLUMN waiting_reason TEXT NOT NULL DEFAULT ''`,
+					`ALTER TABLE tasks ADD COLUMN waiting_since INTEGER NOT NULL DEFAULT 0`,
+					`ALTER TABLE tasks ADD COLUMN started_at INTEGER NOT NULL DEFAULT 0`,
+					`ALTER TABLE tasks ADD COLUMN finished_at INTEGER NOT NULL DEFAULT 0`,
+					`ALTER TABLE tasks ADD COLUMN fail_reason TEXT NOT NULL DEFAULT ''`,
+					`ALTER TABLE tasks ADD COLUMN deadline_at INTEGER NOT NULL DEFAULT 0`,
+					`ALTER TABLE tasks ADD COLUMN deadline_reminded_at INTEGER NOT NULL DEFAULT 0`,
+					`ALTER TABLE tasks ADD COLUMN trigger_count INTEGER NOT NULL DEFAULT 0`,
+					`CREATE INDEX IF NOT EXISTS idx_tasks_session_updated ON tasks(session_id, updated_at)`,
+					`CREATE INDEX IF NOT EXISTS idx_tasks_batch ON tasks(batch_id)`,
+				} {
+					if _, err := tx.ExecContext(ctx, stmt); err != nil {
+						return err
+					}
+				}
+				return nil
+			},
+		},
+		{
+			Version: 9,
+			Name:    "P1-CONV-009 steps, traces, batches, deps",
+			Up: func(ctx context.Context, tx *sql.Tx) error {
+				for _, stmt := range []string{
+					`CREATE TABLE IF NOT EXISTS task_steps (
+						id TEXT PRIMARY KEY,
+						task_id TEXT NOT NULL,
+						seq INTEGER NOT NULL,
+						title TEXT NOT NULL,
+						status TEXT NOT NULL,
+						summary TEXT NOT NULL DEFAULT '',
+						fail_reason TEXT NOT NULL DEFAULT '',
+						started_at INTEGER NOT NULL DEFAULT 0,
+						finished_at INTEGER NOT NULL DEFAULT 0
+					)`,
+					`CREATE INDEX IF NOT EXISTS idx_task_steps_task ON task_steps(task_id, seq)`,
+					`CREATE UNIQUE INDEX IF NOT EXISTS uq_task_steps_seq ON task_steps(task_id, seq)`,
+					`CREATE TABLE IF NOT EXISTS task_traces (
+						id TEXT PRIMARY KEY,
+						task_id TEXT NOT NULL,
+						step_id TEXT NOT NULL DEFAULT '',
+						seq INTEGER NOT NULL,
+						category TEXT NOT NULL,
+						tool TEXT NOT NULL DEFAULT '',
+						text TEXT NOT NULL,
+						at INTEGER NOT NULL
+					)`,
+					`CREATE INDEX IF NOT EXISTS idx_task_traces_task ON task_traces(task_id, seq)`,
+					`CREATE TABLE IF NOT EXISTS task_batches (
+						id TEXT PRIMARY KEY,
+						session_id TEXT NOT NULL,
+						client_mutation_id TEXT NOT NULL DEFAULT '',
+						task_count INTEGER NOT NULL,
+						message_id TEXT NOT NULL DEFAULT '',
+						created_at INTEGER NOT NULL
+					)`,
+					`CREATE UNIQUE INDEX IF NOT EXISTS uq_task_batches_mutation
+						ON task_batches(session_id, client_mutation_id) WHERE client_mutation_id <> ''`,
+					`CREATE TABLE IF NOT EXISTS task_deps (
+						task_id TEXT NOT NULL,
+						dep_id TEXT NOT NULL,
+						join_mode TEXT NOT NULL DEFAULT 'all',
+						created_at INTEGER NOT NULL,
+						PRIMARY KEY (task_id, dep_id)
+					)`,
+					`CREATE INDEX IF NOT EXISTS idx_task_deps_dep ON task_deps(dep_id)`,
+				} {
+					if _, err := tx.ExecContext(ctx, stmt); err != nil {
+						return err
+					}
+				}
+				// 回填旧 steps JSON；解析失败的行跳过，旧列保留只读。
+				rows, err := tx.QueryContext(ctx, `SELECT id, steps FROM tasks`)
+				if err != nil {
+					return err
+				}
+				type legacyTask struct {
+					id    string
+					steps string
+				}
+				var legacy []legacyTask
+				for rows.Next() {
+					var item legacyTask
+					if err := rows.Scan(&item.id, &item.steps); err != nil {
+						rows.Close()
+						return err
+					}
+					legacy = append(legacy, item)
+				}
+				if err := rows.Err(); err != nil {
+					rows.Close()
+					return err
+				}
+				rows.Close()
+				for _, item := range legacy {
+					var steps []struct {
+						ID     string `json:"id"`
+						Title  string `json:"title"`
+						Status string `json:"status"`
+					}
+					if err := json.Unmarshal([]byte(item.steps), &steps); err != nil {
+						continue
+					}
+					for i, step := range steps {
+						title := step.Title
+						if title == "" {
+							title = step.ID
+						}
+						status := step.Status
+						switch status {
+						case "pending", "running", "done", "failed", "skipped":
+						default:
+							status = "pending"
+						}
+						if status == "running" {
+							status = "pending"
+						}
+						if _, err := tx.ExecContext(ctx, `INSERT OR IGNORE INTO task_steps
+							(id, task_id, seq, title, status, summary, fail_reason, started_at, finished_at)
+							VALUES (?, ?, ?, ?, ?, '', '', 0, 0)`,
+							"step-"+randomHex(8), item.id, i+1, title, status); err != nil {
+							return err
+						}
 					}
 				}
 				return nil

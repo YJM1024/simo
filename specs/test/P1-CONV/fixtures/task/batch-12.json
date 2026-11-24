@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "kind": "simo.task-fixture",
+  "name": "batch-12",
+  "description": "单批上限 12 条任务，验证边界值不触发 400。",
+  "usage": "POST 一次 N1（12 条），再 POST 13 条应得 400（负例由 harness 另造）。",
+  "generatedAt": "2026-11-24T10:09:57.647Z",
+  "generatedBy": "scripts/ac/lib/task-fixtures.mjs",
+  "sessions": [
+    {
+      "id": "s1",
+      "createSession": false,
+      "requests": [
+        {
+          "label": "batch-12-create",
+          "request": {
+            "mode": "plan",
+            "goal": "用单批上限 12 条验证 N1 的边界值。",
+            "inputs": [
+              "上周的指标快照：新增会话 1280、消息 9640、平均首响 1.8 秒。",
+              "目标：把平均首响压到 1.2 秒以内。",
+              "本批正好 12 条，属于允许的最大批量。"
+            ],
+            "constraints": [
+              "不得拆成两次请求。"
+            ],
+            "tasks": [
+              {
+                "key": "u01",
+                "title": "上限任务 01：核对第 1 项清单",
+                "mode": "plan",
+                "goal": "核对第 1 项清单并标记是否通过。",
+                "joinMode": "all"
+              },
+              {
+                "key": "u02",
+                "title": "上限任务 02：核对第 2 项清单",
+                "mode": "plan",
+                "goal": "核对第 2 项清单并标记是否通过。",
+                "joinMode": "any"
+              },
+              {
+                "key": "u03",
+                "title": "上限任务 03：核对第 3 项清单",
+                "mode": "plan",
+                "goal": "核对第 3 项清单并标记是否通过。",
+                "joinMode": "each"
+              },
+              {
+                "key": "u04",
+                "title": "上限任务 04：核对第 4 项清单",
+                "mode": "plan",
+                "goal": "核对第 4 项清单并标记是否通过。",
+                "joinMode": "all"
+              },
+              {
+                "key": "u05",
+                "title": "上限任务 05：核对第 5 项清单",
+                "mode": "plan",
+                "goal": "核对第 5 项清单并标记是否通过。",
+                "joinMode": "any"
+              },
+              {
+                "key": "u06",
+                "title": "上限任务 06：核对第 6 项清单",
+                "mode": "plan",
+                "goal": "核对第 6 项清单并标记是否通过。",
+                "joinMode": "each"
+              },
+              {
+                "key": "u07",
+                "title": "上限任务 07：核对第 7 项清单",
+                "mode": "plan",
+                "goal": "核对第 7 项清单并标记是否通过。",
+                "joinMode": "all"
+              },
+              {
+                "key": "u08",
+                "title": "上限任务 08：核对第 8 项清单",
+                "mode": "plan",
+                "goal": "核对第 8 项清单并标记是否通过。",
+                "joinMode": "any"
+              },
+              {
+                "key": "u09",
+                "title": "上限任务 09：核对第 9 项清单",
+                "mode": "plan",
+                "goal": "核对第 9 项清单并标记是否通过。",
+                "joinMode": "each"
+              },
+              {
+                "key": "u10",
+                "title": "上限任务 10：核对第 10 项清单",
+                "mode": "plan",
+                "goal": "核对第 10 项清单并标记是否通过。",
+                "joinMode": "all"
+              },
+              {
+                "key": "u11",
+                "title": "上限任务 11：核对第 11 项清单",
+                "mode": "plan",
+                "goal": "核对第 11 项清单并标记是否通过。",
+                "joinMode": "any"
+              },
+              {
+                "key": "u12",
+                "title": "上限任务 12：核对第 12 项清单",
+                "mode": "plan",
+                "goal": "核对第 12 项清单并标记是否通过。",
+                "joinMode": "each"
+              }
+            ],
+            "clientMutationId": "fx-batch-12-001"
+          }
+        }
+      ],
+      "expect": {
+        "accepted": 12,
+        "initialStatus": "pending",
+        "layers": 1
+      }
+    }
+  ],
+  "expect": {
+    "notes": [
+      "12 条是单批上限；13 条必须 400。",
+      "joinMode 覆盖 all/any/each 三种取值。"
+    ]
+  }
+}

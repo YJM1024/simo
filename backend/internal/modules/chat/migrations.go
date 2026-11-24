@@ -627,5 +627,18 @@ func migrations() []sqlite.Migration {
 				return err
 			},
 		},
+		{
+			// P1-CONV-009：任务卡片批次列。spec 记为 chat v23，但 v23 已被
+			// session_read_cursors 占用，故顺延为 v24（只加列，行为与 spec 一致）。
+			Version: 24,
+			Name:    "message batch id for task cards",
+			Up: func(ctx context.Context, tx *sql.Tx) error {
+				if _, err := tx.ExecContext(ctx, `ALTER TABLE messages ADD COLUMN batch_id TEXT NOT NULL DEFAULT ''`); err != nil {
+					return err
+				}
+				_, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS idx_messages_batch ON messages(batch_id)`)
+				return err
+			},
+		},
 	}
 }

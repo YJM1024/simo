@@ -17,7 +17,7 @@
 
 | 域 | PRD | covered | partial | gap | 产品 spec | TEST |
 |---|---:|---:|---:|---:|---|---|
-| [`P1`](#p1) | 12 | 12 | 0 | 0 | [spec](../../specs/product/P1-CONV/spec.md) | [test](../../specs/test/P1-CONV/test-plan.md) |
+| [`P1`](#p1) | 13 | 12 | 0 | 1 | [spec](../../specs/product/P1-CONV/spec.md) | [test](../../specs/test/P1-CONV/test-plan.md) |
 | [`P2`](#p2) | 6 | 0 | 0 | 6 | [spec](../../specs/product/P2-TASK/spec.md) | [test](../../specs/test/P2-TASK/test-plan.md) |
 | [`P3`](#p3) | 5 | 0 | 4 | 1 | [spec](../../specs/product/P3-WORK/spec.md) | [test](../../specs/test/P3-WORK/test-plan.md) |
 | [`P4`](#p4) | 6 | 0 | 2 | 4 | [spec](../../specs/product/P4-FILE/spec.md) | [test](../../specs/test/P4-FILE/test-plan.md) |
@@ -27,9 +27,9 @@
 | [`P8`](#p8) | 12 | 0 | 9 | 3 | [spec](../../specs/product/P8-SET/spec.md) | [test](../../specs/test/P8-SET/test-plan.md) |
 | [`P9`](#p9) | 7 | 0 | 4 | 3 | [spec](../../specs/product/P9-TOOL/spec.md) | [test](../../specs/test/P9-TOOL/test-plan.md) |
 | [`P10`](#p10) | 6 | 0 | 5 | 1 | [spec](../../specs/product/P10-METRIC/spec.md) | [test](../../specs/test/P10-METRIC/test-plan.md) |
-| **合计** | **71** | **12** | **37** | **22** | **10/10** | **10/10** |
+| **合计** | **72** | **12** | **37** | **23** | **10/10** | **10/10** |
 
-> 说明：10 份 test-plan 原为骨架；2026-11-20 已回写 69 个前端单测、11 个 CDP E2E 与 223 个后端测试的**部分执行证据**（见 §2.1）。2026-11-22 收口后（同日移除 `PRD-SYNC-005`），全仓覆盖为 **12 covered / 37 partial / 22 gap**：P1 的 12 个 PRD 具备可复现证据链，全部升为 covered（`CONV-005` 停止机制由 `stop_upstream_test.go` 假上游证明，`CONV-006` 由 `IME-EVIDENCE-20261122.md` 的 CDP 合成组合态补证，`CONV-008` 真机 304 由第八轮验收补齐）；33 条 AC = 33 pass / 0 partial。其余 9 域维持原口径，不能因“用例跑过一部分”升级。
+> 说明：10 份 test-plan 原为骨架；2026-11-20 已回写 69 个前端单测、11 个 CDP E2E 与 223 个后端测试的**部分执行证据**（见 §2.1）。2026-11-23 补入 `PRD-CONV-009`（会话内任务与编排）后，全仓覆盖为 **12 covered / 37 partial / 23 gap**，P1 为 **12 / 0 / 1**：P1 原有的 12 个 PRD 具备可复现证据链，全部为 covered（`CONV-005` 停止机制由 `stop_upstream_test.go` 假上游证明，`CONV-006` 由 `IME-EVIDENCE-20261122.md` 的 CDP 合成组合态补证，`CONV-008` 真机 304 由第八轮验收补齐）；33 条既有 AC = 33 pass / 0 partial。`PRD-CONV-009` 只有用户确认的原型九屏，18 条 AC 未建脚本与用例，记 gap，不因原型存在升级。其余 9 域维持原口径，不能因“用例跑过一部分”升级。
 >
 > 2026-11-21 补充（第 2 次证据回写）：前端单测 69→**115/115**、后端 **246** 个顶层测试、E2E **19/19×2** 已按真实用例回写进 `specs/test/P1-CONV/test-plan.md` 与 [`CONV-CLOSURE.md`](CONV-CLOSURE.md)；用例口径 **4 pass / 9 partial / 2 missing**（TC-009 升 partial、E1 升 pass），P1 覆盖口径**维持 0/12/1**（2026-11-21 历史口径；2026-11-22 P1 收口后为 12/0/0，SYNC-005 已移除）。
 >
@@ -43,15 +43,15 @@
 
 | 域 | 已回写的部分证据 | 覆盖判定 | 不能升级的原因 |
 |---|---|---|---|
-| P1 会话与消息 | 前端 243/243（26.45s，0 skip）；后端全量 EXIT=0（16 个有测试的包全部 ok，另 10 个包无测试文件，`cmd/simo` 253.124s，日志 `backend/.tmp/final-backend.log`），定向 stop 2.07s、chat 整包 3.139s、停止上游 8.059s；E2E 19/19×2（01–16，07 OOS）；用例 33 条 AC = 33 通过 / 0 部分，SYNC-005 已移除、无 blocked 登记 | 已 12/0/0 | 2026-11-22 收口：12 个 PRD 判 covered；`PRD-CONV-006` 由 CDP 合成组合态补证（`IME-EVIDENCE-20261122.md`）；`PRD-CONV-005` 停止机制由 `stop_upstream_test.go` 假上游证明（10ms 取消、delta 0、idle 在 retracted 之后）；`PRD-CONV-008` 真机 304 |
+| P1 会话与消息 | 前端 243/243（26.45s，0 skip）；后端全量 EXIT=0（16 个有测试的包全部 ok，另 10 个包无测试文件，`cmd/simo` 253.124s，日志 `backend/.tmp/final-backend.log`），定向 stop 2.07s、chat 整包 3.139s、停止上游 8.059s；E2E 19/19×2（01–16，07 OOS）；用例 33 条 AC = 33 通过 / 0 部分，SYNC-005 已移除、无 blocked 登记 | 已 12/0/1 | 2026-11-22 收口：12 个 PRD 判 covered；`PRD-CONV-006` 由 CDP 合成组合态补证（`IME-EVIDENCE-20261122.md`）；`PRD-CONV-005` 停止机制由 `stop_upstream_test.go` 假上游证明（10ms 取消、delta 0、idle 在 retracted 之后）；`PRD-CONV-008` 真机 304。2026-11-23 新增 `PRD-CONV-009`：只有原型九屏，无实现、无 AC 脚本，记 gap |
 | P2 任务与执行 | RightPanel 6 展示层、E2E 06 定位 | 仍 0/0/6 | 后端生命周期/取消/重试/复杂度/子会话均无执行证据 |
 | P3 工作台与视图 | LibraryUtilities 2、App 工作台指标、RightPanel/E2E 07 | 仍 0/4/1 | WORK-005 未实现；真实 usage/每日聚合/最近活动未覆盖 |
 | P4 文件与交付物 | RightPanel 交付物、E2E 07 下载 | 仍 0/2/4 | 上传/隔离/预览/PDF/Office 未覆盖 |
 | P5–P9 | 后端 246/246 PASS（16 package with tests，0 skip）；P5 记忆、P6 团队、P7 调度、P8 设置/系统、P9 工具均有直接测试 | 仍 0/26/10 | 产品 AC/change 包/前端/权限/异常未齐；PASS 只证明既有测试通过 |
 | P10 指标 | MetricsDashboard 9、App 工作台指标 | 仍 0/5/1 | 006 导出/对比/告警未实现；真实后端聚合未覆盖 |
-| **合计** | 115 单测 + 19 E2E + 246 后端测试 | **12/37/22** | P1 已收口为 12/0/0（SYNC-005 已移除）；其余 9 域的证据仍只到“部分用例/部分 AC”，未到 PRD 覆盖 |
+| **合计** | 115 单测 + 19 E2E + 246 后端测试 | **12/37/23** | P1 为 12/0/1（12 个既有 PRD 收口，新增 `PRD-CONV-009` 记 gap）；其余 9 域的证据仍只到“部分用例/部分 AC”，未到 PRD 覆盖 |
 
-> 结论：本轮把“没有任何执行证据”推进为“前端、E2E 与 P5–P9 后端均有用例级证据”。P1 已于 2026-11-22 收口为 12/0/0（12 covered / 0 partial / 0 gap，33 条 AC 全 pass），停止机制、IME、消息定向与投影真机 304 均已补证；其余 9 域 covered/partial/gap 判定未变，后续仍须按 change 包补齐六类产物才允许逐项升级。
+> 结论：本轮把“没有任何执行证据”推进为“前端、E2E 与 P5–P9 后端均有用例级证据”。P1 原有的 12 个 PRD 已于 2026-11-22 收口（12 covered / 0 partial / 0 gap，33 条 AC 全 pass），停止机制、IME、消息定向与投影真机 304 均已补证；2026-11-23 新增 `PRD-CONV-009`（会话内任务与编排）只有原型九屏，18 条 AC 未建脚本，P1 改计 12/0/1，全仓 12/37/23。其余 9 域 covered/partial/gap 判定未变，后续仍须按 change 包补齐六类产物才允许逐项升级。
 
 ## 3. PRD → CHANGE → TEST
 
@@ -72,6 +72,7 @@
 | `PRD-SYNC-002` | 多标签 active/ancestor/read cursor | [CHG-CONV-004](../../specs/changes/CHG-CONV-004/spec.md) / [FE-009](../../specs/FE-009-web-multitab/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-009](../../specs/test/P1-CONV/test-plan.md#tc-p1-009) | `covered` | 已闭环（2026-11-22）：BroadcastChannel 单测 6 条 + E2E 13；未读游标由 SYNC-004 承接并通过。 |
 | `PRD-SYNC-003` | 发送模式/设置跨标签同步 | [CHG-CONV-004](../../specs/changes/CHG-CONV-004/spec.md) / [FE-006](../../specs/FE-006-chat-experience/spec.md) / [COMP-composer-send-mode](../../specs/COMP-composer-send-mode/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-010](../../specs/test/P1-CONV/test-plan.md#tc-p1-010) | `covered` | 已闭环（2026-11-22）：单标签持久化 + E2E 13 多标签发送模式均 pass。 |
 | `PRD-SYNC-004` | 未读与已读游标 | [CHG-CONV-005](../../specs/changes/CHG-CONV-005/spec.md)（剩余范围） / [FE-003](../../specs/FE-003-chat-capabilities/spec.md) / [CHG-LEGACY-P1-CONV](../../specs/changes/CHG-LEGACY-P1-CONV/spec.md) | [TC-P1-011](../../specs/test/P1-CONV/test-plan.md#tc-p1-011) | `covered` | 已闭环（2026-11-22）：AC-SYNC-004-01/02/03 全 pass（未读持久化）；CHG-CONV-005 中原 SYNC-005 范围已移除。 |
+| `PRD-CONV-009` | 会话内任务与编排 | 待建 `CHG-CONV-007`（暂未立包） | [TC-P1-CONV-009](../../specs/test/P1-CONV/test-plan.md#tc-p1-conv-009) | `gap` | 缺口：变更包未立、18 条 AC 无断言脚本与 test-plan 用例、无实现；形态以原型 `docs/design/task-prototype-v3-20261123.html` 九屏为准（2026-11-23 用户确认）；任务执行器与生命周期归 P2-TASK，交付物存储与下载实现归 P4-FILE |
 
 ### P2 · 任务与执行
 <a id="p2"></a>
@@ -200,7 +201,7 @@
 
 ## 5. Gap 清单（按域）
 
-- **P1 会话与消息**：无 PRD 级 gap（12 covered / 0 partial / 0 gap，33 条 AC 全 pass）。非阻塞项：`AC-CONV-008-05` 的组件级负路径（G18）仍缺断言；真实厂商 403、跨标签双 WS、断网 e2e（CONV-005）与物理输入法（CONV-006）属环境限制，不进 AC 判据。
+- **P1 会话与消息**：1 个 PRD 级 gap：`PRD-CONV-009`（会话内任务与编排，unimplemented；18 条 AC 无脚本与用例、变更包待立）。其余 12 个 PRD 为 covered / 0 partial（33 条 AC 全 pass）。非阻塞项：`AC-CONV-008-05` 的组件级负路径（G18）仍缺断言；真实厂商 403、跨标签双 WS、断网 e2e（CONV-005）与物理输入法（CONV-006）属环境限制，不进 AC 判据。
 - **P2 任务与执行**：`PRD-TASK-001`（partial）、`PRD-TASK-002`（partial）、`PRD-TASK-003`（unimplemented）、`PRD-TASK-006`（partial）、`PRD-TASK-004`（unimplemented）、`PRD-TASK-005`（unimplemented）
 - **P3 工作台与视图**：`PRD-WORK-005`（unimplemented）
 - **P4 文件与交付物**：`PRD-FILE-001`（partial）、`PRD-FILE-005`（partial）、`PRD-FILE-002`（partial）、`PRD-FILE-006`（partial）

@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "kind": "simo.task-fixture",
+  "name": "explore-14",
+  "description": "explore 模式单条任务，假上游 react 模式产出 14 条轨迹。",
+  "usage": "以 mock-llm --mode react 启动假上游；POST 一次 N1，N3 详情返回 14 条 traces。",
+  "generatedAt": "2026-11-24T10:09:57.647Z",
+  "generatedBy": "scripts/ac/lib/task-fixtures.mjs",
+  "sessions": [
+    {
+      "id": "s1",
+      "createSession": false,
+      "mock": {
+        "mode": "react",
+        "reactCount": 14
+      },
+      "requests": [
+        {
+          "label": "explore-14-create",
+          "request": {
+            "mode": "plan",
+            "goal": "验证 explore 模式只产轨迹、不带步骤计划。",
+            "inputs": [
+              "上周的指标快照：新增会话 1280、消息 9640、平均首响 1.8 秒。",
+              "目标：把平均首响压到 1.2 秒以内。",
+              "探索任务不写 steps。"
+            ],
+            "constraints": [
+              "探索阶段不生成交付物。"
+            ],
+            "tasks": [
+              {
+                "key": "explore14",
+                "title": "探索任务：定位首响变慢的原因",
+                "mode": "explore",
+                "goal": "探索首响变慢的可能原因，给出可验证的假设。",
+                "joinMode": "all"
+              }
+            ],
+            "clientMutationId": "fx-explore-14-001"
+          }
+        }
+      ],
+      "expect": {
+        "accepted": 1,
+        "traces": 14,
+        "categories": [
+          "think",
+          "action",
+          "observe"
+        ],
+        "steps": 0
+      }
+    }
+  ],
+  "expect": {
+    "notes": [
+      "explore 模式带 steps 会 400，负例由 harness 另造。",
+      "轨迹 at 单调不减。"
+    ]
+  }
+}

@@ -4,8 +4,14 @@ import {
   type ChatEvents,
   archiveSession,
   createSessionDraft,
+  decideTaskConfirmation,
   getArtifactContent,
+  getSessionDeliverables,
+  getTaskDetail,
+  getTaskGraph,
+  listSessionTasks,
   markSessionRead,
+  resumeTask,
   unarchiveSession,
   getPermissions,
   getAllSessionMessages,
@@ -22,9 +28,10 @@ import {
   submitCardAction,
   unpinSession,
 } from './api'
-import type { Card, Message, PermissionState, Session, StatsBucket, StatsTotals } from './types'
+import type { Card, DeliverableGroup, Message, PermissionState, Session, StatsBucket, StatsTotals, TaskCounts, TaskDetailPayload, TaskEvent, TaskFile, TaskGraphPayload, TaskView } from './types'
 import { publishTabSync, tabId, useTabSync, winsTabSyncTiebreak } from './tabsync'
-import { Composer, ConversationPanel, EmptyState, ErrorState, Icon, LoadingState, MessageItem, MetricsDashboard, RightPanel, Segmented, Sidebar, StatusBar, TimelineGroups, WorkbenchChart, formatTime, formatTokens } from './components'
+import { appendTrace, mergeTaskStep, mergeTaskView, TaskEventLog } from './taskEvents'
+import { Composer, ConversationPanel, EmptyState, ErrorState, Icon, LoadingState, MessageItem, MetricsDashboard, RightPanel, Segmented, Sidebar, StatusBar, TimelineGroups, WorkbenchChart, formatTime, formatTokens, readInspCollapsed, saveInspCollapsed, type MessageTaskInfo, type RightTab, type TaskFilter } from './components'
 
 type Page = 'chat' | 'workbench'
 
@@ -33,6 +40,8 @@ const STATS_REFRESH_THROTTLE_MS = 1000
 
 /** 主会话 id：没有可恢复的会话（从未选过、已删除或已归档）时的兜底。 */
 const MAIN_SESSION_ID = 'main'
+
+const EMPTY_TASK_COUNTS: TaskCounts = { all: 0, pending: 0, running: 0, failed: 0, done: 0 }
 
 /**
  * 本标签上次的 active 会话，存 localStorage 供跨标签共享同一份：
@@ -148,6 +157,8 @@ export default function App(): React.ReactNode {
   const ancestorLoadingRef = useRef(false)
   const ancestorRequestRef = useRef<Promise<void> | null>(null)
   const [ancestorError, setAncestorError] = useState('')
+  /** 403 无权读取上级：非错误态提示，用中性样式，不阻断发送。 */
+  const [ancestorHint, setAncestorHint] = useState('')
   const [emptyAncestorIds, setEmptyAncestorIds] = useState<Set<string>>(new Set())
   const [activityAt, setActivityAt] = useState<Record<string, number>>({})
   const prependAnchorRef = useRef<{ scrollTop: number; scrollHeight: number; id: string; offset: number } | null>(null)
@@ -160,8 +171,50 @@ export default function App(): React.ReactNode {
   const [loadingMessages, setLoadingMessages] = useState(false)
   const [rightLoading, setRightLoading] = useState(false)
   const [rightError, setRightError] = useState('')
+  /**
+   * 展开任务组补取失败只落在触发它的那一组：错误进组内，整栏数据与其它组保持原状。
+   * group 取 done / running / pending；首屏整栏失败仍走 rightError。
+   */
+  const [rightGroupError, setRightGroupError] = useState<{ group: string; message: string } | null>(null)
   /** 右栏当前已请求的 taskLimit；展开任务组补取后记 50（合同上限），切会话时归 3。 */
   const rightTaskLimitRef = useRef(3)
+  // ---- §17 任务域：右栏三标签的列表、详情、任务图与消息流任务卡 ----
+  const [rightTab, setRightTab] = useState<RightTab>('overview')
+  const [rightCollapsed, setRightCollapsed] = useState(false)
+  const [tasks, setTasks] = useState<TaskView[]>([])
+  const [taskCounts, setTaskCounts] = useState<TaskCounts>({ all: 0, pending: 0, running: 0, failed: 0, done: 0 })
+  const [tasksLoading, setTasksLoading] = useState(false)
+  const [tasksError, setTasksError] = useState('')
+  const [tasksHasMore, setTasksHasMore] = useState(false)
+  const [taskFilter, setTaskFilter] = useState<TaskFilter>('all')
+  const [jumpTaskId, setJumpTaskId] = useState<string | null>(null)
+  const taskFilterRef = useRef<TaskFilter>('all')
+  taskFilterRef.current = taskFilter
+  const taskBeforeRef = useRef<string | undefined>(undefined)
+  /** 消息流任务卡可能落在筛选结果之外，单独累积一份 id→任务 的索引。 */
+  const [taskIndex, setTaskIndex] = useState<Record<string, TaskView>>({})
+  const [batchTasks, setBatchTasks] = useState<Record<string, { tasks: TaskView[]; total: number; limit: number }>>({})
+  const batchRequestedRef = useRef(new Map<string, number>())
+  const [expandedBatches, setExpandedBatches] = useState<Set<string>>(new Set())
+  const [taskActionBusyId, setTaskActionBusyId] = useState('')
+  const [taskActionError, setTaskActionError] = useState<{ taskId: string; message: string } | null>(null)
+  const [deliverableGroups, setDeliverableGroups] = useState<DeliverableGroup[]>([])
+  const [tabDeliverablesLoading, setTabDeliverablesLoading] = useState(false)
+  const [tabDeliverablesError, setTabDeliverablesError] = useState('')
+  const [tabDeliverablesHasMore, setTabDeliverablesHasMore] = useState(false)
+  const [tabDeliverablesTotal, setTabDeliverablesTotal] = useState(0)
+  const [tabDeliverablesFileCount, setTabDeliverablesFileCount] = useState(0)
+  const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
+  const [taskDetail, setTaskDetail] = useState<TaskDetailPayload | null>(null)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [detailError, setDetailError] = useState('')
+  const [graphOpen, setGraphOpen] = useState(false)
+  const [taskGraph, setTaskGraph] = useState<TaskGraphPayload | null>(null)
+  const [graphLoading, setGraphLoading] = useState(false)
+  const [graphError, setGraphError] = useState('')
+  const taskEventLogRef = useRef(new TaskEventLog())
+  const taskRefreshTimer = useRef<number | null>(null)
+
   const [error, setError] = useState('')
   // 失败回复的「重试」把触发它的用户消息填回输入框；seq 只用于让 Composer 感知重复点击。
   const [composerPrefill, setComposerPrefill] = useState<{ text: string; seq: number } | null>(null)
@@ -215,6 +268,12 @@ export default function App(): React.ReactNode {
   const reloadTimer = useRef<number | null>(null)
   /** session_unread 广播的合并定时器：300ms 内的连续帧只触发一次列表刷新。 */
   const unreadTimer = useRef<number | null>(null)
+  /**
+   * 进入会话标读的 1 秒去重窗口：记录最近一次发过标读请求的会话与时刻。
+   * 只挡同一 sessionId 的连续重复（列表刷新会让标读 effect 重跑）；切到别的会话后
+   * 记录里的 sessionId 就变了，切回来会重新发。
+   */
+  const lastMarkReadRef = useRef<{ sessionId: string; at: number } | null>(null)
   /**
    * 全局统计刷新的节流定时器：非 null 表示节流窗口仍开着，窗口内的事件直接丢弃。
    * 只在定时器回调里置 null，不用 state，避免 WS 回调因节流状态变化而重连。
@@ -480,13 +539,14 @@ export default function App(): React.ReactNode {
     }
   }, [])
 
-  const loadRight = useCallback(async (sessionId: string, taskLimit = 3, silent = false): Promise<void> => {
+  const loadRight = useCallback(async (sessionId: string, taskLimit = 3, silent = false, group?: string): Promise<void> => {
     // 同一会话同一 taskLimit 已有上一份投影：先占位再用 If-None-Match 条件请求。
     // 命中 304 时服务端没有新数据，占位内容原样保留；因此这类请求从一开始就不亮骨架，也不清空右栏。
     const cached = peekSpecProjection(sessionId, taskLimit)
     if (!silent) {
       if (cached) setProjection((current) => current ?? cached)
       setRightLoading(cached === null)
+      setRightGroupError(null)
     }
     setRightError('')
     try {
@@ -496,10 +556,16 @@ export default function App(): React.ReactNode {
         // 200 时它是服务端最新数据。两种情况都不清空、不进错误态。
         setProjection((current) => result.projection ?? current)
         rightTaskLimitRef.current = taskLimit
+        setRightGroupError(null)
       }
     } catch (err) {
       if (activeIdRef.current === sessionId) {
-        setRightError(err instanceof Error ? err.message : '右栏数据加载失败，可稍后刷新重试')
+        const message = err instanceof Error ? err.message : '右栏数据加载失败，可稍后刷新重试'
+        // 组内补取失败不动整栏：只把错误交给触发补取的那一组，组头计数与其它组已展开内容留在原位。
+        // silent=false 是首屏整栏加载，失败仍进整栏错误态。
+        if (silent && group) setRightGroupError({ group, message })
+        else setRightError(message)
+        // 复位到 3，让失败后重新展开或组内重试可以再次发起补取。
         rightTaskLimitRef.current = 3
       }
     } finally {
@@ -510,11 +576,233 @@ export default function App(): React.ReactNode {
 
   // 展开任务组时若只拿到首页（total > items），按合同上限补取一次；silent 保住展开态，
   // 否则 loading 会卸载右栏内容，ExecutionGroup 的展开 state 随之丢失。
-  const expandRightGroup = useCallback((): void => {
+  const expandRightGroup = useCallback((group: string): void => {
     if (rightTaskLimitRef.current >= 50) return
     rightTaskLimitRef.current = 50
-    void loadRight(activeIdRef.current, 50, true)
+    setRightGroupError(null)
+    void loadRight(activeIdRef.current, 50, true, group)
   }, [loadRight])
+
+  // 组内重试只重取该组的补取请求：不经过首屏骨架，不清空已渲染的投影与其它组。
+  const retryRightGroup = useCallback((): void => {
+    const group = rightGroupError?.group
+    if (!group) return
+    rightTaskLimitRef.current = 50
+    setRightGroupError(null)
+    void loadRight(activeIdRef.current, 50, true, group)
+  }, [loadRight, rightGroupError])
+
+  const mergeTaskIndex = useCallback((items: TaskView[]): void => {
+    if (items.length === 0) return
+    setTaskIndex((current) => {
+      let changed = false
+      const next = { ...current }
+      for (const task of items) { if (next[task.id] !== task) { next[task.id] = task; changed = true } }
+      return changed ? next : current
+    })
+  }, [])
+
+  const loadTasks = useCallback(async (sessionId: string, filter: TaskFilter, append = false): Promise<void> => {
+    setTasksLoading(true)
+    if (!append) setTasksError('')
+    try {
+      const data = await listSessionTasks(sessionId, { status: filter === 'all' ? undefined : filter, limit: 50, before: append ? taskBeforeRef.current : undefined })
+      if (activeIdRef.current !== sessionId) return
+      setTaskCounts(data.counts)
+      setTasks((current) => append ? [...current, ...data.tasks.filter((task) => !current.some((item) => item.id === task.id))] : data.tasks)
+      setTasksHasMore(data.hasMore)
+      taskBeforeRef.current = data.nextBefore ?? undefined
+      mergeTaskIndex(data.tasks)
+    } catch (err) {
+      if (activeIdRef.current === sessionId) setTasksError(err instanceof Error ? err.message : '任务加载失败')
+    } finally {
+      if (activeIdRef.current === sessionId) setTasksLoading(false)
+    }
+  }, [mergeTaskIndex])
+
+  const loadTabDeliverables = useCallback(async (sessionId: string): Promise<void> => {
+    setTabDeliverablesLoading(true)
+    setTabDeliverablesError('')
+    try {
+      const data = await getSessionDeliverables(sessionId, { limit: 50 })
+      if (activeIdRef.current !== sessionId) return
+      setDeliverableGroups(data.groups)
+      setTabDeliverablesTotal(data.total)
+      setTabDeliverablesFileCount(data.fileCount)
+      setTabDeliverablesHasMore(data.hasMore)
+    } catch (err) {
+      if (activeIdRef.current === sessionId) setTabDeliverablesError(err instanceof Error ? err.message : '交付物加载失败')
+    } finally {
+      if (activeIdRef.current === sessionId) setTabDeliverablesLoading(false)
+    }
+  }, [])
+
+  const loadMoreTabDeliverables = useCallback(async (): Promise<void> => {
+    const sessionId = activeIdRef.current
+    if (!sessionId || tabDeliverablesLoading) return
+    const files = deliverableGroups.flatMap((group) => group.files)
+    const last = files[files.length - 1]
+    setTabDeliverablesLoading(true)
+    try {
+      const data = await getSessionDeliverables(sessionId, { limit: 50, before: last ? String(last.createdAt) : undefined })
+      if (activeIdRef.current !== sessionId) return
+      setDeliverableGroups((prev) => {
+        const next = prev.map((group) => ({ ...group, files: [...group.files] }))
+        for (const group of data.groups) {
+          const existing = next.find((item) => item.taskId === group.taskId)
+          if (!existing) { next.push({ ...group, files: [...group.files] }); continue }
+          const seen = new Set(existing.files.map((file) => file.id))
+          existing.files.push(...group.files.filter((file) => !seen.has(file.id)))
+        }
+        return next
+      })
+      setTabDeliverablesTotal(data.total)
+      setTabDeliverablesFileCount(data.fileCount)
+      setTabDeliverablesHasMore(data.hasMore)
+    } catch (err) {
+      setTabDeliverablesError(err instanceof Error ? err.message : '交付物加载失败')
+    } finally {
+      setTabDeliverablesLoading(false)
+    }
+  }, [deliverableGroups, tabDeliverablesLoading])
+
+  const openTaskFile = useCallback((file: TaskFile): void => {
+    const url = file.previewUrl ?? file.downloadUrl
+    if (url) window.open(url, '_blank', 'noopener')
+  }, [])
+
+  const loadTaskDetail = useCallback(async (taskId: string): Promise<void> => {    setDetailLoading(true)
+    setDetailError('')
+    try {
+      const data = await getTaskDetail(taskId)
+      if (activeIdRef.current !== data.task.sessionId) return
+      setTaskDetail(data)
+      mergeTaskIndex([data.task])
+    } catch (err) {
+      setDetailError(err instanceof Error ? err.message : '任务详情加载失败')
+    } finally {
+      setDetailLoading(false)
+    }
+  }, [mergeTaskIndex])
+
+  /** 打开只读详情：详情打开时不发写请求，也不改右栏边界。 */
+  const openTaskDetail = useCallback((task: TaskView | string): void => {
+    const taskId = typeof task === 'string' ? task : task.id
+    setDetailTaskId(taskId)
+    setTaskDetail(null)
+    void loadTaskDetail(taskId)
+  }, [loadTaskDetail])
+
+  const closeTaskDetail = useCallback((): void => {
+    setDetailTaskId(null)
+    setTaskDetail(null)
+    setDetailError('')
+  }, [])
+
+  const loadTaskGraph = useCallback(async (sessionId: string): Promise<void> => {
+    setGraphLoading(true)
+    setGraphError('')
+    try {
+      const data = await getTaskGraph(sessionId)
+      if (activeIdRef.current === sessionId) setTaskGraph(data)
+    } catch (err) {
+      if (activeIdRef.current === sessionId) setGraphError(err instanceof Error ? err.message : '任务图加载失败')
+    } finally {
+      if (activeIdRef.current === sessionId) setGraphLoading(false)
+    }
+  }, [])
+
+  const openTaskGraph = useCallback((): void => {
+    if (taskCounts.all === 0) return
+    setGraphOpen(true)
+    void loadTaskGraph(activeIdRef.current)
+  }, [loadTaskGraph, taskCounts.all])
+
+  /** 筛选切换、标签切换、收起右栏都不改变角标，只重取列表与 counts（§17.3）。 */
+  const refreshTasksSoon = useCallback((): void => {
+    if (taskRefreshTimer.current !== null) window.clearTimeout(taskRefreshTimer.current)
+    taskRefreshTimer.current = window.setTimeout(() => {
+      taskRefreshTimer.current = null
+      const sessionId = activeIdRef.current
+      if (!sessionId) return
+      void loadTasks(sessionId, taskFilterRef.current)
+    }, 300)
+  }, [loadTasks])
+
+  const decideTask = useCallback(async (taskId: string, decision: 'confirm' | 'cancel'): Promise<void> => {
+    setTaskActionBusyId(taskId)
+    setTaskActionError(null)
+    try {
+      await decideTaskConfirmation(taskId, decision)
+      refreshTasksSoon()
+      if (detailTaskId === taskId) void loadTaskDetail(taskId)
+    } catch (err) {
+      setTaskActionError({ taskId, message: err instanceof Error ? err.message : '任务操作失败' })
+    } finally {
+      setTaskActionBusyId('')
+    }
+  }, [detailTaskId, loadTaskDetail, refreshTasksSoon])
+
+  const resumeTaskById = useCallback(async (taskId: string): Promise<void> => {
+    setTaskActionBusyId(taskId)
+    setTaskActionError(null)
+    try {
+      await resumeTask(taskId, '用户从消息卡恢复')
+      refreshTasksSoon()
+      if (detailTaskId === taskId) void loadTaskDetail(taskId)
+    } catch (err) {
+      setTaskActionError({ taskId, message: err instanceof Error ? err.message : '任务恢复失败' })
+    } finally {
+      setTaskActionBusyId('')
+    }
+  }, [detailTaskId, loadTaskDetail, refreshTasksSoon])
+
+  const changeRightTab = useCallback((tab: RightTab): void => {
+    setRightTab(tab)
+    if (tab !== 'tasks') return
+    // 概览「还有 N 个」跳任务标签：重置筛选并把首个任务作为落点，落点距滚动口顶 0–8px。
+    setTaskFilter('all')
+    const target = tasks[0]?.id ?? null
+    setJumpTaskId(target)
+    if (target) window.setTimeout(() => setJumpTaskId((current) => current === target ? null : current), 1200)
+  }, [tasks])
+
+  const changeRightCollapsed = useCallback((next: boolean): void => {
+    setRightCollapsed(next)
+    if (activeIdRef.current) saveInspCollapsed(activeIdRef.current, next)
+    if (next) closeTaskDetail()
+  }, [closeTaskDetail])
+
+  /** WS 任务增量：按事件 id / (taskId,stepId,stepSeq) / (taskId,traceSeq) 去重后就地合并，300ms 后对账 counts。 */
+  const applyTaskEvent = useCallback((event: TaskEvent): void => {
+    const verdict = taskEventLogRef.current.accept(event)
+    if (verdict.duplicate) return
+    if (event.sessionId && event.sessionId !== activeIdRef.current) return
+    if (verdict.gap) refreshTasksSoon()
+    if (event.type === 'task.trace') {
+      const trace = {
+        id: typeof event.traceId === 'string' ? event.traceId : undefined,
+        taskId: event.id,
+        stepId: typeof event.stepId === 'string' ? event.stepId : undefined,
+        traceSeq: typeof event.traceSeq === 'number' ? event.traceSeq : 0,
+        category: typeof event.category === 'string' ? event.category : 'action',
+        tool: typeof event.tool === 'string' ? event.tool : undefined,
+        text: typeof event.text === 'string' ? event.text : '',
+        at: typeof event.at === 'number' ? event.at : Date.now(),
+      }
+      setTaskDetail((prev) => prev && prev.task.id === event.id ? { ...prev, traces: appendTrace(prev.traces, trace) } : prev)
+      setTasks((prev) => prev.map((task) => task.id === event.id ? { ...task, lastTrace: trace } : task))
+      return
+    }
+    if (event.type === 'task.step') {
+      setTaskDetail((prev) => prev && prev.task.id === event.id ? { ...prev, steps: prev.steps.map((step) => step.id === event.stepId ? mergeTaskStep(step, event) : step) } : prev)
+      refreshTasksSoon()
+      return
+    }
+    setTasks((prev) => prev.map((task) => task.id === event.id ? mergeTaskView(task, event) : task))
+    setTaskDetail((prev) => prev && prev.task.id === event.id ? { ...prev, task: mergeTaskView(prev.task, event) } : prev)
+    refreshTasksSoon()
+  }, [refreshTasksSoon])
 
   useEffect(() => {
     void loadSessions().catch((err: unknown) => setError(err instanceof Error ? err.message : '会话加载失败'))
@@ -537,6 +825,7 @@ export default function App(): React.ReactNode {
       setMessages([])
       setAncestorMessages([])
       setAncestorError('')
+      setAncestorHint('')
       setEmptyAncestorIds(new Set())
       setAncestorLoading(false)
       ancestorLoadingRef.current = false
@@ -545,6 +834,15 @@ export default function App(): React.ReactNode {
       setRightError('')
       setRightLoading(false)
       rightTaskLimitRef.current = 3
+      setTasks([])
+      setTaskCounts(EMPTY_TASK_COUNTS)
+      setTasksError('')
+      taskBeforeRef.current = undefined
+      setDeliverableGroups([])
+      setTabDeliverablesError('')
+      closeTaskDetail()
+      setGraphOpen(false)
+      setTaskGraph(null)
       setError('')
       setLoadingMessages(false)
       return
@@ -556,22 +854,58 @@ export default function App(): React.ReactNode {
     setMessages([])
     setAncestorMessages([])
     setAncestorError('')
+    setAncestorHint('')
     setEmptyAncestorIds(new Set())
     setAncestorLoading(false)
     ancestorLoadingRef.current = false
     ancestorRequestRef.current = null
     setProjection(null)
     rightTaskLimitRef.current = 3
+    // 切换会话：筛选与标签保留，列表、详情、任务图与批次展开态全部重来（§17.4）。
+    setTasks([])
+    setTaskCounts(EMPTY_TASK_COUNTS)
+    setTasksError('')
+    taskBeforeRef.current = undefined
+    setDeliverableGroups([])
+    setTabDeliverablesError('')
+    setExpandedBatches(new Set())
+    setBatchTasks({})
+    batchRequestedRef.current = new Map()
+    closeTaskDetail()
+    setGraphOpen(false)
+    setTaskGraph(null)
+    // 收起状态按会话持久化；760–1023 抽屉档不读写（§17.2.3）。
+    setRightCollapsed(typeof window.matchMedia === 'function' && window.matchMedia('(min-width: 760px) and (max-width: 1179px)').matches ? false : readInspCollapsed(activeId))
     void loadMessages(activeId)
     // 草稿会话还没落库，spec-projection 只会 404：不发请求，右栏显示占位；首条消息物化后再加载。
-    if (activeSessionRef.current?.draft !== true) void loadRight(activeId)
-  }, [activeId, loadMessages, loadRight])
+    if (activeSessionRef.current?.draft !== true) {
+      void loadRight(activeId)
+      void loadTabDeliverables(activeId)
+    }
+  }, [activeId, loadMessages, loadRight, loadTabDeliverables, closeTaskDetail])
 
-  // 进入会话即标记已读：只在服务端判定 hasUnread 时请求（POST /api/sessions/{id}/read，无 body），
-  // 成功后本地即时清除该会话未读点；刷新页面后的未读状态仍完全以后端返回为准。
+  // 任务列表随会话与筛选重取；筛选值在会话之间保留。
   useEffect(() => {
+    if (!activeId) return
+    if (activeSessionRef.current?.draft === true) { setTasks([]); setTaskCounts(EMPTY_TASK_COUNTS); return }
+    taskBeforeRef.current = undefined
+    void loadTasks(activeId, taskFilter)
+  }, [activeId, taskFilter, loadTasks])
+
+
+  // 进入会话即标记已读（POST /api/sessions/{id}/read，无 body），成功后本地即时清除该会话未读点；
+  // 刷新页面后的未读状态仍完全以后端返回为准。
+  // 判据是“进入即已读”，所以不看本地 hasUnread：列表可能还没刷新出未读，靠它判断会漏发标读请求，
+  // 未读点就一直留着。草稿会话还没落库（draft.go CreateDraft），发过去只会 404，跳过。
+  // 同一会话 1 秒内只发一次：列表刷新会让本 effect 重跑，不能重复发；切到别的会话再切回会重新发。
+  useEffect(() => {
+    if (!activeId) return
     const target = flatSessions.find((session) => session.id === activeId)
-    if (!target?.hasUnread) return
+    if (!target || target.draft === true) return
+    const now = Date.now()
+    const last = lastMarkReadRef.current
+    if (last !== null && last.sessionId === activeId && now - last.at < 1000) return
+    lastMarkReadRef.current = { sessionId: activeId, at: now }
     void markRead(activeId)
   }, [activeId, flatSessions, markRead])
 
@@ -596,7 +930,7 @@ export default function App(): React.ReactNode {
           void loadMessages(activeIdRef.current)
         }
       },
-      onEvent: ({ type, id }) => {
+      onEvent: ({ type, id, eventId, data }) => {
         // 已读事件来自其他标签页/端：刷新列表让未读点跟随服务端状态；它不带事件游标，不能写入 since
         if (type === 'session_read') { void loadSessions(); return }
         // 未读广播可能连续到达（一个会话一条）：合并 300ms 刷新一次，且不动当前会话/搜索词
@@ -608,6 +942,11 @@ export default function App(): React.ReactNode {
           }, 300)
           // 未读广播背后就是一条新消息：底部汇总也要跟上（与列表刷新同一节流，不互相触发）。
           scheduleStatsRefresh()
+          return
+        }
+        // 任务域事件：按事件 id 与 (任务,步骤,序号)/(任务,轨迹序号) 去重后就地合并，不整页重载消息。
+        if (type.startsWith('task.')) {
+          applyTaskEvent({ ...(data ?? {}), type: type as TaskEvent['type'], id, eventId })
           return
         }
         const key = `${type}:${id}`
@@ -644,7 +983,7 @@ export default function App(): React.ReactNode {
       if (reloadTimer.current !== null) window.clearTimeout(reloadTimer.current)
       if (unreadTimer.current !== null) { window.clearTimeout(unreadTimer.current); unreadTimer.current = null }
     }
-  }, [activeId, loadMessages, loadSessions, refreshSessions, scheduleStatsRefresh])
+  }, [activeId, applyTaskEvent, loadMessages, loadSessions, refreshSessions, scheduleStatsRefresh])
 
   // 组件卸载时清掉统计节流窗口，避免定时器回调落在已卸载的组件上。
   useEffect(() => () => {
@@ -892,10 +1231,12 @@ export default function App(): React.ReactNode {
     }
     setAncestorLoading(true)
     setAncestorError('')
+    setAncestorHint('')
     try {
       const data = await getAllSessionMessages(nextParent.id)
       const incoming = (data.messages ?? []).filter((message) => !messages.some((existing) => existing.id === message.id) && !ancestorMessages.some((existing) => existing.id === message.id))
-      if (incoming.length === 0) { setAncestorError('上级没有消息'); setEmptyAncestorIds((current) => new Set(current).add(nextParent.id)) }
+      // 空上级是常态：只记入已访问，按无上级处理，不渲染任何提示。
+      if (incoming.length === 0) { setEmptyAncestorIds((current) => new Set(current).add(nextParent.id)) }
       else {
         setAncestorMessages((current) => [...incoming, ...current].sort((a, b) => a.at - b.at))
         const chain = [...new Set([...ancestorMessages.map((message) => message.sessionId), nextParent.id])]
@@ -904,7 +1245,9 @@ export default function App(): React.ReactNode {
       stickToBottomRef.current = false
     } catch (err) {
       const raw = err instanceof Error ? err.message : '上级消息加载失败'
-      setAncestorError(raw.includes('413') ? '消息过多，暂不能完整加载' : raw.includes('403') ? '无权读取该上级会话' : raw)
+      // 403 只说明该段上下文不可读，用 1 条中性提示；413 仍是可重试的错误态。
+      if (raw.includes('403')) setAncestorHint('无权读取该上级会话')
+      else setAncestorError(raw.includes('413') ? '消息过多，暂不能完整加载' : raw)
     } finally {
       ancestorLoadingRef.current = false
       ancestorRequestRef.current = null
@@ -948,6 +1291,7 @@ export default function App(): React.ReactNode {
 
   const createSession = async (): Promise<void> => {
     const root = sessions.find((session) => session.parentId === '' || session.parentId === 'main') ?? sessions[0]
+    setOpError('')
     try {
       const created = await createSessionDraft(root?.id ?? 'main', '新会话')
       const id = extractSessionId(created)
@@ -957,7 +1301,7 @@ export default function App(): React.ReactNode {
         setActiveId(id)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '新建会话失败')
+      setOpError(err instanceof Error ? err.message : '新建会话失败')
     }
   }
 
@@ -1023,6 +1367,38 @@ export default function App(): React.ReactNode {
       at: message.at, dateKey: new Date(message.at).toISOString().slice(0, 10), summary: message.text,
     }))
   }, [combinedMessages, ancestorChain, activeId, flatAll])
+  // 消息流任务卡的数据：详情最准，其次标签列表与累积索引里最近的一版（任务可能不在当前筛选里）。
+  const taskLookup = useMemo(() => {
+    const map = new Map<string, TaskView>()
+    for (const task of Object.values(taskIndex)) map.set(task.id, task)
+    for (const task of tasks) map.set(task.id, task)
+    if (taskDetail) map.set(taskDetail.task.id, taskDetail.task)
+    return map
+  }, [taskIndex, tasks, taskDetail])
+
+  // 汇总卡按 batchId 取任务：首屏 10 条，展开后 100 条；同一批次同一档只请求一次。
+  useEffect(() => {
+    if (!activeId) return
+    for (const message of combinedMessages) {
+      const batchId = message.batchId
+      if (!batchId || message.taskId) continue
+      const limit = expandedBatches.has(batchId) ? 100 : 10
+      const requested = batchRequestedRef.current.get(batchId)
+      if (requested !== undefined && requested >= limit) continue
+      batchRequestedRef.current.set(batchId, limit)
+      void (async () => {
+        try {
+          const data = await listSessionTasks(activeId, { batchId, limit })
+          if (activeIdRef.current !== activeId) return
+          setBatchTasks((prev) => ({ ...prev, [batchId]: { tasks: data.tasks, total: data.total, limit } }))
+          mergeTaskIndex(data.tasks)
+        } catch {
+          // 汇总卡加载失败时不阻塞消息流：卡片保留标题与「还有 N 条」，下次展开会重试。
+          batchRequestedRef.current.delete(batchId)
+        }
+      })()
+    }
+  }, [activeId, combinedMessages, expandedBatches, mergeTaskIndex])
   const retryFailedReply = (message: Message): void => {
     const index = combinedMessages.findIndex((item) => item.id === message.id)
     for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
@@ -1036,6 +1412,33 @@ export default function App(): React.ReactNode {
   const quotaPct = statsTotals?.tokens ? Math.min(100, Math.max(1, Math.round(statsTotals.tokens / 100000 * 100))) : 0
   // 行数字直接取会话对象上的 messageCount（后端按会话自身统计），底部汇总仍用 statsTotals.messages。
 
+  const taskInfoFor = (message: Message): MessageTaskInfo => {
+    const task = message.taskId ? taskLookup.get(message.taskId) : undefined
+    const batch = message.batchId ? batchTasks[message.batchId] : undefined
+    const batchId = message.batchId
+    return {
+      task,
+      tasks: batch?.tasks ?? [],
+      total: batch?.total ?? message.taskCount ?? 0,
+      expanded: batchId ? expandedBatches.has(batchId) : false,
+      busy: task ? taskActionBusyId === task.id : false,
+      error: task && taskActionError?.taskId === task.id ? taskActionError.message : '',
+      onOpen: () => { if (task) openTaskDetail(task) },
+      onOpenTask: (item) => openTaskDetail(item),
+      onToggle: () => {
+        if (!batchId) return
+        setExpandedBatches((prev) => {
+          const next = new Set(prev)
+          if (next.has(batchId)) next.delete(batchId); else next.add(batchId)
+          return next
+        })
+      },
+      onConfirm: () => { if (task) void decideTask(task.id, 'confirm') },
+      onCancel: () => { if (task) void decideTask(task.id, 'cancel') },
+      onResume: () => { if (task) void resumeTaskById(task.id) },
+    }
+  }
+
   return (
     <div className="app">
       <aside className="sidebar">
@@ -1047,6 +1450,9 @@ export default function App(): React.ReactNode {
           <div className="crumb">司墨 / <b>{page === 'chat' ? activeSession?.title ?? '未选择会话' : '工作台'}</b></div>
           <Segmented value={page} onChange={setPage} />
           <div className="top-right">
+            {page === 'chat' && taskCounts.all > 0 && (
+              <button type="button" className="topbar-task-graph" aria-label="任务图" title="任务图" aria-disabled={taskCounts.all === 0} onClick={openTaskGraph}>任务图</button>
+            )}
             <span className="status"><i className={`connection-dot ${connection === 'open' ? 'open' : connection === 'error' || connection === 'closed' ? 'closed' : ''}`} />{connection === 'open' ? '已连接' : connection === 'reconnecting' ? '重连中' : connection === 'error' ? '订阅失败' : connection === 'closed' ? '连接已关闭' : '连接中'}</span>
             <button type="button" className="icon-btn" aria-label="设置" title="设置"><Icon name="gear" /></button>
             <span className="ok-avatar">Y</span>
@@ -1075,11 +1481,12 @@ export default function App(): React.ReactNode {
                     <div className="chat-inner">
                       {nextParent && <div className="message-top"><button className="btn sm" type="button" disabled={ancestorLoading} aria-busy={ancestorLoading} title={nextParent.title} aria-label={`显示上级会话：${nextParent.title}`} onClick={() => void loadAncestor()}>{ancestorLoading ? '加载中…' : '显示上级会话'}</button></div>}
                       {ancestorError && <p className="err-text" role="alert">{ancestorError}</p>}
+                      {ancestorHint && <p className="ancestor-hint" role="status">{ancestorHint}</p>}
                       {error && messages.length > 0 && <p className="err-text" role="alert">{error}</p>}
                       {combinedMessages.map((message, index) => {
                         const previous = combinedMessages[index - 1]
                         const divider = !previous || previous.sessionId !== message.sessionId
-                        return <div key={message.id}>{divider && <div className="session-divider"><span>{message.sessionTitle ?? (message.sessionId === activeId ? activeSession?.title : '会话')}</span></div>}<MessageItem message={message} onCardAction={handleCardAction} readOnly={Boolean(activeSession?.archived) || message.sessionId !== activeId} onRetry={retryFailedReply} /></div>
+                        return <div key={message.id}>{divider && <div className="session-divider"><span>{message.sessionTitle ?? (message.sessionId === activeId ? activeSession?.title : '会话')}</span></div>}<MessageItem message={message} onCardAction={handleCardAction} readOnly={Boolean(activeSession?.archived) || message.sessionId !== activeId} onRetry={retryFailedReply} taskInfo={message.category === 'task' ? taskInfoFor(message) : undefined} /></div>
                       })}
                     </div>
                   </ConversationPanel>
@@ -1087,7 +1494,54 @@ export default function App(): React.ReactNode {
                 </div>
                 <Composer disabled={!activeId || Boolean(activeSession?.archived)} streaming={messages.some((message) => message.status === 'streaming')} onSend={send} onStop={stopStreaming} prefill={composerPrefill ?? undefined} />
               </div>
-              <RightPanel session={activeSession} projection={projection} loading={rightLoading} error={rightError} onRetry={() => void loadRight(activeId)} onTaskClick={locateTask} onArtifactOpen={(id) => void openArtifact(id)} onExpandGroup={expandRightGroup} />
+              <RightPanel
+                session={activeSession}
+                projection={projection}
+                loading={rightLoading}
+                error={rightError}
+                onRetry={() => void loadRight(activeId)}
+                onTaskClick={locateTask}
+                onArtifactOpen={(id) => void openArtifact(id)}
+                onExpandGroup={expandRightGroup}
+                groupError={rightGroupError}
+                onRetryGroup={retryRightGroup}
+                counts={taskCounts}
+                tasks={tasks}
+                tasksLoading={tasksLoading}
+                tasksError={tasksError}
+                tasksHasMore={tasksHasMore}
+                taskFilter={taskFilter}
+                jumpTaskId={jumpTaskId ?? undefined}
+                tab={rightTab}
+                onTabChange={changeRightTab}
+                collapsed={rightCollapsed}
+                onCollapsedChange={changeRightCollapsed}
+                onTaskFilterChange={setTaskFilter}
+                onOpenTask={openTaskDetail}
+                onLoadMoreTasks={() => { if (activeId) void loadTasks(activeId, taskFilter, true) }}
+                onRetryTasks={() => { if (activeId) { taskBeforeRef.current = undefined; void loadTasks(activeId, taskFilter) } }}
+                deliverableGroups={deliverableGroups}
+                deliverablesLoading={tabDeliverablesLoading}
+                deliverablesError={tabDeliverablesError}
+                deliverablesHasMore={tabDeliverablesHasMore}
+                deliverablesTotal={tabDeliverablesTotal}
+                deliverablesFileCount={tabDeliverablesFileCount}
+                onLoadMoreDeliverables={() => void loadMoreTabDeliverables()}
+                onRetryDeliverables={() => { if (activeId) void loadTabDeliverables(activeId) }}
+                onOpenTaskById={(taskId) => openTaskDetail(taskId)}
+                onOpenFile={openTaskFile}
+                detail={taskDetail}
+                detailLoading={detailLoading}
+                detailError={detailError}
+                onCloseDetail={closeTaskDetail}
+                onRetryDetail={() => { if (detailTaskId) void loadTaskDetail(detailTaskId) }}
+                graphOpen={graphOpen}
+                graph={taskGraph}
+                graphLoading={graphLoading}
+                graphError={graphError}
+                onCloseGraph={() => setGraphOpen(false)}
+                onRetryGraph={() => { if (activeId) void loadTaskGraph(activeId) }}
+              />
             </div>
           </section>
         ) : (

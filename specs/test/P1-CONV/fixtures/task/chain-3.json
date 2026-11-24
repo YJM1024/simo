@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "kind": "simo.task-fixture",
+  "name": "chain-3",
+  "description": "三层依赖链：8 条任务、按 all/any/each 三种 joinMode 汇聚。",
+  "usage": "POST 一次 N1，观察 L1 只在前置完成后调度，L2 等 a3/b3/c3 全部完成。",
+  "generatedAt": "2026-11-24T10:09:57.647Z",
+  "generatedBy": "scripts/ac/lib/task-fixtures.mjs",
+  "sessions": [
+    {
+      "id": "s1",
+      "createSession": false,
+      "requests": [
+        {
+          "label": "chain-3-create",
+          "request": {
+            "mode": "plan",
+            "goal": "验证三层依赖链的调度顺序与 joinMode 语义。",
+            "inputs": [
+              "上周的指标快照：新增会话 1280、消息 9640、平均首响 1.8 秒。",
+              "目标：把平均首响压到 1.2 秒以内。",
+              "依赖只在本批内解析，跨批次依赖返回 400。"
+            ],
+            "constraints": [
+              "前置未完成时下游任务保持 pending。",
+              "不得跨批次声明依赖。"
+            ],
+            "tasks": [
+              {
+                "key": "a1",
+                "title": "L0 材料一：读取会议记录",
+                "mode": "plan",
+                "goal": "读取会议记录并输出要点。",
+                "joinMode": "all"
+              },
+              {
+                "key": "a2",
+                "title": "L0 材料二：读取指标快照",
+                "mode": "plan",
+                "goal": "读取指标快照并输出异常项。",
+                "joinMode": "all"
+              },
+              {
+                "key": "a3",
+                "title": "L0 材料三：读取访谈记录",
+                "mode": "plan",
+                "goal": "读取访谈记录并输出结论。",
+                "joinMode": "all"
+              },
+              {
+                "key": "c3",
+                "title": "L0 独立任务：列风险清单",
+                "mode": "plan",
+                "goal": "列出三条主要风险。",
+                "joinMode": "all"
+              },
+              {
+                "key": "b1",
+                "title": "L1 汇总一：合并会议与指标",
+                "mode": "plan",
+                "goal": "把会议要点与指标异常合并成一份摘要。",
+                "dependsOn": [
+                  "a1"
+                ],
+                "joinMode": "all"
+              },
+              {
+                "key": "b2",
+                "title": "L1 汇总二：任一份材料即可开写",
+                "mode": "plan",
+                "goal": "基于任意一份材料先写摘要草稿。",
+                "dependsOn": [
+                  "a2"
+                ],
+                "joinMode": "any"
+              },
+              {
+                "key": "b3",
+                "title": "L1 汇总三：逐份处理访谈",
+                "mode": "plan",
+                "goal": "逐份处理访谈并输出结论。",
+                "dependsOn": [
+                  "a3"
+                ],
+                "joinMode": "each"
+              },
+              {
+                "key": "d3",
+                "title": "L2 终稿：汇总三路输入",
+                "mode": "plan",
+                "goal": "合并 a3、b3、c3 的结果输出终稿。",
+                "dependsOn": [
+                  "a3",
+                  "b3",
+                  "c3"
+                ],
+                "joinMode": "each"
+              }
+            ],
+            "clientMutationId": "fx-chain-3-001"
+          }
+        }
+      ],
+      "expect": {
+        "accepted": 8,
+        "layers": [
+          [
+            "a1",
+            "a2",
+            "a3",
+            "c3"
+          ],
+          [
+            "b1",
+            "b2",
+            "b3"
+          ],
+          [
+            "d3"
+          ]
+        ],
+        "layerSizes": [
+          4,
+          3,
+          1
+        ],
+        "joins": {
+          "b1": "all",
+          "b2": "any",
+          "b3": "each",
+          "d3": "each"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "notes": [
+      "L0 有 4 条（a1,a2,a3,c3），L1 有 3 条（b1,b2,b3），L2 有 1 条（d3）。",
+      "joinMode=any 表示任一前置完成即可调度；each 表示逐份处理后再汇总。"
+    ]
+  }
+}

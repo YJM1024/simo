@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "kind": "simo.task-fixture",
+  "name": "sessions-a-b",
+  "description": "双会话 a/b 隔离：会话 a 建 3 条任务、会话 b 建 1 条，产物归属与列表互不串。",
+  "usage": "在会话 a、b 分别 POST 一次 N1；产物目录见 artifacts，N9 按会话分别列举。",
+  "generatedAt": "2026-11-24T10:09:57.647Z",
+  "generatedBy": "scripts/ac/lib/task-fixtures.mjs",
+  "sessions": [
+    {
+      "id": "a",
+      "createSession": true,
+      "requests": [
+        {
+          "label": "session-a-create",
+          "request": {
+            "mode": "plan",
+            "goal": "会话 a：整理会议纪要并输出三个文件。",
+            "inputs": [
+              "上周的指标快照：新增会话 1280、消息 9640、平均首响 1.8 秒。",
+              "目标：把平均首响压到 1.2 秒以内。",
+              "会话 a 的输入只属于 a。"
+            ],
+            "constraints": [
+              "产物只出现在会话 a。"
+            ],
+            "tasks": [
+              {
+                "key": "report",
+                "title": "会话 a：写会议纪要",
+                "mode": "plan",
+                "goal": "输出会议纪要 markdown。",
+                "steps": [
+                  "读取材料",
+                  "写纪要"
+                ],
+                "joinMode": "all"
+              },
+              {
+                "key": "screenshot",
+                "title": "会话 a：截图存档",
+                "mode": "plan",
+                "goal": "生成一张截图占位。",
+                "joinMode": "all"
+              },
+              {
+                "key": "schedule",
+                "title": "会话 a：排期表",
+                "mode": "plan",
+                "goal": "输出排期 pdf 占位。",
+                "joinMode": "all"
+              }
+            ],
+            "clientMutationId": "fx-sessions-a-001"
+          }
+        }
+      ],
+      "expect": {
+        "accepted": 3,
+        "sessionId": "a",
+        "artifacts": 3
+      }
+    },
+    {
+      "id": "b",
+      "createSession": true,
+      "requests": [
+        {
+          "label": "session-b-create",
+          "request": {
+            "mode": "plan",
+            "goal": "会话 b：独立整理一份结论。",
+            "inputs": [
+              "上周的指标快照：新增会话 1280、消息 9640、平均首响 1.8 秒。",
+              "目标：把平均首响压到 1.2 秒以内。",
+              "会话 b 的输入只属于 b。"
+            ],
+            "constraints": [
+              "不得读到会话 a 的产物。"
+            ],
+            "tasks": [
+              {
+                "key": "summary",
+                "title": "会话 b：写结论",
+                "mode": "plan",
+                "goal": "写三条结论。",
+                "joinMode": "all"
+              }
+            ],
+            "clientMutationId": "fx-sessions-b-001"
+          }
+        }
+      ],
+      "expect": {
+        "accepted": 1,
+        "sessionId": "b",
+        "artifacts": 0
+      }
+    }
+  ],
+  "expect": {
+    "sessions": 2,
+    "isolation": "会话 a 的 3 个产物不出现在会话 b 的 N9 列表里。",
+    "notes": [
+      "两个会话都用 createSession=true 新建，避免污染既有会话。"
+    ]
+  },
+  "artifacts": [
+    {
+      "name": "会议纪要.md",
+      "mime": "text/markdown",
+      "size": 12345,
+      "sha256": "87b21a5f6aa8c442c4f331b243918731aec1e05abed3998e5efb1ce75c751c7d",
+      "typeBadge": "doc",
+      "deliveryKind": "user_delivery",
+      "ownerTaskKey": "report"
+    },
+    {
+      "name": "截图.png",
+      "mime": "image/png",
+      "size": 45678,
+      "sha256": "61c5ed1e0a7a74343ba3abc034384eeb21aca104b2587c2bd11ea5c4b82fe028",
+      "typeBadge": "image",
+      "deliveryKind": "user_delivery",
+      "ownerTaskKey": "screenshot"
+    },
+    {
+      "name": "排期.pdf",
+      "mime": "application/pdf",
+      "size": 890,
+      "sha256": "e920e79b5f4a2e21b188f357c958749eb15f3a5e0c2e4ac5f1c274dca56a7c5f",
+      "typeBadge": "doc",
+      "deliveryKind": "user_delivery",
+      "ownerTaskKey": "schedule"
+    }
+  ]
+}

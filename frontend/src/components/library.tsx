@@ -1,7 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { RefObject } from 'react'
-import type { Artifact, Card, Message, Session, StatsBucket, Task } from '../types'
+import type { Artifact, Card, DeliverableGroup, Message, Session, StatsBucket, Task, TaskCounts, TaskDetailPayload, TaskFile, TaskGraphPayload, TaskView } from '../types'
+import { badgeLabel } from '../taskEvents'
+import { DeliverablesTab, TaskBadge, TaskDetailLayer, TaskGraphDialog, TaskMessageCard, TaskSummaryCard, TasksTab, type TaskFilter } from './tasks'
 
 const CATEGORY_LABEL: Record<string, string> = {
   progress: '进度汇报',
@@ -127,6 +129,7 @@ export function Sidebar({ sessions, activeId, onSelect, onRename, onCreate, onRe
     const hasChildren = (session.children?.length ?? 0) > 0
     return (
     <div key={session.id} className={`session-row ${depth > 0 ? 'child' : ''} ${activeId === session.id ? 'is-active' : ''} ${session.archived ? 'is-archived' : ''}`}
+      data-session-id={session.id}
       data-depth={depth}
       style={depth > 0 ? { paddingLeft: `calc(var(--sp-8) + ${depth * 16}px)` } : undefined}
       onDoubleClick={() => { setEditing(session.id); setDraft(session.title) }}
@@ -497,7 +500,24 @@ function renderMessageText(text: string): React.ReactNode {
   })
 }
 
-export function MessageItem({ message, onCardAction, readOnly = false, onRetry }: { message: Message; onCardAction: (card: Card, action: string, payload: Record<string, unknown>) => Promise<void>; readOnly?: boolean; onRetry?: (message: Message) => void }): React.ReactNode {
+/** 消息流任务卡需要的任务数据与动作；缺任务数据时卡片仍以消息文本渲染（单卡入口不消失）。 */
+export interface MessageTaskInfo {
+  task?: TaskView
+  /** 汇总卡当前批次的条目；batchId + limit 由上层按展开态请求。 */
+  tasks?: TaskView[]
+  total?: number
+  expanded?: boolean
+  busy?: boolean
+  error?: string
+  onOpen?: () => void
+  onOpenTask?: (task: TaskView) => void
+  onToggle?: () => void
+  onConfirm?: () => void
+  onCancel?: () => void
+  onResume?: () => void
+}
+
+export function MessageItem({ message, onCardAction, readOnly = false, onRetry, taskInfo }: { message: Message; onCardAction: (card: Card, action: string, payload: Record<string, unknown>) => Promise<void>; readOnly?: boolean; onRetry?: (message: Message) => void; taskInfo?: MessageTaskInfo }): React.ReactNode {
   const [streaming, setStreaming] = useState(false)
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle')
   // 复制态 1.5s 复位：卸载时必须清掉，否则 jsdom 环境回收后定时器仍触发 setState（window is not defined）。
@@ -533,6 +553,34 @@ export function MessageItem({ message, onCardAction, readOnly = false, onRetry }
   const rawCategory = message.category === 'delivery' ? 'progress' : message.category
   const categoryKey = isUser ? '' : (rawCategory && CATEGORY_LABEL[rawCategory] ? rawCategory : 'consultation')
   const category = categoryKey ? CATEGORY_LABEL[categoryKey] : ''
+  // 任务卡分支必须早于类别回退：taskId 缺失时退回普通消息，batchId 存在时走汇总卡（§17.5）。
+  if (!isUser && message.category === 'task' && (message.taskId || message.batchId)) {
+    if (message.taskId) {
+      return (
+        <TaskMessageCard
+          message={message}
+          task={taskInfo?.task}
+          readOnly={readOnly}
+          busy={taskInfo?.busy}
+          error={taskInfo?.error}
+          onOpen={() => { if (taskInfo?.task) taskInfo.onOpenTask?.(taskInfo.task); else taskInfo?.onOpen?.() }}
+          onConfirm={taskInfo?.onConfirm}
+          onCancel={taskInfo?.onCancel}
+          onResume={taskInfo?.onResume}
+        />
+      )
+    }
+    return (
+      <TaskSummaryCard
+        message={message}
+        tasks={taskInfo?.tasks ?? []}
+        total={taskInfo?.total ?? message.taskCount ?? 0}
+        expanded={taskInfo?.expanded}
+        onToggle={taskInfo?.onToggle}
+        onOpenTask={(task) => taskInfo?.onOpenTask?.(task)}
+      />
+    )
+  }
   return (
     <article className={`msg ${isUser ? 'from-user' : 'from-agent'}`} data-message-id={message.id} data-task-id={message.taskId} data-session-id={message.sessionId}>
       <span className="msg-avatar">{isUser ? '你' : '墨'}</span>
@@ -558,7 +606,7 @@ export function CardBlock({ card, onSubmit, readOnly = false }: { card: Card; on
   const action = form?.actions?.[0]?.id ?? 'submit'
   const disabled = busy || readOnly || card.status !== 'active'
   return (
-    <div className="card-block">
+    <div className="card-block" data-kind="card">
       <div className="card-head"><b>{card.schema.title ?? card.title ?? '交互卡片'}</b><span className="state">{card.status} · v{card.version}</span></div>
       {blocks.filter((block) => block.type === 'text').map((block) => <p className="card-text" key={block.id}>{String(block.props?.text ?? '')}</p>)}
       {fields.length > 0 && (
@@ -1044,7 +1092,7 @@ export function DeliverableItem({ artifact, onOpen, downloadUrl }: { artifact: A
   )
 }
 
-export function ExecutionGroup({ title, tasks, total, defaultCount, tone, emptyTitle, emptyDescription, onTaskClick, onExpandAll }: { title: string; tasks: Task[]; total?: number; defaultCount: number; tone: 'done' | 'running' | 'pending'; emptyTitle: string; emptyDescription: string; onTaskClick?: (task: Task) => void; onExpandAll?: () => void }): React.ReactNode {
+export function ExecutionGroup({ title, tasks, total, defaultCount, tone, emptyTitle, emptyDescription, onTaskClick, onExpandAll, groupError, onRetryGroup }: { title: string; tasks: Task[]; total?: number; defaultCount: number; tone: 'done' | 'running' | 'pending'; emptyTitle: string; emptyDescription: string; onTaskClick?: (task: Task) => void; onExpandAll?: () => void; groupError?: string; onRetryGroup?: () => void }): React.ReactNode {
   const [expanded, setExpanded] = useState(false)
   const totalCount = Math.max(total ?? tasks.length, tasks.length)
   const visible = expanded ? tasks : tasks.slice(0, defaultCount)
@@ -1060,6 +1108,12 @@ export function ExecutionGroup({ title, tasks, total, defaultCount, tone, emptyT
       <button type="button" className="exec-head" aria-expanded={expanded} onClick={toggle}>
         <span className="exec-toggle">{expanded ? '▾' : '▸'}</span><span className="exec-name">{title}</span><span className="exec-count">{`${shown}/${totalCount}`}</span>
       </button>
+      {groupError && (
+        <div className="exec-group-error" role="alert">
+          <span className="exec-group-error-text">{groupError}</span>
+          {onRetryGroup && <button className="btn sm" type="button" onClick={onRetryGroup}>重试</button>}
+        </div>
+      )}
       {visible.length === 0 ? <EmptyState title={emptyTitle} description={emptyDescription} /> : (
         <List>{visible.map((task) => <TaskItem key={task.id} task={task} tone={tone} onClick={onTaskClick ? () => onTaskClick(task) : undefined} />)}</List>
       )}
@@ -1087,7 +1141,47 @@ export function ConversationPanel({ timeline, children, state = 'ready', empty, 
   )
 }
 
-export function OverviewContent({ session, projection, loading, error = '', onRetry, onTaskClick, onArtifactOpen, onExpandGroup }: {
+export type RightTab = 'overview' | 'tasks' | 'deliverables'
+export const RIGHT_TABS: Array<{ key: RightTab; label: string; icon: string }> = [
+  { key: 'overview', label: '概览', icon: '☰' },
+  { key: 'tasks', label: '任务', icon: '◷' },
+  { key: 'deliverables', label: '交付物', icon: '▤' },
+]
+const INSP_COLLAPSED_PREFIX = 'simo.insp.collapsed.'
+const INSP_OVERVIEW_PREFIX = 'simo.insp.overview.'
+
+function readStored(key: string): string | null {
+  try { return window.localStorage.getItem(key) } catch { return null }
+}
+function writeStored(key: string, value: string): void {
+  try { window.localStorage.setItem(key, value) } catch { /* 隐私模式或配额满时退化为内存态 */ }
+}
+/** 收起状态按会话持久化：只在 sessionId 非空时读写，缺失按展开处理（§17.2.3）。 */
+export function readInspCollapsed(sessionId?: string): boolean {
+  if (!sessionId) return false
+  return readStored(`${INSP_COLLAPSED_PREFIX}${sessionId}`) === '1'
+}
+export function saveInspCollapsed(sessionId: string | undefined, collapsed: boolean): void {
+  if (!sessionId) return
+  writeStored(`${INSP_COLLAPSED_PREFIX}${sessionId}`, collapsed ? '1' : '0')
+}
+/** 概览四块的折叠记忆，值为已收起块的 id 数组（§17.6）。 */
+export function readInspOverviewCollapsed(sessionId?: string): string[] {
+  if (!sessionId) return []
+  const raw = readStored(`${INSP_OVERVIEW_PREFIX}${sessionId}`)
+  if (!raw) return []
+  try {
+    const parsed: unknown = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : []
+  } catch { return [] }
+}
+export function saveInspOverviewCollapsed(sessionId: string | undefined, blocks: string[]): void {
+  if (!sessionId) return
+  writeStored(`${INSP_OVERVIEW_PREFIX}${sessionId}`, JSON.stringify(blocks))
+}
+
+/** 概览四块：固定顺序 目标 / 输入 / 任务 / 交付物，块头可折叠且按会话记忆。 */
+export function OverviewContent({ session, projection, loading, error = '', onRetry, onTaskClick, onArtifactOpen, counts, onJumpTasks, onJumpDeliverables }: {
   session: Session | null
   projection: import('../types').SessionSpecProjection | null
   loading: boolean
@@ -1095,91 +1189,193 @@ export function OverviewContent({ session, projection, loading, error = '', onRe
   onRetry?: () => void
   onTaskClick?: (task: { id: string; title: string; messageId?: string }) => void
   onArtifactOpen?: (id: string) => void
-  /** 某个任务组首次展开且接口只返回了首页时触发，用于按合同上限补取该会话的投影。 */
-  onExpandGroup?: () => void
+  counts?: TaskCounts
+  /** 概览块里的「还有 N 个」跳到任务标签。 */
+  onJumpTasks?: () => void
+  /** 交付物块的「还有 N 个」跳到交付物标签。 */
+  onJumpDeliverables?: () => void
 }): React.ReactNode {
   const statusLabel = projection ? ({ completed: '已完成', active: '进行中', draft: '草稿', blocked: '阻塞', done: '已完成' }[projection.status] ?? projection.status) : ''
-  const mapTasks = (items: Array<{ id: string; title: string; state: string; updatedAt: number; messageId?: string }>): Task[] => items.map((item) => ({ id: item.id, sessionId: projection?.sessionId ?? session?.id ?? '', title: item.title, status: item.state, createdAt: item.updatedAt, updatedAt: item.updatedAt, messageId: item.messageId }))
-  const groups = {
-    done: mapTasks(projection?.tasks.done.items ?? []),
-    running: mapTasks(projection?.tasks.running.items ?? []),
-    queued: mapTasks(projection?.tasks.pending.items ?? []),
+  const [collapsedBlocks, setCollapsedBlocks] = useState<string[]>(() => readInspOverviewCollapsed(session?.id))
+  useEffect(() => {
+    setCollapsedBlocks(readInspOverviewCollapsed(session?.id))
+  }, [session?.id])
+  const toggleBlock = (block: string): void => {
+    setCollapsedBlocks((prev) => {
+      const next = prev.includes(block) ? prev.filter((item) => item !== block) : [...prev, block]
+      saveInspOverviewCollapsed(session?.id, next)
+      return next
+    })
   }
-  const deliverables = projection?.deliverables.items ?? []
-  // 草稿会话尚未落库，spec-projection 只会 404；右栏直接给占位，不发请求（请求守卫在 app.tsx）。
   const isDraft = session?.draft === true
+  if (!session) return <p className="insp-placeholder">未选择会话</p>
+  if (isDraft) return <EmptyState title="目标与执行态待生成" description="发送第一条消息后生成目标与执行态" />
+  const doneTotal = projection?.tasks.done.total ?? 0
+  const runningTotal = projection?.tasks.running.total ?? 0
+  const pendingTotal = projection?.tasks.pending.total ?? 0
+  const taskCounts: TaskCounts = counts ?? { all: doneTotal + runningTotal + pendingTotal, done: doneTotal, running: runningTotal, pending: pendingTotal, failed: 0 }
+  const overviewTasks: Array<{ id: string; title: string; state: string; messageId?: string }> = [
+    ...(projection?.tasks.running.items ?? []),
+    ...(projection?.tasks.pending.items ?? []),
+    ...(projection?.tasks.done.items ?? []),
+  ]
+  const visibleTasks = overviewTasks.slice(0, 2)
+  const moreTasks = Math.max(0, taskCounts.all - visibleTasks.length)
+  const deliverables = projection?.deliverables.items ?? []
+  const deliverablesTotal = projection?.deliverables.total ?? deliverables.length
+  const visibleDeliverables = deliverables.slice(0, 2)
+  const moreDeliverables = Math.max(0, deliverablesTotal - visibleDeliverables.length)
+  const collapsed = (block: string): boolean => collapsedBlocks.includes(block)
+  const blockHead = (block: string, title: string, meta?: React.ReactNode): React.ReactNode => (
+    <button type="button" className="insp-block-head" aria-expanded={!collapsed(block)} aria-controls={`insp-block-${block}`} onClick={() => toggleBlock(block)}>
+      <b>{title}</b>
+      {meta !== undefined && <span>{meta}</span>}
+    </button>
+  )
   return (
     <>
-        {!session && <p className="insp-placeholder">未选择会话</p>}
-        {session && (isDraft ? <EmptyState title="目标与执行态待生成" description="发送第一条消息后生成目标与执行态" /> : <>
-        {loading && <LoadingState label="右栏加载中…" />}
-        {!loading && error && <ErrorState title="右栏加载失败" description={error} onRetry={onRetry} />}
-        {!loading && !error && !projection && <EmptyState title="暂无会话投影" description="当前会话还没有可用的 SessionSpec。" />}
-        {!loading && !error && projection && <>
+      {loading && <LoadingState label="右栏加载中…" />}
+      {!loading && error && <ErrorState title="右栏加载失败" description={error} onRetry={onRetry} />}
+      {!loading && !error && !projection && <EmptyState title="暂无会话投影" description="当前会话还没有可用的 SessionSpec。" />}
+      {!loading && !error && projection && (
+        <>
           <div className="insp-spec-status"><b>{statusLabel}</b><span>rev {projection.revision}</span>{projection.pendingConfirmations.total > 0 && <em>待确认 {projection.pendingConfirmations.total}</em>}</div>
-          <Section title="目标"><p className="insp-text">{projection.goal || (projection.status === 'draft' ? '目标待生成。' : '本会话未记录目标。')}</p></Section>
-          <Section title="输入"><p className="insp-text">{projection.constraints.length || projection.inputs.length ? [...projection.constraints, ...projection.inputs].join(' · ') : '暂无输入约束。'}</p></Section>
-          <section className="insp-block">
-            <SectionHeader title="执行会话" meta={`共 ${projection.tasks.done.total + projection.tasks.running.total + projection.tasks.pending.total} · 本次 ${projection.tasks.done.items.length + projection.tasks.running.items.length + projection.tasks.pending.items.length}`} />
-            <ExecutionGroup title="已完成" tasks={groups.done} total={projection.tasks.done.total} defaultCount={3} tone="done" emptyTitle="暂无已完成任务" emptyDescription="任务完成后会出现在这里。" onTaskClick={(task) => onTaskClick?.({ id: task.id, title: task.title, messageId: task.messageId })} onExpandAll={onExpandGroup} />
-            <ExecutionGroup title="进行中" tasks={groups.running} total={projection.tasks.running.total} defaultCount={3} tone="running" emptyTitle="暂无进行中任务" emptyDescription="任务开始后会出现在这里。" onTaskClick={(task) => onTaskClick?.({ id: task.id, title: task.title, messageId: task.messageId })} onExpandAll={onExpandGroup} />
-            <ExecutionGroup title="未开始" tasks={groups.queued} total={projection.tasks.pending.total} defaultCount={3} tone="pending" emptyTitle="暂无未开始任务" emptyDescription="新任务会先排在这里。" onTaskClick={(task) => onTaskClick?.({ id: task.id, title: task.title, messageId: task.messageId })} onExpandAll={onExpandGroup} />
+          <section className="insp-block" data-block="goal">
+            {blockHead('goal', '目标')}
+            {!collapsed('goal') && <div className="insp-block-body" id="insp-block-goal"><p className="insp-text">{projection.goal || (projection.status === 'draft' ? '目标待生成。' : '本会话未记录目标。')}</p></div>}
           </section>
-          <section className="insp-block">
-            <SectionHeader title="交付物" meta={deliverables.length} />
-            {deliverables.length === 0 ? <EmptyState title="暂无交付物" description="报告、文档、表格或文件会出现在这里。" /> : (
-              <List>{deliverables.slice(0, 8).map((artifact) => <DeliverableItem key={artifact.id} artifact={{ id: artifact.id, name: artifact.name, createdAt: artifact.createdAt ?? 0, mime: 'application/octet-stream', size: 0 }} onOpen={onArtifactOpen ? () => onArtifactOpen(artifact.id) : undefined} downloadUrl={artifact.downloadUrl} />)}</List>
+          <section className="insp-block" data-block="input">
+            {blockHead('input', '输入')}
+            {!collapsed('input') && <div className="insp-block-body" id="insp-block-input"><p className="insp-text">{projection.constraints.length || projection.inputs.length ? [...projection.constraints, ...projection.inputs].join(' · ') : '暂无输入约束。'}</p></div>}
+          </section>
+          <section className="insp-block" data-block="tasks">
+            {blockHead('tasks', '任务', `${taskCounts.all}`)}
+            {!collapsed('tasks') && (
+              <div className="insp-block-body" id="insp-block-tasks">
+                <p className="insp-task-counts">{taskCounts.running} 进行中 / {taskCounts.pending} 未开始 / {taskCounts.done} 已完成 / {taskCounts.failed} 失败</p>
+                {visibleTasks.map((task) => (
+                  <button key={task.id} type="button" className="exec-row" data-task-id={task.id} onClick={() => onTaskClick?.({ id: task.id, title: task.title, messageId: task.messageId })}>
+                    <span className={`exec-dot ${task.state}`} aria-hidden="true" />
+                    <span className="exec-title" title={task.title}>{task.title}</span>
+                    <span className="exec-time">{task.state === 'done' ? '已完成' : task.state === 'running' ? '进行中' : task.state === 'failed' ? '失败' : '未开始'}</span>
+                  </button>
+                ))}
+                {visibleTasks.length === 0 && <p className="insp-text">本会话还没有任务。</p>}
+                {moreTasks > 0 && <button type="button" className="insp-more" onClick={onJumpTasks}>还有 {moreTasks} 个</button>}
+              </div>
             )}
           </section>
-        </>}
-        </>)}
+          <section className="insp-block" data-block="deliverables">
+            {blockHead('deliverables', '交付物', `${deliverablesTotal}`)}
+            {!collapsed('deliverables') && (
+              <div className="insp-block-body" id="insp-block-deliverables">
+                {visibleDeliverables.map((artifact) => (
+                  <button key={artifact.id} type="button" className="exec-row" onClick={() => onArtifactOpen?.(artifact.id)}>
+                    <span className="exec-dot done" aria-hidden="true" />
+                    <span className="exec-title" title={artifact.name}>{artifact.name}</span>
+                    <span className="exec-time">打开</span>
+                  </button>
+                ))}
+                {visibleDeliverables.length === 0 && <p className="insp-text">暂无交付物。</p>}
+                {moreDeliverables > 0 && <button type="button" className="insp-more" onClick={onJumpDeliverables}>还有 {moreDeliverables} 个</button>}
+              </div>
+            )}
+          </section>
+        </>
+      )}
     </>
   )
 }
 
 export function OverviewPanel(props: React.ComponentProps<typeof OverviewContent>): React.ReactNode {
   return (
-    <aside className="inspector" aria-label="会话概览" data-session={props.session ? props.session.id : undefined}>
-      <div className="insp-body"><OverviewContent {...props} /></div>
-      <div className="insp-rail" aria-label="概览导航">
-        <button type="button" className="active" title="概览">☰</button>
-        <button type="button" title="消息">◷</button>
-        <button type="button" title="交付物">▤</button>
-      </div>
+    <aside className="inspector" aria-label="会话右栏" data-tab="overview">
+      <nav className="insp-rail" aria-label="右栏导航"><button type="button" className="active" aria-current="page">☰</button></nav>
+      <div className="insp-panel"><div className="insp-body" id="insp-panel" role="region"><OverviewContent {...props} /></div></div>
     </aside>
   )
 }
 
-export function RightPanel(props: React.ComponentProps<typeof OverviewContent>): React.ReactNode {
-  // 760–1179 档右栏只剩 40px 图标条，内容改由覆盖层抽屉打开（V-CONV-008-6）；
-  // 宽屏档抽屉样式不生效，手机档整块不渲染，故这套状态对两端都是空操作。
+type RightPanelProps = React.ComponentProps<typeof OverviewContent> & {
+  counts?: TaskCounts
+  tasks?: TaskView[]
+  tasksLoading?: boolean
+  tasksError?: string
+  tasksHasMore?: boolean
+  taskFilter?: TaskFilter
+  jumpTaskId?: string | null
+  tab?: RightTab
+  onTabChange?: (tab: RightTab) => void
+  collapsed?: boolean
+  onCollapsedChange?: (collapsed: boolean) => void
+  onTaskFilterChange?: (filter: TaskFilter) => void
+  onOpenTask?: (task: TaskView) => void
+  onLoadMoreTasks?: () => void
+  onRetryTasks?: () => void
+  deliverableGroups?: DeliverableGroup[]
+  deliverablesLoading?: boolean
+  deliverablesError?: string
+  deliverablesHasMore?: boolean
+  deliverablesTotal?: number
+  deliverablesFileCount?: number
+  onLoadMoreDeliverables?: () => void
+  onRetryDeliverables?: () => void
+  onOpenTaskById?: (taskId: string) => void
+  onOpenFile?: (file: TaskFile) => void
+  detail?: TaskDetailPayload | null
+  detailLoading?: boolean
+  detailError?: string
+  detailMode?: 'overlay' | 'drawer'
+  graphOpen?: boolean
+  graph?: TaskGraphPayload | null
+  graphLoading?: boolean
+  graphError?: string
+  onCloseDetail?: () => void
+  onRetryDetail?: () => void
+  onCloseGraph?: () => void
+  onRetryGraph?: () => void
+  /** 旧概览的「展开执行组」入口在三标签版里不再渲染，属性保留以免调用点改签名。 */
+  onExpandGroup?: (kind: string) => void
+  groupError?: { group: string; message: string } | null
+  onRetryGroup?: () => void
+}
+
+/** 760–1023 右栏只留竖条，面板改抽屉；其余档位抽屉样式不生效，状态是空操作。 */
+function isDrawerRange(): boolean {
+  return typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(min-width: 760px) and (max-width: 1179px)').matches
+}
+
+export function RightPanel(props: RightPanelProps): React.ReactNode {
+  const { session, tab, onTabChange, collapsed, onCollapsedChange, counts } = props
+  const [innerTab, setInnerTab] = useState<RightTab>('overview')
+  const activeTab = tab ?? innerTab
+  const controlledCollapse = collapsed !== undefined
+  const [innerCollapsed, setInnerCollapsed] = useState(false)
+  const collapsedNow = collapsed ?? innerCollapsed
   const [drawerOpen, setDrawerOpen] = useState(false)
-  // 抽屉底边让开 Composer：高度随输入行数变化，打开时实测，并用 ResizeObserver 跟随换行增高。
   const [drawerBottom, setDrawerBottom] = useState<number | null>(null)
-  const openDrawer = (): void => setDrawerOpen(true)
-  const closeDrawer = (): void => setDrawerOpen(false)
+  // 非受控用法（组件测试、画廊）自己按会话读收起记忆；受控时由 app.tsx 统一读写。
+  useEffect(() => {
+    if (controlledCollapse) return
+    setInnerCollapsed(isDrawerRange() ? false : readInspCollapsed(session?.id))
+  }, [session?.id, controlledCollapse])
   useEffect(() => {
     if (!drawerOpen) return
-    const onKeyDown = (event: KeyboardEvent) => {
+    const onKeyDown = (event: KeyboardEvent): void => {
       if (event.key === 'Escape') setDrawerOpen(false)
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [drawerOpen])
   useLayoutEffect(() => {
-    if (!drawerOpen) {
-      setDrawerBottom(null)
-      return
-    }
-    const measure = () => {
+    if (!drawerOpen) { setDrawerBottom(null); return }
+    const measure = (): void => {
       const composer = document.querySelector('.composer')
       const rect = composer?.getBoundingClientRect()
-      // jsdom / 无 Composer 的挂载环境量不到高度，交回 CSS 兜底值。
       setDrawerBottom(rect && rect.height > 0 ? Math.round(window.innerHeight - rect.top + 8) : null)
     }
     measure()
     window.addEventListener('resize', measure)
-    // Composer 换行增高时窗口尺寸不变，只靠 resize 会漏；观察它自身的高度变化重算底边。
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
     const composer = document.querySelector('.composer')
     if (observer && composer) observer.observe(composer)
@@ -1188,29 +1384,149 @@ export function RightPanel(props: React.ComponentProps<typeof OverviewContent>):
       observer?.disconnect()
     }
   }, [drawerOpen])
+  const setCollapsed = (next: boolean): void => {
+    if (!controlledCollapse) setInnerCollapsed(next)
+    if (!controlledCollapse) saveInspCollapsed(session?.id, next)
+    onCollapsedChange?.(next)
+  }
+  const selectTab = (key: RightTab): void => {
+    // 零任务态：任务标签 aria-disabled，点击不切标签（F-CONV-009-04）。
+    if (key === 'tasks' && (counts?.all ?? 0) === 0) return
+    const drawer = isDrawerRange()
+    if (drawer) {
+      setDrawerOpen(true)
+      setInnerTab(key)
+      onTabChange?.(key)
+      return
+    }
+    if (key === activeTab) {
+      setCollapsed(!collapsedNow)
+      return
+    }
+    setInnerTab(key)
+    onTabChange?.(key)
+    if (collapsedNow) setCollapsed(false)
+  }
+  const drawerRange = isDrawerRange()
+  const drawerMode = drawerOpen || drawerRange
+  // 抽屉档宽度由媒体查询决定，不读也不写收起记忆：收起态只在宽档隐藏面板（§17.2.3）。
+  const panelHidden = collapsedNow && !drawerOpen && !drawerRange
+  const panelExpanded = drawerOpen || !collapsedNow
+  const countsAll = counts?.all ?? 0
+  const countsRunning = counts?.running ?? 0
+  const closeDrawer = (): void => setDrawerOpen(false)
+  const mode: 'overlay' | 'drawer' = props.detailMode ?? (drawerRange ? 'drawer' : 'overlay')
+  const tabTitle = RIGHT_TABS.find((item) => item.key === activeTab)?.label ?? '概览'
   return (
-    // 无会话时不渲染 data-session，避免伪造一个不存在的会话 id。
     <aside
       className={drawerOpen ? 'inspector is-drawer-open' : 'inspector'}
-      aria-label="会话概览"
+      aria-label="会话右栏"
+      data-tab={activeTab}
+      data-collapsed={collapsedNow && !drawerRange ? 'true' : 'false'}
       data-drawer-open={drawerOpen ? 'true' : undefined}
-      data-session={props.session ? props.session.id : undefined}
+      data-session={session ? session.id : undefined}
       style={drawerBottom === null ? undefined : ({ '--insp-drawer-bottom': `${drawerBottom}px` } as React.CSSProperties)}
     >
-      {drawerOpen ? (
-        <button type="button" className="insp-drawer-scrim" aria-label="关闭右栏" tabIndex={-1} onClick={closeDrawer} />
-      ) : null}
-      <div className="insp-body" id="insp-panel">
-        {drawerOpen ? (
-          <button type="button" className="insp-drawer-close" aria-label="关闭右栏" onClick={closeDrawer}>×</button>
-        ) : null}
-        <OverviewContent {...props} />
+      <nav className="insp-rail" aria-label="右栏导航">
+        {RIGHT_TABS.map((item) => {
+          const active = item.key === activeTab
+          const disabled = item.key === 'tasks' && countsAll === 0
+          return (
+            <button
+              key={item.key}
+              type="button"
+              data-tab={item.key}
+              className={active ? 'active' : undefined}
+              aria-label={item.key === 'tasks' ? (badgeLabel(countsRunning) ?? '任务，0 个进行中') : item.label}
+              aria-current={active ? 'page' : undefined}
+              aria-expanded={active ? panelExpanded : undefined}
+              aria-controls={active ? 'insp-panel' : undefined}
+              aria-disabled={disabled ? true : undefined}
+              title={disabled ? '本会话还没有任务' : item.label}
+              onClick={() => selectTab(item.key)}
+            >
+              <span aria-hidden="true">{item.icon}</span>
+              {item.key === 'tasks' && <TaskBadge count={countsRunning} />}
+            </button>
+          )
+        })}
+      </nav>
+      <div className="insp-panel" hidden={panelHidden}>
+        {drawerOpen ? <button type="button" className="insp-drawer-scrim" aria-label="关闭右栏" tabIndex={-1} onClick={closeDrawer} /> : null}
+        <div className="insp-head" hidden={panelHidden}>
+          <b>{tabTitle}</b>
+          <span>{activeTab === 'tasks' ? `${countsAll} 个任务` : activeTab === 'deliverables' ? `${props.deliverablesTotal ?? 0} 个交付物` : session ? '会话投影' : ''}</span>
+          {drawerMode && <button type="button" className="insp-drawer-close" aria-label="关闭右栏" onClick={closeDrawer}>×</button>}
+          <button type="button" className="insp-collapse" aria-label={collapsedNow ? '展开右栏' : '收起右栏'} aria-expanded={!collapsedNow} aria-controls="insp-panel" onClick={() => setCollapsed(!collapsedNow)}>{collapsedNow ? '«' : '»'}</button>
+        </div>
+        <div className="insp-body" id="insp-panel" role="region" hidden={panelHidden}>
+          {activeTab === 'overview' ? (
+            <OverviewContent
+              session={session}
+              projection={props.projection}
+              loading={props.loading}
+              error={props.error}
+              onRetry={props.onRetry}
+              onTaskClick={props.onTaskClick}
+              onArtifactOpen={props.onArtifactOpen}
+              counts={counts}
+              onJumpTasks={() => props.onTabChange?.('tasks')}
+              onJumpDeliverables={() => props.onTabChange?.('deliverables')}
+            />
+          ) : activeTab === 'tasks' ? (
+            <TasksTab
+              tasks={props.tasks ?? []}
+              counts={counts}
+              filter={props.taskFilter ?? 'all'}
+              loading={props.tasksLoading ?? false}
+              error={props.tasksError ?? ''}
+              hasMore={props.tasksHasMore ?? false}
+              jumpTaskId={props.jumpTaskId ?? null}
+              onFilterChange={props.onTaskFilterChange ?? (() => undefined)}
+              onOpenTask={props.onOpenTask ?? (() => undefined)}
+              onLoadMore={props.onLoadMoreTasks}
+              onRetry={props.onRetryTasks}
+            />
+          ) : (
+            <DeliverablesTab
+              groups={props.deliverableGroups ?? []}
+              loading={props.deliverablesLoading ?? false}
+              error={props.deliverablesError ?? ''}
+              total={props.deliverablesTotal ?? 0}
+              fileCount={props.deliverablesFileCount ?? 0}
+              hasMore={props.deliverablesHasMore ?? false}
+              onOpenTask={props.onOpenTaskById}
+              onOpenFile={props.onOpenFile}
+              onLoadMore={props.onLoadMoreDeliverables}
+              onRetry={props.onRetryDeliverables}
+            />
+          )}
+        </div>
+        <div className="insp-foot" hidden={panelHidden}>
+          <span>任务 {countsAll} · 交付物 {props.deliverablesTotal ?? 0}</span>
+        </div>
       </div>
-      <div className="insp-rail" aria-label="概览导航">
-        <button type="button" className="active" title="概览" aria-expanded={drawerOpen} aria-controls="insp-panel" onClick={openDrawer}>☰</button>
-        <button type="button" title="消息">◷</button>
-        <button type="button" title="交付物" aria-expanded={drawerOpen} aria-controls="insp-panel" onClick={openDrawer}>▤</button>
-      </div>
+      {props.detail && (
+        <TaskDetailLayer
+          open
+          detail={props.detail}
+          loading={props.detailLoading ?? false}
+          error={props.detailError ?? ''}
+          mode={mode}
+          onClose={props.onCloseDetail ?? (() => undefined)}
+          onRetry={props.onRetryDetail}
+          onOpenFile={props.onOpenFile}
+        />
+      )}
+      <TaskGraphDialog
+        open={props.graphOpen ?? false}
+        graph={props.graph ?? null}
+        loading={props.graphLoading ?? false}
+        error={props.graphError ?? ''}
+        onClose={props.onCloseGraph ?? (() => undefined)}
+        onRetry={props.onRetryGraph}
+        onOpenTask={props.onOpenTaskById ?? (() => undefined)}
+      />
     </aside>
   )
 }

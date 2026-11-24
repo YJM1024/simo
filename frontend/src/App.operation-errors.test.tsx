@@ -42,10 +42,24 @@ async function renderApp(): Promise<ReturnType<typeof userEvent.setup>> {
   const user = userEvent.setup()
   render(<App />)
   await screen.findByText('主会话消息')
+  // 侧栏树先到再操作会话菜单：否则会读到尚未渲染的子会话行（渲染顺序不稳定）。
+  await screen.findByTitle('子会话')
   return user
 }
 
 describe('App 会话操作失败反馈 (AC-CONV-002-02)', () => {
+  it('创建会话失败时通过 toast 显示错误并保持当前会话', async () => {
+    snap.createFail = true
+    const user = await renderApp()
+    await user.click(screen.getAllByRole('button', { name: '新建会话' })[0])
+    await waitFor(() => expect(snap.createBodies).toHaveLength(1))
+
+    const alert = await screen.findByText('请求失败（500），请稍后重试', { selector: '.toast' })
+    expect(alert).toHaveAttribute('role', 'alert')
+    expect(sessionRow('主会话')).toHaveClass('is-active')
+    expect(screen.queryByTitle('新会话')).not.toBeInTheDocument()
+  })
+
   it('rename 失败时显示错误、保留输入，重试后生效且不重复', async () => {
     snap.renameFail = true
     const user = await renderApp()

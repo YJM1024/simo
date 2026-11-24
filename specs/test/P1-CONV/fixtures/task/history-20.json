@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "kind": "simo.task-fixture",
+  "name": "history-20",
+  "description": "会话里预置 20 条历史消息后再建任务，验证 N3 的 context 不泄漏历史。",
+  "usage": "先在会话里造 20 条消息，再 POST 一次 N1；N3 详情 context.historyCount 必须为 0。",
+  "generatedAt": "2026-11-24T10:09:57.647Z",
+  "generatedBy": "scripts/ac/lib/task-fixtures.mjs",
+  "sessions": [
+    {
+      "id": "s1",
+      "createSession": false,
+      "setup": {
+        "priorMessages": 20,
+        "note": "20 条历史消息由 harness 通过会话消息接口预置，不计入 N1 入参。"
+      },
+      "requests": [
+        {
+          "label": "history-20-create",
+          "request": {
+            "mode": "plan",
+            "goal": "验证任务详情不把会话历史当成任务上下文。",
+            "inputs": [
+              "上周的指标快照：新增会话 1280、消息 9640、平均首响 1.8 秒。",
+              "目标：把平均首响压到 1.2 秒以内。",
+              "任务入参只带本夹具声明的材料。"
+            ],
+            "constraints": [
+              "不能读取会话历史作为任务输入。"
+            ],
+            "tasks": [
+              {
+                "key": "history",
+                "title": "历史上下文任务：整理最近讨论",
+                "mode": "plan",
+                "goal": "整理最近讨论并输出结论。",
+                "joinMode": "all"
+              }
+            ],
+            "clientMutationId": "fx-history-20-001"
+          }
+        }
+      ],
+      "expect": {
+        "accepted": 1,
+        "context": {
+          "historyCount": 0
+        },
+        "setupMessages": 20
+      }
+    }
+  ],
+  "expect": {
+    "notes": [
+      "N3 详情 context 只回统计值，historyCount 恒为 0。",
+      "历史消息不进入 N1 请求体。"
+    ]
+  }
+}

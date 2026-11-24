@@ -36,6 +36,9 @@ const (
 	TypeTaskCreated    = "task.created"
 	TypeTaskUpdated    = "task.updated"
 	TypeTaskReport     = "task.report"
+	TypeTaskStep       = "task.step"
+	TypeTaskTrace      = "task.trace"
+	TypeTaskReminder   = "task.reminder"
 	TypeTraceReasoning = "trace.reasoning"
 
 	TypeWorkflowCreated = "workflow.created"
@@ -100,6 +103,9 @@ var persistedTypes = map[string]struct{}{
 	TypeTaskCreated:     {},
 	TypeTaskUpdated:     {},
 	TypeTaskReport:      {},
+	TypeTaskStep:        {},
+	TypeTaskTrace:       {},
+	TypeTaskReminder:    {},
 	TypeTraceReasoning:  {},
 	TypeWorkflowCreated: {},
 	TypeWorkflowUpdated: {},

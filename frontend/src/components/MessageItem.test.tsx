@@ -144,6 +144,14 @@ describe('MessageItem', () => {
     expect(screen.queryByRole('button', { name: '重试' })).not.toBeInTheDocument()
   })
 
+  it('marks each message card node with data-kind=card and keeps its inner structure (AC-CONV-004-03)', () => {
+    render(<MessageItem message={message({ cards: [card()] })} onCardAction={vi.fn()} />)
+    const node = document.querySelector('.card-block')
+    expect(node).toHaveAttribute('data-kind', 'card')
+    expect(node?.querySelector('.card-head')).not.toBeNull()
+    expect(node?.querySelector('.card-actions')).not.toBeNull()
+  })
+
   it('submits card values and shows submitted state', async () => {
     const user = userEvent.setup()
     const onCardAction = vi.fn().mockResolvedValue(undefined)

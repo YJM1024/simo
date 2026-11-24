@@ -1,24 +1,39 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { RightPanel } from '../components'
 import { projection, session } from '../test/fixtures'
+import type { TaskCounts, TaskView } from '../types'
+
+const counts = (overrides: Partial<TaskCounts> = {}): TaskCounts => ({ all: 6, pending: 2, running: 2, failed: 1, done: 1, ...overrides })
+
+function taskView(overrides: Partial<TaskView> = {}): TaskView {
+  return { id: 'task-1', sessionId: 'main', title: '任务一', mode: 'plan', status: 'running', displayStatus: 'running', createdAt: 1, updatedAt: 2, stepCount: 8, doneStepCount: 5, outputCount: 1, ...overrides }
+}
+
+beforeEach(() => {
+  window.localStorage.clear()
+})
 
 describe('RightPanel / OverviewPanel', () => {
-  it('renders goal, inputs, status, task groups and deliverables', () => {
-    render(<RightPanel session={session()} projection={projection()} loading={false} />)
-    expect(screen.getByRole('complementary', { name: '会话概览' })).toBeInTheDocument()
+  it('renders the three-tab shell with the four overview blocks in fixed order', () => {
+    render(<RightPanel session={session()} projection={projection()} loading={false} counts={counts()} />)
+    const aside = screen.getByRole('complementary', { name: '会话右栏' })
+    expect(aside).toHaveAttribute('data-tab', 'overview')
+    expect(aside).toHaveAttribute('data-collapsed', 'false')
+    expect(aside).toHaveAttribute('data-session', 'main')
+    expect(aside.querySelectorAll('.insp-rail button')).toHaveLength(3)
+    expect([...aside.querySelectorAll('.insp-rail button')].map((button) => button.getAttribute('data-tab'))).toEqual(['overview', 'tasks', 'deliverables'])
     expect(screen.getByText('验证前端测试体系')).toBeInTheDocument()
     expect(screen.getByText('只改 frontend · 真实数据')).toBeInTheDocument()
     expect(document.querySelector('.insp-spec-status b')).toHaveTextContent('进行中')
     expect(screen.getByText('rev 7')).toBeInTheDocument()
-    expect(screen.getByText('待确认 1')).toBeInTheDocument()
-    expect(screen.getByText('共 5 · 本次 5')).toBeInTheDocument()
-    expect(screen.getByText('report.md')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '下载 report.md' })).toHaveAttribute('href', '/api/deliverables/a1/download')
+    expect(screen.getByText('2 进行中 / 2 未开始 / 1 已完成 / 1 失败')).toBeInTheDocument()
+    const blocks = [...aside.querySelectorAll('.insp-block')].map((block) => block.getAttribute('data-block'))
+    expect(blocks).toEqual(['goal', 'input', 'tasks', 'deliverables'])
   })
 
-  it('shows loading, error/retry, and empty projection states', async () => {
+  it('shows loading, error/retry and empty projection states', async () => {
     const user = userEvent.setup()
     const { rerender } = render(<RightPanel session={session()} projection={null} loading />)
     expect(screen.getByText('右栏加载中…')).toBeInTheDocument()
@@ -40,177 +55,109 @@ describe('RightPanel / OverviewPanel', () => {
     expect(screen.queryByText('暂无会话投影')).not.toBeInTheDocument()
   })
 
-  it('expands and collapses grouped tasks and forwards messageId locating', async () => {
+  it('keeps four-block collapse memory per session across remounts', async () => {
     const user = userEvent.setup()
-    const onTaskClick = vi.fn()
-    render(<RightPanel session={session()} projection={projection()} loading={false} onTaskClick={onTaskClick} />)
-    const doneHead = screen.getByRole('button', { name: /已完成/ })
-    expect(doneHead).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.queryByText('完成任务 3')).not.toBeInTheDocument()
-    await user.click(doneHead)
-    expect(doneHead).toHaveAttribute('aria-expanded', 'true')
-    expect(screen.getByText('完成任务 3')).toBeInTheDocument()
-    await user.click(screen.getByText('完成任务 3'))
-    expect(onTaskClick).toHaveBeenCalledWith({ id: 'done-3', title: '完成任务 3', messageId: 'msg-3' })
-    await user.click(doneHead)
-    expect(screen.queryByText('完成任务 3')).not.toBeInTheDocument()
+    const { unmount } = render(<RightPanel session={session()} projection={projection()} loading={false} counts={counts()} />)
+    const goalHead = screen.getByRole('button', { name: '目标' })
+    expect(goalHead).toHaveAttribute('aria-expanded', 'true')
+    await user.click(goalHead)
+    expect(goalHead).toHaveAttribute('aria-expanded', 'false')
+    expect(window.localStorage.getItem('simo.insp.overview.main')).toBe(JSON.stringify(['goal']))
+    unmount()
+
+    render(<RightPanel session={session()} projection={projection()} loading={false} counts={counts()} />)
+    expect(screen.getByRole('button', { name: '目标' })).toHaveAttribute('aria-expanded', 'false')
   })
 
-  it('counts against the server total and requests the full page on first expand', async () => {
+  it('switches to the tasks tab and renders the fixed four filters with counts', async () => {
     const user = userEvent.setup()
-    const onExpandGroup = vi.fn()
-    const partial = projection({
-      tasks: {
-        done: { total: 6, items: [0, 1, 2].map((n) => ({ id: `done-${n}`, title: `完成任务 ${n}`, state: 'done', updatedAt: 1_700_000_100_000 + n, messageId: `msg-${n}` })), hasMore: true },
-        running: { total: 1, items: [{ id: 'run-1', title: '进行中的任务', state: 'running', updatedAt: 1_700_000_200_000, messageId: 'msg-run' }], hasMore: false },
-        pending: { total: 0, items: [], hasMore: false },
-      },
-    })
-    const { rerender } = render(<RightPanel session={session()} projection={partial} loading={false} onExpandGroup={onExpandGroup} />)
-    const doneGroup = (): HTMLElement => screen.getByText('已完成', { selector: '.exec-name' }).closest('.exec-group') as HTMLElement
-    // 分母取接口 total（6），未过滤到首页 3 条就冒充总数。
-    expect(within(doneGroup()).getByText('3/6')).toBeInTheDocument()
-    expect(within(doneGroup()).queryByText('完成任务 3')).not.toBeInTheDocument()
-
-    await user.click(within(doneGroup()).getByRole('button', { name: /已完成/ }))
-    expect(onExpandGroup).toHaveBeenCalledTimes(1)
-    expect(within(doneGroup()).getByText('3/6')).toBeInTheDocument()
-
-    // 补取完成：展开态保留，6 条全部可见，计数与可见条目一致。
-    const full = projection({
-      tasks: {
-        done: { total: 6, items: [0, 1, 2, 3, 4, 5].map((n) => ({ id: `done-${n}`, title: `完成任务 ${n}`, state: 'done', updatedAt: 1_700_000_100_000 + n, messageId: `msg-${n}` })), hasMore: false },
-        running: partial.tasks.running,
-        pending: partial.tasks.pending,
-      },
-    })
-    rerender(<RightPanel session={session()} projection={full} loading={false} onExpandGroup={onExpandGroup} />)
-    expect(within(doneGroup()).getByText('6/6')).toBeInTheDocument()
-    expect(within(doneGroup()).getByText('完成任务 5')).toBeInTheDocument()
-
-    // 已取全的组再展开不需要补取。
-    await user.click(within(doneGroup()).getByRole('button', { name: /已完成/ }))
-    await user.click(within(doneGroup()).getByRole('button', { name: /已完成/ }))
-    expect(onExpandGroup).toHaveBeenCalledTimes(1)
+    const onTaskFilterChange = vi.fn()
+    render(<RightPanel session={session()} projection={projection()} loading={false} counts={counts({ all: 11, running: 2, failed: 1, done: 3 })} tab="tasks" tasks={[taskView()]} onTaskFilterChange={onTaskFilterChange} onOpenTask={vi.fn()} />)
+    expect(screen.getByRole('complementary', { name: '会话右栏' })).toHaveAttribute('data-tab', 'tasks')
+    const group = screen.getByRole('group', { name: '任务筛选' })
+    expect([...group.querySelectorAll('button')].map((button) => button.textContent?.replace(/\s+/g, ' ').trim())).toEqual(['全部 11', '进行中 2', '失败 1', '已完成 3'])
+    await user.click(within(group).getByRole('button', { name: /进行中/ }))
+    expect(onTaskFilterChange).toHaveBeenCalledWith('running')
+    expect(screen.getByRole('list').querySelectorAll('.task-card')).toHaveLength(1)
   })
 
-  it('renders pending tasks in 未开始 without mixing them into 进行中', async () => {
+  it('opens the tasks tab from the rail but blocks it when the session has no tasks', async () => {
     const user = userEvent.setup()
-    const onTaskClick = vi.fn()
-    const data = projection({
-      tasks: {
-        done: { total: 0, items: [], hasMore: false },
-        running: { total: 1, items: [{ id: 'run-1', title: '进行中的任务', state: 'running', updatedAt: 1_700_000_200_000, messageId: 'msg-run' }], hasMore: false },
-        pending: { total: 1, items: [{ id: 'pending-1', title: '待开始的任务', state: 'pending', updatedAt: 1_700_000_300_000, messageId: 'msg-pending' }], hasMore: false },
-      },
-    })
-    render(<RightPanel session={session()} projection={data} loading={false} onTaskClick={onTaskClick} />)
+    const onTabChange = vi.fn()
+    render(<RightPanel session={session()} projection={projection()} loading={false} counts={counts()} onTabChange={onTabChange} />)
+    const aside = screen.getByRole('complementary', { name: '会话右栏' })
+    await user.click(within(aside).getByRole('button', { name: /任务，2 个进行中/ }))
+    expect(onTabChange).toHaveBeenCalledWith('tasks')
 
-    expect(screen.getByText('共 2 · 本次 2')).toBeInTheDocument()
-    const runningGroup = screen.getByText('进行中', { selector: '.exec-name' }).closest('.exec-group') as HTMLElement
-    const queuedGroup = screen.getByText('未开始', { selector: '.exec-name' }).closest('.exec-group') as HTMLElement
-    expect(within(runningGroup).getByText('进行中的任务')).toBeInTheDocument()
-    expect(within(runningGroup).queryByText('待开始的任务')).not.toBeInTheDocument()
-    expect(within(queuedGroup).getByText('待开始的任务')).toBeInTheDocument()
-    expect(within(queuedGroup).queryByText('进行中的任务')).not.toBeInTheDocument()
-
-    await user.click(within(queuedGroup).getByText('待开始的任务'))
-    expect(onTaskClick).toHaveBeenCalledWith({ id: 'pending-1', title: '待开始的任务', messageId: 'msg-pending' })
+    const { rerender } = render(<RightPanel session={session({ id: 'empty' })} projection={projection()} loading={false} counts={counts({ all: 0, pending: 0, running: 0, failed: 0, done: 0 })} onTabChange={onTabChange} />)
+    const emptyAside = screen.getAllByRole('complementary', { name: '会话右栏' }).at(-1) as HTMLElement
+    const disabled = within(emptyAside).getByRole('button', { name: '任务，0 个进行中' })
+    expect(disabled).toHaveAttribute('aria-disabled', 'true')
+    onTabChange.mockClear()
+    await user.click(disabled)
+    expect(onTabChange).not.toHaveBeenCalled()
+    expect(emptyAside).not.toHaveAttribute('data-tab', 'tasks')
+    rerender(<RightPanel session={session()} projection={projection()} loading={false} counts={counts()} onTabChange={onTabChange} />)
   })
 
-  it('renders empty states for all task groups and deliverables', () => {
+  it('badge shows 2, 9+ and nothing at all for zero', () => {
+    const { rerender } = render(<RightPanel session={session()} projection={projection()} loading={false} counts={counts({ running: 2 })} />)
+    const aside = screen.getByRole('complementary', { name: '会话右栏' })
+    expect(within(aside).getByRole('button', { name: '任务，2 个进行中' }).querySelector('.insp-badge')).toHaveTextContent('2')
+    rerender(<RightPanel session={session()} projection={projection()} loading={false} counts={counts({ running: 10 })} />)
+    expect(within(aside).getByRole('button', { name: '任务，9 个以上进行中' }).querySelector('.insp-badge')).toHaveTextContent('9+')
+    rerender(<RightPanel session={session()} projection={projection()} loading={false} counts={counts({ running: 0, all: 4 })} />)
+    expect(within(aside).getByRole('button', { name: '任务，0 个进行中' }).querySelector('.insp-badge')).toBeNull()
+  })
+
+  it('collapses to the rail-only strip with persisted state and restores per session', async () => {
+    const user = userEvent.setup()
+    const { unmount } = render(<RightPanel session={session()} projection={projection()} loading={false} counts={counts()} />)
+    const aside = screen.getByRole('complementary', { name: '会话右栏' })
+    await user.click(screen.getByRole('button', { name: '收起右栏' }))
+    expect(aside).toHaveAttribute('data-collapsed', 'true')
+    expect(aside.querySelector('.insp-panel')).toHaveAttribute('hidden')
+    expect(window.localStorage.getItem('simo.insp.collapsed.main')).toBe('1')
+    unmount()
+
+    render(<RightPanel session={session()} projection={projection()} loading={false} counts={counts()} />)
+    expect(screen.getByRole('complementary', { name: '会话右栏' })).toHaveAttribute('data-collapsed', 'true')
+  })
+
+  it('renders the deliverables tab with grouped files and no upload entry', () => {
+    render(<RightPanel session={session()} projection={projection({ deliverables: { total: 0, items: [], hasMore: false } })} loading={false} counts={counts()} tab="deliverables" deliverableGroups={[{ taskId: 'task-1', taskTitle: '任务一', taskStatus: 'done', files: [{ id: 'f1', name: 'report.md', mime: 'text/markdown', size: 1024, createdAt: 1, typeBadge: 'doc', downloadUrl: '/api/artifacts/f1/content?download=1' }] }]} deliverablesTotal={1} deliverablesFileCount={1} onOpenFile={vi.fn()} />)
+    expect(screen.getByText('任务一')).toBeInTheDocument()
+    expect(screen.getByText('report.md')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '下载 report.md' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /上传|删除|重命名/ })).not.toBeInTheDocument()
+  })
+
+  it('shows empty states for all four blocks without fabricating data', () => {
     const empty = projection({
       goal: null,
       constraints: [],
       inputs: [],
       status: 'draft',
-      tasks: {
-        done: { total: 0, items: [], hasMore: false },
-        running: { total: 0, items: [], hasMore: false },
-        pending: { total: 0, items: [], hasMore: false },
-      },
+      tasks: { done: { total: 0, items: [], hasMore: false }, running: { total: 0, items: [], hasMore: false }, pending: { total: 0, items: [], hasMore: false } },
       deliverables: { total: 0, items: [], hasMore: false },
       pendingConfirmations: { total: 0 },
     })
-    render(<RightPanel session={session()} projection={empty} loading={false} />)
+    render(<RightPanel session={session()} projection={empty} loading={false} counts={counts({ all: 0, pending: 0, running: 0, failed: 0, done: 0 })} />)
     expect(screen.getByText('目标待生成。')).toBeInTheDocument()
     expect(screen.getByText('暂无输入约束。')).toBeInTheDocument()
-    expect(screen.getByText('暂无已完成任务')).toBeInTheDocument()
-    expect(screen.getByText('暂无进行中任务')).toBeInTheDocument()
-    expect(screen.getByText('暂无未开始任务')).toBeInTheDocument()
-    expect(screen.getByText('暂无交付物')).toBeInTheDocument()
-    expect(screen.getByText('草稿')).toBeInTheDocument()
+    expect(screen.getByText('本会话还没有任务。')).toBeInTheDocument()
+    expect(screen.getByText('暂无交付物。')).toBeInTheDocument()
+    expect(screen.getByText('草稿', { selector: '.insp-spec-status b' })).toBeInTheDocument()
     expect(screen.queryByText(/待确认/)).not.toBeInTheDocument()
   })
 
-  it('opens deliverables and handles missing projection without crashing', async () => {
-    const user = userEvent.setup()
-    const onArtifactOpen = vi.fn()
-    render(<RightPanel session={session()} projection={projection({ deliverables: { total: 0, items: [], hasMore: false } })} loading={false} onArtifactOpen={onArtifactOpen} />)
-    expect(screen.queryByText('report.md')).not.toBeInTheDocument()
-    expect(screen.queryByText('暂无交付物')).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /已完成/ }))
-    expect(screen.getByText('完成任务 0')).toBeInTheDocument()
-  })
-
-  it('offers no submit, retry or cancel entry in the rail, including expanded task groups', async () => {
-    const user = userEvent.setup()
-    render(<RightPanel session={session()} projection={projection()} loading={false} onTaskClick={vi.fn()} />)
-    const aside = screen.getByRole('complementary', { name: '会话概览' })
-
-    // 三种任务组全部展开，排除“只有展开后才出现操作入口”的情况
-    const heads = [...aside.querySelectorAll<HTMLButtonElement>('button.exec-head')]
-    expect(heads).toHaveLength(3)
-    for (const head of heads) {
-      if (head.getAttribute('aria-expanded') === 'false') await user.click(head)
-      expect(head).toHaveAttribute('aria-expanded', 'true')
-    }
-
-    expect(within(aside).queryAllByRole('button', { name: /提交|重试|取消/ })).toHaveLength(0)
-    expect(within(aside).queryAllByRole('link', { name: /提交|重试|取消/ })).toHaveLength(0)
-    expect(aside.querySelectorAll('form, input[type="submit"], button[type="submit"]')).toHaveLength(0)
-    expect(aside.textContent).not.toMatch(/提交|重试|取消/)
-  })
-
-  it('uses the right rail navigation and does not fabricate missing session id', () => {
-    render(<RightPanel session={null} projection={projection()} loading={false} />)
-    const aside = screen.getByRole('complementary', { name: '会话概览' })
+  it('does not fabricate a session id or a task entry and offers no write actions', () => {
+    render(<RightPanel session={null} projection={projection()} loading={false} counts={counts({ all: 0, running: 0, pending: 0, failed: 0, done: 0 })} />)
+    const aside = screen.getByRole('complementary', { name: '会话右栏' })
     expect(aside).not.toHaveAttribute('data-session')
     expect(screen.getByText('未选择会话')).toBeInTheDocument()
-    expect(within(aside).getByRole('button', { name: '☰' })).toHaveClass('active')
-  })
-
-  it('opens the tablet drawer from the rail and closes it with the close button, Escape or the scrim', async () => {
-    const user = userEvent.setup()
-    render(<RightPanel session={session()} projection={projection()} loading={false} />)
-    const aside = screen.getByRole('complementary', { name: '会话概览' })
-    expect(aside).not.toHaveClass('is-drawer-open')
-    // 关闭按钮只属于抽屉：收起时既不渲染，也没有遮罩
-    expect(aside.querySelectorAll('.insp-drawer-close')).toHaveLength(0)
-    expect(aside.querySelectorAll('.insp-drawer-scrim')).toHaveLength(0)
-
-    await user.click(within(aside).getByRole('button', { name: '☰' }))
-    expect(aside).toHaveClass('is-drawer-open')
-    expect(aside).toHaveAttribute('data-drawer-open', 'true')
-    expect(within(aside).getByRole('button', { name: '☰' })).toHaveAttribute('aria-expanded', 'true')
-    expect(aside.querySelectorAll('.insp-drawer-scrim')).toHaveLength(1)
-    expect(aside.querySelectorAll('.insp-drawer-close')).toHaveLength(1)
-
-    // 关闭按钮与遮罩同名（都叫「关闭右栏」），按类名取抽屉里那颗
-    await user.click(aside.querySelector('.insp-drawer-close') as HTMLElement)
-    expect(aside).not.toHaveClass('is-drawer-open')
-    expect(aside.querySelectorAll('.insp-drawer-close')).toHaveLength(0)
-
-    await user.click(within(aside).getByRole('button', { name: '☰' }))
-    await user.keyboard('{Escape}')
-    expect(aside).not.toHaveClass('is-drawer-open')
-    expect(aside.querySelectorAll('.insp-drawer-scrim')).toHaveLength(0)
-
-    // 再次从 rail 打开，点遮罩关闭
-    await user.click(within(aside).getByRole('button', { name: '☰' }))
-    expect(aside).toHaveClass('is-drawer-open')
-
-    await user.click(aside.querySelector('.insp-drawer-scrim') as HTMLElement)
-    expect(aside).not.toHaveClass('is-drawer-open')
+    expect(within(aside).getByRole('button', { name: '概览' })).toHaveAttribute('aria-current', 'page')
+    expect(within(aside).queryAllByRole('button', { name: /提交|重试|取消|删除/ })).toHaveLength(0)
+    expect(aside.querySelectorAll('form, input, textarea, select')).toHaveLength(0)
   })
 })

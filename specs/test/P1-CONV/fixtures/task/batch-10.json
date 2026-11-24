@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "kind": "simo.task-fixture",
+  "name": "batch-10",
+  "description": "单批 10 条任务一次创建，验证批量创建、列表计数与批量进度。",
+  "usage": "POST 一次 N1，断言创建 10 条、列表 total=10、无依赖层级全为 0。",
+  "generatedAt": "2026-11-24T10:09:57.647Z",
+  "generatedBy": "scripts/ac/lib/task-fixtures.mjs",
+  "sessions": [
+    {
+      "id": "s1",
+      "createSession": false,
+      "requests": [
+        {
+          "label": "batch-10-create",
+          "request": {
+            "mode": "plan",
+            "goal": "一次创建 10 条互不依赖的任务，用于批量建任务主路径。",
+            "inputs": [
+              "上周的指标快照：新增会话 1280、消息 9640、平均首响 1.8 秒。",
+              "目标：把平均首响压到 1.2 秒以内。",
+              "本批 10 条任务彼此无依赖。"
+            ],
+            "constraints": [
+              "每条任务只处理一组材料。"
+            ],
+            "tasks": [
+              {
+                "key": "t01",
+                "title": "批量任务 01：整理第 1 组材料",
+                "mode": "plan",
+                "goal": "整理第 1 组输入材料并输出三条结论。",
+                "joinMode": "all"
+              },
+              {
+                "key": "t02",
+                "title": "批量任务 02：整理第 2 组材料",
+                "mode": "plan",
+                "goal": "整理第 2 组输入材料并输出三条结论。",
+                "joinMode": "all"
+              },
+              {
+                "key": "t03",
+                "title": "批量任务 03：整理第 3 组材料",
+                "mode": "plan",
+                "goal": "整理第 3 组输入材料并输出三条结论。",
+                "joinMode": "all"
+              },
+              {
+                "key": "t04",
+                "title": "批量任务 04：整理第 4 组材料",
+                "mode": "plan",
+                "goal": "整理第 4 组输入材料并输出三条结论。",
+                "joinMode": "all"
+              },
+              {
+                "key": "t05",
+                "title": "批量任务 05：整理第 5 组材料",
+                "mode": "plan",
+                "goal": "整理第 5 组输入材料并输出三条结论。",
+                "joinMode": "all"
+              },
+              {
+                "key": "t06",
+                "title": "批量任务 06：整理第 6 组材料",
+                "mode": "plan",
+                "goal": "整理第 6 组输入材料并输出三条结论。",
+                "joinMode": "all"
+              },
+              {
+                "key": "t07",
+                "title": "批量任务 07：整理第 7 组材料",
+                "mode": "plan",
+                "goal": "整理第 7 组输入材料并输出三条结论。",
+                "joinMode": "all"
+              },
+              {
+                "key": "t08",
+                "title": "批量任务 08：整理第 8 组材料",
+                "mode": "plan",
+                "goal": "整理第 8 组输入材料并输出三条结论。",
+                "joinMode": "all"
+              },
+              {
+                "key": "t09",
+                "title": "批量任务 09：整理第 9 组材料",
+                "mode": "plan",
+                "goal": "整理第 9 组输入材料并输出三条结论。",
+                "joinMode": "all"
+              },
+              {
+                "key": "t10",
+                "title": "批量任务 10：整理第 10 组材料",
+                "mode": "plan",
+                "goal": "整理第 10 组输入材料并输出三条结论。",
+                "joinMode": "all"
+              }
+            ],
+            "clientMutationId": "fx-batch-10-001"
+          }
+        }
+      ],
+      "expect": {
+        "accepted": 10,
+        "initialStatus": "pending",
+        "layers": 1
+      }
+    }
+  ],
+  "expect": {
+    "notes": [
+      "10 条任务无依赖，图层只有 L0。",
+      "列表 counts.total=10，其余状态为 0。"
+    ]
+  }
+}

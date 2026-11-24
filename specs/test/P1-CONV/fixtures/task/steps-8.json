@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "kind": "simo.task-fixture",
+  "name": "steps-8",
+  "description": "单条 plan 任务带 8 个步骤，验证 steps 的落库与详情回读顺序。",
+  "usage": "POST 一次 N1，GET 任务详情（N3）按 seq 升序返回 8 步。",
+  "generatedAt": "2026-11-24T10:09:57.647Z",
+  "generatedBy": "scripts/ac/lib/task-fixtures.mjs",
+  "sessions": [
+    {
+      "id": "s1",
+      "createSession": false,
+      "requests": [
+        {
+          "label": "steps-8-create",
+          "request": {
+            "mode": "plan",
+            "goal": "验证 plan 模式的多步骤计划。",
+            "inputs": [
+              "上周的指标快照：新增会话 1280、消息 9640、平均首响 1.8 秒。",
+              "目标：把平均首响压到 1.2 秒以内。",
+              "计划固定 8 步，每步不超过 200 字。"
+            ],
+            "constraints": [
+              "步骤顺序不得打乱。"
+            ],
+            "tasks": [
+              {
+                "key": "plan8",
+                "title": "八步计划：整理一周材料",
+                "mode": "plan",
+                "goal": "按八个步骤整理一周材料并输出摘要。",
+                "steps": [
+                  "步骤 1：读取第 1 段材料并记下一条结论",
+                  "步骤 2：读取第 2 段材料并记下一条结论",
+                  "步骤 3：读取第 3 段材料并记下一条结论",
+                  "步骤 4：读取第 4 段材料并记下一条结论",
+                  "步骤 5：读取第 5 段材料并记下一条结论",
+                  "步骤 6：读取第 6 段材料并记下一条结论",
+                  "步骤 7：读取第 7 段材料并记下一条结论",
+                  "步骤 8：读取第 8 段材料并记下一条结论"
+                ],
+                "joinMode": "all"
+              }
+            ],
+            "clientMutationId": "fx-steps-8-001"
+          }
+        }
+      ],
+      "expect": {
+        "accepted": 1,
+        "steps": 8,
+        "stepsOrder": "seq 升序"
+      }
+    }
+  ],
+  "expect": {
+    "notes": [
+      "每步文本不超过 200 字；总数不超过 50 步。"
+    ]
+  }
+}

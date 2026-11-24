@@ -2,7 +2,7 @@
 
 > 本文件是**持久状态**。用户口述的计划与规范以这里为准；每次更新在文末追加变更记录。
 > 维护者：Lead（只做交互、派单、验收、记录；具体工作派子智能体）。
-> 最后更新：2026-11-21
+> 最后更新：2026-11-22
 
 ---
 
@@ -175,10 +175,30 @@ specs/changes/CHG-<域>-<NNN>/         变更 Spec（七件套，归档后仍留
 
 ---
 
-## 7. 变更记录
+## 7. 当前阶段与下一步（2026-11-22）
+
+本节记录 2026-11-22 收口时的状态与下一阶段顺序。状态数字取自当日实跑与验收报告；下一阶段四项工作均未开工，开工前需用户确认。
+
+### 7.1 当前状态
+
+- 会话域收口：P1 会话域 12 个 PRD 全部 `covered`，33 条 AC 全部 pass，终态记在 `docs/testing/ACCEPT-CONV-10-20261122.md:112`。`AC-CONV-005-02` 因厂商接口 403 不可达（`ACCEPT-CONV-10-20261122.md:88`）改按机制判据，判据内容为停止帧下发后上游 `context` 取消、`reply.delta` 与 `message.delta` 归零、不落库、状态回 `idle`，证据是 `backend/internal/modules/chat/stop_upstream_test.go` 的假上游 SSE，5 PASS / 0 FAIL，耗时 8.059 秒（`ACCEPT-CONV-10-20261122.md:108`）。
+- 组件签字：5 个组件 spec 的状态行均为 `accepted`，见 `specs/COMP-message-colors/spec.md:3`、`specs/COMP-timeline-groups/spec.md:3`、`specs/COMP-timeline-tip/spec.md:3`、`specs/COMP-composer-send-mode/spec.md:3`、`specs/COMP-conversation-panel/spec.md:3`。conversation-panel 的复签记录在 `docs/testing/COMP-SIGN-20261121.md:129-196`，composer-send-mode 的签收在 `docs/testing/COMP-SIGN-3-20261122.md:1-12`，前三个组件签在 `docs/testing/COMP-SIGN-20261121.md:1-127`。
+- 部署基线：`backend/simo-8787-final10.exe`（22,110,208 B，2026-11-22 18:46 构建，buildId `mwrpos0p-d8dkh`）由主会话后台 job 持有，`GET /api/health` 返回 200。
+- 流程文件：`docs/process/PROCESS.md` 共七节，复盘在第 7 节（第 119 行起）；`docs/process/SPEC-STANDARD.md` 213 行；`docs/process/templates/RETRO.md` 68 行；`docs/plan/DECISIONS.md` 的 DEC-11 至 DEC-17 在第 94 至 100 行。
+- 入仓与 parked：本地 `main` 与远端同为 `165887cca3cb2c32292089ba8d3c26cca67a13f7`，后续用 Git CLI 推送，推送时需现场提供 token，因为代理对 github.com:443 返回 403、SSH 在沙箱内不可用。B1（P2 任务域与 P4 文件域）已 parked，代码保留、文档标注、未提交，重启需用户明确批准。
+
+### 7.2 下一阶段（按顺序，未获确认不开工）
+
+1. 落地六个脚本：`scripts/check-spec-language.mjs`、`scripts/ac/<AC-ID>.mjs` 断言 runner、`scripts/probe-cdp.mjs`、`scripts/ac-coverage.mjs`、`scripts/serve.ps1`、汇总 runner。七条门禁规则里 R1、R3、R4、R7 为 error 级（`SPEC-STANDARD.md:159-167`），都依赖这些脚本，因此这四条规则目前不生效。
+2. 迁移 33 条 AC：按 `SPEC-STANDARD.md` 第 2.6 节第 173 至 185 行的五步改写并补断言脚本，先做“已有测试映射版”，用实测校准建域成本；迁移不重编号、不放宽断言（`SPEC-STANDARD.md:185`）。
+3. 写并发规则：写进 `PROCESS.md` 第 3 节第 48 至 63 行，内容包括 AC 与判据先冻结、四列长期 spec 并行、断言按 HTTP、单元组件与 CDP 三组并行（CDP 组排队）、实现前后端并行、数据库迁移串行、变更级一次全量回归与一次重建。
+4. 选下一批：从 P2 至 P10 九个域里选，等用户定。`docs/product/TREE-FULL.md` 有十域 71 个功能点与四批划分，B1 核心闭环 8 个功能点加 1 项补证在第 244 行，B2 权限与配置底座 9 个在第 254 行，B3 能力扩展 15 个在第 264 行，B4 完善与洞察 27 个在第 274 行；B1 当前 parked（第 288 行）。
+
+## 8. 变更记录
 
 - 2026-11-21：初版。记录 SDD 五条、六角色、变更包粒度、响应 SLA、四阶段路线；登记"绘画=会话"术语研判与 A1–A4。
 - 2026-11-21：A1–A4 全部由用户定案（SYNC-005 不纳入；8787 部署验证强制；前端含视觉返工）。新增 §1.6 部署验证门禁。
 - 2026-11-21：**A1 更正**：我先把"绘画"误判为图像生成，用户给出等式「"绘画" = 会话」→ 阶段 1 回到会话域（P1-CONV 12 PRD，SYNC-005 排除），§0/§2/§3/§6 修正；`paint-discovery` 已改向为 `CONV-DISCOVERY.md`。教训：术语只用用户给出的等式，不自行解释历史文档。
 - 2026-11-21：新增 §1.1 两种 Spec（长期 = 仓库文件；变更 = changelog）与 §1.7 粒度/目录（按域一文件、文件内按功能点 ID 分节）；建立 `docs/plan/BACKLOG.md` 作为唯一执行队列，需求项统一叫「需求项」，大项拆小项逐项执行。
 - 2026-11-22：阶段 1 会话域交付已入仓，远程 `main` head `de4cda8`（206 files，A=142 / M=64 / D=0），推送走 GitHub REST API；登记本地 `.git` 落后于远程、待选择整体替换或继续 API 入仓的待办。本文件自 `de4cda8` 入仓后的改动（含 §4 入仓状态与测试基线、阶段状态）属下一批入仓。
+- 2026-11-22：新增 §7 当前阶段与下一步，记录会话域收口、组件签字、部署基线、流程文件、入仓与 B1 parked 五条现状，以及六个脚本、33 条 AC 迁移、并发规则、下一批选择四项未开工工作；原 §7 变更记录顺延为 §8。

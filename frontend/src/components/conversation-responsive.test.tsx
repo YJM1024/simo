@@ -222,15 +222,15 @@ describe('右栏三档：760–1023 图标条、≥1024 展开、<760 隐藏（V
     for (const width of [760, 768, 900, 1023]) {
       expect(effective('.inspector', 'display', width)).toBe('flex')
       expect(effective('.inspector', 'width', width)).toBe('var(--insp-rail-w)')
-      expect(effective('.insp-body', 'display', width)).toBe('none')
+      expect(effective('.insp-panel', 'display', width)).toBe('none')
     }
   })
 
   it('opens the body as a fixed overlay anchored to the rail width so the middle column keeps its width', () => {
     for (const width of [768, 900, 1023]) {
-      expect(effective('.inspector.is-drawer-open .insp-body', 'display', width)).toBe('block')
-      expect(effective('.inspector.is-drawer-open .insp-body', 'position', width)).toBe('fixed')
-      expect(effective('.inspector.is-drawer-open .insp-body', 'right', width)).toBe('var(--insp-rail-w)')
+      expect(effective('.inspector.is-drawer-open .insp-panel', 'display', width)).toBe('flex')
+      expect(effective('.inspector.is-drawer-open .insp-panel', 'position', width)).toBe('fixed')
+      expect(effective('.inspector.is-drawer-open .insp-panel', 'right', width)).toBe('var(--rail-strip)')
       expect(effective('.insp-drawer-scrim', 'display', width)).toBe('block')
     }
   })
@@ -238,11 +238,11 @@ describe('右栏三档：760–1023 图标条、≥1024 展开、<760 隐藏（V
   it('restores the expanded inspector from 1024 without any drawer overlay', () => {
     for (const width of [1024, 1179, 1180, 1440]) {
       expect(effective('.inspector', 'width', width)).toBe('var(--rail)')
-      expect(effective('.insp-body', 'display', width)).toBeNull()
+      expect(effective('.insp-panel', 'display', width)).toBe('flex')
       expect(effective('.insp-drawer-scrim', 'display', width)).toBe('none')
       expect(effective('.insp-drawer-close', 'display', width)).toBe('none')
     }
-    expect(effective('.insp-body', 'position', 1024)).toBeNull()
+    expect(effective('.insp-panel', 'position', 1024)).toBeNull()
   })
 
   it('keeps 759/760, 1023/1024 and 375 boundaries exact', () => {

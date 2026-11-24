@@ -169,3 +169,12 @@
 @media (max-width: 73.75em) { :root { --chat-pad-x: 18px; } }
 @media (max-width: 47.5em) { :root { --chat-pad-x: 14px; } }
 @media (max-width: 30em) { :root { --chat-pad-x: 12px; } }
+
+/* P1-CONV §17 右栏任务域：展开整栏 = 面板 280 + 竖条 40，收起只剩竖条。 */
+:root {
+  --rail: 320px;
+  --rail-task-panel: 280px;
+  --rail-strip: 40px;
+  --overlay-scrim: rgba(22, 23, 27, 0.34);
+  --success-ink: rgba(42, 115, 84, 1);
+}

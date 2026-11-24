@@ -16,6 +16,7 @@ mindmap
       消息与渲染
       输入与发送
       多标签与同步
+      会话内任务与编排
     P2 任务与执行
       任务生命周期
       长任务与异步
@@ -66,7 +67,7 @@ mindmap
 
 | 域 | 名称 | 技术域码 | L2 | L3 | implemented | partial | unimplemented | 产品 spec | TEST |
 |---|---|---|---:|---:|---:|---:|---:|---|---|
-| [`P1`](#p1) | 会话与消息 | `CONV`/`SYNC` | 5 | 12 | 12 | 0 | 0 | [spec](../../specs/product/P1-CONV/spec.md) | [test](../../specs/test/P1-CONV/test-plan.md) |
+| [`P1`](#p1) | 会话与消息 | `CONV`/`SYNC` | 6 | 13 | 12 | 0 | 1 | [spec](../../specs/product/P1-CONV/spec.md) | [test](../../specs/test/P1-CONV/test-plan.md) |
 | [`P2`](#p2) | 任务与执行 | `TASK` | 3 | 6 | 0 | 3 | 3 | [spec](../../specs/product/P2-TASK/spec.md) | [test](../../specs/test/P2-TASK/test-plan.md) |
 | [`P3`](#p3) | 工作台与视图 | `WORK` | 4 | 5 | 3 | 1 | 1 | [spec](../../specs/product/P3-WORK/spec.md) | [test](../../specs/test/P3-WORK/test-plan.md) |
 | [`P4`](#p4) | 文件与交付物 | `FILE` | 5 | 6 | 1 | 5 | 0 | [spec](../../specs/product/P4-FILE/spec.md) | [test](../../specs/test/P4-FILE/test-plan.md) |
@@ -76,9 +77,9 @@ mindmap
 | [`P8`](#p8) | 设置与系统 | `SET`/`SYS` | 5 | 12 | 1 | 8 | 3 | [spec](../../specs/product/P8-SET/spec.md) | [test](../../specs/test/P8-SET/test-plan.md) |
 | [`P9`](#p9) | 工具与能力 | `TOOL` | 4 | 7 | 0 | 4 | 3 | [spec](../../specs/product/P9-TOOL/spec.md) | [test](../../specs/test/P9-TOOL/test-plan.md) |
 | [`P10`](#p10) | 指标 | `METRIC` | 3 | 6 | 3 | 2 | 1 | [spec](../../specs/product/P10-METRIC/spec.md) | [test](../../specs/test/P10-METRIC/test-plan.md) |
-| **合计** | — | 12 个技术域码 | **40** | **71** | **20** | **36** | **15** | **10/10** | **10/10** |
+| **合计** | — | 12 个技术域码 | **41** | **72** | **20** | **36** | **16** | **10/10** | **10/10** |
 
-> 覆盖口径（2026-11-22 P1 收口后，同日移除 `PRD-SYNC-005`）：全仓 71 个 PRD = **12 covered / 37 partial / 22 gap**；P1 = **12 / 0 / 0**。上表 implemented / partial / unimplemented 三列统计实现状态，与覆盖状态分轴，故 P1 为 12 / 0 / 0；覆盖状态以各 PRD 行的“覆盖”列为准。
+> 覆盖口径（2026-11-22 P1 收口，2026-11-23 补 `PRD-CONV-009`；同日移除 `PRD-SYNC-005`）：全仓 72 个 PRD = **12 covered / 37 partial / 23 gap**；P1 = **12 / 0 / 1**。上表 implemented / partial / unimplemented 三列统计实现状态，与覆盖状态分轴，故 P1 为 12 / 0 / 1；覆盖状态以各 PRD 行的“覆盖”列为准。
 
 ## 3. L2 / L3 功能点
 
@@ -88,6 +89,8 @@ mindmap
 范围：会话树、消息流、发送/流式、输入、时间轴、未读；并含 `SYNC` 的跨域边界。
 
 证据（2026-11-22 收口，同日移除 `PRD-SYNC-005`）：33 条 AC = **33 通过 / 0 部分**（`AC-CONV-006-02` 由 CDP 合成组合态证据转 pass，物理输入法只作环境限制）。P1 覆盖 **12 covered / 0 conditional / 0 not covered / 0 gap**（验收面 12 = `CONV-001..008` + `SYNC-001..004`：`CONV-006` 已闭环（`IME-EVIDENCE-20261122.md`）；`CONV-005` 已闭环，停止按消息定向、双流只停目标（`stop_interrupt_test.go:402`），停止机制由 `stop_upstream_test.go` 按假上游证明（`STOP-UPSTREAM-EVIDENCE-20261122.md`）；`CONV-008` 已闭环，真机 304 已补）。逐项见 [STOP-UPSTREAM-EVIDENCE](../testing/STOP-UPSTREAM-EVIDENCE-20261122.md)、[IME 证据](../testing/IME-EVIDENCE-20261122.md)、[第八轮验收](../testing/ACCEPT-CONV-8-20261122.md)、[test-plan](../../specs/test/P1-CONV/test-plan.md) 与 [CONV-CLOSURE](CONV-CLOSURE.md)。
+
+2026-11-23 补入 `PRD-CONV-009`（会话内任务与编排，新增 L2）：实现状态 `unimplemented`、覆盖 `gap`，形态以原型 `docs/design/task-prototype-v3-20261123.html` 九屏为准；18 条 AC 编号已冻结，断言脚本与 test-plan 用例待建。该功能组只承担会话内任务的呈现、编排与归属，任务执行器与生命周期仍归 P2-TASK。
 
 #### L2 · 会话管理
 
@@ -135,6 +138,14 @@ mindmap
 | PRD | L3 功能点 | P | 实现状态 | 覆盖 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|---|
 | `PRD-CONV-008` | 右栏会话投影（新增） | P1 | `implemented` | `covered`（375 四态截图与真机 304 已补，见 [ACCEPT-CONV-8](../testing/ACCEPT-CONV-8-20261122.md)） | [spec](../../specs/product/P1-CONV/spec.md#prd-conv-008) | [CHG-CONV-006](../../specs/changes/CHG-CONV-006/proposal.md) | [FE-001](../../specs/FE-001-frontend-rebuild/spec.md) / [M1](../m1-contract.md) | — | [TC-P1-CONV-008](../../specs/test/P1-CONV/test-plan.md#tc-p1-conv-008) |
+
+#### L2 · 会话内任务与编排
+
+场景 I：会话内任务与编排（单个/批量创建、任务卡片与汇总卡、右栏三标签与 40px 竖条、概览四节折叠与定位、任务标签厚卡与四态筛选、计划与边做边想只读详情、任务图弹窗、等待语义、失败与取消、交付物下载、归属与无系统超时）。
+
+| PRD | L3 功能点 | P | 实现状态 | 覆盖 | 产品 spec | CHANGE | 开发 | COMP | TEST |
+|---|---|---|---|---|---|---|---|---|---|
+| `PRD-CONV-009` | 会话内任务与编排（新增） | P1 | `unimplemented` | `gap`（18 条 AC 未建脚本与用例；原型九屏已由用户确认） | [spec](../../specs/product/P1-CONV/spec.md#prd-conv-009) | 待建 `CHG-CONV-007`（暂未立包） | — | — | [TC-P1-CONV-009](../../specs/test/P1-CONV/test-plan.md#tc-p1-conv-009)（待补） |
 
 ### P2 · 任务与执行
 <a id="p2"></a>

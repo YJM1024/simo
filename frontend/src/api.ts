@@ -168,7 +168,7 @@ export interface ChatEvents {
 export function connectEvents(sessionId: string, handlers: {
   onDelta: (delta: WsDelta) => void
   onStatus: (status: string) => void
-  onEvent?: (event: { type: string; id: string; seq?: number; eventId?: number }) => void
+  onEvent?: (event: { type: string; id: string; seq?: number; eventId?: number; data?: Record<string, unknown> }) => void
   /**
    * 事件日志游标（since）：只认 WS 信封顶层的数字 id（eventlog.Event.ID）。
    * 消息 id（msg-…）与会话 id 都不是事件序号，不能拿来续接。
@@ -219,6 +219,11 @@ export function connectEvents(sessionId: string, handlers: {
         if (frame.type === 'error') {
           handlers.onError?.(typeof data?.message === 'string' ? data.message : '实时订阅失败')
           handlers.onStatus('error')
+          return
+        }
+        // §17.5.3：任务事件按任务 id 透传，payload 原样交给上层做增量与去重。
+        if (data && typeof data.id === 'string' && (frame.type === 'task.created' || frame.type === 'task.updated' || frame.type === 'task.step' || frame.type === 'task.trace' || frame.type === 'task.report' || frame.type === 'task.reminder')) {
+          handlers.onEvent?.({ type: frame.type, id: data.id, eventId, data: data as unknown as Record<string, unknown> })
           return
         }
         if (data && typeof data.id === 'string' && (frame.type === 'message.created' || frame.type === 'reply.done' || frame.type === 'message.done')) handlers.onEvent?.({ type: frame.type, id: data.id, seq: data.seq, eventId })
@@ -381,4 +386,47 @@ export interface MetricsDay extends MetricsTotals { date: string; start: number;
 export interface MetricsPayload { range: string; timezone: string; from: number; to: number; totals: MetricsTotals; series: MetricsDay[] }
 export function getMetrics(range: '7d' | '30d', tz = Intl.DateTimeFormat().resolvedOptions().timeZone): Promise<MetricsPayload> {
   return request(`/api/metrics?range=${range}&tz=${encodeURIComponent(tz)}`)
+}
+// ---- P1-CONV §17 任务接口（契约 N2/N3/N6/N7/N8/N9） ----
+import type { DeliverablesPayload, TaskDetailPayload, TaskGraphPayload, TaskListPayload } from './types'
+
+export interface TaskQuery { status?: string; mode?: string; batchId?: string; limit?: number; before?: string }
+
+export function listSessionTasks(sessionId: string, query: TaskQuery = {}): Promise<TaskListPayload> {
+  const params = new URLSearchParams()
+  if (query.status) params.set('status', query.status)
+  if (query.mode) params.set('mode', query.mode)
+  if (query.batchId) params.set('batchId', query.batchId)
+  params.set('limit', String(query.limit ?? 50))
+  if (query.before) params.set('before', query.before)
+  return request(`/api/sessions/${encodeURIComponent(sessionId)}/tasks?${params.toString()}`)
+}
+
+export function getTaskDetail(taskId: string, opts: { traceLimit?: number; traceBefore?: string } = {}): Promise<TaskDetailPayload> {
+  const params = new URLSearchParams()
+  params.set('traceLimit', String(opts.traceLimit ?? 200))
+  if (opts.traceBefore) params.set('traceBefore', opts.traceBefore)
+  return request(`/api/tasks/${encodeURIComponent(taskId)}?${params.toString()}`)
+}
+
+export function getTaskGraph(sessionId: string): Promise<TaskGraphPayload> {
+  return request(`/api/sessions/${encodeURIComponent(sessionId)}/task-graph`)
+}
+
+export function getSessionDeliverables(sessionId: string, query: { taskId?: string; limit?: number; before?: string } = {}): Promise<DeliverablesPayload> {
+  const params = new URLSearchParams()
+  if (query.taskId) params.set('taskId', query.taskId)
+  params.set('limit', String(query.limit ?? 50))
+  if (query.before) params.set('before', query.before)
+  return request(`/api/sessions/${encodeURIComponent(sessionId)}/deliverables?${params.toString()}`)
+}
+
+/** 等待确认的任务：确认或取消（N6，DEC-27 唯一可写入口在消息卡内联区）。 */
+export function decideTaskConfirmation(taskId: string, decision: 'confirm' | 'cancel'): Promise<unknown> {
+  return afterSessionMutation(request(`/api/tasks/${encodeURIComponent(taskId)}/confirmation`, { method: 'POST', body: JSON.stringify({ decision }) }))
+}
+
+/** 等待资源或额度：恢复任务（N7）。 */
+export function resumeTask(taskId: string, reason: string): Promise<unknown> {
+  return afterSessionMutation(request(`/api/tasks/${encodeURIComponent(taskId)}/resume`, { method: 'POST', body: JSON.stringify({ reason }) }))
 }

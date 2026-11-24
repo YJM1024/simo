@@ -108,6 +108,7 @@ func (m *Module) Start(ctx context.Context) error {
 	m.ctx, m.cancel = context.WithCancel(ctx)
 	m.recoverInterrupted()
 	m.recoverWorkflows()
+	m.startReminderLoop(m.ctx)
 	m.log.Debug("module started", "module", m.ID())
 	return nil
 }
@@ -561,31 +562,65 @@ func (m *Module) saveAndEmit(ctx context.Context, task coretask.Task, phaseID, s
 		return
 	}
 	m.emit(ctx, eventlog.TypeTaskUpdated, taskEvent(task, phaseID, stepID))
+	if task.Status == coretask.StatusDone {
+		m.notifyDependents(ctx, task.ID)
+	}
 }
 
 func (m *Module) saveTask(ctx context.Context, task coretask.Task) error {
+	return m.store.Write(ctx, func(tx *sql.Tx) error {
+		return saveTaskConvTx(ctx, tx, task)
+	})
+}
+
+// saveTaskTx 允许调用方把任务写入并入自己的事务（批量创建）。
+func saveTaskConvTx(ctx context.Context, tx *sql.Tx, task coretask.Task) error {
 	phases, _ := json.Marshal(task.Phases)
 	steps, _ := json.Marshal(task.Steps)
 	depends, _ := json.Marshal(task.DependsOn)
-	return m.store.Write(ctx, func(tx *sql.Tx) error {
-		_, err := tx.ExecContext(ctx, `INSERT INTO tasks(
+	inputs, _ := json.Marshal(task.Inputs)
+	constraints, _ := json.Marshal(task.Constraints)
+	_, err := tx.ExecContext(ctx, `INSERT INTO tasks(
 			id, session_id, title, kind, status, payload, phases, steps, progress,
 			summary, outcome, attempt, workflow_id, depends_on_json, order_index, report_message_id,
-			budget_json, created_at, updated_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			budget_json, created_at, updated_at,
+			mode, batch_id, goal, inputs_json, constraints_json, context_json,
+			waiting_reason, waiting_since, started_at, finished_at, fail_reason,
+			deadline_at, deadline_reminded_at, trigger_count)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+				?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			ON CONFLICT(id) DO UPDATE SET
 				title=excluded.title, status=excluded.status, phases=excluded.phases,
 				steps=excluded.steps, progress=excluded.progress, summary=excluded.summary,
 				outcome=excluded.outcome, attempt=excluded.attempt,
 				workflow_id=excluded.workflow_id, depends_on_json=excluded.depends_on_json,
 				order_index=excluded.order_index, report_message_id=excluded.report_message_id,
-				budget_json=excluded.budget_json, updated_at=excluded.updated_at`,
-			task.ID, task.SessionID, task.Title, task.Kind, task.Status, task.Payload,
-			string(phases), string(steps), task.Progress, task.Summary, task.Outcome,
-			task.Attempt, task.WorkflowID, string(depends), task.OrderIndex, task.ReportMessageID,
-			task.BudgetJSON, task.CreatedAt, task.UpdatedAt)
-		return err
-	})
+				budget_json=excluded.budget_json, updated_at=excluded.updated_at,
+				mode=excluded.mode, batch_id=excluded.batch_id, goal=excluded.goal,
+				inputs_json=excluded.inputs_json, constraints_json=excluded.constraints_json,
+				context_json=excluded.context_json, waiting_reason=excluded.waiting_reason,
+				waiting_since=excluded.waiting_since, started_at=excluded.started_at,
+				finished_at=excluded.finished_at, fail_reason=excluded.fail_reason,
+				deadline_at=excluded.deadline_at, deadline_reminded_at=excluded.deadline_reminded_at,
+				trigger_count=excluded.trigger_count`,
+		task.ID, task.SessionID, task.Title, task.Kind, task.Status, task.Payload,
+		string(phases), string(steps), task.Progress, task.Summary, task.Outcome,
+		task.Attempt, task.WorkflowID, string(depends), task.OrderIndex, task.ReportMessageID,
+		task.BudgetJSON, task.CreatedAt, task.UpdatedAt,
+		firstNonEmptyValue(task.Mode, "plan"), task.BatchID, task.Goal,
+		string(inputs), string(constraints), firstNonEmptyValue(task.ContextJSON, "{}"),
+		task.WaitingReason, task.WaitingSince, task.StartedAt, task.FinishedAt, task.FailReason,
+		task.DeadlineAt, task.DeadlineRemindedAt, task.TriggerCount)
+	return err
+}
+
+func firstNonEmptyValue(values ...string) string {
+	for _, value := range values {
+		if strings.TrimSpace(value) != "" {
+			return value
+		}
+	}
+	return ""
 }
 
 func (m *Module) emit(ctx context.Context, typ string, payload any) {
@@ -604,6 +639,17 @@ func taskEvent(task coretask.Task, phaseID, stepID string) map[string]any {
 		"orderIndex": task.OrderIndex, "reportMessageId": task.ReportMessageID,
 		"executorAgentId": firstNonEmptyWorkflow(task.ExecutorAgentID, configuredExecutorAgentID()),
 		"stateReason":     task.StateReason,
+		"displayStatus":   displayStatus(task.Status),
+		"mode":            firstNonEmptyValue(task.Mode, "plan"),
+		"batchId":         task.BatchID,
+		"goal":            task.Goal,
+		"waitingReason":   task.WaitingReason,
+		"waitingSince":    task.WaitingSince,
+		"failReason":      task.FailReason,
+		"deadlineAt":      task.DeadlineAt,
+		"startedAt":       task.StartedAt,
+		"finishedAt":      task.FinishedAt,
+		"triggerCount":    task.TriggerCount,
 	}
 	if phaseID != "" {
 		payload["phase"] = phaseID
@@ -681,7 +727,10 @@ func phaseStepsDone(steps []coretask.Step, phaseID string) bool {
 
 const taskSelect = `SELECT id, session_id, title, kind, status, payload, phases, steps,
 	progress, summary, outcome, attempt, workflow_id, depends_on_json, order_index, report_message_id,
-	budget_json, created_at, updated_at FROM tasks`
+	budget_json, created_at, updated_at,
+	mode, batch_id, goal, inputs_json, constraints_json, context_json,
+	waiting_reason, waiting_since, started_at, finished_at, fail_reason,
+	deadline_at, deadline_reminded_at, trigger_count FROM tasks`
 
 type rowScanner interface {
 	Scan(dest ...any) error
@@ -690,15 +739,22 @@ type rowScanner interface {
 func scanTask(row rowScanner) (coretask.Task, error) {
 	var task coretask.Task
 	var phasesJSON, stepsJSON, dependsJSON string
+	var inputsJSON, constraintsJSON, contextJSON string
 	if err := row.Scan(&task.ID, &task.SessionID, &task.Title, &task.Kind, &task.Status,
 		&task.Payload, &phasesJSON, &stepsJSON, &task.Progress, &task.Summary,
 		&task.Outcome, &task.Attempt, &task.WorkflowID, &dependsJSON, &task.OrderIndex,
-		&task.ReportMessageID, &task.BudgetJSON, &task.CreatedAt, &task.UpdatedAt); err != nil {
+		&task.ReportMessageID, &task.BudgetJSON, &task.CreatedAt, &task.UpdatedAt,
+		&task.Mode, &task.BatchID, &task.Goal, &inputsJSON, &constraintsJSON, &contextJSON,
+		&task.WaitingReason, &task.WaitingSince, &task.StartedAt, &task.FinishedAt, &task.FailReason,
+		&task.DeadlineAt, &task.DeadlineRemindedAt, &task.TriggerCount); err != nil {
 		return coretask.Task{}, err
 	}
 	_ = json.Unmarshal([]byte(phasesJSON), &task.Phases)
 	_ = json.Unmarshal([]byte(stepsJSON), &task.Steps)
 	_ = json.Unmarshal([]byte(dependsJSON), &task.DependsOn)
+	_ = json.Unmarshal([]byte(inputsJSON), &task.Inputs)
+	_ = json.Unmarshal([]byte(constraintsJSON), &task.Constraints)
+	task.ContextJSON = contextJSON
 	if task.Phases == nil {
 		task.Phases = []coretask.Phase{}
 	}
@@ -707,6 +763,12 @@ func scanTask(row rowScanner) (coretask.Task, error) {
 	}
 	if task.DependsOn == nil {
 		task.DependsOn = []string{}
+	}
+	if task.Inputs == nil {
+		task.Inputs = []string{}
+	}
+	if task.Constraints == nil {
+		task.Constraints = []string{}
 	}
 	return task, nil
 }

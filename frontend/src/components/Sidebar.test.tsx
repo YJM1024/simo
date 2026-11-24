@@ -50,6 +50,16 @@ describe('Sidebar', () => {
     expect(document.querySelector('.quota-bar .q81')).toBeInTheDocument()
   })
 
+  it('exposes data-session-id on each row and keeps is-active on the active row (AC-CONV-001-01)', () => {
+    setup()
+    const activeRow = screen.getByTitle('主会话').closest('.session-row') as HTMLElement
+    const childRow = screen.getByTitle('子会话').closest('.session-row') as HTMLElement
+    expect(activeRow).toHaveAttribute('data-session-id', 'main')
+    expect(activeRow).toHaveClass('is-active')
+    expect(childRow).toHaveAttribute('data-session-id', 'child')
+    expect(childRow).not.toHaveClass('is-active')
+  })
+
   it('shows each session own message count in its row while the footer keeps the global total', () => {
     const props = setupProps({
       sessions: [

@@ -1,0 +1,282 @@
+{
+  "schemaVersion": 1,
+  "kind": "simo.task-fixture",
+  "name": "graph-21",
+  "description": "21 节点任务图，因单批上限 12 拆成两次 N1（12 + 9）。",
+  "usage": "同一会话连续 POST 两次 N1；第一次 12 条、第二次 9 条；跨批次不得声明依赖。",
+  "generatedAt": "2026-11-24T10:09:57.647Z",
+  "generatedBy": "scripts/ac/lib/task-fixtures.mjs",
+  "sessions": [
+    {
+      "id": "s1",
+      "createSession": false,
+      "requests": [
+        {
+          "label": "graph-21-batch-A-12",
+          "request": {
+            "mode": "plan",
+            "goal": "第一批 12 个节点，构成 7 层子图。",
+            "inputs": [
+              "上周的指标快照：新增会话 1280、消息 9640、平均首响 1.8 秒。",
+              "目标：把平均首响压到 1.2 秒以内。",
+              "第一批正好 12 条，达到单批上限。"
+            ],
+            "constraints": [
+              "第一批不得引用第二批的 key。"
+            ],
+            "tasks": [
+              {
+                "key": "n01",
+                "title": "图节点 01：采集入口",
+                "mode": "plan",
+                "goal": "采集入口数据。",
+                "joinMode": "all"
+              },
+              {
+                "key": "n02",
+                "title": "图节点 02：采集分支甲",
+                "mode": "plan",
+                "goal": "采集分支甲。",
+                "dependsOn": [
+                  "n01"
+                ],
+                "joinMode": "all"
+              },
+              {
+                "key": "n03",
+                "title": "图节点 03：采集分支乙",
+                "mode": "plan",
+                "goal": "采集分支乙。",
+                "dependsOn": [
+                  "n01"
+                ],
+                "joinMode": "all"
+              },
+              {
+                "key": "n04",
+                "title": "图节点 04：清洗甲",
+                "mode": "plan",
+                "goal": "清洗分支甲。",
+                "dependsOn": [
+                  "n02"
+                ],
+                "joinMode": "all"
+              },
+              {
+                "key": "n05",
+                "title": "图节点 05：清洗乙",
+                "mode": "plan",
+                "goal": "清洗分支乙。",
+                "dependsOn": [
+                  "n03"
+                ],
+                "joinMode": "all"
+              },
+              {
+                "key": "n06",
+                "title": "图节点 06：指标甲",
+                "mode": "plan",
+                "goal": "生成指标甲。",
+                "dependsOn": [
+                  "n04"
+                ],
+                "joinMode": "all"
+              },
+              {
+                "key": "n07",
+                "title": "图节点 07：指标乙",
+                "mode": "plan",
+                "goal": "生成指标乙。",
+                "dependsOn": [
+                  "n05"
+                ],
+                "joinMode": "all"
+              },
+              {
+                "key": "n08",
+                "title": "图节点 08：汇总甲",
+                "mode": "plan",
+                "goal": "汇总指标甲。",
+                "dependsOn": [
+                  "n06"
+                ],
+                "joinMode": "all"
+              },
+              {
+                "key": "n09",
+                "title": "图节点 09：汇总乙",
+                "mode": "plan",
+                "goal": "汇总指标乙。",
+                "dependsOn": [
+                  "n07"
+                ],
+                "joinMode": "all"
+              },
+              {
+                "key": "n10",
+                "title": "图节点 10：复核甲",
+                "mode": "plan",
+                "goal": "复核汇总甲。",
+                "dependsOn": [
+                  "n08"
+                ],
+                "joinMode": "all"
+              },
+              {
+                "key": "n11",
+                "title": "图节点 11：复核乙",
+                "mode": "plan",
+                "goal": "复核汇总乙。",
+                "dependsOn": [
+                  "n09"
+                ],
+                "joinMode": "all"
+              },
+              {
+                "key": "n12",
+                "title": "图节点 12：输出图表",
+                "mode": "plan",
+                "goal": "输出图表。",
+                "dependsOn": [
+                  "n10"
+                ],
+                "joinMode": "all"
+              }
+            ],
+            "clientMutationId": "fx-graph-21-a"
+          }
+        },
+        {
+          "label": "graph-21-batch-B-9",
+          "request": {
+            "mode": "plan",
+            "goal": "第二批 9 个节点，独立成 6 层子图。",
+            "inputs": [
+              "上周的指标快照：新增会话 1280、消息 9640、平均首响 1.8 秒。",
+              "目标：把平均首响压到 1.2 秒以内。",
+              "第二批 9 条，单独一次 N1。"
+            ],
+            "constraints": [
+              "跨批次依赖会 400，两批必须各自闭环。"
+            ],
+            "tasks": [
+              {
+                "key": "n13",
+                "title": "图节点 13：会话侧采集",
+                "mode": "plan",
+                "goal": "采集会话侧数据。",
+                "joinMode": "all"
+              },
+              {
+                "key": "n14",
+                "title": "图节点 14：会话侧清洗",
+                "mode": "plan",
+                "goal": "清洗会话数据。",
+                "dependsOn": [
+                  "n13"
+                ],
+                "joinMode": "all"
+              },
+              {
+                "key": "n15",
+                "title": "图节点 15：会话指标甲",
+                "mode": "plan",
+                "goal": "生成会话指标甲。",
+                "dependsOn": [
+                  "n14"
+                ],
+                "joinMode": "all"
+              },
+              {
+                "key": "n16",
+                "title": "图节点 16：会话指标乙",
+                "mode": "plan",
+                "goal": "生成会话指标乙。",
+                "dependsOn": [
+                  "n14"
+                ],
+                "joinMode": "all"
+              },
+              {
+                "key": "n17",
+                "title": "图节点 17：会话指标汇总",
+                "mode": "plan",
+                "goal": "汇总会话指标。",
+                "dependsOn": [
+                  "n15"
+                ],
+                "joinMode": "all"
+              },
+              {
+                "key": "n18",
+                "title": "图节点 18：会话对比甲",
+                "mode": "plan",
+                "goal": "对比会话指标甲。",
+                "dependsOn": [
+                  "n17"
+                ],
+                "joinMode": "all"
+              },
+              {
+                "key": "n19",
+                "title": "图节点 19：会话对比乙",
+                "mode": "plan",
+                "goal": "对比会话指标乙。",
+                "dependsOn": [
+                  "n17"
+                ],
+                "joinMode": "all"
+              },
+              {
+                "key": "n20",
+                "title": "图节点 20：异常说明",
+                "mode": "plan",
+                "goal": "说明异常项。",
+                "dependsOn": [
+                  "n17"
+                ],
+                "joinMode": "all"
+              },
+              {
+                "key": "n21",
+                "title": "图节点 21：产出结论",
+                "mode": "plan",
+                "goal": "产出结论。",
+                "dependsOn": [
+                  "n18"
+                ],
+                "joinMode": "all"
+              }
+            ],
+            "clientMutationId": "fx-graph-21-b"
+          }
+        }
+      ],
+      "expect": {
+        "accepted": 21,
+        "requests": 2,
+        "batchSizes": [
+          12,
+          9
+        ],
+        "graph": {
+          "nodes": 21,
+          "edges": 19,
+          "layers": 7,
+          "layersPerBatch": [
+            7,
+            6
+          ]
+        },
+        "runningBadge": 11
+      }
+    }
+  ],
+  "expect": {
+    "notes": [
+      "单批上限 12，21 节点必须拆成 12+9 两次 N1。",
+      "第一批 11 条边、第二批 8 条边，合并后 19 条。",
+      "runningBadge=11 用于验证列表角标只统计进行中的任务。"
+    ]
+  }
+}

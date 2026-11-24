@@ -37,6 +37,8 @@ export interface Message {
   status: string
   agentId?: string
   taskId?: string
+  batchId?: string
+  taskCount?: number
   category?: string
   cards?: Card[]
   attachments?: Array<{ id: string; name?: string; mime?: string }>
@@ -150,4 +152,89 @@ export interface SessionSpecProjection {
   tasks: { done: SpecTaskGroup; running: SpecTaskGroup; pending: SpecTaskGroup }
   deliverables: { total: number; items: SpecDeliverable[]; hasMore: boolean }
   pendingConfirmations: { total: number }
+}
+
+// ---- P1-CONV §17 任务域（F-CONV-009） ----
+export type TaskDisplayStatus = 'pending' | 'running' | 'failed' | 'done'
+export interface TaskView {
+  id: string
+  sessionId: string
+  batchId?: string
+  title: string
+  mode: 'plan' | 'loop'
+  status: string
+  displayStatus: TaskDisplayStatus
+  waitingReason?: string
+  progress?: number
+  attempt?: number
+  failReason?: string
+  dependsOn?: string[]
+  orderIndex?: number
+  createdAt: number
+  updatedAt: number
+  messageId?: string
+  stepCount?: number
+  doneStepCount?: number
+  currentStepSeq?: number
+  outputCount?: number
+  overdueMinutes?: number
+  lastTrace?: TraceItem
+}
+export interface TraceItem {
+  id?: string
+  taskId?: string
+  stepId?: string
+  traceSeq: number
+  category: 'thought' | 'action' | 'observation' | string
+  tool?: string
+  text: string
+  at: number
+}
+export interface TaskStep {
+  id: string
+  seq: number
+  title: string
+  status: string
+  summary?: string
+  failReason?: string
+  startedAt?: number
+  finishedAt?: number
+  traceCount: number
+  traces?: TraceItem[]
+}
+export interface TaskCounts { all: number; pending: number; running: number; failed: number; done: number }
+export interface TaskListPayload { ok?: boolean; tasks: TaskView[]; counts: TaskCounts; total: number; hasMore: boolean; nextBefore?: string | null }
+export interface TaskDetailPayload {
+  task: TaskView
+  steps: TaskStep[]
+  currentStepId?: string | null
+  traces: TraceItem[]
+  tracesHasMore: boolean
+  deliverables: TaskFile[]
+  context?: { goal?: string; inputs?: string[]; constraints?: string[]; historyCount?: number }
+  budget?: { maxTokens?: number; maxSteps?: number; usedTokens?: number; usedSteps?: number }
+  taskTotal?: number
+}
+export interface TaskFile { id: string; name: string; mime: string; size: number; typeBadge?: 'doc' | 'sheet' | 'image' | string; createdAt: number; downloadUrl?: string; previewUrl?: string }
+export interface DeliverableGroup { taskId: string; taskTitle: string; taskStatus: string; files: TaskFile[] }
+export interface DeliverablesPayload { groups: DeliverableGroup[]; total: number; fileCount: number; hasMore: boolean }
+export interface TaskGraphNode { id: string; title: string; mode: 'plan' | 'loop'; status: string; displayStatus: TaskDisplayStatus; waitingReason?: string; progress?: number; failReason?: string; dependsOn?: string[] }
+export interface TaskGraphEdge { from: string; to: string; joinMode?: string; style?: string }
+export interface TaskGraphPayload { nodes: TaskGraphNode[]; edges: TaskGraphEdge[]; layers: Array<{ index: number; nodeIds: string[] }>; total: number }
+export type TaskEventType = 'task.created' | 'task.updated' | 'task.step' | 'task.trace' | 'task.report' | 'task.reminder'
+export interface TaskEvent {
+  type: TaskEventType | 'message.created'
+  id: string
+  sessionId?: string
+  batchId?: string
+  stepId?: string
+  stepSeq?: number
+  traceSeq?: number
+  category?: string
+  tool?: string
+  text?: string
+  at?: number
+  eventId?: number
+  displayStatus?: TaskDisplayStatus
+  [key: string]: unknown
 }

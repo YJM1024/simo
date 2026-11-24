@@ -107,7 +107,7 @@ test.describe('E2E-ANCESTOR-001 FE-007 加载上级会话', () => {
     await expect(page.locator('.tlg-session.is-ancestor-session')).toHaveCount(0)
   })
 
-  test('403 时显示“无权读取该上级会话”', async ({ page }) => {
+  test('403 时显示一条中性提示“无权读取该上级会话”', async ({ page }) => {
     const chain = await seedChain({ childMessages: 1 })
     await page.route(/\/api\/sessions\/[^/]+\/messages\?scope=all/, (route) =>
       route.fulfill({ status: 403, contentType: 'application/json', body: JSON.stringify({ ok: false, code: 'forbidden' }) }),
@@ -117,11 +117,12 @@ test.describe('E2E-ANCESTOR-001 FE-007 加载上级会话', () => {
     await expect(page.locator('.conversation-panel.is-ready')).toBeVisible()
     await expect(page.locator('.msg').first()).toBeVisible()
     await page.locator('.message-top button').click()
-    await expect(page.locator('.err-text[role="alert"]')).toHaveText('无权读取该上级会话', { timeout: 15_000 })
+    await expect(page.locator('.ancestor-hint[role="status"]')).toHaveText('无权读取该上级会话', { timeout: 15_000 })
+    await expect(page.locator('.err-text')).toHaveCount(0)
     await expect(page.locator('.tlg-session.is-ancestor-session')).toHaveCount(0)
   })
 
-  test('空上级显示“上级没有消息”并允许继续向上', async ({ page }) => {
+  test('空上级静默不提示并允许继续向上', async ({ page }) => {
     const suffix = unique('E2E 空上级')
     // 注意：createSession(null) 在后端等价于 parentId=main，所以“空上级”仍有 main 这一级。
     const parent = await createSession(null, `${suffix} 上级`)
@@ -134,11 +135,12 @@ test.describe('E2E-ANCESTOR-001 FE-007 加载上级会话', () => {
     await expect(page.locator('.msg').first()).toBeVisible()
     const before = await page.locator('.msg').count()
     await page.locator('.message-top button').click()
-    await expect(page.locator('.err-text[role="alert"]')).toContainText('上级没有消息', { timeout: 15_000 })
-    // 空上级不插入消息，但按 FE-007 规范“按钮仍可继续向上（若还有 parent）”。
+    // 空上级按无上级处理：提示与错误都是 0 条。
+    await expect(page.locator('.message-top button')).toHaveAttribute('title', '主会话', { timeout: 15_000 })
+    await expect(page.locator('.err-text')).toHaveCount(0)
+    await expect(page.locator('.ancestor-hint')).toHaveCount(0)
     expect(await page.locator('.msg').count()).toBe(before)
     await expect(page.locator('.tlg-session.is-ancestor-session')).toHaveCount(0)
-    await expect(page.locator('.message-top button')).toHaveAttribute('title', '主会话')
 
     // 再点一次加载到根，按钮消失、根会话组出现。
     await page.locator('.message-top button').click()

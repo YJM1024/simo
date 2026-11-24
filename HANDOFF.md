@@ -4,6 +4,8 @@
 仓库：`YJM1024/simo`（main）
 本文件是**给下一个会话/下一位 Agent 的交接**。先读本文件 → `docs/CONTINUITY.md` → `docs/tasks/STATUS.md` → `docs/product/CONV-CLOSURE.md`。
 
+> **2026-11-24 追加**：本文件主体停在 2026-11-21 的会话域收口口径（"P2–P10 冻结"）。11-23 已开 `CHG-CONV-007`（PRD-CONV-009 会话内任务与编排，18 条 AC 已冻结，前端列做到一半），11-24 该变更把 18 条已签会话域断言打红，主会话 `f9b819e0` 随后因上下文自锁不可用。当前现场、判定、出口选项与恢复入口见 [`docs/plan/INCIDENT-20261124-009-deadlock.md`](docs/plan/INCIDENT-20261124-009-deadlock.md)，在出口裁决之前不要继续写任务域代码，也不要为变绿去改已签断言。
+
 ## 1. 产品范围（硬边界）
 
 - **本轮及后续只做会话域（P1：`CONV` + `SYNC`，12 个 PRD）的验收收口。**

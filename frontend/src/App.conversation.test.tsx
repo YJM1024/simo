@@ -50,6 +50,15 @@ function sessionRow(title: string): HTMLElement {
   return screen.getByTitle(title).closest('.session-row') as HTMLElement
 }
 
+/** 按标题取侧栏行本身：同一标题在会话头/祖先区也可能出现，getByTitle 会命中多个。 */
+function sidebarRow(title: string): HTMLElement {
+  const row = screen.getAllByTitle(title)
+    .map((node) => node.closest('.session-row'))
+    .find((node): node is HTMLElement => node !== null)
+  if (!row) throw new Error(`missing sidebar row: ${title}`)
+  return row
+}
+
 const messageInput = (): HTMLTextAreaElement => screen.getByLabelText('消息输入框') as HTMLTextAreaElement
 
 // Sidebar 头部与 "会话" 分组各有一个「新建会话」按钮（library.tsx:128、141），取第一个即可。
@@ -162,7 +171,7 @@ describe('App session lifecycle (PRD-CONV-002)', () => {
     snap.createFail = true
     await user.click(createSessionButton())
     await waitFor(() => expect(snap.createBodies).toHaveLength(1))
-    // 与发送失败一致：错误同时出现在 Composer alert 与会话内 err-text
+    // 失败以 toast 呈现（与 rename 一致），当前会话不被切走、不产生草稿行
     expect((await screen.findAllByText('请求失败（500），请稍后重试')).length).toBeGreaterThan(0)
     expect(sessionRow('主会话')).toHaveClass('is-active')
     expect(screen.queryByTitle('新会话')).not.toBeInTheDocument()
@@ -229,7 +238,7 @@ describe('App unread badge (P1-CONV 未读持久化)', () => {
     expect(sessionRow('子会话').querySelector('[data-unread="true"]')?.textContent).toBe('')
 
     await user.click(screen.getByTitle('子会话'))
-    await waitFor(() => expect(snap.readCalls).toEqual(['child']))
+    await waitFor(() => expect(snap.readCalls).toEqual(['main', 'child']))
     await waitFor(() => expect(within(sessionRow('子会话')).queryByLabelText('未读')).not.toBeInTheDocument())
   })
 
@@ -246,7 +255,7 @@ describe('App unread badge (P1-CONV 未读持久化)', () => {
 
     // 进入该会话 → 服务端已读 → 本地即时清除，且刷新后不再出现
     await user.click(screen.getByTitle('子会话'))
-    await waitFor(() => expect(snap.readCalls).toEqual(['child']))
+    await waitFor(() => expect(snap.readCalls).toEqual(['main', 'child']))
     await waitFor(() => expect(screen.queryByLabelText('未读')).not.toBeInTheDocument())
     expect(snap.tree[0].children?.[0]?.hasUnread).toBe(false)
   })
@@ -295,6 +304,44 @@ describe('App unread badge (P1-CONV 未读持久化)', () => {
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent('标记已读失败：请求失败（500），请稍后重试')
     expect(within(sessionRow('子会话')).getByLabelText('未读')).toBeInTheDocument()
+  })
+
+  /**
+   * 缺陷回归：点击早于列表刷新出未读时（本地 hasUnread=false），旧实现直接 return，
+   * 标读请求根本没发，未读点一直留着。判据是“进入即已读”，进入就该发 POST。
+   */
+  it('marks a session read on entry even when the local list has no unread flag yet', async () => {
+    const child = snap.tree[0].children?.[0]
+    if (!child) throw new Error('fixture missing child session')
+    child.hasUnread = false
+    const user = await renderApp()
+    expect(within(sessionRow('子会话')).queryByLabelText('未读')).not.toBeInTheDocument()
+
+    await user.click(screen.getByTitle('子会话'))
+    await waitFor(() => expect(snap.readCalls).toContain('child'))
+  })
+
+  /**
+   * 去重：列表刷新会让标读 effect 重跑，同一会话 1 秒内只能发一次；
+   * 切到别的会话后记录里的 sessionId 已变，切回来应重新发，不被上个会话的去重窗口挡住。
+   */
+  it('marks the same session once within a 1s window and again after switching away and back', async () => {
+    const user = await renderApp()
+    await user.click(sidebarRow('子会话'))
+    await waitFor(() => expect(snap.readCalls.filter((id) => id === 'child')).toHaveLength(1))
+
+    // session_read 广播触发列表刷新 → 标读 effect 重跑 → 1 秒内不得重复发
+    const listsBefore = snap.listCalls
+    act(() => { MockWebSocket.instances[0].emit('message', { data: readFrame('child') }) })
+    await waitFor(() => expect(snap.listCalls).toBeGreaterThan(listsBefore))
+    await flush(30)
+    expect(snap.readCalls.filter((id) => id === 'child')).toHaveLength(1)
+
+    // 切走再切回：重新发（主会话这次是第 2 次：挂载 1 次 + 切回 1 次）
+    await user.click(sidebarRow('主会话'))
+    await waitFor(() => expect(snap.readCalls.filter((id) => id === 'main')).toHaveLength(2))
+    await user.click(sidebarRow('子会话'))
+    await waitFor(() => expect(snap.readCalls.filter((id) => id === 'child')).toHaveLength(2))
   })
 })
 
@@ -523,16 +570,18 @@ describe('App ancestor chain (PRD-CONV-007)', () => {
     await waitFor(() => expect(screen.queryByRole('button', { name: /显示上级会话/ })).not.toBeInTheDocument())
   })
 
-  it('reports an empty ancestor and stops offering that level', async () => {
+  it('silently treats an empty ancestor as visited', async () => {
     snap.ancestor.main = []
     const user = await renderApp()
     await user.click(sessionRow('子会话'))
     await screen.findByText('子会话消息')
 
     await user.click(screen.getByRole('button', { name: '显示上级会话：主会话' }))
-    expect(await screen.findByText('上级没有消息')).toBeInTheDocument()
-    // 空层级被记为已访问，不会重复请求、也不会继续显示入口
+    // 空上级按无上级处理：不插入消息、不渲染任何提示，层级直接记为已访问。
     await waitFor(() => expect(screen.queryByRole('button', { name: /显示上级会话/ })).not.toBeInTheDocument())
+    expect(screen.queryByText('上级没有消息')).not.toBeInTheDocument()
+    expect(document.querySelector('.err-text, .ancestor-hint')).toBeNull()
+    expect(document.querySelectorAll('.tlg-session.is-ancestor-session')).toHaveLength(0)
     expect(screen.queryByText('主会话消息')).not.toBeInTheDocument()
   })
 
@@ -589,13 +638,17 @@ describe('App ancestor chain (PRD-CONV-007)', () => {
     expect(screen.getByRole('button', { name: '显示上级会话：主会话' })).not.toBeDisabled()
   })
 
-  it('maps 403 to the permission error', async () => {
+  it('maps 403 to a neutral non-blocking hint', async () => {
     snap.ancestorStatus.main = 403
     const user = await renderApp()
     await user.click(sessionRow('子会话'))
     await screen.findByText('子会话消息')
     await user.click(screen.getByRole('button', { name: '显示上级会话：主会话' }))
-    expect(await screen.findByText('无权读取该上级会话')).toBeInTheDocument()
+    const hint = await screen.findByText('无权读取该上级会话')
+    expect(hint).toHaveClass('ancestor-hint')
+    expect(hint).not.toHaveClass('err-text')
+    expect(hint).not.toHaveTextContent(/失败|错误/)
+    expect(screen.getByRole('button', { name: '显示上级会话：主会话' })).not.toBeDisabled()
   })
 })
 

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	coretask "simo/internal/core/task"
@@ -29,7 +30,7 @@ func (m *Module) registerHTTP(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/artifacts/{id}", m.handleArtifact)
 	mux.HandleFunc("GET /api/artifacts/{id}/content", m.handleArtifactContent)
 	mux.HandleFunc("GET /api/sessions/{id}/artifacts", m.handleSessionArtifacts)
-	mux.HandleFunc("GET /api/sessions/{id}/deliverables", m.handleSessionArtifacts)
+	m.registerConvHTTP(mux)
 }
 
 func (m *Module) handleTeam(w http.ResponseWriter, r *http.Request) {
@@ -103,18 +104,46 @@ func (m *Module) handleWorkflowMembers(w http.ResponseWriter, r *http.Request) {
 func (m *Module) handleList(w http.ResponseWriter, r *http.Request) {
 	sessionID := strings.TrimSpace(r.URL.Query().Get("sessionId"))
 	statusFilter := strings.TrimSpace(r.URL.Query().Get("status"))
+	batchFilter := strings.TrimSpace(r.URL.Query().Get("batchId"))
+	if sessionID != "" {
+		// 会话化列表：筛选、计数、展示态与游标走同一套实现。
+		filter := ListFilter{BatchID: batchFilter, Mode: strings.TrimSpace(r.URL.Query().Get("mode"))}
+		if statusFilter != "" {
+			filter.Status = strings.Split(statusFilter, ",")
+		}
+		if raw := strings.TrimSpace(r.URL.Query().Get("limit")); raw != "" {
+			if limit, convErr := strconv.Atoi(raw); convErr == nil {
+				filter.Limit = limit
+			}
+		}
+		tasks, hasMore, nextBefore, err := m.ListConvTasks(r.Context(), sessionID, filter)
+		if err != nil {
+			writeConvError(w, err)
+			return
+		}
+		counts, _ := m.sessionTaskCounts(r.Context(), sessionID)
+		httpserver.WriteJSON(w, http.StatusOK, map[string]any{
+			"ok": true, "tasks": tasks, "counts": counts,
+			"hasMore": hasMore, "nextBefore": nextBefore,
+		})
+		return
+	}
 	list, err := m.List(r.Context(), sessionID)
 	if err != nil {
 		m.log.Error("列任务失败", "err", err)
 		httpserver.WriteError(w, http.StatusInternalServerError, "读取任务失败")
 		return
 	}
-	if statusFilter != "" {
+	if statusFilter != "" || batchFilter != "" {
 		filtered := make([]coretask.Task, 0, len(list))
 		for _, task := range list {
-			if task.Status == statusFilter {
-				filtered = append(filtered, task)
+			if statusFilter != "" && displayStatus(task.Status) != statusFilter && task.Status != statusFilter {
+				continue
 			}
+			if batchFilter != "" && task.BatchID != batchFilter {
+				continue
+			}
+			filtered = append(filtered, task)
 		}
 		list = filtered
 	}
@@ -180,16 +209,43 @@ func (m *Module) handleWorkflowCancel(w http.ResponseWriter, r *http.Request) {
 }
 
 func (m *Module) handleGet(w http.ResponseWriter, r *http.Request) {
-	task, err := m.Get(r.Context(), strings.TrimSpace(r.PathValue("id")))
+	taskID := strings.TrimSpace(r.PathValue("id"))
+	task, err := m.Get(r.Context(), taskID)
 	if err != nil {
 		m.writeTaskError(w, err)
 		return
 	}
 	decorateTask(&task)
-	httpserver.WriteJSON(w, http.StatusOK, map[string]any{"ok": true, "task": task})
+	payload := map[string]any{"ok": true, "task": task, "displayStatus": displayStatus(task.Status)}
+	// 新字段：步骤、轨迹、上下文与预算；旧客户端不读这些键也不受影响。
+	if steps, err := m.loadSteps(r.Context(), taskID); err == nil && len(steps) > 0 {
+		payload["steps"] = steps
+	}
+	if traces, hasMore, err := m.loadTraces(r.Context(), taskID, 0, 0); err == nil && len(traces) > 0 {
+		payload["traces"] = traces
+		payload["tracesHasMore"] = hasMore
+	}
+	payload["context"] = map[string]any{
+		"goal": task.Goal, "inputs": task.Inputs, "constraints": task.Constraints, "historyCount": 0,
+	}
+	payload["budget"] = parseBudget(task.BudgetJSON)
+	httpserver.WriteJSON(w, http.StatusOK, payload)
 }
 
 func (m *Module) handleCancel(w http.ResponseWriter, r *http.Request) {
+	scope := strings.TrimSpace(r.URL.Query().Get("scope"))
+	if scope == "chain" || scope == "self" {
+		task, cancelled, changed, err := m.CancelScope(r.Context(), strings.TrimSpace(r.PathValue("id")), scope)
+		if err != nil {
+			writeConvError(w, err)
+			return
+		}
+		decorateTask(&task)
+		httpserver.WriteJSON(w, http.StatusOK, map[string]any{
+			"ok": true, "task": task, "cancelled": cancelled, "changed": changed,
+		})
+		return
+	}
 	task, err := m.Cancel(r.Context(), strings.TrimSpace(r.PathValue("id")))
 	if err != nil {
 		m.writeTaskError(w, err)
@@ -199,6 +255,18 @@ func (m *Module) handleCancel(w http.ResponseWriter, r *http.Request) {
 }
 
 func (m *Module) handleRetry(w http.ResponseWriter, r *http.Request) {
+	// P1-CONV-009：只允许 failed/cancelled/interrupted，其余 409 task_state_conflict。
+	current, err := m.getTask(r.Context(), strings.TrimSpace(r.PathValue("id")))
+	if err != nil {
+		m.writeTaskError(w, err)
+		return
+	}
+	switch current.Status {
+	case coretask.StatusFailed, coretask.StatusCancelled, coretask.StatusInterrupted:
+	default:
+		writeConvError(w, errStateConflict(current.Status))
+		return
+	}
 	task, err := m.Retry(r.Context(), strings.TrimSpace(r.PathValue("id")))
 	if err != nil {
 		m.writeTaskError(w, err)

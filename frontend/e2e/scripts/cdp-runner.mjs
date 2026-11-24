@@ -533,12 +533,13 @@ scenario('04c FE-007 403 显示无权限', { width: 1440, height: 900 }, async (
   await expect(page.locator('.conversation-panel.is-ready')).toBeVisible()
   await expect(page.locator('.msg').first()).toBeVisible()
   await page.locator('.message-top button').click()
-  await expect(page.locator('.err-text[role="alert"]')).toHaveText('无权读取该上级会话', { timeout: 15_000 })
+  await expect(page.locator('.ancestor-hint[role="status"]')).toHaveText('无权读取该上级会话', { timeout: 15_000 })
+  await expect(page.locator('.err-text')).toHaveCount(0)
   await expect(page.locator('.tlg-session.is-ancestor-session')).toHaveCount(0)
 })
 
 // 04d / E2E-ANCESTOR-001
-scenario('04d FE-007 空上级提示并允许继续向上', { width: 1440, height: 900 }, async (page) => {
+scenario('04d FE-007 空上级静默并允许继续向上', { width: 1440, height: 900 }, async (page) => {
   const suffix = unique('E2E 空上级')
   const parent = await createSession(null, `${suffix} 上级`)
   const childTitle = `${suffix} 当前`
@@ -549,7 +550,10 @@ scenario('04d FE-007 空上级提示并允许继续向上', { width: 1440, heigh
   await expect(page.locator('.msg').first()).toBeVisible()
   const before = await page.locator('.msg').count()
   await page.locator('.message-top button').click()
-  await expect(page.locator('.err-text[role="alert"]')).toContainText('上级没有消息', { timeout: 15_000 })
+  // 空上级按无上级处理：不渲染任何提示或错误，按钮直接推进到下一级。
+  await expect(page.locator('.message-top button')).toHaveAttribute('title', '主会话', { timeout: 15_000 })
+  await expect(page.locator('.err-text')).toHaveCount(0)
+  await expect(page.locator('.ancestor-hint')).toHaveCount(0)
   expect(await page.locator('.msg').count()).toBe(before)
   await expect(page.locator('.tlg-session.is-ancestor-session')).toHaveCount(0)
   await expect(page.locator('.message-top button')).toHaveAttribute('title', '主会话')

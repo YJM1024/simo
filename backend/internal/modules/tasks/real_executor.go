@@ -1,4 +1,4 @@
-package tasks
+﻿package tasks
 
 import (
 	"context"
@@ -69,7 +69,10 @@ func (m *Module) runRealAttempt(ctx context.Context, id string, attempt int) {
 		return
 	}
 	if result.Budget {
-		task.Status = coretask.StatusBlocked
+		// P1-CONV-009：预算耗尽转 resource 等待，不落 blocked，也不结束执行。
+		task.Status = coretask.StatusRunning
+		task.WaitingReason = WaitingResource
+		task.WaitingSince = time.Now().UnixMilli()
 		task.Outcome = "budget_exceeded"
 		task.Summary = result.Summary
 		if strings.TrimSpace(task.Summary) == "" {
@@ -84,7 +87,10 @@ func (m *Module) runRealAttempt(ctx context.Context, id string, attempt int) {
 		return
 	}
 	if result.Paused {
-		task.Status = coretask.StatusBlocked
+		// P1-CONV-009：需审批工具挂起转 confirmation 等待。
+		task.Status = coretask.StatusRunning
+		task.WaitingReason = WaitingConfirmation
+		task.WaitingSince = time.Now().UnixMilli()
 		task.Outcome = "paused"
 		task.Summary = result.Summary
 		if strings.TrimSpace(task.Summary) == "" {

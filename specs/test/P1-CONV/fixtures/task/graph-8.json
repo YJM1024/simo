@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "kind": "simo.task-fixture",
+  "name": "graph-8",
+  "description": "8 节点任务图：链式依赖、平行任务与一条失败分支。",
+  "usage": "POST 一次 N1；mock 对任务 d 注入失败；GET 图（N8）应为 8 节点 3 边 3 层。",
+  "generatedAt": "2026-11-24T10:09:57.647Z",
+  "generatedBy": "scripts/ac/lib/task-fixtures.mjs",
+  "sessions": [
+    {
+      "id": "s1",
+      "createSession": false,
+      "mock": {
+        "failures": [
+          {
+            "taskKey": "d",
+            "message": "mock 注入失败：外部接口超时",
+            "code": "tool_timeout"
+          }
+        ]
+      },
+      "requests": [
+        {
+          "label": "graph-8-create",
+          "request": {
+            "mode": "plan",
+            "goal": "验证任务图的节点、边与分层计算。",
+            "inputs": [
+              "上周的指标快照：新增会话 1280、消息 9640、平均首响 1.8 秒。",
+              "目标：把平均首响压到 1.2 秒以内。",
+              "节点 d 会失败，节点 h 依赖它的失败结果。"
+            ],
+            "constraints": [
+              "失败节点不阻塞平行任务。"
+            ],
+            "tasks": [
+              {
+                "key": "a",
+                "title": "图节点 a：拉取原始数据",
+                "mode": "plan",
+                "goal": "拉取原始数据并落盘。",
+                "joinMode": "all"
+              },
+              {
+                "key": "b",
+                "title": "图节点 b：清洗数据",
+                "mode": "plan",
+                "goal": "清洗数据并输出中间表。",
+                "dependsOn": [
+                  "a"
+                ],
+                "joinMode": "all"
+              },
+              {
+                "key": "c",
+                "title": "图节点 c：生成指标",
+                "mode": "plan",
+                "goal": "基于中间表生成指标。",
+                "dependsOn": [
+                  "b"
+                ],
+                "joinMode": "all"
+              },
+              {
+                "key": "d",
+                "title": "图节点 d：尝试外部接口",
+                "mode": "plan",
+                "goal": "调用外部接口补齐维度，本夹具注入失败。",
+                "joinMode": "all"
+              },
+              {
+                "key": "e",
+                "title": "图节点 e：并行核对口径",
+                "mode": "plan",
+                "goal": "核对指标口径。",
+                "joinMode": "all"
+              },
+              {
+                "key": "f",
+                "title": "图节点 f：并行检查缺数",
+                "mode": "plan",
+                "goal": "检查缺数与异常值。",
+                "joinMode": "all"
+              },
+              {
+                "key": "g",
+                "title": "图节点 g：并行整理备注",
+                "mode": "plan",
+                "goal": "整理分析备注。",
+                "joinMode": "all"
+              },
+              {
+                "key": "h",
+                "title": "图节点 h：失败分支的下游",
+                "mode": "plan",
+                "goal": "等待 d 完成后执行；d 失败时 h 保持未开始。",
+                "dependsOn": [
+                  "d"
+                ],
+                "joinMode": "all"
+              }
+            ],
+            "clientMutationId": "fx-graph-8-001"
+          }
+        }
+      ],
+      "expect": {
+        "accepted": 8,
+        "graph": {
+          "nodes": 8,
+          "edges": 3,
+          "layers": 3,
+          "layerSizes": [
+            5,
+            2,
+            1
+          ]
+        },
+        "failedKeys": [
+          "d"
+        ]
+      }
+    }
+  ],
+  "expect": {
+    "notes": [
+      "边为 a->b、b->c、d->h，共 3 条。",
+      "e/f/g 与 a 同层，平行执行。",
+      "d 失败后 h 仍应被调度并收尾。"
+    ]
+  }
+}

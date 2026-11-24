@@ -4,14 +4,14 @@
 |---|---|
 | 域 | P1-CONV（会话域） |
 | 产物类型 | 后端开发 Spec（长期 Spec，随域常驻） |
-| 状态 | implemented（12 个 PRD 中 7 个已实现、1 个部分实现、4 个后端 N/A；行为变更 3 项未实现，见 §13） |
-| 版本 | v1.0 |
-| 最后更新 | 2026-11-21 |
+| 状态 | implemented（12 个 PRD 中 7 个已实现、1 个部分实现、4 个后端 N/A；行为变更 3 项未实现，见 §13）；`PRD-CONV-009` 见 §17，状态 planned |
+| 版本 | v1.3 |
+| 最后更新 | 2026-11-23 |
 | owner | 后端角色（TASK-CHG-CONV-006-10） |
-| 产品输入 | `specs/product/P1-CONV/spec.md`（PRD-CONV-001..008 + PRD-SYNC-001..004；SYNC-005 已于 2026-11-22 移除） |
-| 变更输入 | `specs/changes/CHG-CONV-006/product.md`、`specs/changes/CHG-CONV-006/tasks.md` |
+| 产品输入 | `specs/product/P1-CONV/spec.md`（PRD-CONV-001..008、PRD-CONV-009 见 §17 + PRD-SYNC-001..004；SYNC-005 已于 2026-11-22 移除） |
+| 变更输入 | `specs/changes/CHG-CONV-006/product.md`、`specs/changes/CHG-CONV-006/tasks.md`、`specs/changes/CHG-CONV-007/spec.md` |
 | 运行时基线 | `127.0.0.1:8787`，单用户、无鉴权中间件；SQLite 单进程单写者；时间戳均为 Unix 毫秒（除特别注明） |
-| 代码基线 | `backend/internal/modules/{sessions,chat}`、`backend/internal/core/{session,eventlog}`、`backend/cmd/simo/*_test.go` |
+| 代码基线 | `backend/internal/modules/{sessions,chat,tasks}`、`backend/internal/core/{session,eventlog,task}`、`backend/cmd/simo/*_test.go` |
 | 本文范围 | 只描述**已落地或明确标注未实现**的后端契约；不写重构建议，不修改任何代码/产品/变更文档 |
 
 **阅读方式**：§0 索引 → 按 PRD 分节查 HTTP/WS/数据/不变量/证据 → §13 冲突清单（需 Lead 裁决项）→ §14 错误码总表 → §15 技术债 → §16 变更记录。文中 `路径:行号` 均为本轮实读位置；行号以当前工作区文件为准。
@@ -36,6 +36,7 @@
 | §10 | PRD-SYNC-002 多标签 active/祖先/已读 | N/A：浏览器 BroadcastChannel 状态 | 无接口/无字段 | 前端测试，后端无证据 |
 | §11 | PRD-SYNC-003 发送模式跨标签 | N/A：localStorage/BroadcastChannel | 无接口/无字段 | 前端测试，后端无证据 |
 | §12 | PRD-SYNC-004 未读 | 待新增（产品裁决：会话级持久化读游标；当前后端无表/接口） | 需新增读游标表、进入即写已读、刷新/重启读回、多标签共享；不新增全站数字 | 无（产品 AC-SYNC-004-03 记 `missing`） |
+| §17 | PRD-CONV-009 会话内任务与编排 | planned：契约已冻结，实现未落地（2026-11-23） | 9 个新增会话内接口、5 个改造接口、`task.*` 6 个 WS 事件；tasks 模块 v8/v9、chat 模块 v23 | 无实现；待建 `scripts/ac/AC-CONV-009-*.mjs`，当前 18 条 AC 证据均为 `missing` |
 
 **通用约定**
 
@@ -752,3 +753,523 @@ N/A：投影是 HTTP 拉取（可按 ETag 304 复用）；后端不推送投影�
 | 2026-11-21 | v1.0 | 明确 `main_session_immutable`（产品）与 `main_session_protected`（实现）不一致，列入 C-01，不自行裁决 | 产品 AC-001-03 vs `sessions/http.go:344-345` |
 | 2026-11-21 | v1.1 | 删除会话改标为**产品显式非目标 / backlog**（`REQ-CONV-002-03`）：`DELETE` 固定 403 `R4_CONFIRM_REQUIRED` 为保护性占位，不实现确认令牌/204/级联；§2 状态改 `implemented`，§2.7 改“非目标与待办”，要求补断言钉住 403 | 产品 `specs/product/P1-CONV/spec.md` §2.1 + `REQ-CONV-002-03`；`sessions/http.go:68-70`、`p1_conv_sessions_http_test.go:355` |
 | 2026-11-22 | v1.2 | §8 投影 ETag 从 `"spec-<id>-<revision>"` 改为响应内容摘要（规范化 JSON + 生效 `taskLimit` 的 SHA-256 前 8 字节），条件请求改走 `etagMatches`，200/304 都带 `Cache-Control: no-cache`；补 304 语义（空 body、前端保留现有数据）与 5 个自动化用例；T-08/T-09 关闭 | `backend/internal/modules/sessions/spec_projection.go:99-162`、`spec_projection_etag_test.go`；`go test ./internal/modules/sessions -run TestSpecProjectionETag -v`、`go test ./... -count=1`（16 包 ok / 0 FAIL） |
+| 2026-11-23 | v1.3 | 新增 §17「会话内任务与编排」（`PRD-CONV-009`）：任务、步骤、轨迹、批次、依赖五组数据的字段与迁移（tasks 模块 v8/v9、chat 模块 v23）；8 个存储状态、4 个展示态、3 类等待与迁移触发者；9 个新增接口与 5 个改造接口；`task.*` 6 个 WS 事件与任务卡片消息落库规则；隔离与审批、禁网禁子进程、上下文与额度、幂等与并发、10 个新增错误码；登记与现有实现（`blocked` 级联、steps JSON、全局 `/api/tasks`）的差异与 8 项未决。§0 索引补 §17 一行，头部版本与最后更新同步 | `specs/product/P1-CONV/spec.md` §4.6 与 `AC-CONV-009-01..18`；`specs/design/P1-CONV/spec.md` §17；`specs/changes/CHG-CONV-007/spec.md`；`docs/plan/DECISIONS.md` DEC-26 至 DEC-29；`backend/internal/modules/tasks/`、`backend/internal/modules/chat/category.go`、`backend/internal/modules/chat/loop.go` |
+
+---
+
+## 17 PRD-CONV-009 会话内任务与编排
+
+**状态**：契约已冻结，实现未落地（planned，2026-11-23）。本节只写目标契约与可断言口径，不改动 §1 至 §12 已实现的会话、消息、投影与 WS 行为；18 条 AC 中由后端承担的判据见 §17.12，视觉与交互判据见 `specs/design/P1-CONV/spec.md` §17。
+
+**与既有实现的关系**：右栏概览继续使用 `GET /api/sessions/{id}/spec-projection`（§8），四态、ETag 与 304 语义保持不变；任务与交付物两个标签改用本节新增的会话内接口。任务执行器与生命周期引擎归 `P2-TASK`，本轮由 `backend/internal/modules/tasks/` 的记录与编排代码承接；交付物落盘、类型识别与原文件读取归 `P4-FILE`，本节只约束记录、编排、归属、呈现数据与下载入口。
+
+**模块开关**：任务接口随 `cfg.Modules["tasks"]` 注册。开关关闭时 `/api/sessions/{id}/tasks` 等路径不注册，`http.ServeMux` 返回 404，响应体不是本节的错误信封；前端按“本会话没有任务”降级，不显示错误态。开关打开时本节全部契约生效。
+
+### 17.1 通用约定
+
+| 项 | 约定 |
+|---|---|
+| 路径 | 会话内接口以 `/api/sessions/{id}/tasks` 为前缀，`{id}` 为会话 id；不带会话段的 `/api/tasks*` 保留给内部调试与既有动作层 |
+| 会话归属 | 任务、步骤、轨迹、交付物只属于 `tasks.session_id` 指向的会话；路径会话与资源会话不一致时返回 404，不返回 403 |
+| 时间 | 全部为 Unix 毫秒；`0` 表示未发生 |
+| 状态枚举 | 存储与接口统一使用小写英文，取值见 §17.3；展示文案由前端映射，后端不返回中文状态 |
+| 分页 | `limit` 缺省 50、合法区间 1–100，越界返回 400 `invalid_task_limit`；游标是上一页最后一条的 `id`，放在 `before` |
+| 计数 | 列表响应的 `counts` 按整个会话统计，不受 `limit`、筛选与游标影响 |
+| 幂等 | 创建接口接受 `clientMutationId`；同一会话内同一 id 的重试返回首次结果，不新建任务 |
+| 批量上限 | 一次创建 1 至 12 个任务；超过 12 个返回 400 `task_batch_too_large` |
+
+### 17.2 数据模型
+
+既有 `tasks` 表与 `task_artifacts` 表保持列名不变，只做增量加列与新表；`task_steps`、`task_traces`、`task_batches`、`task_deps` 为本轮新增。
+
+**17.2.1 `tasks` 表新增列（tasks 模块迁移 v8）**
+
+| 列 | 类型 | 默认 | 语义与断言口径 |
+|---|---|---|---|
+| `mode` | TEXT | `'plan'` | 执行模式，仅 `plan` 或 `explore`；`plan` 有步骤行，`explore` 的步骤为空、轨迹扁平 |
+| `batch_id` | TEXT | `''` | 创建批次；单任务创建也写批次 id，汇总卡与取消链按它聚合 |
+| `goal` | TEXT | `''` | 启动上下文里的目标文本，≤2000 字 |
+| `inputs_json` | TEXT | `'[]'` | 输入项 JSON 数组，字符串数组，≤20 条 |
+| `constraints_json` | TEXT | `'[]'` | 约束 JSON 数组，字符串数组，≤20 条 |
+| `context_json` | TEXT | `'{}'` | 启动时上下文快照，键固定为 `goal`、`inputs`、`constraints`、`historyCount`、`sessionId`；`historyCount` 恒为 0 |
+| `waiting_reason` | TEXT | `''` | 等待原因，仅 `''`、`dependency`、`confirmation`、`resource` |
+| `waiting_since` | INTEGER | `0` | 进入当前等待的毫秒时间戳，退出等待清 0 |
+| `started_at` | INTEGER | `0` | 首次进入 `running` 的时间，重试不重置 |
+| `finished_at` | INTEGER | `0` | 首次进入 `done`/`failed`/`cancelled` 的时间，重试清 0 |
+| `fail_reason` | TEXT | `''` | 最近一次失败原因，≤500 字；重试成功后清空 |
+| `deadline_at` | INTEGER | `0` | 用户时限，0 表示未设；只提醒不取消 |
+| `deadline_reminded_at` | INTEGER | `0` | 时限提醒已发送的时间，保证提醒只发一次 |
+| `trigger_count` | INTEGER | `0` | 该任务被依赖触发启动的累计次数，`each` 语义下等于已完成前置数 |
+
+既有列沿用并固定语义：`status`（§17.3）、`progress`（0–100 整数）、`attempt`（从 1 起，每次重试加 1）、`depends_on_json`（依赖 id 数组的兼容镜像，写入顺序与创建顺序一致）、`order_index`（批内创建顺序，从 0 起）、`report_message_id`（终态汇报消息 id）、`budget_json`（见 §17.7）、`executor_agent_id`、`state_reason`。
+
+**17.2.2 `task_steps` 表（v9 新建）**
+
+| 列 | 类型 | 约束 | 语义 |
+|---|---|---|---|
+| `id` | TEXT | PRIMARY KEY | 形如 `step-<16 hex>` |
+| `task_id` | TEXT | NOT NULL | 所属任务 |
+| `seq` | INTEGER | NOT NULL | 执行顺序，同一任务内从 1 连续递增，唯一 |
+| `title` | TEXT | NOT NULL | 步骤名，≤200 字 |
+| `status` | TEXT | NOT NULL | `pending`/`running`/`done`/`failed`/`skipped` |
+| `summary` | TEXT | DEFAULT `''` | 步骤摘要，≤200 字 |
+| `fail_reason` | TEXT | DEFAULT `''` | 该步失败原因；用户取消时写「用户取消」 |
+| `started_at` | INTEGER | DEFAULT 0 | 进入 `running` 的时间 |
+| `finished_at` | INTEGER | DEFAULT 0 | 进入终态的时间 |
+
+索引 `idx_task_steps_task(task_id, seq)` 与唯一索引 `uq_task_steps_seq(task_id, seq)`。`explore` 模式不写该表，详情接口返回空数组。
+
+**17.2.3 `task_traces` 表（v9 新建）**
+
+| 列 | 类型 | 约束 | 语义 |
+|---|---|---|---|
+| `id` | TEXT | PRIMARY KEY | 形如 `tr-<16 hex>` |
+| `task_id` | TEXT | NOT NULL | 所属任务 |
+| `step_id` | TEXT | DEFAULT `''` | 所属步骤；`explore` 模式与步骤外的动作留空 |
+| `seq` | INTEGER | NOT NULL | 同一任务内严格递增，从 1 起，不因重试回退 |
+| `category` | TEXT | NOT NULL | 仅 `think`、`action`、`observe` |
+| `tool` | TEXT | DEFAULT `''` | `action` 与 `observe` 的工具名，其它类别为空 |
+| `text` | TEXT | NOT NULL | 正文，≤4000 字 |
+| `at` | INTEGER | NOT NULL | 发生时间 |
+
+索引 `idx_task_traces_task(task_id, seq)`。轨迹只追加、不更新、不删除；重试产生新轨迹，旧轨迹保留。
+
+**17.2.4 `task_batches` 表（v9 新建）**
+
+| 列 | 类型 | 约束 | 语义 |
+|---|---|---|---|
+| `id` | TEXT | PRIMARY KEY | 形如 `batch-<16 hex>` |
+| `session_id` | TEXT | NOT NULL | 发起会话 |
+| `client_mutation_id` | TEXT | DEFAULT `''` | 幂等键，空表示不去重 |
+| `task_count` | INTEGER | NOT NULL | 批内任务数，1–12 |
+| `message_id` | TEXT | DEFAULT `''` | 汇总卡消息 id；单任务批次指向该任务的卡片消息 |
+| `created_at` | INTEGER | NOT NULL | 创建时间 |
+
+唯一索引 `uq_task_batches_mutation(session_id, client_mutation_id) WHERE client_mutation_id <> ''`。幂等键按会话隔离，跨会话复用同一 id 不互相命中。
+
+**17.2.5 `task_deps` 表（v9 新建）**
+
+| 列 | 类型 | 约束 | 语义 |
+|---|---|---|---|
+| `task_id` | TEXT | 联合主键 | 等待方任务 |
+| `dep_id` | TEXT | 联合主键 | 前置任务，必须同会话、同批次 |
+| `join_mode` | TEXT | NOT NULL | `all`、`any`、`each`，缺省 `all` |
+| `created_at` | INTEGER | NOT NULL | 创建时间 |
+
+索引 `idx_task_deps_dep(dep_id)`。同一等待方的全部入边必须使用同一 `join_mode`，混合返回 400 `invalid_task_dependency`；`depends_on_json` 与 `task_deps` 在创建事务内同时写入，读取以 `task_deps` 为准。
+
+**17.2.6 `task_artifacts` 复用**
+
+沿用 v2 的 `id`、`task_id`、`name`、`rel_path`、`mime`、`size`、`created_at`，v6 的 `delivery_kind`，v7 的 `storage_scope`、`workspace_rel_path`。本轮不新增列；交付物列表只取 `delivery_kind = 'user_delivery'` 的行，类型徽标由 `mime` 与扩展名派生，取值 `doc`、`sheet`、`image`：`text/*`、`application/pdf`、`docx`、`doc`、`markdown` 归 `doc`，`csv`、`xlsx`、`xls` 归 `sheet`，`image/*` 归 `image`，其余归 `doc`。
+
+### 17.3 状态机
+
+**17.3.1 状态集合**
+
+存储状态共 8 个，展示态 4 个。展示映射由后端在 `displayStatus` 字段给出，保证任务图四态节点数之和等于节点总数。
+
+| 存储 `status` | `displayStatus` | 含义 | 说明 |
+|---|---|---|---|
+| `pending` | `pending` | 未开始 | 依赖未满足或尚未取得调度槽；`waiting_reason` 可为 `dependency` |
+| `queued` | `pending` | 未开始（排队） | 依赖已满足、已占槽，等待执行器领取 |
+| `running` | `running` | 进行中 | 执行器持有；`waiting_reason` 为 `confirmation` 或 `resource` 时仍计进行中 |
+| `done` | `done` | 已完成 | 终态，`finished_at` 非 0 |
+| `failed` | `failed` | 失败 | 终态，`fail_reason` 非空 |
+| `cancelled` | `failed` | 失败（已取消） | 终态，`fail_reason` 固定写「已取消」；筛选「失败」包含该状态 |
+| `interrupted` | `failed` | 失败（已中断） | 服务重启时由 `recoverInterrupted` 置入；可重试 |
+| `blocked` | `pending` | 未开始（历史） | 仅为旧库兼容保留，新写入禁止；读取时按 `pending` 加 `dependency` 等待处理 |
+
+**17.3.2 合法迁移**
+
+触发者三列固定为「智能体」「用户」「系统」；未列入下表或条件不满足的迁移一律拒绝，错误码见 §17.10。
+
+| 从 | 到 | 触发者 | 条件与副作用 |
+|---|---|---|---|
+| `pending` | `queued` | 系统 | 全部入边满足该边的 `join_mode` 且取得并发槽；写 `started_at` 前置不改，`waiting_reason` 清空 |
+| `pending` | `cancelled` | 用户/系统 | 取消作用于该任务或整链；`fail_reason` 写「已取消」，`trigger_count` 不变，下游保持 `pending` |
+| `queued` | `running` | 系统 | 执行器领取；`started_at` 若为 0 则写入；进度保持 |
+| `queued` | `cancelled` | 用户/系统 | 同 `pending` 到 `cancelled`；不产生步骤启动 |
+| `running` | `running` | 系统 | 只改 `waiting_reason`：进入 `confirmation` 或 `resource`；不改 `status`、不改进度 |
+| `running` | `done` | 智能体 | 全部步骤 `done`；`progress=100`、`finished_at` 写入、`fail_reason` 清空 |
+| `running` | `failed` | 智能体/系统 | 执行器报错或步骤失败；`fail_reason` 写最近一条原因，`finished_at` 写入 |
+| `running` | `cancelled` | 用户/系统 | 取消确认在 5 秒内生效；未完成步骤回 `pending`，已完成步骤保留 |
+| `failed` | `queued` | 用户 | 显式重试；`attempt` 加 1，步骤重置为 `pending`，`fail_reason` 清空，轨迹保留 |
+| `cancelled` | `queued` | 用户 | 显式重试；规则同上 |
+| `interrupted` | `queued` | 用户 | 显式重试；规则同上 |
+
+终态对终态的取消不构成错误：对 `done`、`failed`、`cancelled`、`interrupted` 调用取消接口返回 200，`changed=false`，任务字段不变，避免前端把幂等请求显示成失败。重试不适用于 `pending`、`queued`、`running`、`done`，返回 409 `task_state_conflict`。
+
+**17.3.3 三类等待**
+
+| `waiting_reason` | 存储状态 | 进入条件 | 退出条件 | 断言口径 |
+|---|---|---|---|---|
+| `dependency` | `pending` | 入边未满足；前置失败、取消或中断时保持该值 | 入边按 `join_mode` 满足后转 `queued` 并清空 | 等待期间步骤启动 0 次、`trigger_count` 不变、失败计数不变 |
+| `confirmation` | `running` | 工具调用需人工审批，或计划要求用户确认 | 确认接口 `decision=confirm` 清空并继续；`decision=cancel` 使当前步 `failed`、任务 `failed`、`fail_reason` 写「用户取消」 | 当前步保持 `running`、后续步骤启动 0 次、确认与取消入口各 1 个 |
+| `resource` | `running` | token 预算或步骤预算耗尽 | 恢复接口清空并从暂停步继续，已完成步骤不重跑 | 等待期间进度增量 0、恢复后 `progress` 从暂停值继续 |
+
+等待依赖时任务图节点文案为「未开始 · 等待前置」，节点仍计入 `pending`；等待确认与等待资源计入 `running`。三类等待都没有系统超时：等待 30 分钟不自动失败、不自动取消，只有前置完成、用户确认或取消、资源恢复三种途径改变等待状态。进入等待与退出等待都写 `waiting_since`，退出时清 0。
+
+**17.3.4 依赖连接语义**
+
+| `join_mode` | 启动规则 | 触发次数（三个前置均完成时） | 其余前置 |
+|---|---|---|---|
+| `all` | 全部前置 `done` 后启动 | 1 | 无需处理 |
+| `any` | 任一前置 `done` 后启动 | 1 | 继续执行，不取消 |
+| `each` | 每个前置 `done` 各触发一次，串行执行，同一任务同一时刻最多一个执行中实例 | 3 | 各自完成，互不影响 |
+
+`each` 语义下每次触发都把 `attempt` 加 1、`trigger_count` 加 1，并新建一次执行；若前一次仍在运行，后一次进入 `queued` 等待，不并发执行同一任务。前置失败、取消或中断时，等待方保持 `pending` 与 `dependency`，`trigger_count` 不变、失败计数不变、不自动重试、不级联标失败；任务图中该边为虚线。
+
+**17.3.5 取消的级联规则**
+
+取消接口的 `scope` 取 `self` 或 `chain`，缺省 `self`。`self` 只改目标任务；`chain` 改同批次内尚未开始的任务，把它们置 `cancelled` 并写「已取消」，正在运行的任务走中断流程，已完成的任务不变。下游任务在被取消或前置失败后保持 `pending`（不写 `blocked`），步骤启动 0 次，失败计数不增加。取消整链时不得出现半完成状态：正在运行的步骤被中断后回 `pending`，已完成步骤与产出保留，`attempt` 不增加。
+
+### 17.4 HTTP 契约
+
+**17.4.1 新增接口**
+
+| 序号 | 方法 | 路径 | 用途 | 成功 | 主要错误 |
+|---|---|---|---|---|---|
+| N1 | POST | `/api/sessions/{id}/tasks` | 创建单个或批量任务并生成卡片消息 | 201 | 400、404、409、413 |
+| N2 | GET | `/api/sessions/{id}/tasks` | 按会话列任务，支持状态、模式、批次筛选与计数 | 200 | 400、404 |
+| N3 | GET | `/api/sessions/{id}/tasks/{taskId}` | 任务详情，含步骤、轨迹、交付物与上下文摘要 | 200 | 400、404 |
+| N4 | POST | `/api/sessions/{id}/tasks/{taskId}/cancel` | 取消单任务或整链 | 200 | 400、404、409 |
+| N5 | POST | `/api/sessions/{id}/tasks/{taskId}/retry` | 失败、取消或中断任务重试 | 200 | 404、409 |
+| N6 | POST | `/api/sessions/{id}/tasks/{taskId}/confirmation` | 等待确认时确认或取消 | 200 | 400、404、409 |
+| N7 | POST | `/api/sessions/{id}/tasks/{taskId}/resume` | 等待资源或额度时恢复 | 200 | 404、409 |
+| N8 | GET | `/api/sessions/{id}/tasks/graph` | 任务图节点、边与依赖层 | 200 | 400、404 |
+| N9 | GET | `/api/sessions/{id}/deliverables` | 交付物按任务分组 | 200 | 400、404 |
+
+**N1 创建任务**
+
+请求体字段：
+
+| 字段 | 类型 | 必填 | 约束与语义 |
+|---|---|---|---|
+| `mode` | string | 否 | `plan` 或 `explore`，缺省 `plan`；非法值 400 `invalid_task_mode` |
+| `goal` | string | 否 | 批次默认目标，≤2000 字 |
+| `inputs` | string[] | 否 | 批次默认输入，≤20 条、每条 ≤500 字 |
+| `constraints` | string[] | 否 | 批次默认约束，≤20 条、每条 ≤500 字 |
+| `tasks` | object[] | 是 | 1–12 项；空数组或超过 12 项分别返回 400 `invalid_argument`、400 `task_batch_too_large` |
+| `tasks[].key` | string | 否 | 批内唯一，缺省按 `t1`、`t2` 依次生成；重复返回 400 `invalid_argument` |
+| `tasks[].title` | string | 是 | 1–120 字，去空白后为空返回 400 `invalid_argument` |
+| `tasks[].mode` | string | 否 | 覆盖批次 `mode`，取值同上 |
+| `tasks[].goal` | string | 否 | 覆盖批次目标；缺省用批次 `goal`，再缺省用 `title` |
+| `tasks[].inputs` | string[] | 否 | 覆盖批次输入 |
+| `tasks[].constraints` | string[] | 否 | 覆盖批次约束 |
+| `tasks[].steps` | string[] | 否 | 仅 `plan` 模式接受，≤50 步、每步 ≤200 字；`explore` 模式携带返回 400 `invalid_task_mode` |
+| `tasks[].dependsOn` | string[] | 否 | 批内其它任务的 `key`，自依赖、环、跨批次引用返回 400 `invalid_task_dependency` |
+| `tasks[].joinMode` | string | 否 | `all`、`any`、`each`，缺省 `all`；同一任务的全部入边必须一致 |
+| `tasks[].deadlineAt` | number | 否 | 用户时限毫秒时间戳，必须大于当前时间；只提醒不取消 |
+| `clientMutationId` | string | 否 | 幂等键，≤64 字，同一会话内唯一 |
+
+成功响应 201：
+
+| 字段 | 类型 | 语义 |
+|---|---|---|
+| `ok` | bool | 恒为 `true` |
+| `batchId` | string | `batch-<16 hex>` |
+| `tasks` | object[] | 新建任务投影，顺序与请求 `tasks` 一致，含 §17.3 的 `displayStatus`、`waitingReason`、`dependsOn`、`orderIndex` |
+| `messageId` | string | 汇总卡消息 id；单任务批次即该任务的卡片消息 id |
+| `counts` | object | 会话任务计数，字段同 N2 |
+| `idempotent` | bool | 首次创建为 `false`，命中幂等键重放为 `true` |
+
+创建在一个事务内完成批次行、任务行、依赖行与步骤行写入，任一任务校验失败则全部回滚，不产生任务卡片。提交成功后按 §17.5 的顺序发事件，再返回响应。
+
+**N2 任务列表**
+
+| 查询参数 | 类型 | 缺省 | 语义 |
+|---|---|---|---|
+| `status` | string | 空 | 逗号分隔；接受展示态 `pending`、`running`、`failed`、`done` 与存储态 `queued`、`cancelled`、`interrupted`；未知值 400 `invalid_task_status`；`failed` 同时匹配 `failed`、`cancelled`、`interrupted` |
+| `mode` | string | 空 | `plan` 或 `explore`，非法值 400 `invalid_task_mode` |
+| `batchId` | string | 空 | 按批次筛选；格式不是 `batch-<16 hex>` 返回 400 `invalid_argument` |
+| `limit` | number | 50 | 1–100，越界 400 `invalid_task_limit` |
+| `before` | string | 空 | 上一页最后一条任务 id；不存在时返回空页而非 404 |
+
+响应 200 字段：
+
+| 字段 | 类型 | 语义 |
+|---|---|---|
+| `ok` | bool | 恒为 `true` |
+| `tasks` | object[] | 按 `updated_at DESC, id DESC` 排序；`failed` 组内也按该序 |
+| `counts` | object | `all`、`pending`、`running`、`failed`、`done` 五个整数，按整个会话统计，`pending` 含 `queued` 与历史 `blocked`，`failed` 含 `cancelled` 与 `interrupted` |
+| `total` | number | 当前筛选下的总数 |
+| `hasMore` | bool | 是否还有下一页 |
+| `nextBefore` | string | 下一页游标；`hasMore` 为 `false` 时为空串 |
+
+**N3 任务详情**
+
+查询参数 `traceLimit`（缺省 200、区间 1–500）与 `traceBefore`（轨迹 id）。成功响应 200 包含以下字段：
+
+| 字段 | 类型 | 语义 |
+|---|---|---|
+| `task` | object | 单任务投影，字段为 `id`、`sessionId`、`batchId`、`title`、`mode`、`status`、`displayStatus`、`waitingReason`、`progress`、`attempt`、`triggerCount`、`goal`、`inputs`、`constraints`、`dependsOn`、`orderIndex`、`failReason`、`startedAt`、`finishedAt`、`createdAt`、`updatedAt`、`deadlineAt`、`executorAgentId` |
+| `steps` | object[] | 每项 `id`、`seq`、`title`、`status`、`summary`、`failReason`、`startedAt`、`finishedAt`、`traceCount`；`explore` 模式为空数组 |
+| `currentStepId` | string | 第一个 `running` 步骤，没有则取第一个 `pending`，全部终态为空串 |
+| `traces` | object[] | 每项 `id`、`stepId`、`seq`、`category`、`tool`、`text`、`at`；按 `seq` 升序 |
+| `tracesHasMore` | bool | 轨迹是否被截断 |
+| `deliverables` | object[] | 该任务的用户交付物，字段同 N9 的 `files` |
+| `context` | object | `goal`、`inputs`、`constraints`、`historyCount`，其中 `historyCount` 恒为 0 |
+| `budget` | object | `maxTokens`、`maxSteps`、`usedTokens`、`usedSteps` |
+
+跨会话请求返回 404 `task_not_found`，响应体不含任务标题、目标、步骤与轨迹；不得返回 403，也不得在错误文案里带任务名。
+
+**N4 取消**
+
+查询参数 `scope` 取 `self` 或 `chain`，缺省 `self`；其它值 400 `invalid_argument`。响应 200：
+
+| 字段 | 类型 | 语义 |
+|---|---|---|
+| `ok` | bool | 恒为 `true` |
+| `task` | object | 目标任务的最新投影 |
+| `cancelled` | string[] | 本次实际置为 `cancelled` 的任务 id，按批次 `orderIndex` 升序 |
+| `changed` | bool | 本次是否有任务状态变化；对终态调用为 `false` |
+
+取消在 5 秒内返回；执行器未在 5 秒内响应时仍返回 200，任务保持 `running` 并在下一次事件中落为 `cancelled`，响应里的 `changed` 为 `false`，避免前端无限等待。
+
+**N5 重试**
+
+无请求体要求，可选 `clientMutationId`。响应 200 字段 `ok`、`task`、`attempt`、`resetStepCount`。`attempt` 等于新值，`resetStepCount` 是被重置为 `pending` 的步骤数。状态不在 `failed`、`cancelled`、`interrupted` 时返回 409 `task_state_conflict`，响应体带 `currentStatus`。
+
+**N6 确认**
+
+请求体 `{"decision":"confirm"|"cancel","note":"..."}`，`decision` 必填，其它取值 400 `invalid_argument`，`note` ≤500 字。响应 200 字段 `ok`、`task`、`step`（当前步骤最新投影）、`decision`。`waitingReason` 不是 `confirmation` 时返回 409 `task_state_conflict`。`decision=cancel` 把当前步置 `failed`、`failReason` 写「用户取消」，任务置 `failed`，下游保持 `pending`。
+
+**N7 恢复**
+
+请求体可选 `{"reason":"..."}`，≤200 字。响应 200 字段 `ok`、`task`、`resumedStepId`。`waitingReason` 不是 `resource` 时返回 409 `task_state_conflict`。恢复后 `progress` 从暂停值继续，已完成步骤的 `status`、`startedAt`、`finishedAt` 不变。
+
+**N8 任务图**
+
+响应 200 字段：
+
+| 字段 | 类型 | 语义 |
+|---|---|---|
+| `ok` | bool | 恒为 `true` |
+| `nodes` | object[] | 每项 `id`、`title`、`mode`、`status`、`displayStatus`、`waitingReason`、`progress`、`failReason`、`dependsOn` |
+| `edges` | object[] | 每项 `from`（前置 id）、`to`（等待方 id）、`joinMode`、`style`；`style` 取 `solid` 或 `dashed`，前置为 `failed`、`cancelled`、`interrupted` 时为 `dashed` |
+| `layers` | object[] | 每项 `index`（从 0 起）与 `nodeIds`；按最长路径分层，同层内保持 `orderIndex` 升序 |
+| `total` | number | 节点总数，等于四态节点数之和 |
+
+节点只读：接口不提供任何修改位置或状态的参数，节点坐标与缩放由前端按设计 §17 计算，后端不下发坐标。
+
+**N9 交付物列表**
+
+查询参数 `taskId`（可选，按任务过滤）、`limit`（缺省 50、1–100）、`before`。响应 200：
+
+| 字段 | 类型 | 语义 |
+|---|---|---|
+| `ok` | bool | 恒为 `true` |
+| `groups` | object[] | 每项 `taskId`、`taskTitle`、`taskStatus`、`files`；按任务最近交付时间倒序 |
+| `files[]` | object[] | 每项 `id`、`name`、`mime`、`size`、`typeBadge`（`doc`、`sheet`、`image`）、`createdAt`、`downloadUrl`、`previewUrl` |
+| `total` | number | 组数 |
+| `fileCount` | number | 文件总数 |
+| `hasMore` | bool | 是否还有更多文件 |
+
+`downloadUrl` 为 `/api/artifacts/{artifactId}/content?download=1`，`previewUrl` 为 `/api/artifacts/{artifactId}/content`；接口只返回 `delivery_kind='user_delivery'` 的文件，内部产物不出现在这里。
+
+**17.4.2 改造接口**
+
+| 方法 | 路径 | 改造点 | 兼容性 |
+|---|---|---|---|
+| GET | `/api/tasks` | 新增 `sessionId`、`batchId` 查询参数，返回 `counts` 与 `displayStatus`；缺省仍返回全部任务 | 旧字段保留，新增字段向前兼容 |
+| GET | `/api/tasks/{id}` | 响应增加 `steps`、`currentStepId`、`traces`、`context`、`budget`、`mode`、`waitingReason`、`failReason`、`displayStatus` | 旧字段保留；`steps` 与旧 `phases` 并存 |
+| POST | `/api/tasks/{id}/cancel` | 接受 `scope` 查询参数，语义同 N4；终态返回 200 且 `changed=false` | 旧调用不传 `scope` 时行为等于 `self` |
+| POST | `/api/tasks/{id}/retry` | 限定状态为 `failed`、`cancelled`、`interrupted`，其它状态 409 `task_state_conflict` | 旧调用对 `done` 重试会从 200 变为 409，属契约收紧，须在实现时同步前端 |
+| GET | `/api/sessions/{id}/artifacts` | 响应元素增加 `typeBadge`、`taskTitle`；保留原有扁平分页 | 旧字段与 `ETag` 语义不变 |
+
+### 17.5 消息与事件
+
+**17.5.1 任务卡片落库**
+
+任务卡片是一条普通 `messages` 行，不新增表，只在 `messages` 上加 `batch_id` 列（chat 模块迁移 v23）。卡片字段固定为：
+
+| 字段 | 值 | 断言口径 |
+|---|---|---|
+| `role` | `agent` | 与消息流其它智能体消息一致，不新增角色 |
+| `category` | `task` | 现存 `category.go` 只允许 `requirement`、`clarification`、`progress`、`consultation`，实现须把 `task` 加入允许集合，且只允许服务端写入 |
+| `task_id` | 单个任务创建时写该任务 id；批量创建时写 `tasks[0].id` | DEC-26 要求非空；批量时以首个任务满足非空约束 |
+| `batch_id` | 批次 id；单任务也为该批次 id | 汇总卡子条目的唯一查询依据 |
+| `text` | 单任务为卡片标题；批量为一句话「已创建 N 个任务」 | 作为不支持卡片渲染的客户端的降级文本 |
+| `status` | `done` | 卡片不进入流式状态 |
+| `internal` | `0` | 用户可见 |
+
+任务终态汇报继续使用既有 `category=progress` 与 `report_message_id`，不复用 `category=task`；历史 `progress` 开始消息不迁移、不改写。
+
+**17.5.2 汇总卡规则**
+
+单任务创建写 1 条 `category=task` 消息，不生成汇总卡。批量创建（N ≥ 2）只写 1 条汇总卡，`task_count=N`；卡片展开时前端用 `GET /api/sessions/{id}/tasks?batchId=<batchId>&limit=10` 取前 10 条，平铺条数上限 10（DEC-28）。第 11 条起不返回、不渲染，折算为「还有 N−10 条」；用户点开后前端以 `limit=100` 全量拉取，入口消失；收起再展开回到 10 条。后端只保证 `task_count` 与分页总数一致，概览文案由前端计算。
+
+`task_count` 与列表 `total` 不一致（例如任务被删除，本轮不提供删除，不会发生）时以列表为准，卡片显示实际条数。批量创建的 `messageId` 在响应中返回，`task.created` 事件不携带该 id，前端以 `message.created` 事件或重连后的消息拉取补齐。
+
+**17.5.3 WS 事件**
+
+事件名与 payload 固定如下，全部纳入 `isWSEventType` 白名单：
+
+| 事件 | 触发时机 | payload 关键字段 |
+|---|---|---|
+| `task.created` | 批内每个任务创建后各发 1 条 | `id`、`sessionId`、`batchId`、`mode`、`status`、`displayStatus`、`title`、`dependsOn`、`orderIndex`、`createdAt` |
+| `task.updated` | 状态、等待原因、进度、尝试次数变化 | `id`、`sessionId`、`batchId`、`status`、`displayStatus`、`waitingReason`、`progress`、`attempt`、`triggerCount`、`failReason`、`changed`（字符串数组，元素取 `status`、`waitingReason`、`progress`、`attempt`） |
+| `task.step` | 步骤进入 `running` 或终态 | `id`、`stepId`、`stepSeq`、`status`、`traceCount`、`progress`、`at` |
+| `task.trace` | 追加一条轨迹 | `id`、`stepId`、`traceSeq`、`category`、`tool`、`text`（前 200 字）、`at` |
+| `task.report` | 任务进入终态并需要汇报 | 既有字段不变，增加 `displayStatus` 与 `failReason` |
+| `task.reminder` | 用户时限到点 | `id`、`deadlineAt`、`at`；每个任务最多 1 条 |
+
+**17.5.4 顺序与增量**
+
+事件日志 id 单调递增，是全局顺序的唯一依据。同一任务的 `stepSeq` 与 `traceSeq` 各自从 1 严格递增，重试不回退；客户端按 `(id, stepId, stepSeq)` 与 `(id, traceSeq)` 去重，收到小于等于已应用值的序号时丢弃。批量创建的顺序固定为：全部 `task.created`（按 `orderIndex` 升序）写完后写 `message.created`，最后才返回 HTTP 响应，因此客户端先拿到任务、再拿到卡片，不会出现卡片指向不存在任务。
+
+**17.5.5 断线重连补偿**
+
+客户端重连带 `since=<最后事件 id>`，服务端按 `since` 回放；事件不做清理，不出现空洞（技术债 T-06 描述的增长问题不改变正确性）。重连后客户端必须再做一次对账：拉 `GET /api/sessions/{id}/tasks` 与所有非终态任务的详情，拉最近一页消息补齐卡片；对账以 HTTP 结果覆盖本地快照，事件只用于增量。若 `since` 过旧导致回放量过大，客户端可放弃回放，直接走上述对账，`tasks` 与 `messages` 的 HTTP 结果是权威来源。
+
+### 17.6 隔离与权限
+
+| 场景 | 判据 | 后端行为 |
+|---|---|---|
+| 跨会话读任务 | 路径会话 id 与 `tasks.session_id` 不一致 | 404 `task_not_found`，响应不含任务正文；不得返回 403 |
+| 跨会话取消或重试 | 同上 | 404 `task_not_found`，不做任何写入 |
+| 跨会话交付物 | 交付物所属任务不在路径会话内 | 404 `task_not_found`；若交付物无归属任务，返回 404 `artifact_not_found` |
+| 路径越出工作区 | 解析后的绝对路径不在 `workspace` 或 `artifacts` 根内 | 403 `permission_denied`，轨迹写一条 `observe` 记录，`text` 以 `403 ` 开头 |
+| 工具不在会话白名单 | 工具名不在当前会话可用的工具集 | 403 `permission_denied`，不创建审批 |
+| 需要审批的工具 | 风险级为 R3 或写入类 | 409 `APPROVAL_REQUIRED`（与 `chat/actions.go` 的动作端点同码，带 `approvalId`），任务进入 `confirmation` 等待 |
+| 默认禁网 | 会话未授予网络权限 | 工具调用直接 403 `permission_denied`，不发起连接 |
+| 默认禁子进程 | 会话未授予子进程权限 | 同上，不创建进程 |
+
+任务只属于发起会话，不存在跨会话共享、移交或跨会话任务图。任务执行器调用工具时构造的审批记录写入既有 `approvals` 表，`session_id` 取任务所属会话，审批决策与聊天回合共用同一套 R0–R4 规则和 `approval` 设置，不新增审批类型。
+
+越权判据按顺序判定：先判会话归属，再判路径范围，再判工具白名单，最后判网络与子进程权限；任一不通过即终止本次工具调用并把原因写入轨迹，任务本身不因此失败，等待用户处理或继续下一步。
+
+### 17.7 上下文与额度
+
+**17.7.1 启动上下文**
+
+任务启动只注入三类内容：`goal`（目标）、`inputs`（输入）、`constraints`（约束），不继承会话历史。`context_json` 在创建时一次写定，`historyCount` 恒为 0，任务执行器构造请求时只读该字段，不读 `messages` 表。缺省值按 `tasks[].约束 > 批次约束 > 会话 spec 的约束` 与 `tasks[].goal > 批次 goal > title` 的优先级取，不会回退到聊天历史。
+
+详情接口的 `context` 字段直接返回这三类内容与 `historyCount`，供 AC-03 断言。任务重试不重新收集上下文，沿用首次创建的 `context_json`。
+
+**17.7.2 预算与额度**
+
+`budget_json` 字段固定为 `{"maxTokens":N,"maxSteps":N,"usedTokens":N,"usedSteps":N}`，缺省 `maxTokens=0`（不限额）、`maxSteps=50`。每次步骤结束累加 `usedSteps`，每次模型调用累加 `usedTokens`。达到任一上限时任务进入 `running` 加 `waitingReason=resource`，`progress` 保持当前值，已完成步骤与产出保留，不写失败原因，不自动重试。
+
+恢复接口清空 `waitingReason` 并从暂停步骤继续；恢复不重置计数，预算仍按累计值判断，因此恢复后若仍未提高上限会再次进入等待。提高上限通过会话级配置或后续的预算编辑入口完成，本轮不提供任务级预算编辑接口。
+
+**17.7.3 时限与超时**
+
+任务的执行时限只来自用户设置的 `deadlineAt`，系统不设默认执行超时，不因运行时间长而失败或取消。到点后系统发 1 条 `task.reminder` 并写 `deadline_reminded_at`，同一任务不重复提醒；任务状态不变，任务卡脚注由前端显示「已超出预计 N 分钟」。等待依赖、等待确认、等待资源三类状态同样不受时限影响，等待 30 分钟也不会自动失败。
+
+实现须保证任务执行器不继承聊天回合的墙钟上限：既有聊天回合按 12 分钟上下文取消，`tasks` 模块调用执行器时使用任务自己的取消上下文，只有取消接口、服务关闭与显式中断能取消它。
+
+### 17.8 并发与幂等
+
+| 场景 | 处理规则 | 断言口径 |
+|---|---|---|
+| 同批创建 | 批次、任务、依赖、步骤在 1 个事务内写入；任一失败全部回滚，不留任务行、不留卡片 | 失败响应后按 `sessionId` 查任务数不变 |
+| 批量并发 | 同一会话的两个创建请求串行提交（SQLite 单写者）；后提交的批次 `order_index` 从 0 重新计数，不跨批次续号 | 两个批次各自 `orderIndex` 从 0 起，互不影响 |
+| 重复提交 | 同一 `session_id` 与 `clientMutationId` 的重放返回首次结果，`idempotent=true`；占位未完成时返回 409 `mutation_in_progress` | 重放后任务数不变、`batchId` 与 `messageId` 与首次一致 |
+| 幂等键规则 | 键按会话隔离，长度 ≤64，保留 7 天；空键不去重；同一键不同请求体视为冲突，返回 409 `mutation_in_progress` 且不覆盖首次结果 | 同键不同体两次请求，第二次 409，首次数据不变 |
+| 取消并发 | 用条件更新 `UPDATE tasks SET status='cancelled' WHERE id=? AND status IN ('pending','queued','running')`；受影响行数为 0 时读当前状态，终态返回 200 且 `changed=false`，不覆盖已完成结果 | 两个并发取消只有一个写入成功，两次响应最终状态一致 |
+| 重试并发 | 条件更新带上 `attempt=旧值`，受影响行数为 0 时返回 409 `task_state_conflict`；重试后旧执行上下文的写事件按 `attempt` 丢弃 | 同一任务并发重试只产生 1 个新 attempt |
+| 步骤事件乱序 | 步骤更新带 `stepSeq`，写入用 `seq` 做条件；事件按 `stepSeq` 与事件 id 双序发送；客户端丢弃小于等于已应用序号的步骤事件 | 乱序到达后最终步骤状态与详情一致 |
+| 轨迹乱序 | `traceSeq` 由任务级计数器在同一事务内分配，追加写不更新已有行 | 详情中 `seq` 连续、无重复、无回退 |
+| 触发计数 | `each` 触发时 `trigger_count` 与 `attempt` 在同一事务内自增，条件为当前 `status` 不是终态 | 三个前置触发 3 次，`triggerCount=3` |
+| 服务重启 | 恢复时把 `running` 与 `queued` 置 `interrupted`，`fail_reason` 写「服务重启，任务已中断」，不自动重试；下游保持 `pending` | 重启后不存在 `running` 行，任务数不变 |
+
+创建请求的幂等占位与既有 `client_mutations` 表分离，任务侧只使用 `task_batches.client_mutation_id`，避免与聊天消息幂等互相污染。占位清理沿用 7 天 TTL 口径，实现时补一条启动清理，清掉 `client_mutation_id` 非空且无对应任务行的批次行。
+
+### 17.9 持久化与迁移
+
+| 模块 | 迁移 | 内容 | 旧库升级路径 |
+|---|---|---|---|
+| tasks | v8 | `tasks` 表加 14 列，全部带默认值；加 `idx_tasks_session_updated(session_id, updated_at)` 与 `idx_tasks_batch(batch_id)` | 加列后旧行按默认值读，`mode` 为 `plan`、`waiting_reason` 为空、时间字段为 0；旧行 `blocked` 只在读取时映射，不批量改写 |
+| tasks | v9 | 新建 `task_steps`、`task_traces`、`task_batches`、`task_deps` 与各自索引 | 迁移末尾逐行读 `tasks.steps` 的 JSON，写入 `task_steps`；解析失败的行跳过并记日志，旧列保留只读，不回删 |
+| chat | v23 | `messages` 加 `batch_id TEXT NOT NULL DEFAULT ''`，加 `idx_messages_batch(batch_id)` | 旧消息 `batch_id` 为空，卡片查询按空值跳过；历史 `category=progress` 不变 |
+
+迁移版本按模块独立记录，库级版本取各模块最大版本，当前 tasks 为 v9、chat 为 v23、核心 eventlog 与 sessions 不变。升级顺序固定为先 tasks v8、再 tasks v9、最后 chat v23，三步都在启动时由 `db.Migrate` 串行执行，失败即启动失败，不进入半迁移状态。回滚采用“保留数据、停写新列”的方式：回滚到旧版本时新列与新表原样保留，旧代码不读它们；不删除表、不清空列、不改写历史 `blocked` 行。`task_steps` 与 `tasks.steps` 并存期间以 `task_steps` 为准，下一轮变更再评估删除旧列。
+
+### 17.10 本轮新增错误码
+
+| 错误码 | HTTP | 何时返回 | 文案要点与客户端动作 |
+|---|---|---|---|
+| `task_not_found` | 404 | 任务 id 不存在，或任务与会话不匹配 | 「任务不存在」；前端退出详情并刷新列表，不提示“无权限” |
+| `task_state_conflict` | 409 | 重试、确认、恢复的状态前提不满足 | 「当前状态不支持该操作」，带 `currentStatus`；前端刷新该任务后隐藏不适用入口 |
+| `invalid_task_mode` | 400 | `mode` 不是 `plan`/`explore`，或 `explore` 携带步骤 | 「执行模式不合法」；前端回退到 `plan` |
+| `invalid_task_status` | 400 | 列表筛选 `status` 含未知值 | 「筛选状态不合法」；前端重置为全部 |
+| `invalid_task_limit` | 400 | `limit` 越界 | 「每页条数需在 1 到 100 之间」；前端改用 50 |
+| `task_batch_too_large` | 400 | 一次创建超过 12 个任务 | 「单次最多创建 12 个任务」；前端拆批 |
+| `invalid_task_dependency` | 400 | 依赖不存在、跨批次、自依赖、成环、同一任务入边 `joinMode` 混合 | 「任务依赖不合法」；前端提示并阻止提交 |
+| `task_context_too_large` | 413 | 目标、输入或约束合计超过上限（目标 2000 字、输入与约束各 20 条） | 「任务上下文过大」；前端要求删减 |
+| `permission_denied` | 403 | 路径越出工作区、工具不在白名单、未授权网络或子进程 | 「操作超出会话权限」；前端展示为工具调用失败，不重试 |
+| `task_executor_unavailable` | 503 | 任务模块已启用但执行器未装配（缺少真实执行器或模型配置） | 「任务执行器不可用」；前端禁用发起入口并提示稍后重试 |
+
+错误信封沿用 §14 的 `{"ok":false,"error":"...","code":"..."}`；`task_state_conflict` 额外带 `currentStatus`，`permission_denied` 额外带 `path` 或 `tool`，其余不追加字段。错误码不进入既有 §14 总表的同名冲突项，实现时按本节追加进 §14。
+
+### 17.11 与现有实现的差异
+
+| 项 | 现有实现 | 本节契约 | 处理方式 |
+|---|---|---|---|
+| 失败级联 | `onWorkflowTaskFinished` 把下游置 `blocked` 并写「前置任务失败/取消」 | 下游保持 `pending` 加 `dependency`，不写 `blocked`、失败计数不变 | 改为等待语义，历史 `blocked` 行只读映射 |
+| 步骤存储 | `tasks.steps` 存 JSON，步骤没有独立行与时间戳 | `task_steps` 行级存储，含 `seq`、起止时间、失败原因 | v9 迁移回填，旧列保留只读 |
+| 创建入口 | 只有 `chat/loop.go` 的 `delegate` 在明确任务意图时创建单个任务，无批次、无模式、无上下文快照 | 会话内接口支持 1–12 个任务、两种模式、上下文快照与幂等键 | 新增 N1，`delegate` 改为调用同一服务方法 |
+| 任务卡片 | 创建任务后不写 `messages`；`category` 白名单只有 4 个值 | 写 `role=agent`、`category=task`、`task_id`、`batch_id` 的卡片与汇总卡 | 扩白名单，卡片写入放进创建事务后的同一次提交 |
+| 列表 | 全局 `GET /api/tasks` 返回全部任务，无筛选无计数 | 会话内列表，四态筛选、批次筛选、计数与游标 | 新增 N2，全局接口保留 |
+| 取消 | 只取消单个任务，等待执行器 5 秒，无级联、无条件更新 | 支持 `scope=chain`，条件更新，终态 200 幂等 | 改造既有取消，补级联 |
+| 重试 | 任意状态都能重试，包括 `done` | 只允许 `failed`、`cancelled`、`interrupted` | 收紧为 409，需同步前端 |
+| WS | 只有 `task.created`、`task.updated`、`task.report`，payload 无 `displayStatus`、`waitingReason`、`triggerCount` | 6 个 `task.*` 事件，payload 含展示态、等待原因、触发计数 | 扩白名单与 payload，保持旧字段 |
+| 执行器上下文 | 沿用聊天回合上下文，受 12 分钟墙钟取消 | 任务独立取消上下文，无系统执行超时 | 执行器入口改为接收任务级 `context.Context` |
+| 交付物 | 全局 `GET /api/deliverables` 扁平分页，无类型徽标与任务名 | 会话内按任务分组，`typeBadge`、`taskTitle`、下载地址 | 新增 N9，全局接口保留 |
+| 任务数上限 | 工作流上限 12、并发 3，由 `maxWorkflowTasks`、`maxWorkflowConcurrency` 控制 | 批量上限 12 沿用；并发默认 3，可用 `SIMO_WORKFLOW_CONCURRENCY` 覆盖 | 沿用现有常量与配置项 |
+
+### 17.12 证据与 AC 承载
+
+本轮没有实现，后端证据统一记 `missing`，不写“通过”。建脚本时沿用 `scripts/ac/<AC-ID>.mjs` 的断言 runner，按 HTTP 断言为主，事件与轨迹用事件日志断言。
+
+| AC | 后端判据 | 证据形式 |
+|---|---|---|
+| `AC-CONV-009-01` | 创建 1 个任务后返回 1 个任务与 1 个 `messageId`，消息行 `category=task`、`role=agent`、`task_id` 非空 | 脚本断言响应与 `messages` 行 |
+| `AC-CONV-009-02` | 一次创建 10 个任务返回 `batchId`、10 个任务、1 个 `messageId`；列表按 `batchId` 过滤 `total=10` | 脚本断言计数与汇总卡唯一性 |
+| `AC-CONV-009-03` | 详情 `context.historyCount=0`、`goal` 非空、`constraints` 条数 ≥1 | 脚本断言 `context` 字段 |
+| `AC-CONV-009-04` | 允许工具调用返回成功并落轨迹；越权路径返回 403 `permission_denied` 且在轨迹里留 `403` 记录 | 脚本断言状态码与轨迹 |
+| `AC-CONV-009-05` | 8 步任务详情 `steps` 按 `seq` 1 到 8 返回，第 6 步为 `currentStepId`，已完成步骤有起止时间 | 脚本断言顺序与 `currentStepId` |
+| `AC-CONV-009-06` | `explore` 任务 `steps` 为空、`traces` 14 条、`seq` 单调递增 | 脚本断言条数与序号 |
+| `AC-CONV-009-09` | 进行中 2 个时 `counts.running=2`，11 个时 `counts.running=11` | 脚本断言计数；角标文案由前端断言 |
+| `AC-CONV-009-12` | 四态筛选分别返回 11、2、1、3 条，`counts` 与筛选无关 | 脚本断言四个 `total` |
+| `AC-CONV-009-13` | 任务图 8 个节点、四态之和为 8、失败节点下游边 `style=dashed`、`layers` 覆盖全部节点 | 脚本断言图数据 |
+| `AC-CONV-009-14` | 三个前置依次完成时，`all` 启动 1 次、`any` 启动 1 次、`each` 启动 3 次且 `triggerCount=3` | 脚本断言 `attempt` 与 `triggerCount` |
+| `AC-CONV-009-15` | 取消 A 后 B 的 `status=pending`、`waitingReason=dependency`、步骤启动 0 次、失败计数不变 | 脚本断言 B 状态与计数 |
+| `AC-CONV-009-16` | 交付物分组返回类型徽标、任务名、下载地址；下载字节数与 `size` 一致 | 脚本断言分组与下载响应长度 |
+| `AC-CONV-009-17` | 会话 B 请求会话 A 的任务返回 404 `task_not_found`，响应体不含任务标题 | 脚本断言状态码与响应体 |
+| `AC-CONV-009-18` | 无时限任务运行 30 分钟不产生取消；有时限任务到点只发 1 条 `task.reminder`，状态不变 | 脚本断言 `task.reminder` 条数与状态 |
+
+纯前端判据的 AC 为 `AC-CONV-009-07`、`08`、`10`、`11`，后端只提供数据与计数，不承担视觉断言。
+
+### 17.13 涉及文件
+
+| 文件 | 本轮改动 |
+|---|---|
+| `backend/internal/modules/tasks/migrations.go` | 新增 v8、v9 迁移 |
+| `backend/internal/modules/tasks/service.go` | 创建、取消、重试、事件 payload 按本节扩展 |
+| `backend/internal/modules/tasks/workflow.go` | 依赖等待、`joinMode`、`triggerCount`、失败级联改为等待 |
+| `backend/internal/modules/tasks/http.go` | 新增 N1–N9 路由与参数校验 |
+| `backend/internal/modules/tasks/deliverables.go` | 分组查询与类型徽标派生 |
+| `backend/internal/modules/tasks/concurrency.go` | 并发槽与批次串行 |
+| `backend/internal/core/task/task.go` | 增加 `Mode`、`WaitingReason`、`BatchID`、`TriggerCount` 等字段 |
+| `backend/internal/modules/chat/category.go` | `category` 白名单加入 `task`，仅服务端可写 |
+| `backend/internal/modules/chat/cards.go` | 卡片与汇总卡写入 `batch_id` |
+| `backend/internal/modules/chat/loop.go` | `delegate` 改调会话内创建服务，执行器使用任务级上下文 |
+| `backend/internal/core/eventlog/eventlog.go` | 白名单加入 `task.step`、`task.trace`、`task.reminder` |
+| `scripts/ac/AC-CONV-009-*.mjs` | 本轮只登记待建，未创建 |
+
+### 17.14 未实现项与未决问题
+
+未实现项：N1–N9 全部接口、`task_steps`/`task_traces`/`task_batches`/`task_deps` 四张表、tasks v8/v9 与 chat v23 迁移、6 个 `task.*` 事件的发送与白名单、卡片与汇总卡写入、按任务分组的交付物查询、任务级取消上下文。以上都按契约实现后才允许把对应 AC 记为 pass。
+
+未决问题：
+
+1. 汇总卡的 `task_id` 取批内首个任务以同时满足 DEC-26 的非空约束与汇总卡形态，产品侧尚未确认这个折中；若改为允许卡片 `task_id` 为空，需要改 DEC-26。
+2. `each` 语义下同一任务串行重跑时，步骤与轨迹是复用同一组步骤行还是每次触发新建一组，设计稿未规定；当前契约按复用并递增 `attempt` 处理。
+3. 等待确认时审批记录与任务等待的一一对应关系未定：一次确认是否可放行同一任务的后续同类工具调用，还是每次都需重新确认，沿用会话级授权时两种解释都成立。
+4. 时限提醒的展示位置：本节只发 `task.reminder` 事件，是否同时写一条消息（会改变消息流条数）需前端与产品确认。
+5. 交付物类型徽标对未知 `mime` 归 `doc` 是兜底口径，产品未给出未知类型的展示约定。
+6. 预算上限提高的入口本轮不提供，只能改会话级配置；是否需要任务级编辑接口待 P2-TASK 定。
+7. 取消整链时已完成任务是否保留在汇总卡计数里，产品只规定下游不启动，未规定汇总卡文案如何变化。
+8. `tasks` 模块关闭时不注册路由返回 404，与“跨会话 404”共用状态码但语义不同；前端无法区分，是否需要专门的降级探测接口待定。

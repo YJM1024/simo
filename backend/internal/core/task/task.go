@@ -123,6 +123,22 @@ type Task struct {
 	ExecutorAgentID string     `json:"executorAgentId,omitempty"`
 	CreatedAt       int64      `json:"createdAt"`
 	UpdatedAt       int64      `json:"updatedAt"`
+
+	// P1-CONV-009（tasks v8 列）
+	Mode               string   `json:"mode,omitempty"`
+	BatchID            string   `json:"batchId,omitempty"`
+	Goal               string   `json:"goal,omitempty"`
+	Inputs             []string `json:"inputs,omitempty"`
+	Constraints        []string `json:"constraints,omitempty"`
+	ContextJSON        string   `json:"-"`
+	WaitingReason      string   `json:"waitingReason,omitempty"`
+	WaitingSince       int64    `json:"waitingSince,omitempty"`
+	StartedAt          int64    `json:"startedAt,omitempty"`
+	FinishedAt         int64    `json:"finishedAt,omitempty"`
+	FailReason         string   `json:"failReason,omitempty"`
+	DeadlineAt         int64    `json:"deadlineAt,omitempty"`
+	DeadlineRemindedAt int64    `json:"deadlineRemindedAt,omitempty"`
+	TriggerCount       int      `json:"triggerCount,omitempty"`
 }
 
 // NewTask 是创建输入。

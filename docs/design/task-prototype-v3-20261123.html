@@ -1,0 +1,2689 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>司墨 simo · 任务体验原型 v3 · 2026-11-23</title>
+<style>
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:#FAF9F6;color:#16171B;font-family:"Segoe UI Variable","Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;font-size:13.5px;line-height:1.5}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+a{color:inherit;text-decoration:none}
+svg{display:block}
+::selection{background:#DCDCFA}
+
+:root{
+  --tp-paper:#FAF9F6;
+  --tp-surface:#FFFFFF;
+  --tp-ink:#16171B;
+  --tp-muted:#5E6068;
+  --tp-line:#E6E4DE;
+  --tp-line-soft:#EFEDE8;
+  --tp-accent:#3D3DE0;
+  --tp-accent-soft:#EEEEFC;
+  --tp-done:#246B4E;
+  --tp-done-bg:#E2F1E8;
+  --tp-todo:#5E6068;
+  --tp-todo-bg:#F1F0EC;
+  --tp-fail:#A23B2E;
+  --tp-fail-bg:#F8E7E3;
+  --tp-img:#8A5A26;
+  --tp-img-bg:#F7EEE0;
+  --tp-code:#5B4B9E;
+  --tp-code-bg:#F0EDFA;
+  --tp-hover:#F4F3EF;
+  --tp-r:10px;
+  --tp-side:232px;
+  --tp-panel:280px;
+  --tp-rail:40px;
+  --tp-mono:Consolas,"SFMono-Regular","Cascadia Mono",monospace;
+}
+
+/* ---------- 文档外壳 ---------- */
+.tp-doc{max-width:1328px;margin:0 auto;padding:22px 24px 40px}
+.tp-doc-head{display:flex;align-items:flex-end;justify-content:space-between;gap:28px;padding:4px 0 16px;border-bottom:1px solid var(--tp-line)}
+.tp-doc-kicker{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--tp-muted);margin-bottom:8px}
+.tp-doc-title{margin:0;font-size:24px;line-height:1.35;font-weight:650;letter-spacing:-.01em}
+.tp-doc-sub{margin:8px 0 0;font-size:12px;line-height:1.75;color:var(--tp-muted);max-width:760px}
+.tp-doc-meta{flex:none;text-align:right;font-size:10.5px;line-height:1.9;color:var(--tp-muted);padding-bottom:2px}
+.tp-doc-meta b{display:block;color:var(--tp-ink);font-size:11.5px;font-weight:600}
+
+.tp-nav-wrap{position:sticky;top:0;z-index:40;margin:0 -24px;padding:0 24px;background:rgba(250,249,246,.96);border-bottom:1px solid var(--tp-line);backdrop-filter:blur(8px)}
+.tp-nav{display:flex;gap:2px;overflow-x:auto;padding:7px 0;scrollbar-width:none}
+.tp-nav::-webkit-scrollbar{display:none}
+.tp-nav-item{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 9px;border-radius:7px;font-size:11.5px;color:var(--tp-muted);white-space:nowrap;transition:background .15s,color .15s}
+.tp-nav-item .tp-nav-num{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:4px;background:var(--tp-todo-bg);color:var(--tp-muted);font-size:9.5px;line-height:1;font-variant-numeric:tabular-nums}
+.tp-nav-item:hover{background:var(--tp-hover);color:var(--tp-ink)}
+.tp-nav-item.is-active{background:var(--tp-ink);color:#fff}
+.tp-nav-item.is-active .tp-nav-num{background:rgba(255,255,255,.16);color:#fff}
+
+.tp-screens{padding-top:20px}
+.tp-screen{display:none}
+.tp-screen.is-active{display:block;animation:tp-in .16s ease}
+@keyframes tp-in{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
+.tp-screen-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.tp-screen-head h2{margin:0;font-size:15px;font-weight:650;letter-spacing:-.005em}
+.tp-screen-no{display:inline-block;min-width:22px;color:var(--tp-muted);font-family:var(--tp-mono);font-size:11px;font-weight:500;margin-right:2px}
+.tp-screen-tag{margin-left:auto;font-size:10.5px;color:var(--tp-muted);font-variant-numeric:tabular-nums}
+.tp-focus{margin:0 0 12px;font-size:12px;line-height:1.7;color:var(--tp-muted)}
+.tp-focus b{color:var(--tp-ink);font-weight:550}
+
+.tp-frame{border:0;border-radius:var(--tp-r);overflow-x:auto;overflow-y:hidden;background:var(--tp-paper);box-shadow:0 0 0 1px var(--tp-line),0 1px 2px rgba(22,23,27,.04)}
+
+/* ---------- 应用壳 ---------- */
+.tp-shell{position:relative;display:grid;grid-template-columns:var(--tp-side) minmax(0,1fr) var(--tp-panel) var(--tp-rail);grid-template-rows:48px minmax(0,1fr) 24px;width:1280px;min-width:1120px;height:720px;background:var(--tp-paper);border-radius:9px;isolation:isolate}
+.tp-shell.is-rail-collapsed{grid-template-columns:var(--tp-side) minmax(0,1fr) 0 var(--tp-rail)}
+.tp-shell.is-rail-collapsed .tp-panel{display:none}
+
+/* ---------- 顶栏 ---------- */
+.tp-topbar{grid-column:1/-1;grid-row:1;display:flex;align-items:center;gap:12px;padding:0 12px;background:var(--tp-surface);border-bottom:1px solid var(--tp-line);position:relative;z-index:10}
+.tp-brand{display:flex;align-items:center;gap:8px;width:208px;flex:none}
+.tp-logo{width:24px;height:24px;border-radius:7px;background:var(--tp-ink);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600}
+.tp-brand-name{font-size:13.5px;font-weight:650;letter-spacing:.02em}
+.tp-brand-sub{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--tp-muted);padding-top:2px}
+.tp-search{flex:0 1 336px;height:30px;display:flex;align-items:center;gap:8px;padding:0 9px;border:1px solid var(--tp-line);border-radius:7px;background:var(--tp-paper);color:var(--tp-muted);font-size:11.5px}
+.tp-search kbd{margin-left:auto;font-family:var(--tp-mono);font-size:9.5px;line-height:1;padding:3px 4px;border:1px solid var(--tp-line);border-radius:4px;background:var(--tp-surface);color:var(--tp-muted)}
+.tp-top-actions{margin-left:auto;display:flex;align-items:center;gap:6px}
+.tp-top-btn{height:28px;padding:0 10px;border:1px solid var(--tp-line);border-radius:7px;background:var(--tp-surface);font-size:11.5px;color:var(--tp-ink)}
+.tp-top-btn:hover{border-color:#D6D4CC;background:var(--tp-hover)}
+.tp-icon-btn{width:28px;height:28px;display:grid;place-items:center;border-radius:6px;color:var(--tp-muted)}
+.tp-icon-btn:hover{background:var(--tp-hover);color:var(--tp-ink)}
+.tp-avatar{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--tp-accent-soft);color:var(--tp-accent);font-size:11px;font-weight:600;margin-left:2px}
+
+/* ---------- 左侧会话 ---------- */
+.tp-sidebar{grid-column:1;grid-row:2;display:flex;flex-direction:column;min-height:0;background:var(--tp-paper);border-right:1px solid var(--tp-line)}
+.tp-side-head{flex:none;height:38px;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 14px;font-size:10.5px;letter-spacing:.08em;color:var(--tp-muted)}
+.tp-conv-list{display:flex;flex-direction:column;gap:2px;padding:0 8px}
+.tp-conv{display:flex;align-items:center;gap:8px;height:32px;padding:0 8px;border:1px solid transparent;border-radius:7px;font-size:12px;color:var(--tp-muted)}
+.tp-conv:hover{background:var(--tp-hover);color:var(--tp-ink)}
+.tp-conv.is-on{background:var(--tp-surface);border-color:var(--tp-line);color:var(--tp-ink);font-weight:550}
+.tp-conv-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tp-conv-time{font-size:10px;color:var(--tp-muted);font-variant-numeric:tabular-nums}
+.tp-conv-badge{padding:1px 4px;border-radius:4px;background:var(--tp-accent-soft);color:var(--tp-accent);font-size:9.5px;line-height:1.4}
+.tp-side-foot{margin-top:auto;padding:10px 14px 12px;border-top:1px solid var(--tp-line-soft)}
+.tp-usage{font-size:12px;font-weight:600}
+.tp-usage-sub{margin-top:3px;font-size:10.5px;line-height:1.65;color:var(--tp-muted)}
+
+/* ---------- 中栏会话 ---------- */
+.tp-main{grid-column:2;grid-row:2;position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--tp-paper)}
+.tp-chat-head{flex:none;height:50px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 20px;background:var(--tp-surface);border-bottom:1px solid var(--tp-line)}
+.tp-chat-title{font-size:13.5px;font-weight:650;letter-spacing:.005em}
+.tp-chat-meta{margin-top:2px;font-size:10.5px;color:var(--tp-muted)}
+.tp-chat-tools{display:flex;align-items:center;gap:8px}
+.tp-chat-tools .tp-mini{font-size:10.5px;color:var(--tp-muted);border:1px solid var(--tp-line);border-radius:5px;padding:2px 6px;background:var(--tp-paper)}
+.tp-msgs{flex:1;min-height:0;overflow-y:auto;padding:16px 20px 8px;scrollbar-width:thin}
+.tp-msg{max-width:640px;margin-bottom:10px;padding:11px 13px;background:var(--tp-surface);border:1px solid var(--tp-line);border-radius:var(--tp-r)}
+.tp-msg.is-user{margin-left:auto;background:var(--tp-accent-soft);border-color:#DCDCFF;max-width:560px}
+.tp-msg-head{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.tp-msg-who{font-size:11px;font-weight:650;color:var(--tp-accent)}
+.tp-msg.is-user .tp-msg-who{color:var(--tp-ink)}
+.tp-msg-head time{font-size:10px;color:var(--tp-muted);font-variant-numeric:tabular-nums}
+.tp-msg p{margin:0;font-size:12.5px;line-height:1.75;color:var(--tp-ink)}
+.tp-quiet{margin-top:8px;padding-top:7px;border-top:1px dashed var(--tp-line);font-size:10.5px;color:var(--tp-muted);line-height:1.6}
+.tp-composer{flex:none;padding:9px 18px 11px;background:var(--tp-surface);border-top:1px solid var(--tp-line)}
+.tp-composer-box{display:flex;flex-direction:column;gap:6px;min-height:52px;padding:8px 10px;border:1px solid var(--tp-line);border-radius:var(--tp-r);background:var(--tp-surface)}
+.tp-composer-ph{font-size:12px;color:var(--tp-muted)}
+.tp-composer-foot{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--tp-muted)}
+.tp-send{margin-left:auto;height:24px;padding:0 10px;border-radius:6px;background:var(--tp-accent);color:#fff;font-size:11px}
+
+/* ---------- 右栏与竖条 ---------- */
+.tp-panel{grid-column:3;grid-row:2;display:flex;flex-direction:column;min-height:0;overflow-y:auto;scrollbar-width:thin;overscroll-behavior:contain;background:var(--tp-surface);border-left:1px solid var(--tp-line)}
+.tp-panel::-webkit-scrollbar{width:8px}
+.tp-panel::-webkit-scrollbar-thumb{background:#E3E1DA;border:2px solid var(--tp-surface);border-radius:5px}
+.tp-panel-head{flex:none;height:44px;display:flex;align-items:center;gap:7px;padding:0 8px 0 14px;border-bottom:1px solid var(--tp-line-soft)}
+.tp-panel-title{font-size:12.5px;font-weight:650;letter-spacing:.01em}
+.tp-panel-count{font-size:10.5px;color:var(--tp-muted);font-variant-numeric:tabular-nums}
+.tp-panel-collapse{margin-left:auto;width:26px;height:26px;display:grid;place-items:center;border-radius:6px;color:var(--tp-muted)}
+.tp-panel-collapse:hover{background:var(--tp-hover);color:var(--tp-ink)}
+.tp-panel-body{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;overscroll-behavior:contain}
+.tp-panel-body::-webkit-scrollbar{width:8px}
+.tp-panel-body::-webkit-scrollbar-thumb{background:#E3E1DA;border:2px solid var(--tp-surface);border-radius:5px}
+.tp-panel-foot{flex:none;margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 14px;border-top:1px solid var(--tp-line-soft);font-size:10.5px;color:var(--tp-muted);font-variant-numeric:tabular-nums}
+
+.tp-rail{grid-column:4;grid-row:2;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0;background:var(--tp-surface);border-left:1px solid var(--tp-line);z-index:5}
+.tp-rail-btn{position:relative;width:32px;height:32px;display:grid;place-items:center;border-radius:7px;color:var(--tp-muted);transition:background .15s,color .15s}
+.tp-rail-btn:hover{background:var(--tp-hover);color:var(--tp-ink)}
+.tp-rail-btn.is-current{background:var(--tp-accent-soft);color:var(--tp-accent)}
+.tp-rail-btn.is-current::before{content:"";position:absolute;left:2px;top:9px;bottom:9px;width:2px;border-radius:2px;background:var(--tp-accent)}
+.tp-rail-badge{position:absolute;top:-3px;right:-3px;min-width:14px;height:14px;padding:0 4px;border:1.5px solid var(--tp-surface);border-radius:8px;background:var(--tp-accent);color:#fff;font-size:9.5px;line-height:14px;text-align:center;font-variant-numeric:tabular-nums;box-sizing:content-box}
+
+/* ---------- 概览折叠 ---------- */
+.tp-ov-tools{display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-bottom:1px solid var(--tp-line-soft);font-size:10.5px;color:var(--tp-muted)}
+.tp-ov-all{margin-left:auto;font-size:10.5px;color:var(--tp-accent);padding:2px 0}
+.tp-fold{border-bottom:1px solid var(--tp-line-soft)}
+.tp-fold-btn{display:grid;grid-template-columns:minmax(0,1fr) auto 12px;align-items:center;gap:8px;width:100%;min-height:40px;padding:0 14px;text-align:left;transition:background .15s}
+.tp-fold-btn:hover{background:var(--tp-hover)}
+.tp-fold-title{font-size:12.5px;font-weight:600;color:var(--tp-ink);letter-spacing:.01em}
+.tp-fold-count{font-size:10.5px;color:var(--tp-muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+/* 箭头盒子固定 16×16 并与 16px 图标同宽：图标在盒内居中，展开时的 rotate(90deg) 绕盒子中心旋转，
+   不会把横向偏移转成纵向偏移（旧写法盒子只有列宽 12，图标宽 16 向右溢出 2，旋转后箭头下沉 2.4px）。 */
+.tp-fold-chev{display:flex;align-items:center;justify-content:center;width:16px;height:16px;line-height:1;justify-self:start;color:var(--tp-muted);transition:transform .16s ease,color .16s}
+.tp-fold.is-open .tp-fold-chev{transform:rotate(90deg);color:var(--tp-accent)}
+.tp-fold-body{display:none;padding:0 14px 12px}
+.tp-fold.is-open .tp-fold-body{display:block}
+.tp-ov-text{margin:0;font-size:12px;line-height:1.72;color:var(--tp-ink)}
+.tp-ov-counts{display:flex;flex-wrap:wrap;gap:3px 9px;font-size:10.5px;color:var(--tp-muted);font-variant-numeric:tabular-nums}
+.tp-ov-counts b{font-weight:650}
+.tp-ov-counts .is-running{color:var(--tp-accent)}
+.tp-ov-counts .is-done{color:var(--tp-done)}
+.tp-ov-counts .is-failed{color:var(--tp-fail)}
+.tp-ov-counts .is-todo{color:var(--tp-todo)}
+.tp-ov-task{display:flex;align-items:center;gap:6px;padding:6px 0;border-top:1px solid var(--tp-line-soft);font-size:11.5px}
+.tp-ov-task[data-goto]{cursor:pointer}
+.tp-ov-task[data-goto]:hover .tp-ov-task-name{color:var(--tp-accent)}
+.tp-ov-task:first-of-type{margin-top:7px}
+.tp-ov-task-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tp-ink)}
+.tp-ov-task-meta{margin-left:auto;flex:none;font-size:10.5px;color:var(--tp-muted);font-variant-numeric:tabular-nums}
+.tp-dot{width:6px;height:6px;border-radius:50%;flex:none;background:var(--tp-todo)}
+.tp-dot.is-running{background:var(--tp-accent)}
+.tp-dot.is-done{background:var(--tp-done)}
+.tp-dot.is-failed{background:var(--tp-fail)}
+.tp-ov-file{display:flex;align-items:center;gap:7px;padding:5px 0;font-size:11.5px}
+.tp-ov-file-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tp-ov-file-meta{margin-left:auto;flex:none;font-size:10.5px;color:var(--tp-muted);font-variant-numeric:tabular-nums}
+.tp-file-badge{flex:none;display:inline-grid;place-items:center;width:28px;height:18px;border-radius:4px;font-size:9.5px;line-height:1;background:var(--tp-todo-bg);color:var(--tp-muted)}
+.tp-file-badge.is-doc{background:var(--tp-accent-soft);color:var(--tp-accent)}
+.tp-file-badge.is-sheet{background:var(--tp-done-bg);color:var(--tp-done)}
+.tp-file-badge.is-img{background:var(--tp-img-bg);color:var(--tp-img)}
+.tp-more{display:inline-flex;align-items:center;gap:3px;margin-top:7px;font-size:10.5px;color:var(--tp-accent);cursor:pointer}
+
+/* ---------- 任务标签 ---------- */
+.tp-tasks{padding:9px 10px 10px}
+.tp-filters{flex:none;display:flex;gap:4px;padding:8px 10px;border-bottom:1px solid var(--tp-line-soft);background:var(--tp-surface)}
+.tp-chip{height:24px;padding:0 7px;display:inline-flex;align-items:center;gap:4px;border:1px solid var(--tp-line);border-radius:6px;background:var(--tp-surface);font-size:10.5px;color:var(--tp-muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.tp-chip b{font-weight:600;color:var(--tp-muted)}
+.tp-chip.is-on{background:var(--tp-ink);border-color:var(--tp-ink);color:#fff}
+.tp-chip.is-on b{color:#fff}
+.tp-task{position:relative;padding:10px 11px 9px 12px;background:var(--tp-surface);border:1px solid var(--tp-line);border-radius:var(--tp-r);transition:border-color .15s,box-shadow .15s}
+.tp-task[data-goto]{cursor:pointer}
+.tp-task[data-goto]:hover{border-color:#D8D6CE}
+.tp-task + .tp-task{margin-top:8px}
+.tp-task::before{content:"";position:absolute;left:0;top:11px;bottom:11px;width:2px;border-radius:0 2px 2px 0;background:transparent}
+.tp-task.is-running::before{background:var(--tp-accent)}
+.tp-task.is-failed::before{background:var(--tp-fail)}
+.tp-task.is-viewing{border-color:#C9C9F6;box-shadow:0 0 0 2px #F2F2FD}
+.tp-task-head{display:flex;align-items:center;gap:6px}
+.tp-task-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:600}
+.tp-task-meta{display:flex;align-items:center;gap:5px;margin-top:3px;font-size:10.5px;color:var(--tp-muted)}
+.tp-sep{color:#C9C7BF}
+.tp-pill{display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:5px;font-size:10px;font-weight:550;white-space:nowrap;line-height:1}
+.tp-pill.is-running{background:var(--tp-accent-soft);color:var(--tp-accent)}
+.tp-pill.is-done{background:var(--tp-done-bg);color:var(--tp-done)}
+.tp-pill.is-todo{background:var(--tp-todo-bg);color:var(--tp-todo)}
+.tp-pill.is-failed{background:var(--tp-fail-bg);color:var(--tp-fail)}
+.tp-segbar{display:flex;gap:2px;margin-top:7px}
+.tp-segbar span{flex:1;height:3px;border-radius:1px;background:var(--tp-todo-bg)}
+.tp-segbar span.is-done{background:var(--tp-done)}
+.tp-segbar span.is-running{background:var(--tp-accent)}
+.tp-segbar span.is-failed{background:var(--tp-fail)}
+.tp-task-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:5px;font-size:10px;color:var(--tp-muted);font-variant-numeric:tabular-nums}
+.tp-csteps{list-style:none;margin:6px 0 0;padding:0;border-top:1px solid var(--tp-line-soft)}
+.tp-cstep{display:grid;grid-template-columns:12px minmax(0,1fr) auto;align-items:center;gap:6px;height:22px;font-size:10.5px;color:var(--tp-muted)}
+.tp-cmark{font-size:9.5px;color:var(--tp-done);text-align:center}
+.tp-cstep.is-running{color:var(--tp-ink)}
+.tp-cstep.is-running .tp-cmark{color:var(--tp-accent)}
+.tp-cname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tp-cmeta{font-size:9.5px;color:var(--tp-muted);white-space:nowrap}
+.tp-recent{margin-top:7px;padding:7px 8px;background:var(--tp-paper);border:1px solid var(--tp-line-soft);border-radius:6px}
+.tp-recent-head{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--tp-muted)}
+.tp-recent-head time{margin-left:auto;font-variant-numeric:tabular-nums}
+.tp-recent p{margin:4px 0 0;font-size:10.5px;line-height:1.65;color:var(--tp-ink)}
+.tp-fail-line{display:flex;gap:6px;margin-top:6px;padding:6px 8px;border-radius:6px;background:var(--tp-fail-bg);color:var(--tp-fail);font-size:10.5px;line-height:1.55}
+
+/* ---------- 交付物 ---------- */
+.tp-deliv-sub{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 14px;border-bottom:1px solid var(--tp-line-soft);font-size:10.5px;color:var(--tp-muted)}
+.tp-deliv{padding:4px 10px 12px}
+.tp-dgroup{padding-top:10px}
+.tp-dgroup + .tp-dgroup{border-top:1px solid var(--tp-line-soft);margin-top:4px}
+.tp-dgroup-head{display:flex;align-items:center;gap:6px;padding:0 2px 6px;min-width:0}
+.tp-dgroup-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:600;color:var(--tp-ink)}
+.tp-dgroup-n{margin-left:auto;flex:none;font-size:9.5px;color:var(--tp-muted);font-variant-numeric:tabular-nums}
+.tp-dlist{border:1px solid var(--tp-line);border-radius:8px;overflow:hidden;background:var(--tp-surface)}
+.tp-drow{display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;gap:7px;padding:7px 8px;border-bottom:1px solid var(--tp-line-soft)}
+.tp-drow > div{min-width:0}
+.tp-drow:last-child{border-bottom:0}
+.tp-dname{display:block;font-size:11px;font-weight:550;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tp-dmeta{display:block;margin-top:1px;font-size:9.5px;color:var(--tp-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums}
+.tp-dact{font-size:10px;color:var(--tp-accent);padding:2px 0 2px 4px;white-space:nowrap}
+.tp-dact:hover{text-decoration:underline}
+.tp-type{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:6px;font-size:9.5px;line-height:1;background:var(--tp-todo-bg);color:var(--tp-muted)}
+.tp-type.is-doc{background:var(--tp-accent-soft);color:var(--tp-accent)}
+.tp-type.is-sheet{background:var(--tp-done-bg);color:var(--tp-done)}
+.tp-type.is-img{background:var(--tp-img-bg);color:var(--tp-img)}
+.tp-empty{padding:11px 12px;border:1px dashed #DCD9D0;border-radius:8px;font-size:10.5px;line-height:1.7;color:var(--tp-muted);background:#FCFBF8}
+.tp-empty b{color:var(--tp-ink);font-weight:600}
+
+/* ---------- 计划详情单列 ---------- */
+.tp-sheet{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;background:var(--tp-surface);border-left:1px solid var(--tp-line);box-shadow:-12px 0 30px rgba(22,23,27,.07);animation:tp-sheet-in .18s ease}
+@keyframes tp-sheet-in{from{opacity:0;transform:translateX(6px)}to{opacity:1;transform:none}}
+.tp-sheet-head{flex:none;padding:10px 18px 9px;border-bottom:1px solid var(--tp-line)}
+.tp-sheet-kicker{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--tp-muted);letter-spacing:.04em}
+.tp-sheet-ro{padding:1px 5px;border:1px solid var(--tp-line);border-radius:4px;font-size:9.5px;letter-spacing:0}
+.tp-sheet-close{margin-left:auto;width:24px;height:24px;display:grid;place-items:center;border-radius:5px;color:var(--tp-muted)}
+.tp-sheet-close:hover{background:var(--tp-hover);color:var(--tp-ink)}
+.tp-sheet-title-row{display:flex;align-items:center;gap:9px;margin-top:5px}
+.tp-sheet-title{margin:0;font-size:18px;line-height:1.3;font-weight:650;letter-spacing:-.01em}
+.tp-sheet-meta{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:5px;font-size:10.5px;color:var(--tp-muted);font-variant-numeric:tabular-nums}
+.tp-sheet-meta .tp-sep{color:#D2D0C8}
+.tp-sheet-body{flex:1;min-height:0;overflow-y:auto;padding:9px 18px 14px;scrollbar-width:thin}
+.tp-sheet-body::-webkit-scrollbar{width:8px}
+.tp-sheet-body::-webkit-scrollbar-thumb{background:#E3E1DA;border:2px solid var(--tp-surface);border-radius:5px}
+.tp-hint{display:flex;gap:7px;align-items:flex-start;padding:7px 9px;border-radius:6px;background:#F7F7FD;color:#3F3F8F;font-size:10.5px;line-height:1.6}
+.tp-hint svg{flex:none;margin-top:1px}
+.tp-section-label{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0 4px;font-size:10px;letter-spacing:.06em;color:var(--tp-muted)}
+.tp-steps{list-style:none;margin:0;padding:0;border-top:1px solid var(--tp-line)}
+.tp-step{border-bottom:1px solid var(--tp-line-soft);box-shadow:inset 2px 0 0 transparent}
+.tp-step.is-open{box-shadow:inset 2px 0 0 var(--tp-accent);background:#FBFAF7}
+.tp-step-row{display:grid;grid-template-columns:16px minmax(0,1fr) auto 12px;align-items:center;gap:8px;min-height:30px;padding:0 2px;border-radius:3px}
+.tp-step-row[data-expand]{cursor:pointer}
+.tp-step-row[data-expand]:hover{background:var(--tp-hover)}
+.tp-step.is-open > .tp-step-row:hover{background:transparent}
+.tp-step.is-current.is-open > .tp-step-row{background:var(--tp-accent-soft)}
+.tp-step.is-current.is-open > .tp-step-row:hover{background:var(--tp-accent-soft)}
+.tp-step-name{font-size:12px;line-height:1.5;color:var(--tp-ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tp-step.is-running .tp-step-name{font-weight:600}
+.tp-step-meta{font-size:10px;color:var(--tp-muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.tp-step.is-running .tp-step-meta{color:var(--tp-accent)}
+.tp-step.is-todo .tp-step-name{color:var(--tp-muted);font-weight:400}
+.tp-step.is-todo .tp-step-row{grid-template-columns:16px minmax(0,1fr);cursor:default}
+.tp-step.is-todo .tp-step-meta,.tp-step.is-todo .tp-step-chev{display:none}
+.tp-step-chev{display:grid;place-items:center;color:var(--tp-muted);transition:transform .15s}
+.tp-step.is-open .tp-step-chev{transform:rotate(90deg);color:var(--tp-accent)}
+.tp-step-mark{position:relative;width:14px;height:14px;border-radius:50%;display:grid;place-items:center;flex:none}
+.tp-step-mark.is-done{background:var(--tp-done-bg);color:var(--tp-done)}
+.tp-step-mark.is-running{border:1.5px solid var(--tp-accent);color:var(--tp-accent)}
+.tp-step-mark.is-running::after{content:"";width:4px;height:4px;border-radius:50%;background:var(--tp-accent)}
+.tp-step-mark.is-todo{border:1px solid #CFCDC5}
+.tp-inline{display:none;padding:6px 12px 7px 42px;border-top:1px solid var(--tp-line-soft);background:#FBFAF7}
+.tp-step.is-open .tp-inline{display:block}
+.tp-inline-head{display:flex;align-items:center;gap:6px;margin-bottom:2px;font-size:10px;color:var(--tp-muted)}
+.tp-inline-head b{font-weight:600;color:var(--tp-ink);font-size:10px}
+.tp-inline-head .tp-inline-right{margin-left:auto;white-space:nowrap}
+.tp-tr{display:grid;grid-template-columns:32px minmax(0,1fr) 45px;gap:7px;align-items:start;padding:2px 0;font-size:11px;line-height:1.5}
+.tp-tr + .tp-tr{border-top:1px solid #F2F0EB}
+.tp-tr .tp-tt{min-width:0;color:var(--tp-ink)}
+.tp-tr .tp-time{padding-top:2px;text-align:right;font-size:9.5px;color:var(--tp-muted);font-variant-numeric:tabular-nums}
+.tp-tag{display:inline-flex;align-items:center;justify-content:center;height:15px;padding:0 4px;border-radius:3px;font-size:9.5px;line-height:1;white-space:nowrap;background:var(--tp-todo-bg);color:var(--tp-muted)}
+.tp-tag.is-think{background:var(--tp-todo-bg);color:var(--tp-muted)}
+.tp-tag.is-act{background:var(--tp-accent-soft);color:var(--tp-accent)}
+.tp-tag.is-obs{background:var(--tp-done-bg);color:var(--tp-done)}
+.tp-tr.is-cur .tp-tt{color:#2E2EB8}
+.tp-tr.is-cur .tp-tag.is-act{background:var(--tp-accent);color:#fff}
+.tp-tool{display:inline-block;margin-right:4px;padding:0 3px;border:1px solid var(--tp-line);border-radius:3px;background:var(--tp-surface);font-family:var(--tp-mono);font-size:9.5px;line-height:1.5;color:var(--tp-muted);vertical-align:1px;white-space:nowrap}
+.tp-inline-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;font-size:9.5px;color:var(--tp-muted)}
+
+/* ---------- 计划详情扁平步骤（仅 s5、s6 使用） ---------- */
+.tp-steps--flat .tp-step-row{padding-left:12px;padding-right:12px}
+.tp-steps--flat .tp-inline{padding:6px 12px 8px 28px;background:transparent}
+.tp-steps--flat .tp-tr{grid-template-columns:32px minmax(0,1fr) 45px;gap:6px;padding:2px 0}
+.tp-steps--flat .tp-tag{width:32px;padding:0}
+
+/* ---------- 边做边想扁平时间线 ---------- */
+.tp-mode-note{margin:0 0 8px;padding:7px 9px;border-left:2px solid var(--tp-accent);background:#F7F7FD;font-size:10.5px;line-height:1.65;color:#3F3F8F}
+.tp-flow{list-style:none;margin:0;padding:0;border-top:1px solid var(--tp-line)}
+.tp-flow-row{display:grid;grid-template-columns:32px minmax(0,1fr) 46px;gap:7px;align-items:start;padding:4px 2px;border-bottom:1px solid var(--tp-line-soft);font-size:11.5px;line-height:1.55}
+.tp-flow-row .tp-tt{min-width:0}
+.tp-flow-row .tp-time{padding-top:2px;text-align:right;font-size:9.5px;color:var(--tp-muted);font-variant-numeric:tabular-nums}
+.tp-flow-row.is-cur{background:#FBFAF7;box-shadow:inset 2px 0 0 var(--tp-accent)}
+.tp-flow-row.is-cur .tp-tag{background:var(--tp-accent);color:#fff}
+.tp-flow-row.is-cur .tp-tt{color:#2E2EB8}
+
+/* ---------- 任务图弹窗 ---------- */
+.tp-modal{position:absolute;inset:0;z-index:60;display:grid;place-items:center;padding:20px;background:rgba(22,23,27,.34)}
+.tp-dialog{width:920px;max-width:calc(100% - 8px);max-height:calc(100% - 8px);display:flex;flex-direction:column;background:var(--tp-surface);border:1px solid var(--tp-line);border-radius:12px;box-shadow:0 18px 48px rgba(22,23,27,.2);overflow:hidden}
+.tp-dialog-head{display:flex;align-items:flex-start;gap:12px;padding:13px 16px 10px;border-bottom:1px solid var(--tp-line-soft)}
+.tp-dialog-title{margin:0;font-size:15px;line-height:1.35;font-weight:650}
+.tp-dialog-sub{margin-top:3px;font-size:10.5px;color:var(--tp-muted)}
+.tp-dialog-close{margin-left:auto;flex:none;width:26px;height:26px;display:grid;place-items:center;border-radius:6px;color:var(--tp-muted)}
+.tp-dialog-close:hover{background:var(--tp-hover);color:var(--tp-ink)}
+.tp-legend{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:8px 16px;font-size:10px;color:var(--tp-muted);border-bottom:1px solid var(--tp-line-soft)}
+.tp-legend span{display:inline-flex;align-items:center;gap:5px}
+.tp-legend .tp-legend-line{margin-left:auto}
+.tp-dag{position:relative;width:860px;height:366px;margin:6px auto 0;flex:none}
+.tp-dag-lines{position:absolute;left:0;top:0;pointer-events:none}
+.tp-dag-node{position:absolute;width:156px;height:64px;padding:7px 9px;text-align:left;background:var(--tp-surface);border:1px solid var(--tp-line);border-radius:8px;box-shadow:0 1px 1px rgba(22,23,27,.03)}
+.tp-dag-node::before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:2px;border-radius:0 2px 2px 0;background:#D8D5CC}
+.tp-dag-node.is-done::before{background:var(--tp-done)}
+.tp-dag-node.is-running::before{background:var(--tp-accent)}
+.tp-dag-node.is-failed::before{background:var(--tp-fail)}
+.tp-dag-node.is-todo::before{background:#C9C6BD}
+.tp-dag-node[data-goto]{cursor:pointer}
+.tp-dag-node[data-goto]:hover{border-color:#C9C9F6;box-shadow:0 0 0 2px #F2F2FD}
+.tp-dag-mode{display:block;font-size:9px;line-height:1;letter-spacing:.04em;color:var(--tp-muted)}
+.tp-dag-mode.is-react{color:var(--tp-accent)}
+.tp-dag-name{display:block;margin-top:3px;font-size:12px;line-height:1.3;font-weight:600;color:var(--tp-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tp-dag-meta{display:flex;align-items:center;gap:4px;margin-top:4px;font-size:9.5px;line-height:1.2;color:var(--tp-muted);white-space:nowrap;overflow:hidden}
+.tp-dag-dot{width:5px;height:5px;border-radius:50%;background:var(--tp-todo);flex:none}
+.tp-dag-node.is-done .tp-dag-dot{background:var(--tp-done)}
+.tp-dag-node.is-running .tp-dag-dot{background:var(--tp-accent)}
+.tp-dag-node.is-failed .tp-dag-dot{background:var(--tp-fail)}
+.tp-dialog-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 16px;border-top:1px solid var(--tp-line-soft);font-size:10px;color:var(--tp-muted)}
+
+/* ---------- 状态栏 ---------- */
+.tp-status{grid-column:1/-1;grid-row:3;display:flex;align-items:center;gap:14px;padding:0 12px;background:var(--tp-surface);border-top:1px solid var(--tp-line);font-size:10px;color:var(--tp-muted)}
+.tp-status .tp-status-right{margin-left:auto;font-variant-numeric:tabular-nums}
+
+/* ---------- 说明 ---------- */
+.tp-notes{display:grid;grid-template-columns:64px minmax(0,1fr);gap:12px;margin-top:12px;padding-top:10px;border-top:1px solid var(--tp-line-soft)}
+.tp-notes-label{padding-top:2px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--tp-muted)}
+.tp-notes-body p{margin:0 0 5px;font-size:11.5px;line-height:1.75;color:var(--tp-muted)}
+.tp-notes-body p:last-child{margin-bottom:0}
+.tp-notes-body b{color:var(--tp-ink);font-weight:550}
+.tp-doc-foot{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:30px;padding-top:12px;border-top:1px solid var(--tp-line);font-size:10.5px;color:var(--tp-muted)}
+
+@media (max-width:900px){
+  .tp-doc{padding:16px 14px 30px}
+  .tp-nav-wrap{margin:0 -14px;padding:0 14px}
+  .tp-doc-head{flex-direction:column;align-items:flex-start;gap:10px}
+  .tp-doc-meta{text-align:left}
+  .tp-notes{grid-template-columns:1fr;gap:5px}
+}
+</style>
+</head>
+<body>
+<div class="tp-doc">
+  <header class="tp-doc-head">
+    <div>
+      <div class="tp-doc-kicker">SIMO · TASK PROTOTYPE V3</div>
+      <h1 class="tp-doc-title">竖条右栏、折叠概览与单列计划详情</h1>
+      <p class="tp-doc-sub">司墨桌面端第三版高保真静态原型。九屏共用一套视觉令牌，右栏竖条、概览四行折叠、计划详情单列内联轨迹是本版三处改动，其余内容沿用第二版的会话与任务数据。</p>
+    </div>
+    <div class="tp-doc-meta">
+      <b>九屏 · 1280 × 720</b>
+      <span>2026-11-23 · 静态原型</span>
+      <span>数字键 1–9 切换</span>
+    </div>
+  </header>
+
+  <div class="tp-nav-wrap">
+    <nav class="tp-nav" aria-label="原型屏幕"><button class="tp-nav-item is-active" type="button" data-screen="s1" aria-current="page"><span class="tp-nav-num">1</span>概览 · 全展开</button><button class="tp-nav-item" type="button" data-screen="s2"><span class="tp-nav-num">2</span>概览 · 全部收起</button><button class="tp-nav-item" type="button" data-screen="s3"><span class="tp-nav-num">3</span>任务标签</button><button class="tp-nav-item" type="button" data-screen="s4"><span class="tp-nav-num">4</span>交付物</button><button class="tp-nav-item" type="button" data-screen="s5"><span class="tp-nav-num">5</span>计划 · 当前步</button><button class="tp-nav-item" type="button" data-screen="s6"><span class="tp-nav-num">6</span>计划 · 回看</button><button class="tp-nav-item" type="button" data-screen="s7"><span class="tp-nav-num">7</span>边做边想详情</button><button class="tp-nav-item" type="button" data-screen="s8"><span class="tp-nav-num">8</span>任务图</button><button class="tp-nav-item" type="button" data-screen="s9"><span class="tp-nav-num">9</span>右栏收起</button></nav>
+  </div>
+
+  <main class="tp-screens">
+    
+<section class="tp-screen is-active" id="s1" aria-labelledby="s1-h">
+  <div class="tp-screen-head">
+    <h2 id="s1-h"><span class="tp-screen-no">01</span>概览 · 全展开</h2>
+    <span class="tp-screen-tag">右栏 280 · 竖条 40</span>
+  </div>
+  <p class="tp-focus">四个小节默认全开。每个标题行占满右栏宽度，右侧只放计数与箭头，展开内容直接落在标题行下面。</p>
+  <div class="tp-frame"><div class="tp-shell">
+  
+  <header class="tp-topbar">
+    <div class="tp-brand">
+      <span class="tp-logo">司</span>
+      <span class="tp-brand-name">司墨</span>
+      <span class="tp-brand-sub">simo</span>
+    </div>
+    <label class="tp-search"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8.8" cy="8.8" r="5.3"/><path d="M12.8 12.8L17 17"/></svg><span>搜索会话、任务或交付物</span><kbd>Ctrl K</kbd></label>
+    <div class="tp-top-actions">
+      <button class="tp-top-btn" type="button" data-goto="s8">任务图</button>
+      <button class="tp-icon-btn" type="button" aria-label="设置"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="2.7"/><path d="M10 2.9v2M10 15.1v2M2.9 10h2M15.1 10h2M4.98 4.98l1.42 1.42M13.6 13.6l1.42 1.42M15.02 4.98l-1.42 1.42M6.4 13.6l-1.42 1.42"/></svg></button>
+      <span class="tp-avatar">陈</span>
+    </div>
+  </header>
+  
+  <aside class="tp-sidebar">
+    <div class="tp-side-head"><span>最近会话</span><button class="tp-icon-btn" type="button" aria-label="新建会话"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button></div>
+    <nav class="tp-conv-list" aria-label="会话列表">
+      <div class="tp-conv is-on"><span class="tp-conv-name">产品周会纪要</span><span class="tp-conv-time">15:42</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">周报数据核对</span><span class="tp-conv-badge">子</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">发布检查</span><span class="tp-conv-badge">子</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">下周排期草稿</span><span class="tp-conv-time">14:08</span></div>
+    </nav>
+    <div class="tp-side-foot">
+      <div class="tp-usage">12 次任务</div>
+      <div class="tp-usage-sub">2 个进行中 · 1 个等待确认</div>
+    </div>
+  </aside>
+  <main class="tp-main">
+  <div class="tp-chat-head">
+    <div>
+      <div class="tp-chat-title">产品周会纪要</div>
+      <div class="tp-chat-meta">主会话 · 8 条消息 · 15:42 更新</div>
+    </div>
+    <div class="tp-chat-tools"><span class="tp-mini">仅本会话</span><button class="tp-icon-btn" type="button" aria-label="更多"><svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4.6" cy="10" r="1.25"/><circle cx="10" cy="10" r="1.25"/><circle cx="15.4" cy="10" r="1.25"/></svg></button></div>
+  </div>
+  <div class="tp-msgs">
+    
+  <article class="tp-msg is-user">
+    <div class="tp-msg-head"><span class="tp-msg-who">你</span><time>15:30</time></div>
+    <p>把今天产品周会的记录整理成纪要，顺手出一版周报草稿，发布清单也核一下。</p>
+    
+  </article>
+    
+  <article class="tp-msg">
+    <div class="tp-msg-head"><span class="tp-msg-who">司墨</span><time>15:31</time></div>
+    <p>拆成三件事：整理会议纪要、生成周报草稿、核对发布清单；上周漏的发布说明单独补一条，不挡前面三个。</p>
+    <div class="tp-quiet">已创建 4 个任务 · 加上先前的共 11 个</div>
+  </article>
+    
+  <article class="tp-msg is-user">
+    <div class="tp-msg-head"><span class="tp-msg-who">你</span><time>15:33</time></div>
+    <p>纪要和周报可以同时来，发布清单等我确认口径再开。</p>
+    
+  </article>
+    
+  <article class="tp-msg">
+    <div class="tp-msg-head"><span class="tp-msg-who">司墨</span><time>15:42</time></div>
+    <p>纪要卡在第 5 步已经失败，初稿文件被占用；周报写到第 4 节，补发说明只差发布链接。</p>
+    
+  </article>
+  </div>
+  
+  <div class="tp-composer">
+    <div class="tp-composer-box">
+      <span class="tp-composer-ph">回复，或输入 / 选择动作</span>
+      <div class="tp-composer-foot"><span>本地模型 · 只在本机处理</span><button class="tp-send" type="button">发送</button></div>
+    </div>
+  </div></main>
+  
+  <aside class="tp-panel" aria-label="概览标签">
+    <div class="tp-panel-head">
+      <span class="tp-panel-title">概览</span>
+      <span class="tp-panel-count">4 个小节</span>
+      <button class="tp-panel-collapse" type="button" data-rail-collapse title="收起右栏" aria-label="收起右栏"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></button>
+    </div>
+    
+    <div class="tp-ov-tools">
+      <span>四节按顺序排列</span>
+      <button class="tp-ov-all" type="button">全部收起</button>
+    </div>
+    
+  <section class="tp-fold is-open">
+    <button class="tp-fold-btn" type="button" aria-expanded="true">
+      <span class="tp-fold-title">目标</span>
+      <span class="tp-fold-count">1 条</span>
+      <span class="tp-fold-chev"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+    </button>
+    <div class="tp-fold-body"><p class="tp-ov-text">把今天产品周会的记录整理成纪要，产出周报草稿，并核对发布清单。</p></div>
+  </section>
+    
+  <section class="tp-fold is-open">
+    <button class="tp-fold-btn" type="button" aria-expanded="true">
+      <span class="tp-fold-title">输入</span>
+      <span class="tp-fold-count">3 项</span>
+      <span class="tp-fold-chev"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+    </button>
+    <div class="tp-fold-body"><p class="tp-ov-text">今天的会议记录 3 份、本周提交 37 条、发布清单草稿 1 份。</p></div>
+  </section>
+    
+  <section class="tp-fold is-open">
+    <button class="tp-fold-btn" type="button" aria-expanded="true">
+      <span class="tp-fold-title">任务</span>
+      <span class="tp-fold-count">11 个</span>
+      <span class="tp-fold-chev"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+    </button>
+    <div class="tp-fold-body">
+      <div class="tp-ov-counts"><span><b class="is-running">2</b> 进行中</span><span><b class="is-todo">5</b> 未开始</span><span><b class="is-done">3</b> 已完成</span><span><b class="is-failed">1</b> 失败</span></div>
+      
+  <div class="tp-ov-task" data-goto="s5" role="button" tabindex="0">
+    <span class="tp-dot is-running"></span>
+    <span class="tp-ov-task-name">生成周报草稿</span>
+    <span class="tp-ov-task-meta">计划 · 5 / 8 步</span>
+  </div>
+      
+  <div class="tp-ov-task" data-goto="s7" role="button" tabindex="0">
+    <span class="tp-dot is-running"></span>
+    <span class="tp-ov-task-name">补发发布说明</span>
+    <span class="tp-ov-task-meta">边做边想 · 14 条</span>
+  </div>
+      <button class="tp-more" type="button" data-goto="s3">还有 9 个 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></button>
+    </div>
+  </section>
+    
+  <section class="tp-fold is-open">
+    <button class="tp-fold-btn" type="button" aria-expanded="true">
+      <span class="tp-fold-title">交付物</span>
+      <span class="tp-fold-count">4 个</span>
+      <span class="tp-fold-chev"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+    </button>
+    <div class="tp-fold-body">
+      
+  <div class="tp-ov-file">
+    <span class="tp-file-badge is-doc">文档</span>
+    <span class="tp-ov-file-name">weekly-report.md</span>
+    <span class="tp-ov-file-meta">15:41</span>
+  </div>
+      
+  <div class="tp-ov-file">
+    <span class="tp-file-badge is-sheet">表格</span>
+    <span class="tp-ov-file-name">metrics-2026-W47.xlsx</span>
+    <span class="tp-ov-file-meta">15:39</span>
+  </div>
+      <button class="tp-more" type="button" data-goto="s4">还有 2 个 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></button>
+    </div>
+  </section>
+    <div class="tp-panel-foot"><span>只读投影 · 随任务更新</span><span>15:42</span></div>
+  </aside>
+  <aside class="tp-rail" aria-label="右栏导航">
+    <button class="tp-rail-btn is-current" type="button" data-goto="s1" title="概览" aria-label="概览" aria-expanded="true"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.6" y="2.6" width="6.1" height="6.1" rx="1.5"/><rect x="11.3" y="2.6" width="6.1" height="6.1" rx="1.5"/><rect x="2.6" y="11.3" width="6.1" height="6.1" rx="1.5"/><rect x="11.3" y="11.3" width="6.1" height="6.1" rx="1.5"/></svg></button>
+    <button class="tp-rail-btn" type="button" data-goto="s3" title="任务" aria-label="任务，2 个进行中"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.4 5.5l1.6 1.6 2.7-2.9"/><path d="M3.4 11l1.6 1.6 2.7-2.9"/><path d="M11 6h6M11 11.5h6M11 17h6"/></svg><span class="tp-rail-badge">2</span></button>
+    <button class="tp-rail-btn" type="button" data-goto="s4" title="交付物" aria-label="交付物"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2a2 2 0 012-2h3l1.8 2h6.2a2 2 0 012 2v6.2a2 2 0 01-2 2H4.5a2 2 0 01-2-2z"/></svg></button>
+  </aside>
+  
+  
+  <footer class="tp-status">
+    <span>就绪 · 本地模型 qwen3-8b</span>
+    <span>任务 11 · 进行中 2 · 失败 1</span>
+    <span class="tp-status-right">15:42:08</span>
+  </footer>
+</div></div>
+  <div class="tp-notes">
+    <span class="tp-notes-label">本屏</span>
+    <div class="tp-notes-body"><p><b>右栏展开宽 280，最右侧固定 40 宽竖条</b>，三个图标自上而下，任务图标带数字角标 2，超过 9 时显示 9+。竖条贴住应用右边缘，右栏展开时仍停在最右侧。</p><p>概览改成四个通栏小节：每个标题行 40 高，只用一条分隔线，展开内容落在标题行下方、与标题共用同一栏宽。</p><p>默认四节全开，工具栏右侧提供“全部收起”，与逐行点击是同一套状态。</p></div>
+  </div>
+</section>
+
+<section class="tp-screen" id="s2" aria-labelledby="s2-h">
+  <div class="tp-screen-head">
+    <h2 id="s2-h"><span class="tp-screen-no">02</span>概览 · 全部收起</h2>
+    <span class="tp-screen-tag">右栏 280 · 四行标题</span>
+  </div>
+  <p class="tp-focus">同一栏位的收起对照：内容区只剩四行标题，计数与箭头仍在，行间由分隔线连接。</p>
+  <div class="tp-frame"><div class="tp-shell">
+  
+  <header class="tp-topbar">
+    <div class="tp-brand">
+      <span class="tp-logo">司</span>
+      <span class="tp-brand-name">司墨</span>
+      <span class="tp-brand-sub">simo</span>
+    </div>
+    <label class="tp-search"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8.8" cy="8.8" r="5.3"/><path d="M12.8 12.8L17 17"/></svg><span>搜索会话、任务或交付物</span><kbd>Ctrl K</kbd></label>
+    <div class="tp-top-actions">
+      <button class="tp-top-btn" type="button" data-goto="s8">任务图</button>
+      <button class="tp-icon-btn" type="button" aria-label="设置"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="2.7"/><path d="M10 2.9v2M10 15.1v2M2.9 10h2M15.1 10h2M4.98 4.98l1.42 1.42M13.6 13.6l1.42 1.42M15.02 4.98l-1.42 1.42M6.4 13.6l-1.42 1.42"/></svg></button>
+      <span class="tp-avatar">陈</span>
+    </div>
+  </header>
+  
+  <aside class="tp-sidebar">
+    <div class="tp-side-head"><span>最近会话</span><button class="tp-icon-btn" type="button" aria-label="新建会话"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button></div>
+    <nav class="tp-conv-list" aria-label="会话列表">
+      <div class="tp-conv is-on"><span class="tp-conv-name">产品周会纪要</span><span class="tp-conv-time">15:42</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">周报数据核对</span><span class="tp-conv-badge">子</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">发布检查</span><span class="tp-conv-badge">子</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">下周排期草稿</span><span class="tp-conv-time">14:08</span></div>
+    </nav>
+    <div class="tp-side-foot">
+      <div class="tp-usage">12 次任务</div>
+      <div class="tp-usage-sub">2 个进行中 · 1 个等待确认</div>
+    </div>
+  </aside>
+  <main class="tp-main">
+  <div class="tp-chat-head">
+    <div>
+      <div class="tp-chat-title">产品周会纪要</div>
+      <div class="tp-chat-meta">主会话 · 8 条消息 · 15:42 更新</div>
+    </div>
+    <div class="tp-chat-tools"><span class="tp-mini">仅本会话</span><button class="tp-icon-btn" type="button" aria-label="更多"><svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4.6" cy="10" r="1.25"/><circle cx="10" cy="10" r="1.25"/><circle cx="15.4" cy="10" r="1.25"/></svg></button></div>
+  </div>
+  <div class="tp-msgs">
+    
+  <article class="tp-msg is-user">
+    <div class="tp-msg-head"><span class="tp-msg-who">你</span><time>15:30</time></div>
+    <p>把今天产品周会的记录整理成纪要，顺手出一版周报草稿，发布清单也核一下。</p>
+    
+  </article>
+    
+  <article class="tp-msg">
+    <div class="tp-msg-head"><span class="tp-msg-who">司墨</span><time>15:31</time></div>
+    <p>拆成三件事：整理会议纪要、生成周报草稿、核对发布清单；上周漏的发布说明单独补一条，不挡前面三个。</p>
+    <div class="tp-quiet">已创建 4 个任务 · 加上先前的共 11 个</div>
+  </article>
+    
+  <article class="tp-msg is-user">
+    <div class="tp-msg-head"><span class="tp-msg-who">你</span><time>15:33</time></div>
+    <p>纪要和周报可以同时来，发布清单等我确认口径再开。</p>
+    
+  </article>
+    
+  <article class="tp-msg">
+    <div class="tp-msg-head"><span class="tp-msg-who">司墨</span><time>15:42</time></div>
+    <p>纪要卡在第 5 步已经失败，初稿文件被占用；周报写到第 4 节，补发说明只差发布链接。</p>
+    
+  </article>
+  </div>
+  
+  <div class="tp-composer">
+    <div class="tp-composer-box">
+      <span class="tp-composer-ph">回复，或输入 / 选择动作</span>
+      <div class="tp-composer-foot"><span>本地模型 · 只在本机处理</span><button class="tp-send" type="button">发送</button></div>
+    </div>
+  </div></main>
+  
+  <aside class="tp-panel" aria-label="概览标签">
+    <div class="tp-panel-head">
+      <span class="tp-panel-title">概览</span>
+      <span class="tp-panel-count">4 个小节</span>
+      <button class="tp-panel-collapse" type="button" data-rail-collapse title="收起右栏" aria-label="收起右栏"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></button>
+    </div>
+    
+    <div class="tp-ov-tools">
+      <span>四节按顺序排列</span>
+      <button class="tp-ov-all" type="button">全部展开</button>
+    </div>
+    
+  <section class="tp-fold">
+    <button class="tp-fold-btn" type="button" aria-expanded="false">
+      <span class="tp-fold-title">目标</span>
+      <span class="tp-fold-count">1 条</span>
+      <span class="tp-fold-chev"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+    </button>
+    <div class="tp-fold-body"><p class="tp-ov-text">把今天产品周会的记录整理成纪要，产出周报草稿，并核对发布清单。</p></div>
+  </section>
+    
+  <section class="tp-fold">
+    <button class="tp-fold-btn" type="button" aria-expanded="false">
+      <span class="tp-fold-title">输入</span>
+      <span class="tp-fold-count">3 项</span>
+      <span class="tp-fold-chev"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+    </button>
+    <div class="tp-fold-body"><p class="tp-ov-text">今天的会议记录 3 份、本周提交 37 条、发布清单草稿 1 份。</p></div>
+  </section>
+    
+  <section class="tp-fold">
+    <button class="tp-fold-btn" type="button" aria-expanded="false">
+      <span class="tp-fold-title">任务</span>
+      <span class="tp-fold-count">11 个</span>
+      <span class="tp-fold-chev"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+    </button>
+    <div class="tp-fold-body">
+      <div class="tp-ov-counts"><span><b class="is-running">2</b> 进行中</span><span><b class="is-todo">5</b> 未开始</span><span><b class="is-done">3</b> 已完成</span><span><b class="is-failed">1</b> 失败</span></div>
+      
+  <div class="tp-ov-task" data-goto="s5" role="button" tabindex="0">
+    <span class="tp-dot is-running"></span>
+    <span class="tp-ov-task-name">生成周报草稿</span>
+    <span class="tp-ov-task-meta">计划 · 5 / 8 步</span>
+  </div>
+      
+  <div class="tp-ov-task" data-goto="s7" role="button" tabindex="0">
+    <span class="tp-dot is-running"></span>
+    <span class="tp-ov-task-name">补发发布说明</span>
+    <span class="tp-ov-task-meta">边做边想 · 14 条</span>
+  </div>
+      <button class="tp-more" type="button" data-goto="s3">还有 9 个 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></button>
+    </div>
+  </section>
+    
+  <section class="tp-fold">
+    <button class="tp-fold-btn" type="button" aria-expanded="false">
+      <span class="tp-fold-title">交付物</span>
+      <span class="tp-fold-count">4 个</span>
+      <span class="tp-fold-chev"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+    </button>
+    <div class="tp-fold-body">
+      
+  <div class="tp-ov-file">
+    <span class="tp-file-badge is-doc">文档</span>
+    <span class="tp-ov-file-name">weekly-report.md</span>
+    <span class="tp-ov-file-meta">15:41</span>
+  </div>
+      
+  <div class="tp-ov-file">
+    <span class="tp-file-badge is-sheet">表格</span>
+    <span class="tp-ov-file-name">metrics-2026-W47.xlsx</span>
+    <span class="tp-ov-file-meta">15:39</span>
+  </div>
+      <button class="tp-more" type="button" data-goto="s4">还有 2 个 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></button>
+    </div>
+  </section>
+    <div class="tp-panel-foot"><span>只读投影 · 随任务更新</span><span>15:42</span></div>
+  </aside>
+  <aside class="tp-rail" aria-label="右栏导航">
+    <button class="tp-rail-btn is-current" type="button" data-goto="s1" title="概览" aria-label="概览" aria-expanded="true"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.6" y="2.6" width="6.1" height="6.1" rx="1.5"/><rect x="11.3" y="2.6" width="6.1" height="6.1" rx="1.5"/><rect x="2.6" y="11.3" width="6.1" height="6.1" rx="1.5"/><rect x="11.3" y="11.3" width="6.1" height="6.1" rx="1.5"/></svg></button>
+    <button class="tp-rail-btn" type="button" data-goto="s3" title="任务" aria-label="任务，2 个进行中"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.4 5.5l1.6 1.6 2.7-2.9"/><path d="M3.4 11l1.6 1.6 2.7-2.9"/><path d="M11 6h6M11 11.5h6M11 17h6"/></svg><span class="tp-rail-badge">2</span></button>
+    <button class="tp-rail-btn" type="button" data-goto="s4" title="交付物" aria-label="交付物"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2a2 2 0 012-2h3l1.8 2h6.2a2 2 0 012 2v6.2a2 2 0 01-2 2H4.5a2 2 0 01-2-2z"/></svg></button>
+  </aside>
+  
+  
+  <footer class="tp-status">
+    <span>就绪 · 本地模型 qwen3-8b</span>
+    <span>任务 11 · 进行中 2 · 失败 1</span>
+    <span class="tp-status-right">15:42:08</span>
+  </footer>
+</div></div>
+  <div class="tp-notes">
+    <span class="tp-notes-label">本屏</span>
+    <div class="tp-notes-body"><p><b>全部收起后右栏内容区只剩四行标题</b>，每行仍保留标题、计数、箭头，点击任意一行可单独展开。</p><p>工具栏文案随状态变为“全部展开”。四行按内容高度排布，剩余空间留白，右栏整栏滚动。</p><p>收起只折叠内容区，右栏宽度、竖条位置与任务角标保持不变。</p></div>
+  </div>
+</section>
+
+<section class="tp-screen" id="s3" aria-labelledby="s3-h">
+  <div class="tp-screen-head">
+    <h2 id="s3-h"><span class="tp-screen-no">03</span>任务标签</h2>
+    <span class="tp-screen-tag">任务 · 筛选 4 枚 · 厚卡 3 张</span>
+  </div>
+  <p class="tp-focus">任务标签在 280 宽下把四枚筛选放成一行，厚卡保留计划进行中、边做边想进行中与计划失败三种形态。</p>
+  <div class="tp-frame"><div class="tp-shell">
+  
+  <header class="tp-topbar">
+    <div class="tp-brand">
+      <span class="tp-logo">司</span>
+      <span class="tp-brand-name">司墨</span>
+      <span class="tp-brand-sub">simo</span>
+    </div>
+    <label class="tp-search"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8.8" cy="8.8" r="5.3"/><path d="M12.8 12.8L17 17"/></svg><span>搜索会话、任务或交付物</span><kbd>Ctrl K</kbd></label>
+    <div class="tp-top-actions">
+      <button class="tp-top-btn" type="button" data-goto="s8">任务图</button>
+      <button class="tp-icon-btn" type="button" aria-label="设置"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="2.7"/><path d="M10 2.9v2M10 15.1v2M2.9 10h2M15.1 10h2M4.98 4.98l1.42 1.42M13.6 13.6l1.42 1.42M15.02 4.98l-1.42 1.42M6.4 13.6l-1.42 1.42"/></svg></button>
+      <span class="tp-avatar">陈</span>
+    </div>
+  </header>
+  
+  <aside class="tp-sidebar">
+    <div class="tp-side-head"><span>最近会话</span><button class="tp-icon-btn" type="button" aria-label="新建会话"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button></div>
+    <nav class="tp-conv-list" aria-label="会话列表">
+      <div class="tp-conv is-on"><span class="tp-conv-name">产品周会纪要</span><span class="tp-conv-time">15:42</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">周报数据核对</span><span class="tp-conv-badge">子</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">发布检查</span><span class="tp-conv-badge">子</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">下周排期草稿</span><span class="tp-conv-time">14:08</span></div>
+    </nav>
+    <div class="tp-side-foot">
+      <div class="tp-usage">12 次任务</div>
+      <div class="tp-usage-sub">2 个进行中 · 1 个等待确认</div>
+    </div>
+  </aside>
+  <main class="tp-main">
+  <div class="tp-chat-head">
+    <div>
+      <div class="tp-chat-title">产品周会纪要</div>
+      <div class="tp-chat-meta">主会话 · 8 条消息 · 15:42 更新</div>
+    </div>
+    <div class="tp-chat-tools"><span class="tp-mini">仅本会话</span><button class="tp-icon-btn" type="button" aria-label="更多"><svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4.6" cy="10" r="1.25"/><circle cx="10" cy="10" r="1.25"/><circle cx="15.4" cy="10" r="1.25"/></svg></button></div>
+  </div>
+  <div class="tp-msgs">
+    
+  <article class="tp-msg is-user">
+    <div class="tp-msg-head"><span class="tp-msg-who">你</span><time>15:30</time></div>
+    <p>把今天产品周会的记录整理成纪要，顺手出一版周报草稿，发布清单也核一下。</p>
+    
+  </article>
+    
+  <article class="tp-msg">
+    <div class="tp-msg-head"><span class="tp-msg-who">司墨</span><time>15:31</time></div>
+    <p>拆成三件事：整理会议纪要、生成周报草稿、核对发布清单；上周漏的发布说明单独补一条，不挡前面三个。</p>
+    <div class="tp-quiet">已创建 4 个任务 · 加上先前的共 11 个</div>
+  </article>
+    
+  <article class="tp-msg is-user">
+    <div class="tp-msg-head"><span class="tp-msg-who">你</span><time>15:33</time></div>
+    <p>纪要和周报可以同时来，发布清单等我确认口径再开。</p>
+    
+  </article>
+    
+  <article class="tp-msg">
+    <div class="tp-msg-head"><span class="tp-msg-who">司墨</span><time>15:42</time></div>
+    <p>纪要卡在第 5 步已经失败，初稿文件被占用；周报写到第 4 节，补发说明只差发布链接。</p>
+    
+  </article>
+  </div>
+  
+  <div class="tp-composer">
+    <div class="tp-composer-box">
+      <span class="tp-composer-ph">回复，或输入 / 选择动作</span>
+      <div class="tp-composer-foot"><span>本地模型 · 只在本机处理</span><button class="tp-send" type="button">发送</button></div>
+    </div>
+  </div></main>
+  
+  <aside class="tp-panel" aria-label="任务标签">
+    <div class="tp-panel-head">
+      <span class="tp-panel-title">任务</span>
+      <span class="tp-panel-count">11 个</span>
+      <button class="tp-panel-collapse" type="button" data-rail-collapse title="收起右栏" aria-label="收起右栏"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></button>
+    </div>
+    
+    <div class="tp-filters">
+      <button class="tp-chip is-on" type="button">全部 <b>11</b></button>
+      <button class="tp-chip" type="button">进行中 <b>2</b></button>
+      <button class="tp-chip" type="button">失败 <b>1</b></button>
+      <button class="tp-chip" type="button">已完成 <b>3</b></button>
+    </div>
+    <div class="tp-panel-body">
+      <div class="tp-tasks">
+        
+  <article class="tp-task is-running" role="button" tabindex="0" data-goto="s5" aria-label="打开任务 生成周报草稿 的详情">
+    <div class="tp-task-head"><span class="tp-task-name">生成周报草稿</span><span class="tp-pill is-running">进行中</span></div>
+    <div class="tp-task-meta"><span>计划</span><span class="tp-sep">·</span><span>产出 3 个</span></div>
+    <div class="tp-segbar"><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-running"></span><span></span><span></span></div>
+    <div class="tp-task-foot"><span>已完成 5 / 8 步</span><span>第 6 步 · 进行中</span></div>
+    <ol class="tp-csteps">
+      <li class="tp-cstep"><span class="tp-cmark">✓</span><span class="tp-cname">生成趋势图</span><span class="tp-cmeta">产出 1</span></li>
+      <li class="tp-cstep"><span class="tp-cmark">✓</span><span class="tp-cname">起草结构与前 3 节</span><span class="tp-cmeta">产出 1</span></li>
+      <li class="tp-cstep is-running"><span class="tp-cmark">●</span><span class="tp-cname">写入第 4 节</span><span class="tp-cmeta">进行中</span></li>
+    </ol>
+    <span class="tp-more">查看全部 8 步 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+  </article>
+        
+  <article class="tp-task is-running" role="button" tabindex="0" data-goto="s7" aria-label="打开任务 补发发布说明 的详情">
+    <div class="tp-task-head"><span class="tp-task-name">补发发布说明</span><span class="tp-pill is-running">进行中</span></div>
+    <div class="tp-task-meta"><span>边做边想</span><span class="tp-sep">·</span><span>14 条轨迹</span><span class="tp-sep">·</span><span>产出 1</span></div>
+    <div class="tp-recent">
+      <div class="tp-recent-head"><span class="tp-tag is-act">动作</span><span class="tp-tool">append_file</span><time>15:38:07</time></div>
+      <p>在「发布说明-补发.md」追加「已知问题」占位一行，等发布链接确认后补。</p>
+    </div>
+    <span class="tp-more">查看循环轨迹 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+  </article>
+        
+  <article class="tp-task is-failed" aria-label="任务 整理会议纪要 失败">
+    <div class="tp-task-head"><span class="tp-task-name">整理会议纪要</span><span class="tp-pill is-failed">失败</span></div>
+    <div class="tp-task-meta"><span>计划</span><span class="tp-sep">·</span><span>产出 0 个</span></div>
+    <div class="tp-segbar"><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-failed"></span><span></span><span></span></div>
+    <div class="tp-task-foot"><span>已完成 4 / 7 步</span><span>失败于 15:36</span></div>
+    <div class="tp-fail-line"><span>失败：初稿文件被占用，无法写入</span></div>
+  </article>
+      </div>
+    </div>
+    <div class="tp-panel-foot"><span>共 11 个任务</span><span>进行中 2</span></div>
+  </aside>
+  <aside class="tp-rail" aria-label="右栏导航">
+    <button class="tp-rail-btn" type="button" data-goto="s1" title="概览" aria-label="概览"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.6" y="2.6" width="6.1" height="6.1" rx="1.5"/><rect x="11.3" y="2.6" width="6.1" height="6.1" rx="1.5"/><rect x="2.6" y="11.3" width="6.1" height="6.1" rx="1.5"/><rect x="11.3" y="11.3" width="6.1" height="6.1" rx="1.5"/></svg></button>
+    <button class="tp-rail-btn is-current" type="button" data-goto="s3" title="任务" aria-label="任务，2 个进行中" aria-expanded="true"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.4 5.5l1.6 1.6 2.7-2.9"/><path d="M3.4 11l1.6 1.6 2.7-2.9"/><path d="M11 6h6M11 11.5h6M11 17h6"/></svg><span class="tp-rail-badge">2</span></button>
+    <button class="tp-rail-btn" type="button" data-goto="s4" title="交付物" aria-label="交付物"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2a2 2 0 012-2h3l1.8 2h6.2a2 2 0 012 2v6.2a2 2 0 01-2 2H4.5a2 2 0 01-2-2z"/></svg></button>
+  </aside>
+  
+  
+  <footer class="tp-status">
+    <span>就绪 · 本地模型 qwen3-8b</span>
+    <span>任务 11 · 进行中 2 · 失败 1</span>
+    <span class="tp-status-right">15:42:08</span>
+  </footer>
+</div></div>
+  <div class="tp-notes">
+    <span class="tp-notes-label">本屏</span>
+    <div class="tp-notes-body"><p>筛选在 280 宽内压成一行，四枚 chip 合计约 250 宽；选中态用深色底，与未选中的浅底区分。</p><p>三张厚卡分别覆盖计划进行中、边做边想进行中、计划失败；卡左侧 2px 竖条标状态，进度条与步骤摘要保留。</p><p>两张进行中的卡整卡可点进入详情；失败卡停在失败位置，作为列表里的失败对照。</p></div>
+  </div>
+</section>
+
+<section class="tp-screen" id="s4" aria-labelledby="s4-h">
+  <div class="tp-screen-head">
+    <h2 id="s4-h"><span class="tp-screen-no">04</span>交付物标签</h2>
+    <span class="tp-screen-tag">交付物 · 按任务分组</span>
+  </div>
+  <p class="tp-focus">交付物按任务分组，文档、表格、图片用文字徽标区分，失败任务明确说明没有文件。</p>
+  <div class="tp-frame"><div class="tp-shell">
+  
+  <header class="tp-topbar">
+    <div class="tp-brand">
+      <span class="tp-logo">司</span>
+      <span class="tp-brand-name">司墨</span>
+      <span class="tp-brand-sub">simo</span>
+    </div>
+    <label class="tp-search"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8.8" cy="8.8" r="5.3"/><path d="M12.8 12.8L17 17"/></svg><span>搜索会话、任务或交付物</span><kbd>Ctrl K</kbd></label>
+    <div class="tp-top-actions">
+      <button class="tp-top-btn" type="button" data-goto="s8">任务图</button>
+      <button class="tp-icon-btn" type="button" aria-label="设置"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="2.7"/><path d="M10 2.9v2M10 15.1v2M2.9 10h2M15.1 10h2M4.98 4.98l1.42 1.42M13.6 13.6l1.42 1.42M15.02 4.98l-1.42 1.42M6.4 13.6l-1.42 1.42"/></svg></button>
+      <span class="tp-avatar">陈</span>
+    </div>
+  </header>
+  
+  <aside class="tp-sidebar">
+    <div class="tp-side-head"><span>最近会话</span><button class="tp-icon-btn" type="button" aria-label="新建会话"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button></div>
+    <nav class="tp-conv-list" aria-label="会话列表">
+      <div class="tp-conv is-on"><span class="tp-conv-name">产品周会纪要</span><span class="tp-conv-time">15:42</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">周报数据核对</span><span class="tp-conv-badge">子</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">发布检查</span><span class="tp-conv-badge">子</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">下周排期草稿</span><span class="tp-conv-time">14:08</span></div>
+    </nav>
+    <div class="tp-side-foot">
+      <div class="tp-usage">12 次任务</div>
+      <div class="tp-usage-sub">2 个进行中 · 1 个等待确认</div>
+    </div>
+  </aside>
+  <main class="tp-main">
+  <div class="tp-chat-head">
+    <div>
+      <div class="tp-chat-title">产品周会纪要</div>
+      <div class="tp-chat-meta">主会话 · 8 条消息 · 15:42 更新</div>
+    </div>
+    <div class="tp-chat-tools"><span class="tp-mini">仅本会话</span><button class="tp-icon-btn" type="button" aria-label="更多"><svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4.6" cy="10" r="1.25"/><circle cx="10" cy="10" r="1.25"/><circle cx="15.4" cy="10" r="1.25"/></svg></button></div>
+  </div>
+  <div class="tp-msgs">
+    
+  <article class="tp-msg is-user">
+    <div class="tp-msg-head"><span class="tp-msg-who">你</span><time>15:30</time></div>
+    <p>把今天产品周会的记录整理成纪要，顺手出一版周报草稿，发布清单也核一下。</p>
+    
+  </article>
+    
+  <article class="tp-msg">
+    <div class="tp-msg-head"><span class="tp-msg-who">司墨</span><time>15:31</time></div>
+    <p>拆成三件事：整理会议纪要、生成周报草稿、核对发布清单；上周漏的发布说明单独补一条，不挡前面三个。</p>
+    <div class="tp-quiet">已创建 4 个任务 · 加上先前的共 11 个</div>
+  </article>
+    
+  <article class="tp-msg is-user">
+    <div class="tp-msg-head"><span class="tp-msg-who">你</span><time>15:33</time></div>
+    <p>纪要和周报可以同时来，发布清单等我确认口径再开。</p>
+    
+  </article>
+    
+  <article class="tp-msg">
+    <div class="tp-msg-head"><span class="tp-msg-who">司墨</span><time>15:42</time></div>
+    <p>纪要卡在第 5 步已经失败，初稿文件被占用；周报写到第 4 节，补发说明只差发布链接。</p>
+    
+  </article>
+  </div>
+  
+  <div class="tp-composer">
+    <div class="tp-composer-box">
+      <span class="tp-composer-ph">回复，或输入 / 选择动作</span>
+      <div class="tp-composer-foot"><span>本地模型 · 只在本机处理</span><button class="tp-send" type="button">发送</button></div>
+    </div>
+  </div></main>
+  
+  <aside class="tp-panel" aria-label="交付物标签">
+    <div class="tp-panel-head">
+      <span class="tp-panel-title">交付物</span>
+      <span class="tp-panel-count">4 个</span>
+      <button class="tp-panel-collapse" type="button" data-rail-collapse title="收起右栏" aria-label="收起右栏"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></button>
+    </div>
+    
+    <div class="tp-deliv-sub"><span>4 个文件 · 2 个任务</span><span>按任务分组</span></div>
+    <div class="tp-panel-body">
+      <div class="tp-deliv">
+        <section class="tp-dgroup">
+          <div class="tp-dgroup-head"><span class="tp-dot is-running"></span><span class="tp-dgroup-name">生成周报草稿</span><span class="tp-pill is-running">进行中</span><span class="tp-dgroup-n">3 个</span></div>
+          <div class="tp-dlist">
+            
+  <div class="tp-drow">
+    <span class="tp-type is-doc">文档</span>
+    <div><span class="tp-dname">weekly-report.md</span><span class="tp-dmeta">15:41 · 4.2 KB · 更新中</span></div>
+    <button class="tp-dact" type="button">打开</button>
+  </div>
+            
+  <div class="tp-drow">
+    <span class="tp-type is-sheet">表格</span>
+    <div><span class="tp-dname">metrics-2026-W47.xlsx</span><span class="tp-dmeta">15:39 · 18.6 KB</span></div>
+    <button class="tp-dact" type="button">打开</button>
+  </div>
+            
+  <div class="tp-drow">
+    <span class="tp-type is-img">图片</span>
+    <div><span class="tp-dname">trend.png</span><span class="tp-dmeta">15:39 · 96 KB</span></div>
+    <button class="tp-dact" type="button">打开</button>
+  </div>
+          </div>
+        </section>
+        <section class="tp-dgroup">
+          <div class="tp-dgroup-head"><span class="tp-dot is-running"></span><span class="tp-dgroup-name">补发发布说明</span><span class="tp-pill is-running">进行中</span><span class="tp-dgroup-n">1 个</span></div>
+          <div class="tp-dlist">
+  <div class="tp-drow">
+    <span class="tp-type is-doc">文档</span>
+    <div><span class="tp-dname">发布说明-补发.md</span><span class="tp-dmeta">15:37 · 2.4 KB · 更新中</span></div>
+    <button class="tp-dact" type="button">打开</button>
+  </div></div>
+        </section>
+        <section class="tp-dgroup">
+          <div class="tp-dgroup-head"><span class="tp-dot is-failed"></span><span class="tp-dgroup-name">整理会议纪要</span><span class="tp-pill is-failed">失败</span><span class="tp-dgroup-n">0 个</span></div>
+          <div class="tp-empty"><b>没有生成文件。</b>任务在第 5 步写入初稿时失败，临时文件不计入交付物。</div>
+        </section>
+      </div>
+    </div>
+    <div class="tp-panel-foot"><span>共 4 个文件</span><span>15:42 更新</span></div>
+  </aside>
+  <aside class="tp-rail" aria-label="右栏导航">
+    <button class="tp-rail-btn" type="button" data-goto="s1" title="概览" aria-label="概览"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.6" y="2.6" width="6.1" height="6.1" rx="1.5"/><rect x="11.3" y="2.6" width="6.1" height="6.1" rx="1.5"/><rect x="2.6" y="11.3" width="6.1" height="6.1" rx="1.5"/><rect x="11.3" y="11.3" width="6.1" height="6.1" rx="1.5"/></svg></button>
+    <button class="tp-rail-btn" type="button" data-goto="s3" title="任务" aria-label="任务，2 个进行中"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.4 5.5l1.6 1.6 2.7-2.9"/><path d="M3.4 11l1.6 1.6 2.7-2.9"/><path d="M11 6h6M11 11.5h6M11 17h6"/></svg><span class="tp-rail-badge">2</span></button>
+    <button class="tp-rail-btn is-current" type="button" data-goto="s4" title="交付物" aria-label="交付物" aria-expanded="true"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2a2 2 0 012-2h3l1.8 2h6.2a2 2 0 012 2v6.2a2 2 0 01-2 2H4.5a2 2 0 01-2-2z"/></svg></button>
+  </aside>
+  
+  
+  <footer class="tp-status">
+    <span>就绪 · 本地模型 qwen3-8b</span>
+    <span>任务 11 · 进行中 2 · 失败 1</span>
+    <span class="tp-status-right">15:42:08</span>
+  </footer>
+</div></div>
+  <div class="tp-notes">
+    <span class="tp-notes-label">本屏</span>
+    <div class="tp-notes-body"><p>分组头带状态点、任务名、状态 pill 与文件数；文件行用 30 宽的文字徽标替代图标，窄栏下仍留出文件名空间。</p><p>失败组用一张虚线说明卡，写明“没有生成文件”和失败位置，失败任务的产物计数为 0。</p><p>文件行保留“打开”，文件名与元信息在剩余宽度内省略显示。</p></div>
+  </div>
+</section>
+
+<section class="tp-screen" id="s5" aria-labelledby="s5-h">
+  <div class="tp-screen-head">
+    <h2 id="s5-h"><span class="tp-screen-no">05</span>计划详情 · 当前步展开</h2>
+    <span class="tp-screen-tag">单列步骤 · 内联轨迹</span>
+  </div>
+  <p class="tp-focus">计划详情改成一列步骤：第 6 步展开，它的思考、动作与观察直接显示在这一行下面。</p>
+  <div class="tp-frame"><div class="tp-shell">
+  
+  <header class="tp-topbar">
+    <div class="tp-brand">
+      <span class="tp-logo">司</span>
+      <span class="tp-brand-name">司墨</span>
+      <span class="tp-brand-sub">simo</span>
+    </div>
+    <label class="tp-search"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8.8" cy="8.8" r="5.3"/><path d="M12.8 12.8L17 17"/></svg><span>搜索会话、任务或交付物</span><kbd>Ctrl K</kbd></label>
+    <div class="tp-top-actions">
+      <button class="tp-top-btn" type="button" data-goto="s8">任务图</button>
+      <button class="tp-icon-btn" type="button" aria-label="设置"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="2.7"/><path d="M10 2.9v2M10 15.1v2M2.9 10h2M15.1 10h2M4.98 4.98l1.42 1.42M13.6 13.6l1.42 1.42M15.02 4.98l-1.42 1.42M6.4 13.6l-1.42 1.42"/></svg></button>
+      <span class="tp-avatar">陈</span>
+    </div>
+  </header>
+  
+  <aside class="tp-sidebar">
+    <div class="tp-side-head"><span>最近会话</span><button class="tp-icon-btn" type="button" aria-label="新建会话"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button></div>
+    <nav class="tp-conv-list" aria-label="会话列表">
+      <div class="tp-conv is-on"><span class="tp-conv-name">产品周会纪要</span><span class="tp-conv-time">15:42</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">周报数据核对</span><span class="tp-conv-badge">子</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">发布检查</span><span class="tp-conv-badge">子</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">下周排期草稿</span><span class="tp-conv-time">14:08</span></div>
+    </nav>
+    <div class="tp-side-foot">
+      <div class="tp-usage">12 次任务</div>
+      <div class="tp-usage-sub">2 个进行中 · 1 个等待确认</div>
+    </div>
+  </aside>
+  <main class="tp-main">
+  <div class="tp-chat-head">
+    <div>
+      <div class="tp-chat-title">产品周会纪要</div>
+      <div class="tp-chat-meta">主会话 · 8 条消息 · 15:42 更新</div>
+    </div>
+    <div class="tp-chat-tools"><span class="tp-mini">仅本会话</span><button class="tp-icon-btn" type="button" aria-label="更多"><svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4.6" cy="10" r="1.25"/><circle cx="10" cy="10" r="1.25"/><circle cx="15.4" cy="10" r="1.25"/></svg></button></div>
+  </div>
+  <div class="tp-msgs">
+    
+  <article class="tp-msg is-user">
+    <div class="tp-msg-head"><span class="tp-msg-who">你</span><time>15:30</time></div>
+    <p>把今天产品周会的记录整理成纪要，顺手出一版周报草稿，发布清单也核一下。</p>
+    
+  </article>
+    
+  <article class="tp-msg">
+    <div class="tp-msg-head"><span class="tp-msg-who">司墨</span><time>15:31</time></div>
+    <p>拆成三件事：整理会议纪要、生成周报草稿、核对发布清单；上周漏的发布说明单独补一条，不挡前面三个。</p>
+    <div class="tp-quiet">已创建 4 个任务 · 加上先前的共 11 个</div>
+  </article>
+    
+  <article class="tp-msg is-user">
+    <div class="tp-msg-head"><span class="tp-msg-who">你</span><time>15:33</time></div>
+    <p>纪要和周报可以同时来，发布清单等我确认口径再开。</p>
+    
+  </article>
+    
+  <article class="tp-msg">
+    <div class="tp-msg-head"><span class="tp-msg-who">司墨</span><time>15:42</time></div>
+    <p>纪要卡在第 5 步已经失败，初稿文件被占用；周报写到第 4 节，补发说明只差发布链接。</p>
+    
+  </article>
+  </div>
+  
+  <div class="tp-composer">
+    <div class="tp-composer-box">
+      <span class="tp-composer-ph">回复，或输入 / 选择动作</span>
+      <div class="tp-composer-foot"><span>本地模型 · 只在本机处理</span><button class="tp-send" type="button">发送</button></div>
+    </div>
+  </div>
+  <section class="tp-sheet" aria-label="计划任务详情">
+    <div class="tp-sheet-head">
+      <div class="tp-sheet-kicker">
+        <span>任务详情 · 计划模式</span><span class="tp-sheet-ro">只读</span>
+        <button class="tp-sheet-close" type="button" data-goto="s3" title="关闭详情" aria-label="关闭详情"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg></button>
+      </div>
+      <div class="tp-sheet-title-row"><h2 class="tp-sheet-title">生成周报草稿</h2><span class="tp-pill is-running">进行中</span></div>
+      <div class="tp-sheet-meta"><span>所属会话 · 产品周会纪要</span><span class="tp-sep">·</span><span>8 步 · 已完成 5</span><span class="tp-sep">·</span><span>3 个产出</span></div>
+    </div>
+    <div class="tp-sheet-body">
+      <div class="tp-hint"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 9.1v4.7"/><path d="M10 6.3h.01"/></svg><span>进行中的步骤默认展开，轨迹紧跟在这一步下面；已完成的步骤点标题行可回看。</span></div>
+      <div class="tp-section-label"><span>执行步骤</span><span>按执行顺序</span></div>
+      <ol class="tp-steps tp-steps--flat">
+        
+    <li class="tp-step is-done">
+      <div class="tp-step-row" data-expand role="button" tabindex="0" aria-expanded="false">
+        <span class="tp-step-mark is-done"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg></span>
+        <span class="tp-step-name">读取本周提交记录</span>
+        <span class="tp-step-meta">轨迹 4 条 · 产出 0</span>
+        <span class="tp-step-chev"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+      </div>
+      
+  <div class="tp-inline">
+    <div class="tp-inline-head"><span>第 1 步内部轨迹</span><b>4 条</b><span class="tp-inline-right">已归档 · 可收起</span></div>
+    
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">先把本周 37 条提交读完，按仓库分组再判断哪些进周报。</span>
+    <span class="tp-time">15:33:02</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">read_file</span>读「本周提交.json」，37 条，涉及 4 个仓库。</span>
+    <span class="tp-time">15:33:05</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">有 2 条合并提交没有正文，需要看关联 PR。</span>
+    <span class="tp-time">15:33:07</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">read_file</span>读关联 PR 说明，补齐 2 条合并提交的摘要。</span>
+    <span class="tp-time">15:33:12</span>
+  </div>
+    <div class="tp-inline-foot"><span>这一段随步骤结束归档，收起不丢记录</span><span>第 1 步已结束</span></div>
+  </div>
+    </li>
+    <li class="tp-step is-done">
+      <div class="tp-step-row" data-expand role="button" tabindex="0" aria-expanded="false">
+        <span class="tp-step-mark is-done"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg></span>
+        <span class="tp-step-name">按仓库聚合提交</span>
+        <span class="tp-step-meta">轨迹 6 条 · 产出 0</span>
+        <span class="tp-step-chev"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+      </div>
+      
+  <div class="tp-inline">
+    <div class="tp-inline-head"><span>第 2 步内部轨迹</span><b>6 条</b><span class="tp-inline-right">已归档 · 可收起</span></div>
+    
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">按仓库聚合，再按功能、修复、文档三类分开。</span>
+    <span class="tp-time">15:33:20</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">run_script</span>运行 scripts/group-commits.mjs，输出 4 组。</span>
+    <span class="tp-time">15:33:24</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">4 个仓库共 37 条，功能 21、修复 9、文档 7。</span>
+    <span class="tp-time">15:33:26</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">修复类里 3 条是同一问题，合并成一条写。</span>
+    <span class="tp-time">15:33:31</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">edit_file</span>把合并后的 35 条写进「提交汇总.md」。</span>
+    <span class="tp-time">15:33:38</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">文件 35 行，分组标题齐全。</span>
+    <span class="tp-time">15:33:40</span>
+  </div>
+    <div class="tp-inline-foot"><span>这一段随步骤结束归档，收起不丢记录</span><span>第 2 步已结束</span></div>
+  </div>
+    </li>
+    <li class="tp-step is-done">
+      <div class="tp-step-row" data-expand role="button" tabindex="0" aria-expanded="false">
+        <span class="tp-step-mark is-done"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg></span>
+        <span class="tp-step-name">汇总指标与趋势</span>
+        <span class="tp-step-meta">轨迹 9 条 · 产出 1</span>
+        <span class="tp-step-chev"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+      </div>
+      
+  <div class="tp-inline">
+    <div class="tp-inline-head"><span>第 3 步内部轨迹</span><b>9 条</b><span class="tp-inline-right">已归档 · 可收起</span></div>
+    
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">周报要 3 个指标：合并数、平均评审时间、线上问题数。</span>
+    <span class="tp-time">15:34:01</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">run_script</span>运行 metrics.mjs，取本周与上周对比。</span>
+    <span class="tp-time">15:34:06</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">合并 35 条，较上周 +6；平均评审 4.2 小时。</span>
+    <span class="tp-time">15:34:08</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">线上问题 2 个，比上周少，趋势可以画出来。</span>
+    <span class="tp-time">15:34:15</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">query_db</span>从 issues 表取近 8 周线上问题数。</span>
+    <span class="tp-time">15:34:19</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">8 周数据齐全，第 47 周为 2。</span>
+    <span class="tp-time">15:34:20</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">图表用折线，横轴按周，纵轴从 0 起。</span>
+    <span class="tp-time">15:34:26</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">edit_file</span>写入指标段与趋势数据表。</span>
+    <span class="tp-time">15:34:33</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">3 个指标都有数字，趋势表 8 行。</span>
+    <span class="tp-time">15:34:35</span>
+  </div>
+    <div class="tp-inline-foot"><span>这一段随步骤结束归档，收起不丢记录</span><span>第 3 步已结束</span></div>
+  </div>
+    </li>
+    <li class="tp-step is-done">
+      <div class="tp-step-row" data-expand role="button" tabindex="0" aria-expanded="false">
+        <span class="tp-step-mark is-done"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg></span>
+        <span class="tp-step-name">生成趋势图</span>
+        <span class="tp-step-meta">轨迹 5 条 · 产出 1</span>
+        <span class="tp-step-chev"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+      </div>
+      
+  <div class="tp-inline">
+    <div class="tp-inline-head"><span>第 4 步内部轨迹</span><b>5 条</b><span class="tp-inline-right">已归档 · 可收起</span></div>
+    
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">折线图比柱状图更适合看 8 周趋势。</span>
+    <span class="tp-time">15:34:45</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">run_script</span>运行 chart.mjs，生成 trend.png。</span>
+    <span class="tp-time">15:34:52</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">图片 96 KB，坐标轴标签没有重叠。</span>
+    <span class="tp-time">15:34:54</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">标题补上统计口径，避免读者误读。</span>
+    <span class="tp-time">15:35:00</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">edit_file</span>在图片下方加一行口径说明。</span>
+    <span class="tp-time">15:35:03</span>
+  </div>
+    <div class="tp-inline-foot"><span>这一段随步骤结束归档，收起不丢记录</span><span>第 4 步已结束</span></div>
+  </div>
+    </li>
+    <li class="tp-step is-done">
+      <div class="tp-step-row" data-expand role="button" tabindex="0" aria-expanded="false">
+        <span class="tp-step-mark is-done"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg></span>
+        <span class="tp-step-name">起草结构与前 3 节</span>
+        <span class="tp-step-meta">轨迹 6 条 · 产出 1</span>
+        <span class="tp-step-chev"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+      </div>
+      
+  <div class="tp-inline">
+    <div class="tp-inline-head"><span>第 5 步内部轨迹</span><b>6 条</b><span class="tp-inline-right">已归档 · 可收起</span></div>
+    
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">前 3 节按“结论、数据、待办”排，第 4 节接发布节奏。</span>
+    <span class="tp-time">15:39:02</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">read_file</span>读「周报模板.md」与上周周报，确认标题层级。</span>
+    <span class="tp-time">15:39:08</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">模板是三级标题，上周在第 2 节多插了一级。</span>
+    <span class="tp-time">15:39:10</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">沿用模板，不新增层级；第 2 节的例外这周不重复。</span>
+    <span class="tp-time">15:39:18</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">write_file</span>写出标题、第 1 节结论段与第 2 节指标表。</span>
+    <span class="tp-time">15:39:34</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">第 1 至 3 节已落盘，共 42 行；第 4 节留了占位。</span>
+    <span class="tp-time">15:39:41</span>
+  </div>
+    <div class="tp-inline-foot"><span>这一段随步骤结束归档，收起不丢记录</span><span>第 5 步已结束</span></div>
+  </div>
+    </li>
+    <li class="tp-step is-running is-open is-current">
+      <div class="tp-step-row" data-expand role="button" tabindex="0" aria-expanded="true">
+        <span class="tp-step-mark is-running"></span>
+        <span class="tp-step-name">写入第 4 节</span>
+        <span class="tp-step-meta">轨迹 8 条 · 进行中</span>
+        <span class="tp-step-chev"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+      </div>
+      
+  <div class="tp-inline">
+    <div class="tp-inline-head"><span>第 6 步内部轨迹</span><b>8 条</b><span class="tp-inline-right">只读 · 最新在最后</span></div>
+    
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">第 4 节讲发布节奏，需要引用发布清单里的 3 个版本号。</span>
+    <span class="tp-time">15:41:02</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">read_file</span>读「发布清单.md」，取到 3 个版本与对应日期。</span>
+    <span class="tp-time">15:41:06</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">版本号齐全；v4.1 的发布日期与周报口径差一天。</span>
+    <span class="tp-time">15:41:07</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">以清单为准，正文注明“按发布日期”，避免两个日期并存。</span>
+    <span class="tp-time">15:41:13</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">edit_file</span>写入 3 行版本表，列宽沿用第 3 节。</span>
+    <span class="tp-time">15:41:19</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">表格已写入 3 行，没有超出页面宽度。</span>
+    <span class="tp-time">15:41:20</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">还差一句过渡，第 5 节不能突然开始。</span>
+    <span class="tp-time">15:41:26</span>
+  </div>
+  <div class="tp-tr is-cur">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">edit_file</span>正在写入过渡句，随后保存第 4 节。</span>
+    <span class="tp-time">15:41:28</span>
+  </div>
+    <div class="tp-inline-foot"><span>轨迹随执行追加，不单独占固定高度的框</span><span>最新 15:41:28</span></div>
+  </div>
+    </li>
+    <li class="tp-step is-todo">
+      <div class="tp-step-row">
+        <span class="tp-step-mark is-todo"></span>
+        <span class="tp-step-name">补齐第 5 节与待办</span>
+        
+        
+      </div>
+      
+    </li>
+    <li class="tp-step is-todo">
+      <div class="tp-step-row">
+        <span class="tp-step-mark is-todo"></span>
+        <span class="tp-step-name">校对并保存</span>
+        
+        
+      </div>
+      
+    </li>
+      </ol>
+    </div>
+  </section></main>
+  
+  <aside class="tp-panel" aria-label="任务标签">
+    <div class="tp-panel-head">
+      <span class="tp-panel-title">任务</span>
+      <span class="tp-panel-count">11 个</span>
+      <button class="tp-panel-collapse" type="button" data-rail-collapse title="收起右栏" aria-label="收起右栏"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></button>
+    </div>
+    
+    <div class="tp-filters">
+      <button class="tp-chip is-on" type="button">全部 <b>11</b></button>
+      <button class="tp-chip" type="button">进行中 <b>2</b></button>
+      <button class="tp-chip" type="button">失败 <b>1</b></button>
+      <button class="tp-chip" type="button">已完成 <b>3</b></button>
+    </div>
+    <div class="tp-panel-body">
+      <div class="tp-tasks">
+        
+  <article class="tp-task is-running is-viewing" role="button" tabindex="0" data-goto="s5" aria-label="打开任务 生成周报草稿 的详情">
+    <div class="tp-task-head"><span class="tp-task-name">生成周报草稿</span><span class="tp-pill is-running">进行中</span></div>
+    <div class="tp-task-meta"><span>计划</span><span class="tp-sep">·</span><span>产出 3 个</span></div>
+    <div class="tp-segbar"><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-running"></span><span></span><span></span></div>
+    <div class="tp-task-foot"><span>已完成 5 / 8 步</span><span>第 6 步 · 进行中</span></div>
+    <ol class="tp-csteps">
+      <li class="tp-cstep"><span class="tp-cmark">✓</span><span class="tp-cname">生成趋势图</span><span class="tp-cmeta">产出 1</span></li>
+      <li class="tp-cstep"><span class="tp-cmark">✓</span><span class="tp-cname">起草结构与前 3 节</span><span class="tp-cmeta">产出 1</span></li>
+      <li class="tp-cstep is-running"><span class="tp-cmark">●</span><span class="tp-cname">写入第 4 节</span><span class="tp-cmeta">进行中</span></li>
+    </ol>
+    <span class="tp-more">查看全部 8 步 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+  </article>
+        
+  <article class="tp-task is-running" role="button" tabindex="0" data-goto="s7" aria-label="打开任务 补发发布说明 的详情">
+    <div class="tp-task-head"><span class="tp-task-name">补发发布说明</span><span class="tp-pill is-running">进行中</span></div>
+    <div class="tp-task-meta"><span>边做边想</span><span class="tp-sep">·</span><span>14 条轨迹</span><span class="tp-sep">·</span><span>产出 1</span></div>
+    <div class="tp-recent">
+      <div class="tp-recent-head"><span class="tp-tag is-act">动作</span><span class="tp-tool">append_file</span><time>15:38:07</time></div>
+      <p>在「发布说明-补发.md」追加「已知问题」占位一行，等发布链接确认后补。</p>
+    </div>
+    <span class="tp-more">查看循环轨迹 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+  </article>
+        
+  <article class="tp-task is-failed" aria-label="任务 整理会议纪要 失败">
+    <div class="tp-task-head"><span class="tp-task-name">整理会议纪要</span><span class="tp-pill is-failed">失败</span></div>
+    <div class="tp-task-meta"><span>计划</span><span class="tp-sep">·</span><span>产出 0 个</span></div>
+    <div class="tp-segbar"><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-failed"></span><span></span><span></span></div>
+    <div class="tp-task-foot"><span>已完成 4 / 7 步</span><span>失败于 15:36</span></div>
+    <div class="tp-fail-line"><span>失败：初稿文件被占用，无法写入</span></div>
+  </article>
+      </div>
+    </div>
+    <div class="tp-panel-foot"><span>共 11 个任务</span><span>进行中 2</span></div>
+  </aside>
+  <aside class="tp-rail" aria-label="右栏导航">
+    <button class="tp-rail-btn" type="button" data-goto="s1" title="概览" aria-label="概览"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.6" y="2.6" width="6.1" height="6.1" rx="1.5"/><rect x="11.3" y="2.6" width="6.1" height="6.1" rx="1.5"/><rect x="2.6" y="11.3" width="6.1" height="6.1" rx="1.5"/><rect x="11.3" y="11.3" width="6.1" height="6.1" rx="1.5"/></svg></button>
+    <button class="tp-rail-btn is-current" type="button" data-goto="s3" title="任务" aria-label="任务，2 个进行中" aria-expanded="true"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.4 5.5l1.6 1.6 2.7-2.9"/><path d="M3.4 11l1.6 1.6 2.7-2.9"/><path d="M11 6h6M11 11.5h6M11 17h6"/></svg><span class="tp-rail-badge">2</span></button>
+    <button class="tp-rail-btn" type="button" data-goto="s4" title="交付物" aria-label="交付物"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2a2 2 0 012-2h3l1.8 2h6.2a2 2 0 012 2v6.2a2 2 0 01-2 2H4.5a2 2 0 01-2-2z"/></svg></button>
+  </aside>
+  
+  
+  <footer class="tp-status">
+    <span>就绪 · 本地模型 qwen3-8b</span>
+    <span>任务 11 · 进行中 2 · 失败 1</span>
+    <span class="tp-status-right">15:42:08</span>
+  </footer>
+</div></div>
+  <div class="tp-notes">
+    <span class="tp-notes-label">本屏</span>
+    <div class="tp-notes-body"><p>计划详情改为一列步骤，轨迹紧接在它所属的那一步下面。</p><p>第 6 步默认展开，行本身用主色浅底与 2px 左条标出进行中；展开内容紧接该行，边框与高度随内容走。</p><p>行右侧改为“轨迹 8 条 · 进行中”，与展开内容里的轨迹条数一致；详情头只保留步数与产出数。</p></div>
+  </div>
+</section>
+
+<section class="tp-screen" id="s6" aria-labelledby="s6-h">
+  <div class="tp-screen-head">
+    <h2 id="s6-h"><span class="tp-screen-no">06</span>计划详情 · 已完成步回看</h2>
+    <span class="tp-screen-tag">同一任务 · 第 5 步展开</span>
+  </div>
+  <p class="tp-focus">同一任务的另一状态：第 5 步展开回看；第 6 步仍在进行但被收起；未开始的步骤只有标题。</p>
+  <div class="tp-frame"><div class="tp-shell">
+  
+  <header class="tp-topbar">
+    <div class="tp-brand">
+      <span class="tp-logo">司</span>
+      <span class="tp-brand-name">司墨</span>
+      <span class="tp-brand-sub">simo</span>
+    </div>
+    <label class="tp-search"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8.8" cy="8.8" r="5.3"/><path d="M12.8 12.8L17 17"/></svg><span>搜索会话、任务或交付物</span><kbd>Ctrl K</kbd></label>
+    <div class="tp-top-actions">
+      <button class="tp-top-btn" type="button" data-goto="s8">任务图</button>
+      <button class="tp-icon-btn" type="button" aria-label="设置"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="2.7"/><path d="M10 2.9v2M10 15.1v2M2.9 10h2M15.1 10h2M4.98 4.98l1.42 1.42M13.6 13.6l1.42 1.42M15.02 4.98l-1.42 1.42M6.4 13.6l-1.42 1.42"/></svg></button>
+      <span class="tp-avatar">陈</span>
+    </div>
+  </header>
+  
+  <aside class="tp-sidebar">
+    <div class="tp-side-head"><span>最近会话</span><button class="tp-icon-btn" type="button" aria-label="新建会话"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button></div>
+    <nav class="tp-conv-list" aria-label="会话列表">
+      <div class="tp-conv is-on"><span class="tp-conv-name">产品周会纪要</span><span class="tp-conv-time">15:42</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">周报数据核对</span><span class="tp-conv-badge">子</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">发布检查</span><span class="tp-conv-badge">子</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">下周排期草稿</span><span class="tp-conv-time">14:08</span></div>
+    </nav>
+    <div class="tp-side-foot">
+      <div class="tp-usage">12 次任务</div>
+      <div class="tp-usage-sub">2 个进行中 · 1 个等待确认</div>
+    </div>
+  </aside>
+  <main class="tp-main">
+  <div class="tp-chat-head">
+    <div>
+      <div class="tp-chat-title">产品周会纪要</div>
+      <div class="tp-chat-meta">主会话 · 8 条消息 · 15:42 更新</div>
+    </div>
+    <div class="tp-chat-tools"><span class="tp-mini">仅本会话</span><button class="tp-icon-btn" type="button" aria-label="更多"><svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4.6" cy="10" r="1.25"/><circle cx="10" cy="10" r="1.25"/><circle cx="15.4" cy="10" r="1.25"/></svg></button></div>
+  </div>
+  <div class="tp-msgs">
+    
+  <article class="tp-msg is-user">
+    <div class="tp-msg-head"><span class="tp-msg-who">你</span><time>15:30</time></div>
+    <p>把今天产品周会的记录整理成纪要，顺手出一版周报草稿，发布清单也核一下。</p>
+    
+  </article>
+    
+  <article class="tp-msg">
+    <div class="tp-msg-head"><span class="tp-msg-who">司墨</span><time>15:31</time></div>
+    <p>拆成三件事：整理会议纪要、生成周报草稿、核对发布清单；上周漏的发布说明单独补一条，不挡前面三个。</p>
+    <div class="tp-quiet">已创建 4 个任务 · 加上先前的共 11 个</div>
+  </article>
+    
+  <article class="tp-msg is-user">
+    <div class="tp-msg-head"><span class="tp-msg-who">你</span><time>15:33</time></div>
+    <p>纪要和周报可以同时来，发布清单等我确认口径再开。</p>
+    
+  </article>
+    
+  <article class="tp-msg">
+    <div class="tp-msg-head"><span class="tp-msg-who">司墨</span><time>15:42</time></div>
+    <p>纪要卡在第 5 步已经失败，初稿文件被占用；周报写到第 4 节，补发说明只差发布链接。</p>
+    
+  </article>
+  </div>
+  
+  <div class="tp-composer">
+    <div class="tp-composer-box">
+      <span class="tp-composer-ph">回复，或输入 / 选择动作</span>
+      <div class="tp-composer-foot"><span>本地模型 · 只在本机处理</span><button class="tp-send" type="button">发送</button></div>
+    </div>
+  </div>
+  <section class="tp-sheet" aria-label="计划任务详情">
+    <div class="tp-sheet-head">
+      <div class="tp-sheet-kicker">
+        <span>任务详情 · 计划模式</span><span class="tp-sheet-ro">只读</span>
+        <button class="tp-sheet-close" type="button" data-goto="s3" title="关闭详情" aria-label="关闭详情"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg></button>
+      </div>
+      <div class="tp-sheet-title-row"><h2 class="tp-sheet-title">生成周报草稿</h2><span class="tp-pill is-running">进行中</span></div>
+      <div class="tp-sheet-meta"><span>所属会话 · 产品周会纪要</span><span class="tp-sep">·</span><span>8 步 · 已完成 5</span><span class="tp-sep">·</span><span>3 个产出</span></div>
+    </div>
+    <div class="tp-sheet-body">
+      <div class="tp-hint"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 9.1v4.7"/><path d="M10 6.3h.01"/></svg><span>正在回看第 5 步。第 6 步仍在进行但已收起，点它的标题行可以重新展开。</span></div>
+      <div class="tp-section-label"><span>执行步骤</span><span>按执行顺序</span></div>
+      <ol class="tp-steps tp-steps--flat">
+        
+    <li class="tp-step is-done">
+      <div class="tp-step-row" data-expand role="button" tabindex="0" aria-expanded="false">
+        <span class="tp-step-mark is-done"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg></span>
+        <span class="tp-step-name">读取本周提交记录</span>
+        <span class="tp-step-meta">轨迹 4 条 · 产出 0</span>
+        <span class="tp-step-chev"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+      </div>
+      
+  <div class="tp-inline">
+    <div class="tp-inline-head"><span>第 1 步内部轨迹</span><b>4 条</b><span class="tp-inline-right">已归档 · 可收起</span></div>
+    
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">先把本周 37 条提交读完，按仓库分组再判断哪些进周报。</span>
+    <span class="tp-time">15:33:02</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">read_file</span>读「本周提交.json」，37 条，涉及 4 个仓库。</span>
+    <span class="tp-time">15:33:05</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">有 2 条合并提交没有正文，需要看关联 PR。</span>
+    <span class="tp-time">15:33:07</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">read_file</span>读关联 PR 说明，补齐 2 条合并提交的摘要。</span>
+    <span class="tp-time">15:33:12</span>
+  </div>
+    <div class="tp-inline-foot"><span>这一段随步骤结束归档，收起不丢记录</span><span>第 1 步已结束</span></div>
+  </div>
+    </li>
+    <li class="tp-step is-done">
+      <div class="tp-step-row" data-expand role="button" tabindex="0" aria-expanded="false">
+        <span class="tp-step-mark is-done"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg></span>
+        <span class="tp-step-name">按仓库聚合提交</span>
+        <span class="tp-step-meta">轨迹 6 条 · 产出 0</span>
+        <span class="tp-step-chev"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+      </div>
+      
+  <div class="tp-inline">
+    <div class="tp-inline-head"><span>第 2 步内部轨迹</span><b>6 条</b><span class="tp-inline-right">已归档 · 可收起</span></div>
+    
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">按仓库聚合，再按功能、修复、文档三类分开。</span>
+    <span class="tp-time">15:33:20</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">run_script</span>运行 scripts/group-commits.mjs，输出 4 组。</span>
+    <span class="tp-time">15:33:24</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">4 个仓库共 37 条，功能 21、修复 9、文档 7。</span>
+    <span class="tp-time">15:33:26</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">修复类里 3 条是同一问题，合并成一条写。</span>
+    <span class="tp-time">15:33:31</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">edit_file</span>把合并后的 35 条写进「提交汇总.md」。</span>
+    <span class="tp-time">15:33:38</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">文件 35 行，分组标题齐全。</span>
+    <span class="tp-time">15:33:40</span>
+  </div>
+    <div class="tp-inline-foot"><span>这一段随步骤结束归档，收起不丢记录</span><span>第 2 步已结束</span></div>
+  </div>
+    </li>
+    <li class="tp-step is-done">
+      <div class="tp-step-row" data-expand role="button" tabindex="0" aria-expanded="false">
+        <span class="tp-step-mark is-done"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg></span>
+        <span class="tp-step-name">汇总指标与趋势</span>
+        <span class="tp-step-meta">轨迹 9 条 · 产出 1</span>
+        <span class="tp-step-chev"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+      </div>
+      
+  <div class="tp-inline">
+    <div class="tp-inline-head"><span>第 3 步内部轨迹</span><b>9 条</b><span class="tp-inline-right">已归档 · 可收起</span></div>
+    
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">周报要 3 个指标：合并数、平均评审时间、线上问题数。</span>
+    <span class="tp-time">15:34:01</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">run_script</span>运行 metrics.mjs，取本周与上周对比。</span>
+    <span class="tp-time">15:34:06</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">合并 35 条，较上周 +6；平均评审 4.2 小时。</span>
+    <span class="tp-time">15:34:08</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">线上问题 2 个，比上周少，趋势可以画出来。</span>
+    <span class="tp-time">15:34:15</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">query_db</span>从 issues 表取近 8 周线上问题数。</span>
+    <span class="tp-time">15:34:19</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">8 周数据齐全，第 47 周为 2。</span>
+    <span class="tp-time">15:34:20</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">图表用折线，横轴按周，纵轴从 0 起。</span>
+    <span class="tp-time">15:34:26</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">edit_file</span>写入指标段与趋势数据表。</span>
+    <span class="tp-time">15:34:33</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">3 个指标都有数字，趋势表 8 行。</span>
+    <span class="tp-time">15:34:35</span>
+  </div>
+    <div class="tp-inline-foot"><span>这一段随步骤结束归档，收起不丢记录</span><span>第 3 步已结束</span></div>
+  </div>
+    </li>
+    <li class="tp-step is-done">
+      <div class="tp-step-row" data-expand role="button" tabindex="0" aria-expanded="false">
+        <span class="tp-step-mark is-done"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg></span>
+        <span class="tp-step-name">生成趋势图</span>
+        <span class="tp-step-meta">轨迹 5 条 · 产出 1</span>
+        <span class="tp-step-chev"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+      </div>
+      
+  <div class="tp-inline">
+    <div class="tp-inline-head"><span>第 4 步内部轨迹</span><b>5 条</b><span class="tp-inline-right">已归档 · 可收起</span></div>
+    
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">折线图比柱状图更适合看 8 周趋势。</span>
+    <span class="tp-time">15:34:45</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">run_script</span>运行 chart.mjs，生成 trend.png。</span>
+    <span class="tp-time">15:34:52</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">图片 96 KB，坐标轴标签没有重叠。</span>
+    <span class="tp-time">15:34:54</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">标题补上统计口径，避免读者误读。</span>
+    <span class="tp-time">15:35:00</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">edit_file</span>在图片下方加一行口径说明。</span>
+    <span class="tp-time">15:35:03</span>
+  </div>
+    <div class="tp-inline-foot"><span>这一段随步骤结束归档，收起不丢记录</span><span>第 4 步已结束</span></div>
+  </div>
+    </li>
+    <li class="tp-step is-done is-open">
+      <div class="tp-step-row" data-expand role="button" tabindex="0" aria-expanded="true">
+        <span class="tp-step-mark is-done"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg></span>
+        <span class="tp-step-name">起草结构与前 3 节</span>
+        <span class="tp-step-meta">轨迹 6 条 · 产出 1</span>
+        <span class="tp-step-chev"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+      </div>
+      
+  <div class="tp-inline">
+    <div class="tp-inline-head"><span>第 5 步内部轨迹</span><b>6 条</b><span class="tp-inline-right">已归档 · 可收起</span></div>
+    
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">前 3 节按“结论、数据、待办”排，第 4 节接发布节奏。</span>
+    <span class="tp-time">15:39:02</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">read_file</span>读「周报模板.md」与上周周报，确认标题层级。</span>
+    <span class="tp-time">15:39:08</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">模板是三级标题，上周在第 2 节多插了一级。</span>
+    <span class="tp-time">15:39:10</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">沿用模板，不新增层级；第 2 节的例外这周不重复。</span>
+    <span class="tp-time">15:39:18</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">write_file</span>写出标题、第 1 节结论段与第 2 节指标表。</span>
+    <span class="tp-time">15:39:34</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">第 1 至 3 节已落盘，共 42 行；第 4 节留了占位。</span>
+    <span class="tp-time">15:39:41</span>
+  </div>
+    <div class="tp-inline-foot"><span>这一段随步骤结束归档，收起不丢记录</span><span>第 5 步已结束</span></div>
+  </div>
+    </li>
+    <li class="tp-step is-running is-current">
+      <div class="tp-step-row" data-expand role="button" tabindex="0" aria-expanded="false">
+        <span class="tp-step-mark is-running"></span>
+        <span class="tp-step-name">写入第 4 节</span>
+        <span class="tp-step-meta">轨迹 8 条 · 进行中</span>
+        <span class="tp-step-chev"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+      </div>
+      
+  <div class="tp-inline">
+    <div class="tp-inline-head"><span>第 6 步内部轨迹</span><b>8 条</b><span class="tp-inline-right">只读 · 最新在最后</span></div>
+    
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">第 4 节讲发布节奏，需要引用发布清单里的 3 个版本号。</span>
+    <span class="tp-time">15:41:02</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">read_file</span>读「发布清单.md」，取到 3 个版本与对应日期。</span>
+    <span class="tp-time">15:41:06</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">版本号齐全；v4.1 的发布日期与周报口径差一天。</span>
+    <span class="tp-time">15:41:07</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">以清单为准，正文注明“按发布日期”，避免两个日期并存。</span>
+    <span class="tp-time">15:41:13</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">edit_file</span>写入 3 行版本表，列宽沿用第 3 节。</span>
+    <span class="tp-time">15:41:19</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-obs">观察</span>
+    <span class="tp-tt">表格已写入 3 行，没有超出页面宽度。</span>
+    <span class="tp-time">15:41:20</span>
+  </div>
+  <div class="tp-tr">
+    <span class="tp-tag is-think">思考</span>
+    <span class="tp-tt">还差一句过渡，第 5 节不能突然开始。</span>
+    <span class="tp-time">15:41:26</span>
+  </div>
+  <div class="tp-tr is-cur">
+    <span class="tp-tag is-act">动作</span>
+    <span class="tp-tt"><span class="tp-tool">edit_file</span>正在写入过渡句，随后保存第 4 节。</span>
+    <span class="tp-time">15:41:28</span>
+  </div>
+    <div class="tp-inline-foot"><span>轨迹随执行追加，不单独占固定高度的框</span><span>最新 15:41:28</span></div>
+  </div>
+    </li>
+    <li class="tp-step is-todo">
+      <div class="tp-step-row">
+        <span class="tp-step-mark is-todo"></span>
+        <span class="tp-step-name">补齐第 5 节与待办</span>
+        
+        
+      </div>
+      
+    </li>
+    <li class="tp-step is-todo">
+      <div class="tp-step-row">
+        <span class="tp-step-mark is-todo"></span>
+        <span class="tp-step-name">校对并保存</span>
+        
+        
+      </div>
+      
+    </li>
+      </ol>
+    </div>
+  </section></main>
+  
+  <aside class="tp-panel" aria-label="任务标签">
+    <div class="tp-panel-head">
+      <span class="tp-panel-title">任务</span>
+      <span class="tp-panel-count">11 个</span>
+      <button class="tp-panel-collapse" type="button" data-rail-collapse title="收起右栏" aria-label="收起右栏"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></button>
+    </div>
+    
+    <div class="tp-filters">
+      <button class="tp-chip is-on" type="button">全部 <b>11</b></button>
+      <button class="tp-chip" type="button">进行中 <b>2</b></button>
+      <button class="tp-chip" type="button">失败 <b>1</b></button>
+      <button class="tp-chip" type="button">已完成 <b>3</b></button>
+    </div>
+    <div class="tp-panel-body">
+      <div class="tp-tasks">
+        
+  <article class="tp-task is-running is-viewing" role="button" tabindex="0" data-goto="s5" aria-label="打开任务 生成周报草稿 的详情">
+    <div class="tp-task-head"><span class="tp-task-name">生成周报草稿</span><span class="tp-pill is-running">进行中</span></div>
+    <div class="tp-task-meta"><span>计划</span><span class="tp-sep">·</span><span>产出 3 个</span></div>
+    <div class="tp-segbar"><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-running"></span><span></span><span></span></div>
+    <div class="tp-task-foot"><span>已完成 5 / 8 步</span><span>第 6 步 · 进行中</span></div>
+    <ol class="tp-csteps">
+      <li class="tp-cstep"><span class="tp-cmark">✓</span><span class="tp-cname">生成趋势图</span><span class="tp-cmeta">产出 1</span></li>
+      <li class="tp-cstep"><span class="tp-cmark">✓</span><span class="tp-cname">起草结构与前 3 节</span><span class="tp-cmeta">产出 1</span></li>
+      <li class="tp-cstep is-running"><span class="tp-cmark">●</span><span class="tp-cname">写入第 4 节</span><span class="tp-cmeta">进行中</span></li>
+    </ol>
+    <span class="tp-more">查看全部 8 步 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+  </article>
+        
+  <article class="tp-task is-running" role="button" tabindex="0" data-goto="s7" aria-label="打开任务 补发发布说明 的详情">
+    <div class="tp-task-head"><span class="tp-task-name">补发发布说明</span><span class="tp-pill is-running">进行中</span></div>
+    <div class="tp-task-meta"><span>边做边想</span><span class="tp-sep">·</span><span>14 条轨迹</span><span class="tp-sep">·</span><span>产出 1</span></div>
+    <div class="tp-recent">
+      <div class="tp-recent-head"><span class="tp-tag is-act">动作</span><span class="tp-tool">append_file</span><time>15:38:07</time></div>
+      <p>在「发布说明-补发.md」追加「已知问题」占位一行，等发布链接确认后补。</p>
+    </div>
+    <span class="tp-more">查看循环轨迹 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+  </article>
+        
+  <article class="tp-task is-failed" aria-label="任务 整理会议纪要 失败">
+    <div class="tp-task-head"><span class="tp-task-name">整理会议纪要</span><span class="tp-pill is-failed">失败</span></div>
+    <div class="tp-task-meta"><span>计划</span><span class="tp-sep">·</span><span>产出 0 个</span></div>
+    <div class="tp-segbar"><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-failed"></span><span></span><span></span></div>
+    <div class="tp-task-foot"><span>已完成 4 / 7 步</span><span>失败于 15:36</span></div>
+    <div class="tp-fail-line"><span>失败：初稿文件被占用，无法写入</span></div>
+  </article>
+      </div>
+    </div>
+    <div class="tp-panel-foot"><span>共 11 个任务</span><span>进行中 2</span></div>
+  </aside>
+  <aside class="tp-rail" aria-label="右栏导航">
+    <button class="tp-rail-btn" type="button" data-goto="s1" title="概览" aria-label="概览"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.6" y="2.6" width="6.1" height="6.1" rx="1.5"/><rect x="11.3" y="2.6" width="6.1" height="6.1" rx="1.5"/><rect x="2.6" y="11.3" width="6.1" height="6.1" rx="1.5"/><rect x="11.3" y="11.3" width="6.1" height="6.1" rx="1.5"/></svg></button>
+    <button class="tp-rail-btn is-current" type="button" data-goto="s3" title="任务" aria-label="任务，2 个进行中" aria-expanded="true"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.4 5.5l1.6 1.6 2.7-2.9"/><path d="M3.4 11l1.6 1.6 2.7-2.9"/><path d="M11 6h6M11 11.5h6M11 17h6"/></svg><span class="tp-rail-badge">2</span></button>
+    <button class="tp-rail-btn" type="button" data-goto="s4" title="交付物" aria-label="交付物"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2a2 2 0 012-2h3l1.8 2h6.2a2 2 0 012 2v6.2a2 2 0 01-2 2H4.5a2 2 0 01-2-2z"/></svg></button>
+  </aside>
+  
+  
+  <footer class="tp-status">
+    <span>就绪 · 本地模型 qwen3-8b</span>
+    <span>任务 11 · 进行中 2 · 失败 1</span>
+    <span class="tp-status-right">15:42:08</span>
+  </footer>
+</div></div>
+  <div class="tp-notes">
+    <span class="tp-notes-label">本屏</span>
+    <div class="tp-notes-body"><p>第 5 步是已完成的步骤，点标题行展开回看；展开内容带“已归档 · 可收起”的说明，收起后不丢记录。</p><p>第 6 步仍在进行，但被手动收起，提示条写明可以点行重新展开；一屏同时呈现“已完成回看”与“进行中收起”两种状态。</p><p>第 7、8 步未开始，只有状态圈与标题，没有箭头、条数或可点样式。</p></div>
+  </div>
+</section>
+
+<section class="tp-screen" id="s7" aria-labelledby="s7-h">
+  <div class="tp-screen-head">
+    <h2 id="s7-h"><span class="tp-screen-no">07</span>边做边想详情</h2>
+    <span class="tp-screen-tag">扁平时间线 · 14 条</span>
+  </div>
+  <p class="tp-focus">边做边想用一条扁平时间线读到底，当前动作在最后一行。</p>
+  <div class="tp-frame"><div class="tp-shell">
+  
+  <header class="tp-topbar">
+    <div class="tp-brand">
+      <span class="tp-logo">司</span>
+      <span class="tp-brand-name">司墨</span>
+      <span class="tp-brand-sub">simo</span>
+    </div>
+    <label class="tp-search"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8.8" cy="8.8" r="5.3"/><path d="M12.8 12.8L17 17"/></svg><span>搜索会话、任务或交付物</span><kbd>Ctrl K</kbd></label>
+    <div class="tp-top-actions">
+      <button class="tp-top-btn" type="button" data-goto="s8">任务图</button>
+      <button class="tp-icon-btn" type="button" aria-label="设置"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="2.7"/><path d="M10 2.9v2M10 15.1v2M2.9 10h2M15.1 10h2M4.98 4.98l1.42 1.42M13.6 13.6l1.42 1.42M15.02 4.98l-1.42 1.42M6.4 13.6l-1.42 1.42"/></svg></button>
+      <span class="tp-avatar">陈</span>
+    </div>
+  </header>
+  
+  <aside class="tp-sidebar">
+    <div class="tp-side-head"><span>最近会话</span><button class="tp-icon-btn" type="button" aria-label="新建会话"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button></div>
+    <nav class="tp-conv-list" aria-label="会话列表">
+      <div class="tp-conv is-on"><span class="tp-conv-name">产品周会纪要</span><span class="tp-conv-time">15:42</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">周报数据核对</span><span class="tp-conv-badge">子</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">发布检查</span><span class="tp-conv-badge">子</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">下周排期草稿</span><span class="tp-conv-time">14:08</span></div>
+    </nav>
+    <div class="tp-side-foot">
+      <div class="tp-usage">12 次任务</div>
+      <div class="tp-usage-sub">2 个进行中 · 1 个等待确认</div>
+    </div>
+  </aside>
+  <main class="tp-main">
+  <div class="tp-chat-head">
+    <div>
+      <div class="tp-chat-title">产品周会纪要</div>
+      <div class="tp-chat-meta">主会话 · 8 条消息 · 15:42 更新</div>
+    </div>
+    <div class="tp-chat-tools"><span class="tp-mini">仅本会话</span><button class="tp-icon-btn" type="button" aria-label="更多"><svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4.6" cy="10" r="1.25"/><circle cx="10" cy="10" r="1.25"/><circle cx="15.4" cy="10" r="1.25"/></svg></button></div>
+  </div>
+  <div class="tp-msgs">
+    
+  <article class="tp-msg is-user">
+    <div class="tp-msg-head"><span class="tp-msg-who">你</span><time>15:30</time></div>
+    <p>把今天产品周会的记录整理成纪要，顺手出一版周报草稿，发布清单也核一下。</p>
+    
+  </article>
+    
+  <article class="tp-msg">
+    <div class="tp-msg-head"><span class="tp-msg-who">司墨</span><time>15:31</time></div>
+    <p>拆成三件事：整理会议纪要、生成周报草稿、核对发布清单；上周漏的发布说明单独补一条，不挡前面三个。</p>
+    <div class="tp-quiet">已创建 4 个任务 · 加上先前的共 11 个</div>
+  </article>
+    
+  <article class="tp-msg is-user">
+    <div class="tp-msg-head"><span class="tp-msg-who">你</span><time>15:33</time></div>
+    <p>纪要和周报可以同时来，发布清单等我确认口径再开。</p>
+    
+  </article>
+    
+  <article class="tp-msg">
+    <div class="tp-msg-head"><span class="tp-msg-who">司墨</span><time>15:42</time></div>
+    <p>纪要卡在第 5 步已经失败，初稿文件被占用；周报写到第 4 节，补发说明只差发布链接。</p>
+    
+  </article>
+  </div>
+  
+  <div class="tp-composer">
+    <div class="tp-composer-box">
+      <span class="tp-composer-ph">回复，或输入 / 选择动作</span>
+      <div class="tp-composer-foot"><span>本地模型 · 只在本机处理</span><button class="tp-send" type="button">发送</button></div>
+    </div>
+  </div>
+  <section class="tp-sheet" aria-label="边做边想任务详情">
+    <div class="tp-sheet-head">
+      <div class="tp-sheet-kicker">
+        <span>任务详情 · 边做边想</span><span class="tp-sheet-ro">只读</span>
+        <button class="tp-sheet-close" type="button" data-goto="s3" title="关闭详情" aria-label="关闭详情"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg></button>
+      </div>
+      <div class="tp-sheet-title-row"><h2 class="tp-sheet-title">补发发布说明</h2><span class="tp-pill is-running">进行中</span></div>
+      <div class="tp-sheet-meta"><span>所属会话 · 产品周会纪要</span><span class="tp-sep">·</span><span>循环轨迹 14 条</span><span class="tp-sep">·</span><span>产出 1 个</span></div>
+    </div>
+    <div class="tp-sheet-body">
+      <p class="tp-mode-note">这一任务不预设步骤：每一轮先想一步，再决定下一个动作，直到交付条件满足。轨迹按发生顺序平铺，不做步骤分组。</p>
+      <div class="tp-section-label"><span>循环轨迹</span><span>14 条 · 正序</span></div>
+      <ol class="tp-flow">
+        
+          <li class="tp-flow-row">
+            <span class="tp-tag is-think">思考</span>
+            <span class="tp-tt">先确认补发范围：只补 v4.0 和 v4.1 两条撤回记录，不重写整篇说明。</span>
+            <span class="tp-time">15:37:12</span>
+          </li>
+          <li class="tp-flow-row">
+            <span class="tp-tag is-act">动作</span>
+            <span class="tp-tt"><span class="tp-tool">read_file</span>读「发布说明.md」，核对现有 6 条记录。</span>
+            <span class="tp-time">15:37:19</span>
+          </li>
+          <li class="tp-flow-row">
+            <span class="tp-tag is-obs">观察</span>
+            <span class="tp-tt">前 4 条与发布记录一致，缺 v4.0、v4.1 两条。</span>
+            <span class="tp-time">15:37:21</span>
+          </li>
+          <li class="tp-flow-row">
+            <span class="tp-tag is-think">思考</span>
+            <span class="tp-tt">两条都按“撤回后补发”写，不覆盖原记录。</span>
+            <span class="tp-time">15:37:28</span>
+          </li>
+          <li class="tp-flow-row">
+            <span class="tp-tag is-act">动作</span>
+            <span class="tp-tt"><span class="tp-tool">new_file</span>新建「发布说明-补发.md」。</span>
+            <span class="tp-time">15:37:34</span>
+          </li>
+          <li class="tp-flow-row">
+            <span class="tp-tag is-obs">观察</span>
+            <span class="tp-tt">文件已建，空模板 12 行。</span>
+            <span class="tp-time">15:37:35</span>
+          </li>
+          <li class="tp-flow-row">
+            <span class="tp-tag is-act">动作</span>
+            <span class="tp-tt"><span class="tp-tool">edit_file</span>写入 v4.0 的撤回原因与补发时间。</span>
+            <span class="tp-time">15:37:48</span>
+          </li>
+          <li class="tp-flow-row">
+            <span class="tp-tag is-obs">观察</span>
+            <span class="tp-tt">第一条记录已落盘，日期与清单一致。</span>
+            <span class="tp-time">15:37:50</span>
+          </li>
+          <li class="tp-flow-row">
+            <span class="tp-tag is-act">动作</span>
+            <span class="tp-tt"><span class="tp-tool">edit_file</span>写入 v4.1，日期用发布清单里的 11 月 21 日。</span>
+            <span class="tp-time">15:38:02</span>
+          </li>
+          <li class="tp-flow-row">
+            <span class="tp-tag is-obs">观察</span>
+            <span class="tp-tt">两条记录都在，格式与原文一致。</span>
+            <span class="tp-time">15:38:03</span>
+          </li>
+          <li class="tp-flow-row">
+            <span class="tp-tag is-think">思考</span>
+            <span class="tp-tt">还缺一段“已知问题”，等发布链接确认后补。</span>
+            <span class="tp-time">15:38:05</span>
+          </li>
+          <li class="tp-flow-row">
+            <span class="tp-tag is-act">动作</span>
+            <span class="tp-tt"><span class="tp-tool">read_file</span>回看原文的“已知问题”段落，确认小节标题。</span>
+            <span class="tp-time">15:38:06</span>
+          </li>
+          <li class="tp-flow-row">
+            <span class="tp-tag is-obs">观察</span>
+            <span class="tp-tt">原文小节标题是“已知问题”，位置在文末。</span>
+            <span class="tp-time">15:38:06</span>
+          </li>
+          <li class="tp-flow-row is-cur">
+            <span class="tp-tag is-act">动作</span>
+            <span class="tp-tt"><span class="tp-tool">append_file</span>在文末追加“已知问题”标题与占位一行，等发布链接确认后补。</span>
+            <span class="tp-time">15:38:07</span>
+          </li>
+      </ol>
+    </div>
+  </section></main>
+  
+  <aside class="tp-panel" aria-label="任务标签">
+    <div class="tp-panel-head">
+      <span class="tp-panel-title">任务</span>
+      <span class="tp-panel-count">11 个</span>
+      <button class="tp-panel-collapse" type="button" data-rail-collapse title="收起右栏" aria-label="收起右栏"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></button>
+    </div>
+    
+    <div class="tp-filters">
+      <button class="tp-chip is-on" type="button">全部 <b>11</b></button>
+      <button class="tp-chip" type="button">进行中 <b>2</b></button>
+      <button class="tp-chip" type="button">失败 <b>1</b></button>
+      <button class="tp-chip" type="button">已完成 <b>3</b></button>
+    </div>
+    <div class="tp-panel-body">
+      <div class="tp-tasks">
+        
+  <article class="tp-task is-running" role="button" tabindex="0" data-goto="s5" aria-label="打开任务 生成周报草稿 的详情">
+    <div class="tp-task-head"><span class="tp-task-name">生成周报草稿</span><span class="tp-pill is-running">进行中</span></div>
+    <div class="tp-task-meta"><span>计划</span><span class="tp-sep">·</span><span>产出 3 个</span></div>
+    <div class="tp-segbar"><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-running"></span><span></span><span></span></div>
+    <div class="tp-task-foot"><span>已完成 5 / 8 步</span><span>第 6 步 · 进行中</span></div>
+    <ol class="tp-csteps">
+      <li class="tp-cstep"><span class="tp-cmark">✓</span><span class="tp-cname">生成趋势图</span><span class="tp-cmeta">产出 1</span></li>
+      <li class="tp-cstep"><span class="tp-cmark">✓</span><span class="tp-cname">起草结构与前 3 节</span><span class="tp-cmeta">产出 1</span></li>
+      <li class="tp-cstep is-running"><span class="tp-cmark">●</span><span class="tp-cname">写入第 4 节</span><span class="tp-cmeta">进行中</span></li>
+    </ol>
+    <span class="tp-more">查看全部 8 步 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+  </article>
+        
+  <article class="tp-task is-running is-viewing" role="button" tabindex="0" data-goto="s7" aria-label="打开任务 补发发布说明 的详情">
+    <div class="tp-task-head"><span class="tp-task-name">补发发布说明</span><span class="tp-pill is-running">进行中</span></div>
+    <div class="tp-task-meta"><span>边做边想</span><span class="tp-sep">·</span><span>14 条轨迹</span><span class="tp-sep">·</span><span>产出 1</span></div>
+    <div class="tp-recent">
+      <div class="tp-recent-head"><span class="tp-tag is-act">动作</span><span class="tp-tool">append_file</span><time>15:38:07</time></div>
+      <p>在「发布说明-补发.md」追加「已知问题」占位一行，等发布链接确认后补。</p>
+    </div>
+    <span class="tp-more">查看循环轨迹 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+  </article>
+        
+  <article class="tp-task is-failed" aria-label="任务 整理会议纪要 失败">
+    <div class="tp-task-head"><span class="tp-task-name">整理会议纪要</span><span class="tp-pill is-failed">失败</span></div>
+    <div class="tp-task-meta"><span>计划</span><span class="tp-sep">·</span><span>产出 0 个</span></div>
+    <div class="tp-segbar"><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-failed"></span><span></span><span></span></div>
+    <div class="tp-task-foot"><span>已完成 4 / 7 步</span><span>失败于 15:36</span></div>
+    <div class="tp-fail-line"><span>失败：初稿文件被占用，无法写入</span></div>
+  </article>
+      </div>
+    </div>
+    <div class="tp-panel-foot"><span>共 11 个任务</span><span>进行中 2</span></div>
+  </aside>
+  <aside class="tp-rail" aria-label="右栏导航">
+    <button class="tp-rail-btn" type="button" data-goto="s1" title="概览" aria-label="概览"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.6" y="2.6" width="6.1" height="6.1" rx="1.5"/><rect x="11.3" y="2.6" width="6.1" height="6.1" rx="1.5"/><rect x="2.6" y="11.3" width="6.1" height="6.1" rx="1.5"/><rect x="11.3" y="11.3" width="6.1" height="6.1" rx="1.5"/></svg></button>
+    <button class="tp-rail-btn is-current" type="button" data-goto="s3" title="任务" aria-label="任务，2 个进行中" aria-expanded="true"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.4 5.5l1.6 1.6 2.7-2.9"/><path d="M3.4 11l1.6 1.6 2.7-2.9"/><path d="M11 6h6M11 11.5h6M11 17h6"/></svg><span class="tp-rail-badge">2</span></button>
+    <button class="tp-rail-btn" type="button" data-goto="s4" title="交付物" aria-label="交付物"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2a2 2 0 012-2h3l1.8 2h6.2a2 2 0 012 2v6.2a2 2 0 01-2 2H4.5a2 2 0 01-2-2z"/></svg></button>
+  </aside>
+  
+  
+  <footer class="tp-status">
+    <span>就绪 · 本地模型 qwen3-8b</span>
+    <span>任务 11 · 进行中 2 · 失败 1</span>
+    <span class="tp-status-right">15:42:08</span>
+  </footer>
+</div></div>
+  <div class="tp-notes">
+    <span class="tp-notes-label">本屏</span>
+    <div class="tp-notes-body"><p>边做边想用单列扁平时间线，头部写“循环轨迹 14 条”，逐行读到当前动作。</p><p>每一行由标签、正文、时间三列组成；当前动作在最后一行，用主色标签与左侧细条标出。</p><p>标签仍用思考、动作、观察三色，工具名用等宽字体的小胶囊显示，保持单行密度。</p></div>
+  </div>
+</section>
+
+<section class="tp-screen" id="s8" aria-labelledby="s8-h">
+  <div class="tp-screen-head">
+    <h2 id="s8-h"><span class="tp-screen-no">08</span>任务图弹窗</h2>
+    <span class="tp-screen-tag">覆盖整窗 · 8 节点</span>
+  </div>
+  <p class="tp-focus">任务图覆盖整个应用窗口，8 个节点四种状态，计划与边做边想带模式标记，失败后继用虚线。</p>
+  <div class="tp-frame"><div class="tp-shell">
+  
+  <header class="tp-topbar">
+    <div class="tp-brand">
+      <span class="tp-logo">司</span>
+      <span class="tp-brand-name">司墨</span>
+      <span class="tp-brand-sub">simo</span>
+    </div>
+    <label class="tp-search"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8.8" cy="8.8" r="5.3"/><path d="M12.8 12.8L17 17"/></svg><span>搜索会话、任务或交付物</span><kbd>Ctrl K</kbd></label>
+    <div class="tp-top-actions">
+      <button class="tp-top-btn" type="button" data-goto="s8">任务图</button>
+      <button class="tp-icon-btn" type="button" aria-label="设置"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="2.7"/><path d="M10 2.9v2M10 15.1v2M2.9 10h2M15.1 10h2M4.98 4.98l1.42 1.42M13.6 13.6l1.42 1.42M15.02 4.98l-1.42 1.42M6.4 13.6l-1.42 1.42"/></svg></button>
+      <span class="tp-avatar">陈</span>
+    </div>
+  </header>
+  
+  <aside class="tp-sidebar">
+    <div class="tp-side-head"><span>最近会话</span><button class="tp-icon-btn" type="button" aria-label="新建会话"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button></div>
+    <nav class="tp-conv-list" aria-label="会话列表">
+      <div class="tp-conv is-on"><span class="tp-conv-name">产品周会纪要</span><span class="tp-conv-time">15:42</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">周报数据核对</span><span class="tp-conv-badge">子</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">发布检查</span><span class="tp-conv-badge">子</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">下周排期草稿</span><span class="tp-conv-time">14:08</span></div>
+    </nav>
+    <div class="tp-side-foot">
+      <div class="tp-usage">12 次任务</div>
+      <div class="tp-usage-sub">2 个进行中 · 1 个等待确认</div>
+    </div>
+  </aside>
+  <main class="tp-main">
+  <div class="tp-chat-head">
+    <div>
+      <div class="tp-chat-title">产品周会纪要</div>
+      <div class="tp-chat-meta">主会话 · 8 条消息 · 15:42 更新</div>
+    </div>
+    <div class="tp-chat-tools"><span class="tp-mini">仅本会话</span><button class="tp-icon-btn" type="button" aria-label="更多"><svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4.6" cy="10" r="1.25"/><circle cx="10" cy="10" r="1.25"/><circle cx="15.4" cy="10" r="1.25"/></svg></button></div>
+  </div>
+  <div class="tp-msgs">
+    
+  <article class="tp-msg is-user">
+    <div class="tp-msg-head"><span class="tp-msg-who">你</span><time>15:30</time></div>
+    <p>把今天产品周会的记录整理成纪要，顺手出一版周报草稿，发布清单也核一下。</p>
+    
+  </article>
+    
+  <article class="tp-msg">
+    <div class="tp-msg-head"><span class="tp-msg-who">司墨</span><time>15:31</time></div>
+    <p>拆成三件事：整理会议纪要、生成周报草稿、核对发布清单；上周漏的发布说明单独补一条，不挡前面三个。</p>
+    <div class="tp-quiet">已创建 4 个任务 · 加上先前的共 11 个</div>
+  </article>
+    
+  <article class="tp-msg is-user">
+    <div class="tp-msg-head"><span class="tp-msg-who">你</span><time>15:33</time></div>
+    <p>纪要和周报可以同时来，发布清单等我确认口径再开。</p>
+    
+  </article>
+    
+  <article class="tp-msg">
+    <div class="tp-msg-head"><span class="tp-msg-who">司墨</span><time>15:42</time></div>
+    <p>纪要卡在第 5 步已经失败，初稿文件被占用；周报写到第 4 节，补发说明只差发布链接。</p>
+    
+  </article>
+  </div>
+  
+  <div class="tp-composer">
+    <div class="tp-composer-box">
+      <span class="tp-composer-ph">回复，或输入 / 选择动作</span>
+      <div class="tp-composer-foot"><span>本地模型 · 只在本机处理</span><button class="tp-send" type="button">发送</button></div>
+    </div>
+  </div></main>
+  
+  <aside class="tp-panel" aria-label="任务标签">
+    <div class="tp-panel-head">
+      <span class="tp-panel-title">任务</span>
+      <span class="tp-panel-count">11 个</span>
+      <button class="tp-panel-collapse" type="button" data-rail-collapse title="收起右栏" aria-label="收起右栏"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></button>
+    </div>
+    
+    <div class="tp-filters">
+      <button class="tp-chip is-on" type="button">全部 <b>11</b></button>
+      <button class="tp-chip" type="button">进行中 <b>2</b></button>
+      <button class="tp-chip" type="button">失败 <b>1</b></button>
+      <button class="tp-chip" type="button">已完成 <b>3</b></button>
+    </div>
+    <div class="tp-panel-body">
+      <div class="tp-tasks">
+        
+  <article class="tp-task is-running" role="button" tabindex="0" data-goto="s5" aria-label="打开任务 生成周报草稿 的详情">
+    <div class="tp-task-head"><span class="tp-task-name">生成周报草稿</span><span class="tp-pill is-running">进行中</span></div>
+    <div class="tp-task-meta"><span>计划</span><span class="tp-sep">·</span><span>产出 3 个</span></div>
+    <div class="tp-segbar"><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-running"></span><span></span><span></span></div>
+    <div class="tp-task-foot"><span>已完成 5 / 8 步</span><span>第 6 步 · 进行中</span></div>
+    <ol class="tp-csteps">
+      <li class="tp-cstep"><span class="tp-cmark">✓</span><span class="tp-cname">生成趋势图</span><span class="tp-cmeta">产出 1</span></li>
+      <li class="tp-cstep"><span class="tp-cmark">✓</span><span class="tp-cname">起草结构与前 3 节</span><span class="tp-cmeta">产出 1</span></li>
+      <li class="tp-cstep is-running"><span class="tp-cmark">●</span><span class="tp-cname">写入第 4 节</span><span class="tp-cmeta">进行中</span></li>
+    </ol>
+    <span class="tp-more">查看全部 8 步 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+  </article>
+        
+  <article class="tp-task is-running" role="button" tabindex="0" data-goto="s7" aria-label="打开任务 补发发布说明 的详情">
+    <div class="tp-task-head"><span class="tp-task-name">补发发布说明</span><span class="tp-pill is-running">进行中</span></div>
+    <div class="tp-task-meta"><span>边做边想</span><span class="tp-sep">·</span><span>14 条轨迹</span><span class="tp-sep">·</span><span>产出 1</span></div>
+    <div class="tp-recent">
+      <div class="tp-recent-head"><span class="tp-tag is-act">动作</span><span class="tp-tool">append_file</span><time>15:38:07</time></div>
+      <p>在「发布说明-补发.md」追加「已知问题」占位一行，等发布链接确认后补。</p>
+    </div>
+    <span class="tp-more">查看循环轨迹 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+  </article>
+        
+  <article class="tp-task is-failed" aria-label="任务 整理会议纪要 失败">
+    <div class="tp-task-head"><span class="tp-task-name">整理会议纪要</span><span class="tp-pill is-failed">失败</span></div>
+    <div class="tp-task-meta"><span>计划</span><span class="tp-sep">·</span><span>产出 0 个</span></div>
+    <div class="tp-segbar"><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-failed"></span><span></span><span></span></div>
+    <div class="tp-task-foot"><span>已完成 4 / 7 步</span><span>失败于 15:36</span></div>
+    <div class="tp-fail-line"><span>失败：初稿文件被占用，无法写入</span></div>
+  </article>
+      </div>
+    </div>
+    <div class="tp-panel-foot"><span>共 11 个任务</span><span>进行中 2</span></div>
+  </aside>
+  <aside class="tp-rail" aria-label="右栏导航">
+    <button class="tp-rail-btn" type="button" data-goto="s1" title="概览" aria-label="概览"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.6" y="2.6" width="6.1" height="6.1" rx="1.5"/><rect x="11.3" y="2.6" width="6.1" height="6.1" rx="1.5"/><rect x="2.6" y="11.3" width="6.1" height="6.1" rx="1.5"/><rect x="11.3" y="11.3" width="6.1" height="6.1" rx="1.5"/></svg></button>
+    <button class="tp-rail-btn is-current" type="button" data-goto="s3" title="任务" aria-label="任务，2 个进行中" aria-expanded="true"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.4 5.5l1.6 1.6 2.7-2.9"/><path d="M3.4 11l1.6 1.6 2.7-2.9"/><path d="M11 6h6M11 11.5h6M11 17h6"/></svg><span class="tp-rail-badge">2</span></button>
+    <button class="tp-rail-btn" type="button" data-goto="s4" title="交付物" aria-label="交付物"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2a2 2 0 012-2h3l1.8 2h6.2a2 2 0 012 2v6.2a2 2 0 01-2 2H4.5a2 2 0 01-2-2z"/></svg></button>
+  </aside>
+  
+  <div class="tp-modal" data-modal-backdrop="s3" role="dialog" aria-modal="true" aria-label="任务图">
+    <div class="tp-dialog">
+      <div class="tp-dialog-head">
+        <div>
+          <h2 class="tp-dialog-title">任务图 · 产品周会纪要</h2>
+          <div class="tp-dialog-sub">本会话 8 个任务 · 3 已完成 · 2 进行中 · 2 未开始 · 1 失败</div>
+        </div>
+        <button class="tp-dialog-close" type="button" data-goto="s3" title="关闭任务图" aria-label="关闭任务图"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg></button>
+      </div>
+      <div class="tp-legend">
+        <span><i class="tp-dot is-done"></i>已完成</span>
+        <span><i class="tp-dot is-running"></i>进行中</span>
+        <span><i class="tp-dot"></i>未开始</span>
+        <span><i class="tp-dot is-failed"></i>失败</span>
+        <span class="tp-legend-line"><svg width="22" height="8" viewBox="0 0 22 8" aria-hidden="true"><path d="M1 4h20" stroke="#C39A93" stroke-width="1.4" stroke-dasharray="4 3"/></svg>前置失败</span>
+      </div>
+      <div class="tp-dag">
+        <svg class="tp-dag-lines" width="860" height="366" viewBox="0 0 860 366" aria-hidden="true">
+          <defs>
+            <marker id="tp-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#BEBAB0"/></marker>
+            <marker id="tp-arrow-fail" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#C39A93"/></marker>
+          </defs>
+          <path d="M168 62H222" stroke="#C9C6BD" stroke-width="1.4" fill="none" marker-end="url(#tp-arrow)"/>
+          <path d="M380 62H434" stroke="#C9C6BD" stroke-width="1.4" fill="none" marker-end="url(#tp-arrow)"/>
+          <path d="M592 62H646" stroke="#C39A93" stroke-width="1.4" stroke-dasharray="4 3" fill="none" marker-end="url(#tp-arrow-fail)"/>
+          <path d="M168 196H222" stroke="#C9C6BD" stroke-width="1.4" fill="none" marker-end="url(#tp-arrow)"/>
+          <path d="M380 196H434" stroke="#C9C6BD" stroke-width="1.4" fill="none" marker-end="url(#tp-arrow)"/>
+        </svg>
+        
+          <button class="tp-dag-node is-done" type="button" style="left:12px;top:30px" aria-label="读取会议记录，已完成 · 4 步">
+            <span class="tp-dag-mode">计划</span>
+            <span class="tp-dag-name">读取会议记录</span>
+            <span class="tp-dag-meta"><i class="tp-dag-dot"></i>已完成 · 4 步</span>
+          </button>
+          <button class="tp-dag-node is-done" type="button" style="left:224px;top:30px" aria-label="提取议题与结论，已完成 · 6 步">
+            <span class="tp-dag-mode">计划</span>
+            <span class="tp-dag-name">提取议题与结论</span>
+            <span class="tp-dag-meta"><i class="tp-dag-dot"></i>已完成 · 6 步</span>
+          </button>
+          <button class="tp-dag-node is-failed" type="button" style="left:436px;top:30px" aria-label="整理会议纪要，失败于第 5 步">
+            <span class="tp-dag-mode">计划</span>
+            <span class="tp-dag-name">整理会议纪要</span>
+            <span class="tp-dag-meta"><i class="tp-dag-dot"></i>失败于第 5 步</span>
+          </button>
+          <button class="tp-dag-node is-todo" type="button" style="left:648px;top:30px" aria-label="校对数字与待办，未开始 · 等待前置">
+            <span class="tp-dag-mode">计划</span>
+            <span class="tp-dag-name">校对数字与待办</span>
+            <span class="tp-dag-meta"><i class="tp-dag-dot"></i>未开始 · 等待前置</span>
+          </button>
+          <button class="tp-dag-node is-done" type="button" style="left:12px;top:164px" aria-label="汇总本周提交，已完成 · 6 步">
+            <span class="tp-dag-mode">计划</span>
+            <span class="tp-dag-name">汇总本周提交</span>
+            <span class="tp-dag-meta"><i class="tp-dag-dot"></i>已完成 · 6 步</span>
+          </button>
+          <button class="tp-dag-node is-running" type="button" style="left:224px;top:164px" data-goto="s5" aria-label="生成周报草稿，进行中 · 第 6 步">
+            <span class="tp-dag-mode">计划</span>
+            <span class="tp-dag-name">生成周报草稿</span>
+            <span class="tp-dag-meta"><i class="tp-dag-dot"></i>进行中 · 第 6 步</span>
+          </button>
+          <button class="tp-dag-node is-todo" type="button" style="left:436px;top:164px" aria-label="核对发布清单，未开始 · 等口径">
+            <span class="tp-dag-mode">计划</span>
+            <span class="tp-dag-name">核对发布清单</span>
+            <span class="tp-dag-meta"><i class="tp-dag-dot"></i>未开始 · 等口径</span>
+          </button>
+          <button class="tp-dag-node is-running" type="button" style="left:224px;top:298px" data-goto="s7" aria-label="补发发布说明，进行中 · 14 条">
+            <span class="tp-dag-mode is-react">边做边想</span>
+            <span class="tp-dag-name">补发发布说明</span>
+            <span class="tp-dag-meta"><i class="tp-dag-dot"></i>进行中 · 14 条</span>
+          </button>
+      </div>
+      <div class="tp-dialog-foot"><span>进行中的节点可点开详情</span><span>Esc 关闭</span></div>
+    </div>
+  </div>
+  
+  <footer class="tp-status">
+    <span>就绪 · 本地模型 qwen3-8b</span>
+    <span>任务 11 · 进行中 2 · 失败 1</span>
+    <span class="tp-status-right">15:42:08</span>
+  </footer>
+</div></div>
+  <div class="tp-notes">
+    <span class="tp-notes-label">本屏</span>
+    <div class="tp-notes-body"><p>任务图从上一版只盖中栏改为覆盖整个应用窗口，弹窗宽 920，8 个节点按 4 列 3 行排布。</p><p>四种状态用左侧 2px 色条与状态点区分；计划、边做边想写在节点第一行，用文字标出模式。</p><p>“整理会议纪要”失败后，后继“校对数字与待办”的依赖线改为虚线；进行中的两个节点可点进计划或边做边想详情。</p></div>
+  </div>
+</section>
+
+<section class="tp-screen" id="s9" aria-labelledby="s9-h">
+  <div class="tp-screen-head">
+    <h2 id="s9-h"><span class="tp-screen-no">09</span>右栏收起态</h2>
+    <span class="tp-screen-tag">右栏 0 · 中栏 1008</span>
+  </div>
+  <p class="tp-focus">右栏收起后只剩最右侧 40 宽的竖条，任务图标角标仍为 2；再点任务图标回到任务标签。</p>
+  <div class="tp-frame"><div class="tp-shell is-rail-collapsed">
+  
+  <header class="tp-topbar">
+    <div class="tp-brand">
+      <span class="tp-logo">司</span>
+      <span class="tp-brand-name">司墨</span>
+      <span class="tp-brand-sub">simo</span>
+    </div>
+    <label class="tp-search"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8.8" cy="8.8" r="5.3"/><path d="M12.8 12.8L17 17"/></svg><span>搜索会话、任务或交付物</span><kbd>Ctrl K</kbd></label>
+    <div class="tp-top-actions">
+      <button class="tp-top-btn" type="button" data-goto="s8">任务图</button>
+      <button class="tp-icon-btn" type="button" aria-label="设置"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="2.7"/><path d="M10 2.9v2M10 15.1v2M2.9 10h2M15.1 10h2M4.98 4.98l1.42 1.42M13.6 13.6l1.42 1.42M15.02 4.98l-1.42 1.42M6.4 13.6l-1.42 1.42"/></svg></button>
+      <span class="tp-avatar">陈</span>
+    </div>
+  </header>
+  
+  <aside class="tp-sidebar">
+    <div class="tp-side-head"><span>最近会话</span><button class="tp-icon-btn" type="button" aria-label="新建会话"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button></div>
+    <nav class="tp-conv-list" aria-label="会话列表">
+      <div class="tp-conv is-on"><span class="tp-conv-name">产品周会纪要</span><span class="tp-conv-time">15:42</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">周报数据核对</span><span class="tp-conv-badge">子</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">发布检查</span><span class="tp-conv-badge">子</span></div>
+      <div class="tp-conv"><span class="tp-conv-name">下周排期草稿</span><span class="tp-conv-time">14:08</span></div>
+    </nav>
+    <div class="tp-side-foot">
+      <div class="tp-usage">12 次任务</div>
+      <div class="tp-usage-sub">2 个进行中 · 1 个等待确认</div>
+    </div>
+  </aside>
+  <main class="tp-main">
+  <div class="tp-chat-head">
+    <div>
+      <div class="tp-chat-title">产品周会纪要</div>
+      <div class="tp-chat-meta">主会话 · 8 条消息 · 15:42 更新</div>
+    </div>
+    <div class="tp-chat-tools"><span class="tp-mini">仅本会话</span><button class="tp-icon-btn" type="button" aria-label="更多"><svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4.6" cy="10" r="1.25"/><circle cx="10" cy="10" r="1.25"/><circle cx="15.4" cy="10" r="1.25"/></svg></button></div>
+  </div>
+  <div class="tp-msgs">
+    
+  <article class="tp-msg is-user">
+    <div class="tp-msg-head"><span class="tp-msg-who">你</span><time>15:30</time></div>
+    <p>把今天产品周会的记录整理成纪要，顺手出一版周报草稿，发布清单也核一下。</p>
+    
+  </article>
+    
+  <article class="tp-msg">
+    <div class="tp-msg-head"><span class="tp-msg-who">司墨</span><time>15:31</time></div>
+    <p>拆成三件事：整理会议纪要、生成周报草稿、核对发布清单；上周漏的发布说明单独补一条，不挡前面三个。</p>
+    <div class="tp-quiet">已创建 4 个任务 · 加上先前的共 11 个</div>
+  </article>
+    
+  <article class="tp-msg is-user">
+    <div class="tp-msg-head"><span class="tp-msg-who">你</span><time>15:33</time></div>
+    <p>纪要和周报可以同时来，发布清单等我确认口径再开。</p>
+    
+  </article>
+    
+  <article class="tp-msg">
+    <div class="tp-msg-head"><span class="tp-msg-who">司墨</span><time>15:42</time></div>
+    <p>纪要卡在第 5 步已经失败，初稿文件被占用；周报写到第 4 节，补发说明只差发布链接。</p>
+    
+  </article>
+  </div>
+  
+  <div class="tp-composer">
+    <div class="tp-composer-box">
+      <span class="tp-composer-ph">回复，或输入 / 选择动作</span>
+      <div class="tp-composer-foot"><span>本地模型 · 只在本机处理</span><button class="tp-send" type="button">发送</button></div>
+    </div>
+  </div></main>
+  
+  <aside class="tp-panel" aria-label="任务标签">
+    <div class="tp-panel-head">
+      <span class="tp-panel-title">任务</span>
+      <span class="tp-panel-count">11 个</span>
+      <button class="tp-panel-collapse" type="button" data-rail-collapse title="收起右栏" aria-label="收起右栏"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></button>
+    </div>
+    
+    <div class="tp-filters">
+      <button class="tp-chip is-on" type="button">全部 <b>11</b></button>
+      <button class="tp-chip" type="button">进行中 <b>2</b></button>
+      <button class="tp-chip" type="button">失败 <b>1</b></button>
+      <button class="tp-chip" type="button">已完成 <b>3</b></button>
+    </div>
+    <div class="tp-panel-body">
+      <div class="tp-tasks">
+        
+  <article class="tp-task is-running is-viewing" role="button" tabindex="0" data-goto="s5" aria-label="打开任务 生成周报草稿 的详情">
+    <div class="tp-task-head"><span class="tp-task-name">生成周报草稿</span><span class="tp-pill is-running">进行中</span></div>
+    <div class="tp-task-meta"><span>计划</span><span class="tp-sep">·</span><span>产出 3 个</span></div>
+    <div class="tp-segbar"><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-running"></span><span></span><span></span></div>
+    <div class="tp-task-foot"><span>已完成 5 / 8 步</span><span>第 6 步 · 进行中</span></div>
+    <ol class="tp-csteps">
+      <li class="tp-cstep"><span class="tp-cmark">✓</span><span class="tp-cname">生成趋势图</span><span class="tp-cmeta">产出 1</span></li>
+      <li class="tp-cstep"><span class="tp-cmark">✓</span><span class="tp-cname">起草结构与前 3 节</span><span class="tp-cmeta">产出 1</span></li>
+      <li class="tp-cstep is-running"><span class="tp-cmark">●</span><span class="tp-cname">写入第 4 节</span><span class="tp-cmeta">进行中</span></li>
+    </ol>
+    <span class="tp-more">查看全部 8 步 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+  </article>
+        
+  <article class="tp-task is-running" role="button" tabindex="0" data-goto="s7" aria-label="打开任务 补发发布说明 的详情">
+    <div class="tp-task-head"><span class="tp-task-name">补发发布说明</span><span class="tp-pill is-running">进行中</span></div>
+    <div class="tp-task-meta"><span>边做边想</span><span class="tp-sep">·</span><span>14 条轨迹</span><span class="tp-sep">·</span><span>产出 1</span></div>
+    <div class="tp-recent">
+      <div class="tp-recent-head"><span class="tp-tag is-act">动作</span><span class="tp-tool">append_file</span><time>15:38:07</time></div>
+      <p>在「发布说明-补发.md」追加「已知问题」占位一行，等发布链接确认后补。</p>
+    </div>
+    <span class="tp-more">查看循环轨迹 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></span>
+  </article>
+        
+  <article class="tp-task is-failed" aria-label="任务 整理会议纪要 失败">
+    <div class="tp-task-head"><span class="tp-task-name">整理会议纪要</span><span class="tp-pill is-failed">失败</span></div>
+    <div class="tp-task-meta"><span>计划</span><span class="tp-sep">·</span><span>产出 0 个</span></div>
+    <div class="tp-segbar"><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-done"></span><span class="is-failed"></span><span></span><span></span></div>
+    <div class="tp-task-foot"><span>已完成 4 / 7 步</span><span>失败于 15:36</span></div>
+    <div class="tp-fail-line"><span>失败：初稿文件被占用，无法写入</span></div>
+  </article>
+      </div>
+    </div>
+    <div class="tp-panel-foot"><span>共 11 个任务</span><span>进行中 2</span></div>
+  </aside>
+  <aside class="tp-rail" aria-label="右栏导航">
+    <button class="tp-rail-btn" type="button" data-goto="s1" title="概览" aria-label="概览"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.6" y="2.6" width="6.1" height="6.1" rx="1.5"/><rect x="11.3" y="2.6" width="6.1" height="6.1" rx="1.5"/><rect x="2.6" y="11.3" width="6.1" height="6.1" rx="1.5"/><rect x="11.3" y="11.3" width="6.1" height="6.1" rx="1.5"/></svg></button>
+    <button class="tp-rail-btn is-current" type="button" data-goto="s3" title="任务" aria-label="任务，2 个进行中" aria-expanded="false"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.4 5.5l1.6 1.6 2.7-2.9"/><path d="M3.4 11l1.6 1.6 2.7-2.9"/><path d="M11 6h6M11 11.5h6M11 17h6"/></svg><span class="tp-rail-badge">2</span></button>
+    <button class="tp-rail-btn" type="button" data-goto="s4" title="交付物" aria-label="交付物"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2a2 2 0 012-2h3l1.8 2h6.2a2 2 0 012 2v6.2a2 2 0 01-2 2H4.5a2 2 0 01-2-2z"/></svg></button>
+  </aside>
+  
+  
+  <footer class="tp-status">
+    <span>就绪 · 本地模型 qwen3-8b</span>
+    <span>任务 11 · 进行中 2 · 失败 1</span>
+    <span class="tp-status-right">15:42:08</span>
+  </footer>
+</div></div>
+  <div class="tp-notes">
+    <span class="tp-notes-label">本屏</span>
+    <div class="tp-notes-body"><p><b>收起态只保留最右侧 40 宽竖条</b>，三个图标仍在，任务角标 2 保留；中栏从 728 扩到 1008。</p><p>收起保留当前标签：这一屏记住的是任务标签，再点任务图标会展开到任务列表。</p><p>面板里的收起按钮与竖条是同一套开关；展开后点当前图标同样收起。这一屏可以直接点任务图标验证。</p></div>
+  </div>
+</section>
+  </main>
+
+  <footer class="tp-doc-foot">
+    <span>司墨 simo · 任务体验原型 v3 · 不接真实数据</span>
+    <span>上一版保留：docs/design/task-prototype-v2-20261123.html</span>
+  </footer>
+</div>
+<script>
+(function () {
+  var screens = Array.prototype.slice.call(document.querySelectorAll('.tp-screen'));
+  var navs = Array.prototype.slice.call(document.querySelectorAll('[data-screen]'));
+  var current = 's1';
+
+  function show(id, push) {
+    if (!document.getElementById(id)) return;
+    screens.forEach(function (section) {
+      section.classList.toggle('is-active', section.id === id);
+    });
+    navs.forEach(function (item) {
+      var on = item.getAttribute('data-screen') === id;
+      item.classList.toggle('is-active', on);
+      if (on) { item.setAttribute('aria-current', 'page'); }
+      else { item.removeAttribute('aria-current'); }
+    });
+    current = id;
+    if (push) {
+      try { history.replaceState(null, '', '#' + id); } catch (err) { /* file:// 下忽略 */ }
+    }
+  }
+
+  function syncAllButton(panel) {
+    if (!panel) return;
+    var button = panel.querySelector('.tp-ov-all');
+    if (!button) return;
+    var folds = Array.prototype.slice.call(panel.querySelectorAll('.tp-fold'));
+    var anyOpen = folds.some(function (f) { return f.classList.contains('is-open'); });
+    button.textContent = anyOpen ? '全部收起' : '全部展开';
+  }
+
+  document.addEventListener('click', function (event) {
+    var target = event.target;
+    if (!target || !target.closest) return;
+
+    var nav = target.closest('[data-screen]');
+    if (nav) {
+      show(nav.getAttribute('data-screen'), true);
+      return;
+    }
+
+    var backdrop = target.closest('[data-modal-backdrop]');
+    if (backdrop && !target.closest('.tp-dialog')) {
+      show(backdrop.getAttribute('data-modal-backdrop'), true);
+      return;
+    }
+
+    var railButton = target.closest('.tp-rail-btn');
+    if (railButton) {
+      var shell = railButton.closest('.tp-shell');
+      if (railButton.classList.contains('is-current')) {
+        var collapsed = shell.classList.toggle('is-rail-collapsed');
+        railButton.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        return;
+      }
+      var goto = railButton.getAttribute('data-goto');
+      if (goto) show(goto, true);
+      return;
+    }
+
+    var collapseButton = target.closest('[data-rail-collapse]');
+    if (collapseButton) {
+      var host = collapseButton.closest('.tp-shell');
+      host.classList.add('is-rail-collapsed');
+      var active = host.querySelector('.tp-rail-btn.is-current');
+      if (active) active.setAttribute('aria-expanded', 'false');
+      return;
+    }
+
+    var foldButton = target.closest('.tp-fold-btn');
+    if (foldButton) {
+      var fold = foldButton.closest('.tp-fold');
+      var opened = fold.classList.toggle('is-open');
+      foldButton.setAttribute('aria-expanded', opened ? 'true' : 'false');
+      syncAllButton(fold.closest('.tp-panel'));
+      return;
+    }
+
+    var allButton = target.closest('.tp-ov-all');
+    if (allButton) {
+      var panel = allButton.closest('.tp-panel');
+      var folds = Array.prototype.slice.call(panel.querySelectorAll('.tp-fold'));
+      var anyOpen = folds.some(function (f) { return f.classList.contains('is-open'); });
+      folds.forEach(function (f) {
+        f.classList.toggle('is-open', !anyOpen);
+        var button = f.querySelector('.tp-fold-btn');
+        if (button) button.setAttribute('aria-expanded', anyOpen ? 'false' : 'true');
+      });
+      allButton.textContent = anyOpen ? '全部展开' : '全部收起';
+      return;
+    }
+
+    var stepRow = target.closest('.tp-step-row[data-expand]');
+    if (stepRow) {
+      var step = stepRow.closest('.tp-step');
+      var open = step.classList.toggle('is-open');
+      stepRow.setAttribute('aria-expanded', open ? 'true' : 'false');
+      return;
+    }
+
+    var gotoElement = target.closest('[data-goto]');
+    if (gotoElement) {
+      show(gotoElement.getAttribute('data-goto'), true);
+    }
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && current === 's8') {
+      show('s3', true);
+      return;
+    }
+    var tag = event.target && event.target.tagName ? event.target.tagName.toLowerCase() : '';
+    if (tag === 'input' || tag === 'textarea') return;
+    if (/^[1-9]$/.test(event.key) && !event.metaKey && !event.ctrlKey && !event.altKey) {
+      show('s' + event.key, true);
+      return;
+    }
+    var active = event.target;
+    if ((event.key === 'Enter' || event.key === ' ') && active && active.matches && active.matches('[data-goto][role="button"], .tp-step-row[data-expand], .tp-dag-node[data-goto]')) {
+      event.preventDefault();
+      active.click();
+    }
+  });
+
+  var hash = (location.hash || '').replace('#', '');
+  show(/^s[1-9]$/.test(hash) ? hash : 's1', false);
+})();
+</script>
+</body>
+</html>

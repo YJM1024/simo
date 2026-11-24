@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "kind": "simo.task-fixture",
+  "name": "deadline-1m",
+  "description": "T1 无截止时间、T2 为生成时刻后 60 秒，验证时限提醒与无时限任务不受影响。",
+  "usage": "在生成后尽快 POST 两次 N1；重放时按 rebase.deadlineAtFromNowMs 只重算 T2 的 deadlineAt。",
+  "generatedAt": "2026-11-24T10:09:57.647Z",
+  "generatedBy": "scripts/ac/lib/task-fixtures.mjs",
+  "rebase": {
+    "deadlineAtFromNowMs": 60000
+  },
+  "sessions": [
+    {
+      "id": "s1",
+      "createSession": false,
+      "requests": [
+        {
+          "label": "deadline-1m-create-t1",
+          "request": {
+            "mode": "plan",
+            "goal": "验证无 deadlineAt 的任务不会被时限提醒。",
+            "inputs": [
+              "上周的指标快照：新增会话 1280、消息 9640、平均首响 1.8 秒。",
+              "目标：把平均首响压到 1.2 秒以内。",
+              "T1 不设截止时间。"
+            ],
+            "constraints": [
+              "T1 在 90 秒观察窗口内状态不变、无提醒。"
+            ],
+            "tasks": [
+              {
+                "key": "t1",
+                "title": "无时限任务：持续观察",
+                "mode": "plan",
+                "goal": "持续观察材料，不设截止时间。",
+                "steps": [
+                  "读取材料",
+                  "记录观察"
+                ],
+                "joinMode": "all"
+              }
+            ],
+            "clientMutationId": "fx-deadline-1m-t1"
+          }
+        },
+        {
+          "label": "deadline-1m-create-t2",
+          "request": {
+            "mode": "plan",
+            "goal": "验证 deadlineAt 的时限约束。",
+            "inputs": [
+              "上周的指标快照：新增会话 1280、消息 9640、平均首响 1.8 秒。",
+              "目标：把平均首响压到 1.2 秒以内。",
+              "T2 截止时间等于生成时刻加 60 秒。"
+            ],
+            "constraints": [
+              "到点只发一条提醒，任务状态仍为 running。"
+            ],
+            "tasks": [
+              {
+                "key": "t2",
+                "title": "限时任务：一分钟内给出摘要",
+                "mode": "plan",
+                "goal": "一分钟内给出三条结论。",
+                "steps": [
+                  "读取材料",
+                  "写出三条结论"
+                ],
+                "joinMode": "all"
+              }
+            ],
+            "deadlineAt": 1795515057647,
+            "clientMutationId": "fx-deadline-1m-t2"
+          }
+        }
+      ],
+      "expect": {
+        "accepted": 2,
+        "deadlineOffsetMs": 60000,
+        "deadlineRule": "deadlineAt > 当前时刻"
+      }
+    }
+  ],
+  "expect": {
+    "notes": [
+      "T1 不带 deadlineAt，T2 带 now+60s；重放时只把 T2 的 deadlineAt 改为当前时刻加 60 秒。"
+    ]
+  }
+}
