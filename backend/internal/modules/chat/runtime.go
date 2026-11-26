@@ -13,6 +13,7 @@ import (
 	"time"
 
 	coretask "simo/internal/core/task"
+	"simo/internal/platform/clock"
 	"simo/internal/platform/httpserver"
 )
 
@@ -53,7 +54,7 @@ func (m *Module) runtimeNow() time.Time {
 	if cfg.FakeNowMs > 0 {
 		return time.UnixMilli(cfg.FakeNowMs)
 	}
-	return time.Now()
+	return clock.Now()
 }
 
 func (m *Module) startRuntime(ctx context.Context) {

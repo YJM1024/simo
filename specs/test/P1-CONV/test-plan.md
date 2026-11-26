@@ -3,11 +3,12 @@
 | 项目 | 值 |
 |---|---|
 | 域 | P1-CONV（会话 / 对话 / 同步 / 右栏投影） |
+| 状态 | 已验收（2026-11-26；验收报告 [`ACCEPT-CONV-007-R5`](../../../docs/testing/ACCEPT-CONV-007-R5-20261126.md)，结论 pass） |
 | 产品来源 | [`specs/product/P1-CONV/spec.md`](../../product/P1-CONV/spec.md)（2026-11-21 行为级重写） |
 | 变更来源 | [`specs/changes/CHG-CONV-006/`](../../changes/CHG-CONV-006/)（20 卡，W1–W5） |
 | 本文件性质 | 长期测试 Spec；随产品 spec 增量维护，不按变更单另开测试文件 |
 | 覆盖 AC | **51 条**（CONV-001..008、SYNC-001..004、CONV-009；原 SYNC-005 2 条已随 PRD 移除，编号不复用）；`AC-CONV-002-03` 已移出验收面（产品非目标 + backlog）；2026-11-22 新增 `AC-CONV-001-05`、`AC-CONV-008-05`，由 TC-035、TC-036 承接；2026-11-23 并入 `AC-CONV-009-01..18` 共 18 条，由 TC-037..054 承接 |
-| 当前状态汇总 | pass 33 / partial 0 / missing 18 / blocked 0（共 51 条；18 条 `AC-CONV-009-01..18` 只有 TC 与判据、断言脚本未建，记 `missing`；2026-11-22 第十轮后收口：`AC-CONV-006-02` 由 IME 证据转 pass，`AC-CONV-005-02` 改按“停止帧后上游 context 取消、不再派发 delta、不落库、回 idle”的机制判据转 pass（`stop_upstream_test.go`，真实厂商 403 只记环境限制）；002-03 移出后不计入；原 SYNC-005 两条 blocked 已移除） |
+| 当前状态汇总 | pass 51 / partial 0 / missing 0 / blocked 0（共 51 条；18 条 `AC-CONV-009-01..18` 的断言脚本已于 2026-11-26 全部建成并实跑 `pass`，断言 367 条；2026-11-22 第十轮后收口：`AC-CONV-006-02` 由 IME 证据转 pass，`AC-CONV-005-02` 改按“停止帧后上游 context 取消、不再派发 delta、不落库、回 idle”的机制判据转 pass（`stop_upstream_test.go`，真实厂商 403 只记环境限制）；002-03 移出后不计入；原 SYNC-005 两条 blocked 已移除） |
 | 最近核对 | 2026-11-22 19:01–19:35（Asia/Shanghai，第十轮严格验收 `ACCEPT-CONV-10`，工作树 `E:\dsh_home\workspaces\agent`）；基线：被测实例 `backend/simo-8787-final10.exe`、buildId `mwrpos0p-d8dkh`、`SIMO_HOME=data`；前端全量 `node node_modules/vitest/vitest.mjs run --pool=threads` = 25 文件 / 260 用例（默认 5 s 超时下 `RightPanelRail.cdp.test.tsx:209` 超时，加 `--testTimeout=20000` 后 25/25、260/260 通过、24.43 s、exit 0）；后端全量 `toolchain\go.ps1 test ./... -count=1` exit 0，26 包 16 ok / 10 无测试文件 / 0 FAIL（`cmd/simo` 259.609 s、`chat` 9.018 s，含 `stop_upstream_test.go`）；B1 回退 grep 六项全 0；`GET /` buildId 与 `frontend/dist`、`backend/internal/webui/dist` 三处字节全等 |
 | 维护者 | 测试 Agent（本文件）；验收 Agent 复核证据 |
 
@@ -125,7 +126,7 @@
 
 ## 1. AC → TC 映射矩阵
 
-> 51 条 AC 全覆盖（原 SYNC-005 两条已随 PRD 移除，编号不复用）：33 条生效，18 条 `AC-CONV-009-01..18` 只有 TC 映射、断言脚本待建，全部记 `missing`。`AC-CONV-002-03`（删除会话）经产品裁决移出验收面（显式非目标 + backlog），本表不设行、不设 TC、不计缺口、不计状态。`TC-P1-CONV-NNN` 为稳定编号（既有编号按 AC 在产品 spec 中的出现顺序），负路径用 `-N` 后缀，不改变主编号；因此 007 号保留但不再承载 AC（不重排、不复用）。2026-11-22 新增的 `AC-CONV-001-05`、`AC-CONV-008-05` 追加为 035/036，不回填、不重排既有编号；2026-11-23 并入的 `AC-CONV-009-01..18` 追加为 037..054，同样不回填、不重排。
+> 51 条 AC 全覆盖（原 SYNC-005 两条已随 PRD 移除，编号不复用）：51 条生效，18 条 `AC-CONV-009-01..18` 的断言脚本已于 2026-11-26 全部建成并实跑 `pass`（断言 367 条）。`AC-CONV-002-03`（删除会话）经产品裁决移出验收面（显式非目标 + backlog），本表不设行、不设 TC、不计缺口、不计状态。`TC-P1-CONV-NNN` 为稳定编号（既有编号按 AC 在产品 spec 中的出现顺序），负路径用 `-N` 后缀，不改变主编号；因此 007 号保留但不再承载 AC（不重排、不复用）。2026-11-22 新增的 `AC-CONV-001-05`、`AC-CONV-008-05` 追加为 035/036，不回填、不重排既有编号；2026-11-23 并入的 `AC-CONV-009-01..18` 追加为 037..054，同样不回填、不重排。
 
 | # | AC | TC | 类型 | 自动化位置（`文件:行` 或 `缺失`） | 状态 | 证据 |
 |---|---|---|---|---|---|---|
@@ -162,24 +163,34 @@
 | 31 | AC-CONV-008-04 | TC-P1-CONV-034 | http/component/真机 | `backend/internal/modules/sessions/spec_projection_etag_test.go:67`（Stable）、`:97`（NotModified）、`:145`（TracksTaskChange）、`:182`（TracksDeliverables）、`:207`（DistinguishesTaskLimit）；`backend/internal/modules/sessions/etag_test.go:80`、`:101`、`:139`、`:185`（列表 ETag 四条）；`backend/internal/modules/sessions/spec_projection.go:127-141`（设 ETag/Cache-Control，命中回 304）、`:144-162`（`projectionETag` 含 `taskLimit` 与投影，形如 `"spec-<16 hex>"`）；`backend/cmd/simo/m75_spec_projection_test.go:23`、`:71`（投影内容/limit/404，无 ETag 断言）；`frontend/src/api.ts:337-360`（发 `If-None-Match`；304 先于 200 分支，返回缓存投影 + `notModified:true`）、`:300-306`（缓存键含 `taskLimit`，上限 8）；`frontend/src/app.tsx:423-438`（304 时保留当前数据，不清空、不进错误态）；`frontend/src/api.test.ts:244`（304 不抛错并返回缓存）、`:260`（taskLimit=3/50 各自 ETag、交替 304 不覆盖）、`:282`（`cache=false` 不写缓存）、`:290`（500 仍抛错）、`:295`（LRU 淘汰）；`frontend/src/App.conversation.test.tsx:633`（304 保留搜索行与 active） | pass | E-BE（285 PASS，含投影 ETag 五条）/ E-FE 242（`.tmp/accept8/frontend-all.log`，`api.test.ts:244/:260`、`App.conversation.test.tsx:633` 均执行）；304 空体且保留 ETag/Cache-Control；**真机 304 本轮补齐**：`http://127.0.0.1:8787/api/sessions/main/spec-projection?taskLimit=3` 首次 200、ETag `"spec-c5a2d772dd1d5d88"`（1375 B），带 `If-None-Match` 复请回 304（0 B）、ETag/`Cache-Control: no-cache` 保持；`taskLimit=50` 回 200、ETag `"spec-e217d5acfbc1ba18"`（1815 B）；脚本 `.tmp/accept8/304-live.cjs`、日志 `.tmp/accept8/304-live.log`、结果 `.tmp/accept8/304-live.json`；浏览器内 304 触发的视觉不闪空仍沿用 jsdom 断言（未单独录屏） |
 | 32 | AC-CONV-001-05 | TC-P1-CONV-035 | component/integration/http | `frontend/src/components/Sidebar.test.tsx:53`、`:306`；`frontend/src/App.integration.test.tsx:222`、`:244`；`frontend/src/components/library.tsx:161`；`frontend/src/types.ts:16`；`frontend/src/app.tsx:879`；`backend/internal/modules/sessions/counts.go:16`；`backend/internal/modules/sessions/view.go:12`；`backend/internal/modules/sessions/message_count_test.go`（4 条） | pass | E-FE 23 文件（21 passed / 2 skipped）/ 226 pass + 6 skip（2026-11-22 12:15）；HTTP 原文 `.tmp/conv6-sessions.raw.json`（`main.messageCount=75`、15 会话求和 209）；E-BE 285 PASS（含 `message_count_test.go` 四条）；截图 `docs/testing/accept-conv4-fix-20261122-before.png`/`-after.png` 为迁移前历史证据 |
 | 33 | AC-CONV-008-05 | TC-P1-CONV-036 | component/integration/CDP | `frontend/src/components/RightPanel.test.tsx:59`；`frontend/src/App.integration.test.tsx:262`；`frontend/src/components/library.tsx:1001`（`ExecutionGroup` 组头 `{shown}/{totalCount}` 与补取条件）；`frontend/src/app.tsx:424-457`（`loadRight` / `expandRightGroup`）；`frontend/src/App.integration.test.tsx:289`（`pending.total=4/items=3` 展开补到 `4/4`）、`:315`（补取 500 → “右栏加载失败” + “重试” → 重试再次请求 → 再展开恢复 `6/6`） | pass | E-FE 2026-11-22 12:39：App.integration 13/13、RightPanel 10/10；G18 原两项（`pending=4/items=3` 补取、补取失败重试）已由组件/集成断言覆盖；E-ACC5（`docs/testing/ACCEPT-CONV-5-20261122.md`，2026-11-22）：首屏 done 3/6、pending 3/4；展开 done 只发 1 次 `taskLimit=50` → 6/6 六行；展开 pending → 4/4 四行；折叠回 3/6 只 3 行；拦截 500 显示“右栏加载失败 请求失败（500），请稍后重试”并可重试；撤注入重试回 3/6、再展开 6/6；CDP 沿用 02:09（`.tmp/conv4-after.json`）；组件级负断言（补取失败时错误态与已加载列表同时可读）仍缺，记 G18 |
-| 34 | AC-CONV-009-01 | TC-P1-CONV-037 | 组件/接口/集成/端到端 | 缺失（计划 `scripts/ac/AC-CONV-009-01.mjs`） | missing | 未跑；断言脚本与夹具待建，见 §18.4 |
-| 35 | AC-CONV-009-02 | TC-P1-CONV-038 | 组件/接口/集成 | 缺失（计划 `scripts/ac/AC-CONV-009-02.mjs`） | missing | 未跑；断言脚本与夹具待建，见 §18.4 |
-| 36 | AC-CONV-009-03 | TC-P1-CONV-039 | 组件/接口/集成 | 缺失（计划 `scripts/ac/AC-CONV-009-03.mjs`） | missing | 未跑；断言脚本与夹具待建，见 §18.4 |
-| 37 | AC-CONV-009-04 | TC-P1-CONV-040 | 组件/接口/集成 | 缺失（计划 `scripts/ac/AC-CONV-009-04.mjs`） | missing | 未跑；断言脚本与夹具待建，见 §18.4 |
-| 38 | AC-CONV-009-05 | TC-P1-CONV-041 | 组件/接口/集成 | 缺失（计划 `scripts/ac/AC-CONV-009-05.mjs`） | missing | 未跑；断言脚本与夹具待建，见 §18.4 |
-| 39 | AC-CONV-009-06 | TC-P1-CONV-042 | 组件/接口/集成 | 缺失（计划 `scripts/ac/AC-CONV-009-06.mjs`） | missing | 未跑；断言脚本与夹具待建，见 §18.4 |
-| 40 | AC-CONV-009-07 | TC-P1-CONV-043 | 组件/接口/端到端 | 缺失（计划 `scripts/ac/AC-CONV-009-07.mjs`） | missing | 未跑；断言脚本与夹具待建，见 §18.4 |
-| 41 | AC-CONV-009-08 | TC-P1-CONV-044 | 组件/接口/端到端 | 缺失（计划 `scripts/ac/AC-CONV-009-08.mjs`） | missing | 未跑；断言脚本与夹具待建，见 §18.4 |
-| 42 | AC-CONV-009-09 | TC-P1-CONV-045 | 组件/接口/端到端 | 缺失（计划 `scripts/ac/AC-CONV-009-09.mjs`） | missing | 未跑；断言脚本与夹具待建，见 §18.4 |
-| 43 | AC-CONV-009-10 | TC-P1-CONV-046 | 组件/端到端 | 缺失（计划 `scripts/ac/AC-CONV-009-10.mjs`） | missing | 未跑；断言脚本与夹具待建，见 §18.4 |
-| 44 | AC-CONV-009-11 | TC-P1-CONV-047 | 组件/端到端 | 缺失（计划 `scripts/ac/AC-CONV-009-11.mjs`） | missing | 未跑；断言脚本与夹具待建，见 §18.4 |
-| 45 | AC-CONV-009-12 | TC-P1-CONV-048 | 组件/接口/端到端 | 缺失（计划 `scripts/ac/AC-CONV-009-12.mjs`） | missing | 未跑；断言脚本与夹具待建，见 §18.4 |
-| 46 | AC-CONV-009-13 | TC-P1-CONV-049 | 组件/接口/端到端 | 缺失（计划 `scripts/ac/AC-CONV-009-13.mjs`） | missing | 未跑；断言脚本与夹具待建，见 §18.4 |
-| 47 | AC-CONV-009-14 | TC-P1-CONV-050 | 组件/接口/集成 | 缺失（计划 `scripts/ac/AC-CONV-009-14.mjs`） | missing | 未跑；断言脚本与夹具待建，见 §18.4 |
-| 48 | AC-CONV-009-15 | TC-P1-CONV-051 | 组件/接口/集成 | 缺失（计划 `scripts/ac/AC-CONV-009-15.mjs`） | missing | 未跑；断言脚本与夹具待建，见 §18.4 |
-| 49 | AC-CONV-009-16 | TC-P1-CONV-052 | 组件/接口/集成 | 缺失（计划 `scripts/ac/AC-CONV-009-16.mjs`） | missing | 未跑；断言脚本与夹具待建，见 §18.4 |
-| 50 | AC-CONV-009-17 | TC-P1-CONV-053 | 组件/接口/端到端 | 缺失（计划 `scripts/ac/AC-CONV-009-17.mjs`） | missing | 未跑；断言脚本与夹具待建，见 §18.4 |
-| 51 | AC-CONV-009-18 | TC-P1-CONV-054 | 组件/接口/集成 | 缺失（计划 `scripts/ac/AC-CONV-009-18.mjs`） | missing | 未跑；断言脚本与夹具待建，见 §18.4 |
+| 34 | AC-CONV-009-01 | TC-P1-CONV-037 | 组件/接口/集成/端到端 | `scripts/ac/AC-CONV-009-01.mjs` | pass | 2026-11-26 T06 实测 25/25：单任务创建、消息卡与 counts、幂等与 404/413 负例；证据 `.tmp/ac/AC-CONV-009-01.json` |
+| 35 | AC-CONV-009-02 | TC-P1-CONV-038 | 组件/接口/集成 | `scripts/ac/AC-CONV-009-02.mjs` | pass | 2026-11-26 实测 33/33：接口 17（批量只写 1 条卡片消息、10+2 分页）+ 界面 16（汇总卡、展开 12 行）；证据 `.tmp/ac/AC-CONV-009-02.json` |
+| 36 | AC-CONV-009-03 | TC-P1-CONV-039 | 组件/接口/集成 | `scripts/ac/AC-CONV-009-03.mjs` | pass | 2026-11-26 实测 16/16：20 条历史下 historyCount=0、goal 1、constraints≥1、traceLimit 400；证据 `.tmp/ac/AC-CONV-009-03.json` |
+| 37 | AC-CONV-009-04 | TC-P1-CONV-040 | 组件/接口/集成 | `scripts/ac/AC-CONV-009-04.mjs` | pass | 2026-11-26 实测 12/12：成功调用 1 次、越权 observe 403 1 条、任务 done；证据 `.tmp/ac/AC-CONV-009-04.json` |
+| 38 | AC-CONV-009-05 | TC-P1-CONV-041 | 组件/接口/集成 | `scripts/ac/AC-CONV-009-05.mjs` | pass | 2026-11-26 实测 18/18：8 步、第 6 步默认展开、第 5 步可回看、第 7 步无入口；证据 `.tmp/ac/AC-CONV-009-05.json` |
+| 39 | AC-CONV-009-06 | TC-P1-CONV-042 | 组件/接口/集成 | `scripts/ac/AC-CONV-009-06.mjs` | pass | 2026-11-26 实测 12/12：explore 14 行时间线、步骤节点 0、最后一行当前；证据 `.tmp/ac/AC-CONV-009-06.json` |
+| 40 | AC-CONV-009-07 | TC-P1-CONV-043 | 组件/接口/端到端 | `scripts/ac/AC-CONV-009-07.mjs` | pass | 2026-11-26 实测 33/33：四态详情可开、只读入口 0、关闭与焦点归还；证据 `.tmp/ac/AC-CONV-009-07.json` |
+| 41 | AC-CONV-009-08 | TC-P1-CONV-044 | 组件/接口/端到端 | `scripts/ac/AC-CONV-009-08.mjs` | pass | 2026-11-26 实测 16/16：320/280/40、三标签、收起与刷新保持；证据 `.tmp/ac/AC-CONV-009-08.json` |
+| 42 | AC-CONV-009-09 | TC-P1-CONV-045 | 组件/接口/端到端 | `scripts/ac/AC-CONV-009-09.mjs` | pass | 2026-11-26 实测 15/15：角标 0/2/11、9+、两位数节点 0；证据 `.tmp/ac/AC-CONV-009-09.json` |
+| 43 | AC-CONV-009-10 | TC-P1-CONV-046 | 组件/端到端 | `scripts/ac/AC-CONV-009-10.mjs` | pass | 2026-11-26 实测 13/13：折叠按会话记忆、刷新保持、换会话全展开；证据 `.tmp/ac/AC-CONV-009-10.json` |
+| 44 | AC-CONV-009-11 | TC-P1-CONV-047 | 组件/端到端 | `scripts/ac/AC-CONV-009-11.mjs` | pass | 2026-11-26 实测 9/9：「还有 9 个」落点 0–8px、500ms 复测 ≤1px；证据 `.tmp/ac/AC-CONV-009-11.json` |
+| 45 | AC-CONV-009-12 | TC-P1-CONV-048 | 组件/接口/端到端 | `scripts/ac/AC-CONV-009-12.mjs` | pass | 2026-11-26 实测 18/18：四筛选 11/2/1/3、选中态 1、切换回顶；证据 `.tmp/ac/AC-CONV-009-12.json` |
+| 46 | AC-CONV-009-13 | TC-P1-CONV-049 | 组件/接口/端到端 | `scripts/ac/AC-CONV-009-13.mjs` | pass | UI 层 16/16：8 节点四态、失败下游虚线、节点跳转；集成层按端到端层无页面记 skip；证据 `.tmp/ac/AC-CONV-009-13.json` |
+| 47 | AC-CONV-009-14 | TC-P1-CONV-050 | 组件/接口/集成 | `scripts/ac/AC-CONV-009-14.mjs` | pass | 2026-11-26 实测 17/17：all/any 各 1 次、each 3 次且 attempt=4、依赖负例 400；证据 `.tmp/ac/AC-CONV-009-14.json` |
+| 48 | AC-CONV-009-15 | TC-P1-CONV-051 | 组件/接口/集成 | `scripts/ac/AC-CONV-009-15.mjs` | pass | 2026-11-26 实测 34/34：取消后下游 pending、30s 0 启动、确认卡片 1 条；证据 `.tmp/ac/AC-CONV-009-15.json` |
+| 49 | AC-CONV-009-16 | TC-P1-CONV-052 | 组件/接口/集成 | `scripts/ac/AC-CONV-009-16.mjs` | pass | 2026-11-26 实测 46/46：3 文件字节=size、typeBadge、失败组空页；证据 `.tmp/ac/AC-CONV-009-16.json` |
+| 50 | AC-CONV-009-17 | TC-P1-CONV-053 | 组件/接口/端到端 | `scripts/ac/AC-CONV-009-17.mjs` | pass | 2026-11-26 实测 17/17：会话 B 三处 0、跨会话 404 不泄露；证据 `.tmp/ac/AC-CONV-009-17.json` |
+| 51 | AC-CONV-009-18 | TC-P1-CONV-054 | 组件/接口/集成 | `scripts/ac/AC-CONV-009-18.mjs` | pass | 2026-11-26 实测 17/17：测试时钟 rate=200，1 分钟提醒 1 条、30 分钟窗口不取消；证据 `.tmp/ac/AC-CONV-009-18.json` |
+| 52 | AC-CHG-CONV-007-01 | TC-P1-CONV-055 | 端到端 | `scripts/ac/AC-CHG-CONV-007-01.mjs` | pass | 2026-11-26 实测 14/14：只读消息流夹具，汇总卡 695ms 可见、详情 720×810、下载 3200B、三档无横溢；证据 `.tmp/ac/AC-CHG-CONV-007-01.json` |
+| 53 | AC-CHG-CONV-007-02 | TC-P1-CONV-056 | 集成 | `scripts/ac/AC-CHG-CONV-007-02.mjs` | pass | 2026-11-26 实测 14/14：失败任务 failReason、图节点同因、counts.failed=1、retry 后 task_id 不变；证据 `.tmp/ac/AC-CHG-CONV-007-02.json` |
+| 54 | AC-CHG-CONV-007-03 | TC-P1-CONV-057 | 集成 | `scripts/ac/AC-CHG-CONV-007-03.mjs` | pass | 2026-11-26 实测 52/52：下游 30s 0 启动、运行中下游 interrupted 不进 cancelled、链二构造成功；证据 `.tmp/ac/AC-CHG-CONV-007-03.json` |
+| 55 | AC-CHG-CONV-007-04 | TC-P1-CONV-058 | 集成 | `scripts/ac/AC-CHG-CONV-007-04.mjs` | pass | 2026-11-26 实测 15/15：越权 observe 403、会话 B 三处 0、跨会话 404；证据 `.tmp/ac/AC-CHG-CONV-007-04.json` |
+| 56 | AC-CHG-CONV-007-05 | TC-P1-CONV-059 | 组件/端到端 | `scripts/ac/AC-CHG-CONV-007-05.mjs` | pass | 2026-11-26 修复条件轮询后三遍全过（各 31 条）：768 首屏收起、点竖条 280 抽屉；证据 `.tmp/acc-fix-chg05/fixed-{1,2,3}.json` |
+| 57 | AC-CHG-CONV-007-06 | TC-P1-CONV-060 | 组件/端到端 | `scripts/ac/AC-CHG-CONV-007-06.mjs` | pass | 2026-11-26 实测 17/17：详情与任务图 role=dialog、失败节点 failed、虚线 1 条、写请求 0；证据 `.tmp/ac/AC-CHG-CONV-007-06.json` |
+| 58 | AC-CHG-CONV-007-07 | TC-P1-CONV-061 | 接口/组件 | `scripts/ac/AC-CHG-CONV-007-07.mjs` | pass | 2026-11-26 隔离环境连跑三遍（各 25 条）：汇总卡 1 张、四筛选 11/2/1/3；证据 `.tmp/chg-007-unblock/run-{1,2,3}.json` |
+| 59 | AC-CHG-CONV-007-08 | TC-P1-CONV-062 | 集成 | `scripts/ac/AC-CHG-CONV-007-08.mjs` | pass | 2026-11-26 实测 25/25：测试时钟，历史继承、会话隔离、1 分钟提醒与 30 分钟窗口；证据 `.tmp/ac/AC-CHG-CONV-007-08.json` |
+
+合计：产品判据 18 条 **pass 18 / skip 0 / fail 0**（367 条断言）；变更级判据 8 条 **pass 8 / skip 0 / fail 0**（193 条断言）；26 条合计 **pass 26 / skip 0 / fail 0**（560 条断言）。分层执行时集成层另记 9 pass / 1 skip（`AC-CONV-009-13`，214 条断言），端到端 T08 套件 24 pass / 0 fail / 3 skip。
 
 ### 1.1 转 pass 的证据分布（2026-11-21 23:10 / 23:33、2026-11-22 验收）
 
@@ -899,7 +910,7 @@ FAILED: 3 issue(s)
 <a id="tc-p1-conv-009"></a>
 ## 18. 任务与编排（PRD-CONV-009）
 
-本节按 `PRD-CONV-009` 的 18 条 AC 一条一 TC 展开，判据取产品 §4.6、设计 §17（`V-CONV-009-1..45`）、前端 §17（`F-CONV-009-01..30`）与后端 §17（N1–N9、8 状态机、3 类等待）。假上游 `scripts/ac/lib/mock-llm.mjs` 与 11 个夹具已落盘（见 §18.6），18 个断言脚本仍未创建，18 条全部 `missing`，没有实跑证据，不预先占位为 `pass`。
+本节按 `PRD-CONV-009` 的 18 条 AC 一条一 TC 展开，判据取产品 §4.6、设计 §17（`V-CONV-009-1..45`）、前端 §17（`F-CONV-009-01..30`）与后端 §17（N1–N9、8 状态机、3 类等待）。假上游 `scripts/ac/lib/mock-llm.mjs`、11 个夹具（见 §18.6）与 18 个断言脚本 `scripts/ac/AC-CONV-009-01.mjs` 至 `-18.mjs` 均已落盘，8 条变更级 AC 的脚本同期建成。2026-11-26 02:28–02:47 的 26 条验收批与 T06/T07 复跑后，18 条产品判据全部 `pass`，断言合计 367 条；`AC-CONV-009-13` 的 UI 层 16 条断言通过，集成层因无页面记 `skip`（依据见 §18.2 表下说明）。冻结口径见 `specs/contract/CONV/contract.md` 的 CT-CONV-521 至 CT-CONV-546，逐条证据见 `specs/changes/CHG-CONV-007/evidence.md` §1。
 
 ### 18.1 编号、通道与判定层
 
@@ -914,32 +925,34 @@ TC 编号接续 §2–§14 的最大号 `TC-P1-CONV-036`，用 `TC-P1-CONV-037..
 | 集成 | 真后端 + 隔离 `SIMO_HOME` + 本地假上游 | 编排时序、`trigger_count`/`attempt`、轨迹与步骤条数、下载字节、30 秒窗口 | 像素几何 |
 | 端到端 | 真浏览器 + 真后端（CDP 9224） | 320/280/40 与 90 顶距、0–8px 落点、刷新保持、真实点击与遮挡 | 后端字段全量（只抽查） |
 
-汇总：18 条 TC，四值计数 **pass 0 / partial 0 / missing 18 / blocked 0**；通道计数 组件 18 / 接口 16 / 集成 10 / 端到端 9（一条 TC 可挂多个通道）；判定层计数 组件 3 / 接口 4 / 集成 5 / 端到端 6。
+汇总：18 条 TC，四值计数 **pass 18 / partial 0 / missing 0 / blocked 0**，断言合计 367 条；通道计数 组件 18 / 接口 16 / 集成 10 / 端到端 9（一条 TC 可挂多个通道）；判定层计数 组件 3 / 接口 4 / 集成 5 / 端到端 6。集成层单独跑 10 条时为 9 pass / 1 skip（`AC-CONV-009-13`），214 条断言；8 条变更级 AC 全部 `pass`，断言合计 193 条。
 
-每条 TC 的断言脚本固定为 `scripts/ac/AC-CONV-009-NN.mjs`，脚本经 `scripts/ac/lib/harness.mjs` 的 `report()` 输出一行 JSON 并写证据文件 `.tmp/ac/AC-CONV-009-NN.json`（8KB 截断）。端到端的 9 条在 `scripts/ac/manifest.json` 标 `"group":"cdp"`，由 `scripts/run-ac.mjs` 串行执行；其余按文件名推断为 `http` 组并行，单任务脚本需要 exclusive 资源时在伴随清单里标 `{"group":"http","exclusive":true}`。
+每条 TC 的断言脚本固定为 `scripts/ac/AC-CONV-009-NN.mjs`，脚本经 `scripts/ac/lib/harness.mjs` 的 `report()` 输出一行 JSON 并写证据文件 `.tmp/ac/AC-CONV-009-NN.json`（8KB 截断）。分组登记在 `scripts/ac/groups.json`：`ui` 组 11 条走 CDP 串行，`backend` 与 `backend-tools` 组由 `scripts/run-ac.mjs` 起隔离后端起共享批，时间类两条（`AC-CONV-009-18`、`AC-CHG-CONV-007-08`）走 `backend-clock` 单脚本模式；未登记的脚本按单脚本模式执行。
 
 ### 18.2 TC 与 AC 矩阵
 
 | TC | AC | 主题 | 通道 | 判定层 | 断言脚本 | 状态 |
 |---|---|---|---|---|---|---|
-| TC-P1-CONV-037 | `AC-CONV-009-01` | 单任务卡片、计数 +1、查看任务打开只读详情 | 组件/接口/集成/端到端 | 接口 | `scripts/ac/AC-CONV-009-01.mjs` | `missing` |
-| TC-P1-CONV-038 | `AC-CONV-009-02` | 批量 10 条只 1 张汇总卡、12 条时 10 + 「还有 2 条」 | 组件/接口/集成 | 集成 | `scripts/ac/AC-CONV-009-02.mjs` | `missing` |
-| TC-P1-CONV-039 | `AC-CONV-009-03` | 20 条历史仍 `historyCount=0`、goal 1、constraints ≥1 | 组件/接口/集成 | 接口 | `scripts/ac/AC-CONV-009-03.mjs` | `missing` |
-| TC-P1-CONV-040 | `AC-CONV-009-04` | 工具成功 1 次、越权 403 观察 1 条 | 组件/接口/集成 | 集成 | `scripts/ac/AC-CONV-009-04.mjs` | `missing` |
-| TC-P1-CONV-041 | `AC-CONV-009-05` | 8 步第 6 步展开、第 5 可回看、第 7 无入口 | 组件/接口/集成 | 组件 | `scripts/ac/AC-CONV-009-05.mjs` | `missing` |
-| TC-P1-CONV-042 | `AC-CONV-009-06` | 边做边想 14 行扁平时间线、步骤节点 0 | 组件/接口/集成 | 接口 | `scripts/ac/AC-CONV-009-06.mjs` | `missing` |
-| TC-P1-CONV-043 | `AC-CONV-009-07` | 四态详情均可开、只读写入口 0、关闭 1 | 组件/接口/端到端 | 组件 | `scripts/ac/AC-CONV-009-07.mjs` | `missing` |
-| TC-P1-CONV-044 | `AC-CONV-009-08` | 右栏 320/280/40、三图标、详情打开时右栏可点 | 组件/接口/端到端 | 端到端 | `scripts/ac/AC-CONV-009-08.mjs` | `missing` |
-| TC-P1-CONV-045 | `AC-CONV-009-09` | 角标 0/2/11、两位数字节点 0 | 组件/接口/端到端 | 组件 | `scripts/ac/AC-CONV-009-09.mjs` | `missing` |
-| TC-P1-CONV-046 | `AC-CONV-009-10` | 折叠按会话记忆、刷新保持、另一会话全展开 | 组件/端到端 | 端到端 | `scripts/ac/AC-CONV-009-10.mjs` | `missing` |
-| TC-P1-CONV-047 | `AC-CONV-009-11` | 「还有 9 个」跳任务标签、首行距滚动口顶 0–8px | 组件/端到端 | 端到端 | `scripts/ac/AC-CONV-009-11.mjs` | `missing` |
-| TC-P1-CONV-048 | `AC-CONV-009-12` | 四筛选 11/2/1/3、选中态 1 | 组件/接口/端到端 | 端到端 | `scripts/ac/AC-CONV-009-12.mjs` | `missing` |
-| TC-P1-CONV-049 | `AC-CONV-009-13` | 任务图 8 节点四态、失败下游虚线、节点跳转 | 组件/接口/端到端 | 端到端 | `scripts/ac/AC-CONV-009-13.mjs` | `missing` |
-| TC-P1-CONV-050 | `AC-CONV-009-14` | 三种等待（all 1 / any 1 / each 3） | 组件/接口/集成 | 集成 | `scripts/ac/AC-CONV-009-14.mjs` | `missing` |
-| TC-P1-CONV-051 | `AC-CONV-009-15` | 取消级联、下游 30 秒内启动 0、确认 1 条 | 组件/接口/集成 | 集成 | `scripts/ac/AC-CONV-009-15.mjs` | `missing` |
-| TC-P1-CONV-052 | `AC-CONV-009-16` | 类型徽标、来源任务名、下载字节 = size | 组件/接口/集成 | 接口 | `scripts/ac/AC-CONV-009-16.mjs` | `missing` |
-| TC-P1-CONV-053 | `AC-CONV-009-17` | 会话 B 任务数 0、图节点 0、跨会话 404 | 组件/接口/端到端 | 端到端 | `scripts/ac/AC-CONV-009-17.mjs` | `missing` |
-| TC-P1-CONV-054 | `AC-CONV-009-18` | 30 分钟不自动取消、时限到点提醒 1 条 | 组件/接口/集成 | 集成 | `scripts/ac/AC-CONV-009-18.mjs` | `missing` |
+| TC-P1-CONV-037 | `AC-CONV-009-01` | 单任务卡片、计数 +1、查看任务打开只读详情 | 组件/接口/集成/端到端 | 接口 | `scripts/ac/AC-CONV-009-01.mjs` | pass（25 条断言） |
+| TC-P1-CONV-038 | `AC-CONV-009-02` | 批量 10 条只 1 张汇总卡、12 条时 10 + 「还有 2 条」 | 组件/接口/集成 | 集成 | `scripts/ac/AC-CONV-009-02.mjs` | pass（33 条断言） |
+| TC-P1-CONV-039 | `AC-CONV-009-03` | 20 条历史仍 `historyCount=0`、goal 1、constraints ≥1 | 组件/接口/集成 | 接口 | `scripts/ac/AC-CONV-009-03.mjs` | pass（16 条断言） |
+| TC-P1-CONV-040 | `AC-CONV-009-04` | 工具成功 1 次、越权 403 观察 1 条 | 组件/接口/集成 | 集成 | `scripts/ac/AC-CONV-009-04.mjs` | pass（12 条断言） |
+| TC-P1-CONV-041 | `AC-CONV-009-05` | 8 步第 6 步展开、第 5 可回看、第 7 无入口 | 组件/接口/集成 | 组件 | `scripts/ac/AC-CONV-009-05.mjs` | pass（18 条断言） |
+| TC-P1-CONV-042 | `AC-CONV-009-06` | 边做边想 14 行扁平时间线、步骤节点 0 | 组件/接口/集成 | 接口 | `scripts/ac/AC-CONV-009-06.mjs` | pass（12 条断言） |
+| TC-P1-CONV-043 | `AC-CONV-009-07` | 四态详情均可开、只读写入口 0、关闭 1 | 组件/接口/端到端 | 组件 | `scripts/ac/AC-CONV-009-07.mjs` | pass（33 条断言） |
+| TC-P1-CONV-044 | `AC-CONV-009-08` | 右栏 320/280/40、三图标、详情打开时右栏可点 | 组件/接口/端到端 | 端到端 | `scripts/ac/AC-CONV-009-08.mjs` | pass（16 条断言） |
+| TC-P1-CONV-045 | `AC-CONV-009-09` | 角标 0/2/11、两位数字节点 0 | 组件/接口/端到端 | 组件 | `scripts/ac/AC-CONV-009-09.mjs` | pass（15 条断言） |
+| TC-P1-CONV-046 | `AC-CONV-009-10` | 折叠按会话记忆、刷新保持、另一会话全展开 | 组件/端到端 | 端到端 | `scripts/ac/AC-CONV-009-10.mjs` | pass（13 条断言） |
+| TC-P1-CONV-047 | `AC-CONV-009-11` | 「还有 9 个」跳任务标签、首行距滚动口顶 0–8px | 组件/端到端 | 端到端 | `scripts/ac/AC-CONV-009-11.mjs` | pass（9 条断言） |
+| TC-P1-CONV-048 | `AC-CONV-009-12` | 四筛选 11/2/1/3、选中态 1 | 组件/接口/端到端 | 端到端 | `scripts/ac/AC-CONV-009-12.mjs` | pass（18 条断言） |
+| TC-P1-CONV-049 | `AC-CONV-009-13` | 任务图 8 节点四态、失败下游虚线、节点跳转 | 组件/接口/端到端 | 端到端 | `scripts/ac/AC-CONV-009-13.mjs` | pass（UI 16 条断言）；集成层 skip |
+| TC-P1-CONV-050 | `AC-CONV-009-14` | 三种等待（all 1 / any 1 / each 3） | 组件/接口/集成 | 集成 | `scripts/ac/AC-CONV-009-14.mjs` | pass（17 条断言） |
+| TC-P1-CONV-051 | `AC-CONV-009-15` | 取消级联、下游 30 秒内启动 0 且保持未开始、确认 1 条 | 组件/接口/集成 | 集成 | `scripts/ac/AC-CONV-009-15.mjs` | pass（34 条断言） |
+| TC-P1-CONV-052 | `AC-CONV-009-16` | 类型徽标、来源任务名、下载字节 = size | 组件/接口/集成 | 接口 | `scripts/ac/AC-CONV-009-16.mjs` | pass（46 条断言） |
+| TC-P1-CONV-053 | `AC-CONV-009-17` | 会话 B 任务数 0、图节点 0、跨会话 404 | 组件/接口/端到端 | 端到端 | `scripts/ac/AC-CONV-009-17.mjs` | pass（17 条断言） |
+| TC-P1-CONV-054 | `AC-CONV-009-18` | 30 分钟不自动取消、时限到点提醒 1 条 | 组件/接口/集成 | 集成 | `scripts/ac/AC-CONV-009-18.mjs` | pass（17 条断言） |
+
+合计：18 条产品判据 **pass 18 / skip 0 / fail 0**，断言 367 条；8 条变更级判据 **pass 8 / skip 0 / fail 0**，断言 193 条；两类合计 **pass 26 / skip 0 / fail 0**，断言 560 条。`skip` 只出现在分层执行：集成层 10 条为 9 pass / 1 skip（`AC-CONV-009-13` 属端到端层，集成层无页面，按既有规则 skip、0 断言、不计 pass，UI 层单跑 16/16）；端到端 T08 套件为 24 pass / 0 fail / 3 skip（375 档右栏 `display:none`，三项不可达）。
 
 ### 18.3 分层覆盖清单
 
@@ -962,7 +975,7 @@ TC 编号接续 §2–§14 的最大号 `TC-P1-CONV-036`，用 `TC-P1-CONV-037..
 - 判据：A1 消息 `role=agent`、`category=task`、`task_id=tasks[0].id` 的条件同时成立且只 1 条，`batch_id=batchId`，同批不写汇总卡（`article.msg-task-summary` 0 个）；A2 `counts.all` 由 0 变 1，`counts.pending` 与 `counts.running` 之和 = 1，事件到计数可见 ≤2s；A3 角标文本 = `counts.running`（1 个进行中显示 `1`），进行中归零后角标节点 0 个；A4 点击后 `data-tab="tasks"`，详情 `data-task-id` 与卡一致，`openTaskDetail` 调用次数 = 1，N3 请求 = 1 次；A5 点击前后任务 `status` 与 POST 次数差 0；A6 详情内重试/取消/编辑/删除/确认/恢复按钮各 0。
 - 负路径：缺 `task_id` 的 `category=task` 消息按普通消息渲染（`msg-task-card` 0 个）；`counts.all=0` 时任务标签 `aria-disabled="true"`、点击后 `data-tab` 仍为 `overview`。
 - 断言脚本：`scripts/ac/AC-CONV-009-01.mjs`；证据：`.tmp/ac/AC-CONV-009-01.json`、`.tmp/chg-conv-007/`、`docs/testing/CHG-CONV-007-E2E-20261123.md`。
-- 状态：`missing`。缺口 G20（真实模型条数与文案不可复现，A1 只用假上游固定脚本判定）。
+- 状态：pass（25 条断言，2026-11-26 实测）。缺口 G20（真实模型条数与文案不可复现，A1 只用假上游固定脚本判定）。
 
 #### TC-P1-CONV-038 · 批量 10 条只 1 张汇总卡、12 条时 10 + 「还有 2 条」（AC-CONV-009-02）
 
@@ -973,7 +986,7 @@ TC 编号接续 §2–§14 的最大号 `TC-P1-CONV-036`，用 `TC-P1-CONV-037..
 - 判据：A1 10 条批次只写 1 条 `category=task` 消息，`text` 为「已创建 10 个任务」，`task_id=tasks[0].id`，`batch_id` 非空，task 消息数 = 1 而不是 10；A2 汇总卡 1 个，折叠态显示「已创建 10 个任务」与「展开」按钮各 1；A3 展开后平铺 10 条，每条高 28±1，条目 `button` 与 `tabindex` 各 0 个；A4 12 条批次默认 10 条，`.task-summary-more` 文案「还有 2 条」（`total−10`），入口 1 个；A5 点「还有 2 条」后条目 12 条、入口 0 个，请求 `batchId` + `limit=100` 恰 1 次；A6 收起再展开回 10 条加 1 个入口；A7 `counts.all` 分别 10 与 12，`counts.done` 与 `status` 一致；A8 展开前后消息流 `scrollTop` 差 0。
 - 负路径：`limit=0` 与 `limit=101` 均返回 400 `invalid_task_limit`；`batchId` 非 `batch-<16 hex>` 时返回 400 `invalid_argument`；`limit=100` 仍不足时按 `hasMore` 续页，入口消失前不空转。
 - 断言脚本：`scripts/ac/AC-CONV-009-02.mjs`；证据：`.tmp/ac/AC-CONV-009-02.json`、`.tmp/chg-conv-007/batch-10.raw.json`。
-- 状态：`missing`。
+- 状态：pass（33 条断言，2026-11-26 实测）。
 
 #### TC-P1-CONV-039 · 20 条历史仍 `historyCount=0`、goal 1、constraints ≥1（AC-CONV-009-03）
 
@@ -984,7 +997,7 @@ TC 编号接续 §2–§14 的最大号 `TC-P1-CONV-036`，用 `TC-P1-CONV-037..
 - 判据：A1 `context.historyCount=0`（不是 20）；A2 `context.goal` 为 1 个字符串且长度 >0；A3 `context.constraints` 长度 2，`context.inputs` 长度 3；A4 DB `tasks.context_json` 的 `historyCount` 字段值为 0；A5 详情目标行 1 处、「历史消息 0 条」1 处、历史正文 0 处；A6 打开详情期间 `GET /api/sessions/{id}/messages` 计数 0；A7 重试后 `context_json` 与首次逐字节相等（不重新收集）。
 - 负路径：goal 2001 字返回 413 `task_context_too_large`；inputs 21 条与 constraints 21 条同为 413；413 后 `counts.all` 不变、不落任务行。
 - 断言脚本：`scripts/ac/AC-CONV-009-03.mjs`；证据：`.tmp/ac/AC-CONV-009-03.json`、`.tmp/chg-conv-007/history-20.raw.json`。
-- 状态：`missing`。缺口 G20（20 条历史由夹具构造，非真实长会话）。
+- 状态：pass（16 条断言，2026-11-26 实测）。缺口 G20（20 条历史由夹具构造，非真实长会话）。
 
 #### TC-P1-CONV-040 · 工具成功 1 次、越权 403 观察 1 条（AC-CONV-009-04）
 
@@ -995,7 +1008,7 @@ TC 编号接续 §2–§14 的最大号 `TC-P1-CONV-036`，用 `TC-P1-CONV-037..
 - 判据：A1 轨迹按 `seq` 升序，`category` 只取 think/action/observe；A2 成功调用恰 1 条 action（`tool="read_file"`）与 1 条 observe 结果；A3 越权产生 1 条 observe，`text` 以「403 」开头且含 `permission_denied`，无对应的成功 action；A4 任务 `status=done`（不是 failed），`fail_reason` 为空；A5 越权路径未写 `task_artifacts`（新增行数 0）；A6 每条轨迹 `text` 长度 ≤4000；A7 详情内越权观察渲染为普通「观察」行（类别 1 处），无额外图标或颜色类。
 - 负路径：白名单外工具（`run_shell`）返回 403 `permission_denied`，轨迹 `tool` 写工具名；执行器未装配时 N1 返回 503 `task_executor_unavailable`。
 - 断言脚本：`scripts/ac/AC-CONV-009-04.mjs`；证据：`.tmp/ac/AC-CONV-009-04.json`、`.tmp/chg-conv-007/traces-403.raw.json`。
-- 状态：`missing`。缺口 G20（真实模型的工具序列不确定）。
+- 状态：pass（12 条断言，2026-11-26 实测）。缺口 G20（真实模型的工具序列不确定）。
 
 #### TC-P1-CONV-041 · 8 步第 6 步展开、第 5 可回看、第 7 无入口（AC-CONV-009-05）
 
@@ -1006,7 +1019,7 @@ TC 编号接续 §2–§14 的最大号 `TC-P1-CONV-036`，用 `TC-P1-CONV-037..
 - 判据：A1 `li.task-step` 8 个，`data-status` 第 1–5 为 done、第 6 为 running、第 7–8 为 pending；A2 第 6 步头 `aria-expanded="true"`，展开区显示「轨迹 8 条 · 进行中」；A3 第 5 步头为 `button` 且默认 `aria-expanded="false"`，点击后 `true`、标题变「已归档 · 可收起」、展开区出现该步轨迹；A4 第 7 步的步骤头 `button.task-step-head` 0 个、`tabindex` 属性 0 个、`role="button"` 0 个，按 Enter 与 Space 后展开态集合不变；A5 步骤行最小高 30±1、左缩进 12±1、步间分隔 1px；A6 步骤名占 1 行，展开区最多 3 行。
 - 负路径：全部终态时展开最后一步、其余收起；当前步被手动收起后推进不再自动展开（`aria-expanded="true"` 集合不变）。
 - 断言脚本：`scripts/ac/AC-CONV-009-05.mjs`；证据：`.tmp/ac/AC-CONV-009-05.json`、`.tmp/chg-conv-007/steps-8.raw.json`。
-- 状态：`missing`。
+- 状态：pass（18 条断言，2026-11-26 实测）。
 
 #### TC-P1-CONV-042 · 边做边想 14 行扁平时间线、步骤节点 0（AC-CONV-009-06）
 
@@ -1017,7 +1030,7 @@ TC 编号接续 §2–§14 的最大号 `TC-P1-CONV-036`，用 `TC-P1-CONV-037..
 - 判据：A1 `task.mode="explore"`，`steps` 长度 0 且不报错误态；A2 时间线行数 14；A3 `li.task-step` 0 个、`.task-steps` 0 个、步骤展开入口 0 个、分组 0 个；A4 `data-trace-seq` 从 1 连续到 14，相邻 `at` 差 ≥0（单调不减）；A5 打开后最后一行底边不大于滚动口底边（完整可见），`.is-current` 1 个且落在最后一行；A6 行内「展开」按钮 0 个；A7 追加第 15 条后行数 15，原 14 行 DOM 节点引用不变（不重建）。
 - 负路径：explore 带 steps 提交返回 400 `invalid_task_mode`；时间线为空时文案「还没有循环轨迹」1 处；概览摘要降级为「边做边想」，卡面不渲染「14 条」（U-17-01）。
 - 断言脚本：`scripts/ac/AC-CONV-009-06.mjs`；证据：`.tmp/ac/AC-CONV-009-06.json`、`.tmp/chg-conv-007/explore-14.raw.json`。
-- 状态：`missing`。缺口 G20（14 条由假上游固定，真实模型条数不定）。
+- 状态：pass（12 条断言，2026-11-26 实测）。缺口 G20（14 条由假上游固定，真实模型条数不定）。
 
 #### TC-P1-CONV-043 · 四态详情均可开、只读写入口 0、关闭 1（AC-CONV-009-07）
 
@@ -1028,7 +1041,7 @@ TC 编号接续 §2–§14 的最大号 `TC-P1-CONV-036`，用 `TC-P1-CONV-037..
 - 判据：A1 四态详情都能打开，`data-task-id` 与来源行一致，四种状态各 1 次；A2 重试/取消/编辑/删除/确认/恢复按钮各 0 个（文本与 `role` 双查）；A3 表单控件 0 个；A4 打开到关闭期间 POST/PUT/PATCH/DELETE 请求 0 次；A5 关闭按钮恰 1 个、24×24±1、`aria-label="关闭任务详情"`；A6 `role="dialog"`、`aria-modal="true"`、`aria-labelledby` 指向任务名；A7 Esc 关闭 1 次生效，关闭后 `task-detail` 节点 0 个，焦点等于触发按钮；A8 `inert` 只加中栏与侧栏根，`aside.inspector` 无 `inert`。
 - 负路径：详情 404 显示「任务不存在或已被移除」与「关闭」，服务端细节 0 处，自动重试 0 次（GET 计数 1）。
 - 断言脚本：`scripts/ac/AC-CONV-009-07.mjs`；证据：`.tmp/ac/AC-CONV-009-07.json`、`.tmp/chg-conv-007/detail-readonly.raw.json`。
-- 状态：`missing`。
+- 状态：pass（33 条断言，2026-11-26 实测）。
 
 #### TC-P1-CONV-044 · 右栏 320/280/40、三图标、详情打开时右栏可点（AC-CONV-009-08）
 
@@ -1039,7 +1052,7 @@ TC 编号接续 §2–§14 的最大号 `TC-P1-CONV-036`，用 `TC-P1-CONV-037..
 - 判据：A1 展开整栏 320±1，`.insp-body` 280±1，竖条 40±1，且 320 = 280 + 40（各差 ≤1）；A2 收起整栏 40±1，`data-collapsed="true"`，内容区 `hidden` 且 Tab 序中 0 个；A3 三按钮 `data-tab` 顺序 overview/tasks/deliverables，各 32×32±1、间距 4±1、图标 18×18±1，`aria-current="page"` 恰 1 个；A4 刷新后同会话仍收起（键值 `"1"`），另一会话首开 `data-collapsed="false"`；A5 展开/收起过渡 160ms（两帧宽度差采样，±20ms）；A6 详情打开时点竖条按钮 1 次即切 `data-tab`，详情仍在，右栏边界位移 0px；A7 768 档点竖条打开抽屉，抽屉宽 280±1（`min(280, 100vw−32)`）。
 - 负路径：`counts.all=0` 时任务按钮 `aria-disabled="true"`、点击不切标签、角标不渲染且按钮仍 32×32。
 - 断言脚本：`scripts/ac/AC-CONV-009-08.mjs`（`cdp` 组）；证据：`.tmp/ac/AC-CONV-009-08.json`、`docs/testing/CHG-CONV-007-E2E-20261123.md` 的 320/280/40 截图。
-- 状态：`missing`。
+- 状态：pass（16 条断言，2026-11-26 实测）。
 
 #### TC-P1-CONV-045 · 角标 0/2/11、两位数字节点 0（AC-CONV-009-09）
 
@@ -1050,7 +1063,7 @@ TC 编号接续 §2–§14 的最大号 `TC-P1-CONV-036`，用 `TC-P1-CONV-037..
 - 判据：A1 running=0 时 `span.insp-badge` 0 个、按钮宽 32±1（不占位）；A2 running=2 时角标文本「2」、节点 1 个、最小 14×14±1、`aria-hidden="true"`、字号 9.5±0.5、右上溢 3±1px；A3 running=11 时角标文本「9+」，两位数纯数字节点 0 个；A4 任务按钮 `aria-label` 含「2 个进行中」（2 档）与「9 个以上进行中」（11 档）；A5 `counts.all=0` 时 `aria-disabled="true"`，点击后 `data-tab` 不变；A6 切会话后 300ms 内角标换成新值，断线期间保持最后值、不归零。
 - 负路径：`counts` 请求失败时保留旧值（文本不变、不显示 0），恢复后 2s 内更新；`counts.all` 由 0 变正后 2s 内移除 `aria-disabled`。
 - 断言脚本：`scripts/ac/AC-CONV-009-09.mjs`；证据：`.tmp/ac/AC-CONV-009-09.json`。
-- 状态：`missing`。
+- 状态：pass（15 条断言，2026-11-26 实测）。
 
 #### TC-P1-CONV-046 · 折叠按会话记忆、刷新保持、另一会话全展开（AC-CONV-009-10）
 
@@ -1061,7 +1074,7 @@ TC 编号接续 §2–§14 的最大号 `TC-P1-CONV-036`，用 `TC-P1-CONV-037..
 - 判据：A1 四块 `data-block` 顺序 goal/input/tasks/deliverables，各 1 个；A2 收起 2 块后键内条目 2 个；A3 刷新后 `aria-expanded="false"` 2 个、`true` 2 个；A4 会话 B 首开四块全展开（`false` 0 个、键不存在）；A5 切回 A 仍 2 收起；A6 工具栏全部收起写同一份键（条目 4 个），与单块折叠互不覆盖；A7 右栏收起再展开后折叠键字节前后相等；A8 标题行高 40±1。
 - 负路径：`localStorage` 抛异常时退内存，刷新丢折叠态但无未捕获异常；键名限 `<sessionId>`，切会话不复用别的会话键。
 - 断言脚本：`scripts/ac/AC-CONV-009-10.mjs`（`cdp` 组）；证据：`.tmp/ac/AC-CONV-009-10.json`、刷新前后两帧截图。
-- 状态：`missing`。
+- 状态：pass（13 条断言，2026-11-26 实测）。
 
 #### TC-P1-CONV-047 · 「还有 9 个」跳任务标签、首行距滚动口顶 0–8px（AC-CONV-009-11）
 
@@ -1072,7 +1085,7 @@ TC 编号接续 §2–§14 的最大号 `TC-P1-CONV-036`，用 `TC-P1-CONV-037..
 - 判据：A1 文案「还有 9 个」（11−2），行高 28±1；A2 点击后 `data-tab="tasks"` 且筛选为「全部」；A3 目标行 = 概览排序里第一个未显示任务，`target.top − scroller.top ∈ [0, 8]`，500ms 复采仍在区间内，两次差 ≤1px；A4 `.is-jump-target` 1 个、`document.activeElement` 为目标行；A5 预取 `limit=50` 1 次，跳转期间额外 N2 = 0；A6 滚动口顶在视口顶下 174±1（1280 档）——该值只用于定位滚动口，不作落点零点。
 - 负路径：目标在第 2 页时先加载再滚，落点仍 ∈[0,8]；找不到目标时 `scrollTop` 变化 0；768 档滚动口顶 182±1，落点区间不变。
 - 断言脚本：`scripts/ac/AC-CONV-009-11.mjs`（`cdp` 组）；证据：`.tmp/ac/AC-CONV-009-11.json`、采样 JSON（两次时间戳与偏移）。
-- 状态：`missing`。jsdom 恒为 0，不做尺寸证据。
+- 状态：pass（9 条断言，2026-11-26 实测）。jsdom 恒为 0，不做尺寸证据。
 
 #### TC-P1-CONV-048 · 四筛选 11/2/1/3、选中态 1（AC-CONV-009-12）
 
@@ -1083,7 +1096,7 @@ TC 编号接续 §2–§14 的最大号 `TC-P1-CONV-036`，用 `TC-P1-CONV-037..
 - 判据：A1 四片文案「全部 11」「进行中 2」「失败 1」「已完成 3」，计数与 N2 `counts` 一致，0 也渲染；A2 `aria-pressed="true"` 恰 1 个；A3 点「进行中」后列表 2 条且只含 running 与等待确认，请求 `status=running&limit=50`；A4 点「失败」后 1 条，`status=failed`；A5 点「已完成」后 3 条，`status=done`；A6 每次切换列表 `scrollTop=0`，切换过渡 100ms（±30ms）；A7 刷新后筛选回默认「全部」，同一会话内切标签保持筛选；A8 筛选条 `role="group"`、`aria-label="任务筛选"`、吸顶高 40±1、下方 1px 分隔。
 - 负路径：`status=bogus` 返回 400 `invalid_task_status`；`limit=101` 返回 400 `invalid_task_limit`；空结果文案「没有符合条件的任务」。
 - 断言脚本：`scripts/ac/AC-CONV-009-12.mjs`（`cdp` 组）；证据：`.tmp/ac/AC-CONV-009-12.json`、四片截图各一张。
-- 状态：`missing`。
+- 状态：pass（18 条断言，2026-11-26 实测）。
 
 #### TC-P1-CONV-049 · 任务图 8 节点四态、失败下游虚线、节点跳转（AC-CONV-009-13）
 
@@ -1094,7 +1107,7 @@ TC 编号接续 §2–§14 的最大号 `TC-P1-CONV-036`，用 `TC-P1-CONV-037..
 - 判据：A1 入口高 28±1、文案「任务图」、任务数 0 时 `aria-disabled="true"`；A2 弹窗宽 920±1（窗宽 ≥984 时）、节点 8 个、四态各 ≥1；A3 节点 156×64±1，边 `stroke-width` 1.4±0.1px，起点失败的边 `data-style="dashed"`、虚线 4/3；A4 H 的 `data-status="pending"`、状态行「未开始 · 等待前置」，未被标失败；A5 点 H 后弹窗节点 0 个、详情打开、目标步 `target.top − scroller.top ∈ [0, 8]`、焦点在步骤行、任务 `status` 差 0、非 GET 请求 0；A6 21 节点最大层 5 分 2 行（首行 4、次行 1）；A7 `scrollWidth > clientWidth` 且 `scrollHeight > clientHeight`，缩放控件 0 个，`transform` 无 scale（固定 1.0）；A8 Esc 关闭、焦点回顶栏入口。
 - 负路径：`total=0` 空态「本会话还没有任务」；N8 500 显示「任务图加载失败」+重试+关闭，节点 0 个；<760 不渲染；760–1023 全屏、圆角 0。
 - 断言脚本：`scripts/ac/AC-CONV-009-13.mjs`（`cdp` 组）；证据：`.tmp/ac/AC-CONV-009-13.json`、`graph-8.png`、`graph-21.png`。
-- 状态：`missing`。缺口 G23（>20 节点布局依赖 N8 `layers` 与 DEC-29，实现未落地；分层与夹具不一致时该条只能降 `partial`）。
+- 状态：pass（UI 层 16 条断言，2026-11-26 实测；集成层 skip：本层无页面、按现有规则不计 pass，依据见 §18.2 表下说明）。缺口 G23（>20 节点布局依赖 N8 `layers` 与 DEC-29，实现未落地；分层与夹具不一致时该条只能降 `partial`）。
 
 #### TC-P1-CONV-050 · 三种等待（all 1 / any 1 / each 3）（AC-CONV-009-14）
 
@@ -1105,18 +1118,18 @@ TC 编号接续 §2–§14 的最大号 `TC-P1-CONV-036`，用 `TC-P1-CONV-037..
 - 判据：A1 all：B1 在 A1 done 之前的步骤启动 0 次、`waiting_reason="dependency"`、`trigger_count=0`；A1 done 后 B1 启动 1 次、`attempt=1`；A2 any：B2 在任一前置 done 后启动 1 次，其余前置继续跑完；A3 each：D3 `trigger_count=3`、`attempt` 递增 3 次、串行（同时在跑 ≤1）；A4 前置失败时等待方保持 pending + dependency，`trigger_count` 不变，失败计数不变，任务图该边 dashed；A5 等待确认：`status=running`、`waiting_reason="confirmation"`、当前步仍 running、后续步骤启动 0、确认与取消入口各 1、详情内 0；A6 等待资源：`waiting_reason="resource"`、`progress` 增量 0，恢复后从暂停步继续、已完成步不重跑；A7 三类等待 `waiting_since` 非 0，退出后清 0；A8 等待依赖 60 秒等价窗口内不失败、不取消（真 30 分钟见 G19）。
 - 负路径：同一等待方入边 joinMode 混合（all+any）返回 400 `invalid_task_dependency`；`dependsOn` 自依赖、环、跨批次同为 400；等待状态点「恢复」返回 409 `task_state_conflict`。
 - 断言脚本：`scripts/ac/AC-CONV-009-14.mjs`；证据：`.tmp/ac/AC-CONV-009-14.json`、`.tmp/chg-conv-007/chain-3.raw.json`。
-- 状态：`missing`。缺口 G19（30 分钟窗口用 60 秒等价夹具，未真跑满）。
+- 状态：pass（17 条断言，2026-11-26 实测）。缺口 G19（30 分钟窗口用 60 秒等价夹具，未真跑满）。
 
-#### TC-P1-CONV-051 · 取消级联、下游 30 秒内启动 0、确认 1 条（AC-CONV-009-15）
+#### TC-P1-CONV-051 · 取消级联、下游 30 秒内启动 0 且保持未开始、确认 1 条（AC-CONV-009-15）
 
 - 通道：组件、接口、集成；判定层：集成（30 秒窗口与启动计数）。
 - 前置：A 到 B 到 C 的依赖链（all），A running；`scope=self`、`scope=chain`、N6 取消三条路径各跑一轮。
 - 步骤：1) 取消 A（`scope=self`）；2) 观察 30 秒内 B/C；3) 重建链取消 A（`scope=chain`）；4) 再等 30 秒；5) 对等待确认任务点「取消」。
 - 观察点：A/B/C 的 `status`/`displayStatus`/`fail_reason`、`trigger_count`、步骤 `started_at`、`cancelled[]`、`changed`、消息流条数。
-- 判据：A1 self：A 为 failed、`fail_reason`「已取消」；B/C 30 秒内步骤启动 0 次、`trigger_count` 不变、状态仍 pending；A2 chain：同批未开始任务置 cancelled，运行中走中断，已完成不变，`cancelled[]` 按 `orderIndex` 升序；A3 取消响应 200 且 5 秒内 `changed=true`；终态再取消返回 200、`changed=false`、任务字段前后逐字段相等；A4 N6 取消：当前步 failed、任务 failed、`fail_reason`「用户取消」，下游启动 0；A5 消息流对应取消结果 1 条，不重复；A6 30 秒后 A 起点的任务图边 `data-style="dashed"`；A7 取消期间执行器未响应仍 200 且 `changed=false`。
+- 判据：A1 self：A 存储态为 `cancelled`、展示态为 failed、`fail_reason`「已取消」；B/C 30 秒内步骤启动 0 次、`trigger_count` 不变、状态仍 pending、`waiting_reason=dependency`；A2 chain：运行中的下游走中断（计入 `changed`、不进 `cancelled[]`、写中断轨迹），未开始的下游保持 pending 与 `waiting_reason=dependency` 且不转 cancelled，已完成不变，`cancelled[]` 只含被取消的目标并按 `orderIndex` 升序；A3 取消响应 200 且 5 秒内 `changed=true`；终态再取消返回 200、`changed=false`、任务字段前后逐字段相等；A4 N6 取消：当前步 failed、任务 failed、`fail_reason`「用户取消」，下游启动 0；A5 消息流对应取消结果 1 条，不重复；A6 30 秒后 A 起点的任务图边 `data-style="dashed"`；A7 取消期间执行器未响应仍 200 且 `changed=false`。
 - 负路径：`scope=bogus` 返回 400 `invalid_argument`；跨会话取消返回 404 `task_not_found`；取消已完成任务返回 200 `changed=false` 且状态仍 done。
 - 断言脚本：`scripts/ac/AC-CONV-009-15.mjs`；证据：`.tmp/ac/AC-CONV-009-15.json`、`.tmp/chg-conv-007/cancel-30s.raw.json`。
-- 状态：`missing`。缺口 G21（5 秒未响应分支与运行中步骤回 pending 需人为中断执行器）。
+- 状态：pass（34 条断言，2026-11-26 实测）。缺口 G21（5 秒未响应分支与运行中步骤回 pending 需人为中断执行器）。
 
 #### TC-P1-CONV-052 · 类型徽标、来源任务名、下载字节 = size（AC-CONV-009-16）
 
@@ -1127,7 +1140,7 @@ TC 编号接续 §2–§14 的最大号 `TC-P1-CONV-036`，用 `TC-P1-CONV-037..
 - 判据：A1 组按最近交付时间倒序，`taskTitle` 等于任务名；A2 `typeBadge` 三个分别为 doc、image、doc（`md`/`pdf` 归 doc、`png` 归 image），与扩展名映射一致；A3 下载字节逐一等于 `size`（12345 / 45678 / 890，精确相等），文件名与 `files[].name` 相同；A4 `downloadUrl` 含 `download=1`、`previewUrl` 不含；A5 文件行高 30±1、徽标 28×18±1、「打开」按钮命中 ≥32×24；A6 T2 组头保留、虚线说明「该任务没有产出交付物」1 处、按钮 0 个；A7 非 user_delivery 产物不出现（0 行）；A8 `fileCount=3`、`total` 等于组数。
 - 负路径：`limit=0` 与 `limit=101` 均返回 400 `invalid_task_limit`；跨会话 `taskId` 返回空页（不得 404 泄露存在性，按 N9 契约记空页）；`before` 不存在返回空页不是 404。
 - 断言脚本：`scripts/ac/AC-CONV-009-16.mjs`；证据：`.tmp/ac/AC-CONV-009-16.json`、三个文件的 sha256 与 `size` 对照表。
-- 状态：`missing`。缺口 G25（未知 mime 归 doc 未裁，夹具只用三类已知 mime）。
+- 状态：pass（46 条断言，2026-11-26 实测）。缺口 G25（未知 mime 归 doc 未裁，夹具只用三类已知 mime）。
 
 #### TC-P1-CONV-053 · 会话 B 任务数 0、图节点 0、跨会话 404（AC-CONV-009-17）
 
@@ -1138,7 +1151,7 @@ TC 编号接续 §2–§14 的最大号 `TC-P1-CONV-036`，用 `TC-P1-CONV-037..
 - 判据：A1 切 B 后 300ms 内任务卡 0 个、角标节点 0 个（`aria-disabled="true"`）、详情 0 个；A2 B 任务图 `total=0`、节点 0 个、空态「本会话还没有任务」1 处；A3 以 B 上下文请求 A 的 taskId 返回 404 `task_not_found`，响应体对 A 的标题、目标、步骤、轨迹字符串命中 0 次，状态码不是 403；A4 A 的 `GET .../tasks` 在 B 上下文 404，响应不含 `counts`；A5 B 概览「还没有任务」与「还没有交付物」各 1 处；A6 切回 A 后 300ms 内不出现旧卡（被 abort 的请求 ≥1 个），随后恢复 8 条。
 - 负路径：不存在的会话返回 404；工具越权 `403 permission_denied` 与跨会话 404 不混淆。
 - 断言脚本：`scripts/ac/AC-CONV-009-17.mjs`（`cdp` 组）；证据：`.tmp/ac/AC-CONV-009-17.json`、404 响应原文、切换时间线采样。
-- 状态：`missing`。缺口 G24（`cfg.Modules["tasks"]` 关闭时 mux 404 与跨会话 404 不可区分，降级路径无法单独断言）。
+- 状态：pass（17 条断言，2026-11-26 实测）。缺口 G24（`cfg.Modules["tasks"]` 关闭时 mux 404 与跨会话 404 不可区分，降级路径无法单独断言）。
 
 #### TC-P1-CONV-054 · 30 分钟不自动取消、时限到点提醒 1 条（AC-CONV-009-18）
 
@@ -1149,7 +1162,7 @@ TC 编号接续 §2–§14 的最大号 `TC-P1-CONV-036`，用 `TC-P1-CONV-037..
 - 判据：A1 T2 到点后 `status` 仍 running，`deadline_reminded_at` 非 0，`task.reminder` 恰 1 条（同任务第 2 条 0 次）；A2 T2 详情头出现「已超出预计 N 分钟」1 处（N≥1），状态胶囊不变，新增按钮 0 个；A3 T1 在 90 秒观察窗口内状态不变、无取消文案、`fail_reason` 为空；A4 收到 `task.reminder` 后 N2/N3 请求计数不变（不触发拉取）；A5 重启或再扫不重复发提醒（仍 1 条）；A6 `deadlineAt` 早于当前时间创建返回 400 `invalid_argument`；A7 `task.reminder` 在 `isWSEventType` 内，断线回放后仍只 1 条。
 - 负路径：`deadlineAt` 非法格式返回 400；提醒与终态同时到达时以终态为准、不再追加提醒；`deadlineAt=0` 表示无时限，不发提醒。
 - 断言脚本：`scripts/ac/AC-CONV-009-18.mjs`；证据：`.tmp/ac/AC-CONV-009-18.json`、90 秒时间线采样 JSON。
-- 状态：`missing`。缺口 G19（真 30 分钟与真 1 分钟窗口未跑，集成用 90s/60s 等价窗口）。
+- 状态：pass（17 条断言，2026-11-26 实测）。缺口 G19（真 30 分钟与真 1 分钟窗口未跑，集成用 90s/60s 等价窗口）。
 
 ### 18.5 本轮新增缺口 G19–G25
 
@@ -1167,7 +1180,7 @@ TC 编号接续 §2–§14 的最大号 `TC-P1-CONV-036`，用 `TC-P1-CONV-037..
 
 ### 18.6 本轮验证依赖与夹具
 
-假上游与 11 个夹具已落盘，`task-fixtures.mjs --verify` 实测 11/11 `PASS`、失败 0；18 个断言脚本仍未创建，本节登记的是已交付事实与后续联调依赖，不代表这些用例已经可执行。
+假上游与 11 个夹具已落盘，`task-fixtures.mjs --verify` 实测 11/11 `PASS`、失败 0；18 个断言脚本已全部建成，并在 2026-11-26 的 T06/T07 与验收批复跑中通过，本节保留联调依赖与夹具口径说明。
 
 依赖项：
 
@@ -1195,7 +1208,7 @@ TC 编号接续 §2–§14 的最大号 `TC-P1-CONV-036`，用 `TC-P1-CONV-037..
 
 - 产物文件：`artifacts/会议纪要.md` 12345 B、`artifacts/截图.png` 45678 B、`artifacts/排期.pdf` 890 B；`sessions-a-b.json` 的 `artifacts` 字段记录对应 `mime`、`size`、`sha256` 与 `typeBadge`（doc/image/doc）。
 - 生成与校验：`node scripts/ac/lib/task-fixtures.mjs --emit-all` 默认写入上述目录（`--out` 可改），`--emit <name>` 单个生成，`--list` 列出条数，`--verify` 逐夹具比对文件名、字节数与 sha256，`--self-test` 校验生成逻辑。
-- 断言脚本：18 个 `scripts/ac/AC-CONV-009-NN.mjs`；端到端 9 条在 `scripts/ac/manifest.json` 标 `"group":"cdp"` 串行，其余按 `http` 组并行。
+- 断言脚本：18 个 `scripts/ac/AC-CONV-009-NN.mjs`，分组登记在 `scripts/ac/groups.json`（`ui` 11 条串行、`backend` 与 `backend-tools` 共享批、`backend-clock` 2 条单脚本），未登记的按单脚本运行。
 - 运行命令：接口与集成 `node scripts/ac/AC-CONV-009-01.mjs --base-url http://127.0.0.1:8789 --session-id fixture-a`；端到端在 `AC_CDP_PORT=9224` 下同命令；组件 `cd frontend` 后 `node node_modules/vitest/vitest.mjs run --pool=threads src/components/TaskPanel.test.tsx src/components/TaskMessageCard.test.tsx src/components/TaskDetail.test.tsx src/components/TaskGraphDialog.test.tsx src/taskEvents.test.ts src/api.tasks.test.ts`，并加跑本文 §17.11.1 列的 6 个既有文件。
 
 ### 18.7 与四列不一致处（2026-11-23 已按裁决修复）
@@ -1208,9 +1221,10 @@ TC 编号接续 §2–§14 的最大号 `TC-P1-CONV-036`，用 `TC-P1-CONV-037..
 4. 跨会话状态码：变更包目标 5、`AC-CHG-CONV-007-04` 第 3 条与 `proposal.md` 已统一为 404（不泄露存在性）；权限路径越界仍 403。
 5. AC-15 的取消入口：产品 `AC-CONV-009-15` 已写明判定通道为「接口层调用取消接口 + 集成层观察下游状态」，前端 `U-17-04` 声明无整链取消入口，两处一致。
 6. 设计判据条数：设计 §17.12 为 45 条（`V-CONV-009-1..45`），变更包 §7 与 `tasks.md` W1-01/W1-05 已由 44/42 改为 45。
-7. §1 矩阵与文件头已并入 18 行（`TC-P1-CONV-037..054`），总数 51 = 33 + 18；四值计数 pass 33 / partial 0 / missing 18 / blocked 0。
+7. §1 矩阵与文件头已并入 18 行（`TC-P1-CONV-037..054`），总数 51 = 33 + 18；2026-11-26 复核后四值计数 pass 51 / partial 0 / missing 0 / blocked 0。
 
 ### 18.8 本轮门禁
 
-- `node scripts/check-trace.mjs`（用 `E:\dsh_home\dsh-runtimes\dsh-primary-runtime\dependencies\node\bin\node.exe`）：2026-11-23 收口实测 `PASS (checks: 683)`，失败项 0、提示项 0、坏 TEST 锚点 0；唯一 `[GOVERNANCE]` 提示是既有 `CHG-SYS-001` 豁免项。`tc-p1-conv-009` 锚点与 `TREE.md`/`TRACEABILITY.md` 的 TEST 链接保持可解析。
-- `node scripts/ac-coverage.mjs`：2026-11-23 收口实测「共 51 条，script 32 / manual 1 / missing 18」，退出码 1，`missing` 明细逐条列出 `AC-CONV-009-01..18`（test-plan `:165-182`）。18 个断言脚本尚未创建，退出码 1 与 `missing` 18 是预期状态，`missing` 不计为通过。
+- `node scripts/check-trace.mjs`（用 `E:\dsh_home\dsh-runtimes\dsh-primary-runtime\dependencies\node\bin\node.exe`）：2026-11-26 复核实测 `PASS (checks: 684)`，失败项 0、提示项 0、坏 TEST 锚点 0；两条 `[GOVERNANCE]` 提示为既有豁免项（`CHG-MOXIAN-V16`、`CHG-SYS-001`）。`tc-p1-conv-009` 锚点与 `TREE.md`/`TRACEABILITY.md` 的 TEST 链接保持可解析。
+- `node scripts/ac-coverage.mjs`：2026-11-26 复核实测「共 71 条，script 58 / manual 13 / missing 0」，退出码 0；P1-CONV 59 条全部有脚本或人工判据，18 个 009 脚本均已计入 script 口径。
+- `node scripts/check-sdd.mjs`：2026-11-26 复核实测 `FAILED: 74 issue(s)`，退出码 1；本包（`CHG-CONV-007`）10 条，全部在 `specs/changes/CHG-CONV-007/evidence.md:136-145` 的 §9 表 R3（「复跑」列只有 `--only …` 参数，未给命令或路径）；本文 `test-plan.md` 0 条，本次改动未新增。其余 64 条为存量欠账，分布在 `CHG-CONV-001/002/003/004/006`、`CHG-MOXIAN-V16` 与 `COMP-message-colors`；2026-11-26 的验收报告曾记为 65 条、本包 1 条（`evidence.md:93`），本次只改本文，未触碰 `evidence.md`。

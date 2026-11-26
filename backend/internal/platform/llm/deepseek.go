@@ -57,10 +57,15 @@ func NewDeepSeek(cfg DeepSeekConfig) (*DeepSeek, error) {
 // ModelName 实现 Provider。
 func (d *DeepSeek) ModelName() string { return d.model }
 
+// ReasoningPlaceholder 是没有可回传原文时 assistant 消息的 reasoning_content 占位。
+// DeepSeek 思考模式要求该字段存在，字段缺失会拒绝整轮请求；占位内容对模型只起
+// “此条历史没有思考原文”的说明作用，不代表真实的思考过程。
+const ReasoningPlaceholder = "（本条历史消息未记录思考内容）"
+
 type apiMessage struct {
 	Role             string     `json:"role"`
 	Content          string     `json:"content,omitempty"`
-	ReasoningContent string     `json:"reasoning_content,omitempty"`
+	ReasoningContent *string    `json:"reasoning_content,omitempty"`
 	ToolCalls        []ToolCall `json:"tool_calls,omitempty"`
 	ToolCallID       string     `json:"tool_call_id,omitempty"`
 }
@@ -103,13 +108,28 @@ func (d *DeepSeek) Stream(ctx context.Context, req ChatRequest) (<-chan Event, e
 		Temperature:     req.Temperature,
 	}
 	for _, msg := range req.Messages {
-		body.Messages = append(body.Messages, apiMessage{
-			Role:             msg.Role,
-			Content:          msg.Content,
-			ReasoningContent: msg.ReasoningContent,
-			ToolCalls:        msg.ToolCalls,
-			ToolCallID:       msg.ToolCallID,
-		})
+		item := apiMessage{
+			Role:       msg.Role,
+			Content:    msg.Content,
+			ToolCalls:  msg.ToolCalls,
+			ToolCallID: msg.ToolCallID,
+		}
+		// DeepSeek 思考模式要求请求体里每条 assistant 消息都带 reasoning_content：
+		// 字段被省略时上游以 HTTP 400 拒绝整轮请求（真机报文见
+		// .tmp/chg-007-reasoning-2/last_request.json 与 server.log）。
+		// 没有原文的 assistant（服务端合成的任务卡、迁移前的旧行、模型给出空思考）
+		// 用固定占位补齐，既保证字段存在，也不依赖“空串被上游接受”这一未验证行为。
+		if msg.Role == "assistant" {
+			reasoning := msg.ReasoningContent
+			if strings.TrimSpace(reasoning) == "" {
+				reasoning = ReasoningPlaceholder
+			}
+			item.ReasoningContent = &reasoning
+		} else if msg.ReasoningContent != "" {
+			reasoning := msg.ReasoningContent
+			item.ReasoningContent = &reasoning
+		}
+		body.Messages = append(body.Messages, item)
 	}
 	data, err := json.Marshal(body)
 	if err != nil {

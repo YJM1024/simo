@@ -33,7 +33,7 @@
 
 import http from 'node:http'
 
-const MODES = ['text', 'plan', 'react', 'interrupt', 'http-403', 'http-500']
+const MODES = ['text', 'plan', 'react', 'tools', 'interrupt', 'http-403', 'http-500']
 const DEFAULT_TEXT = '收到。我先按顺序整理材料，再给出可执行的下一步。'
 const DONE_FRAME = 'data: [DONE]\n\n'
 const MAX_BODY_BYTES = 1 << 20
@@ -62,7 +62,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 function usage() {
   return [
     'usage: node scripts/ac/lib/mock-llm.mjs [--host 127.0.0.1] [--port 8790]',
-    '       [--mode text|plan|react|interrupt|http-403|http-500] [--delay-ms 0]',
+    '       [--mode text|plan|react|tools|interrupt|http-403|http-500] [--delay-ms 0]',
     '       [--steps 3] [--text "..."] [--self-test] [--help]',
   ].join('\n')
 }
@@ -188,7 +188,7 @@ function reactPayload(count) {
  * 根据 mode 生成一次响应：SSE 模式返回帧数组与是否以 [DONE] 结束；
  * HTTP 错误模式返回状态码与错误体。纯函数，便于 --self-test 在不联网时检查形状。
  */
-function buildResponse({ mode, text, steps, model = 'mock', created, reactCount = 14 }) {
+function buildResponse({ mode, text, steps, model = 'mock', created, reactCount = 14, messages }) {
   if (mode === 'http-403' || mode === 'http-500') {
     const status = mode === 'http-403' ? 403 : 500
     const denied = mode === 'http-403'
@@ -204,6 +204,40 @@ function buildResponse({ mode, text, steps, model = 'mock', created, reactCount 
         },
       },
     }
+  }
+
+  // tools 模式：第一轮返回两个 tool_calls（一次写文件、一次越权读），收到 tool 结果后给最终文字。
+  // 用于驱动真实执行器（chat.ExecuteTask）验证工具调用、403 权限拒绝轨迹与产物落盘。
+  if (mode === 'tools') {
+    const list = Array.isArray(messages) ? messages : []
+    const last = list[list.length - 1]
+    const afterTool = Boolean(last && last.role === 'tool')
+    const frames = [chatChunk({ id: 'chatcmpl-mock-tools', created, model, delta: { role: 'assistant' } })]
+    if (afterTool) {
+      frames.push(chatChunk({ id: 'chatcmpl-mock-tools', created, model, delta: { content: text } }))
+      frames.push(chatChunk({ id: 'chatcmpl-mock-tools', created, model, delta: {}, finishReason: 'stop' }))
+      return { kind: 'sse', frames, done: true }
+    }
+    frames.push(chatChunk({
+      id: 'chatcmpl-mock-tools', created, model,
+      delta: {
+        tool_calls: [{
+          index: 0, id: 'call-mock-write', type: 'function',
+          function: { name: 'write_file', arguments: JSON.stringify({ path: 'notes/ac-04-output.md', content: 'AC-CONV-009-04 合法工具调用的产物\n' }) },
+        }],
+      },
+    }))
+    frames.push(chatChunk({
+      id: 'chatcmpl-mock-tools', created, model,
+      delta: {
+        tool_calls: [{
+          index: 1, id: 'call-mock-denied', type: 'function',
+          function: { name: 'read_file', arguments: JSON.stringify({ path: 'C:\\\\Windows\\\\win.ini' }) },
+        }],
+      },
+    }))
+    frames.push(chatChunk({ id: 'chatcmpl-mock-tools', created, model, delta: {}, finishReason: 'tool_calls' }))
+    return { kind: 'sse', frames, done: true }
   }
 
   let content
@@ -352,6 +386,7 @@ async function handleChat(res, options, stats, body) {
     steps: options.steps,
     model,
     created: Math.floor(Date.now() / 1000),
+    messages: Array.isArray(body.messages) ? body.messages : [],
   })
 
   if (plan.kind === 'http') {

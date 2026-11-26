@@ -40,6 +40,11 @@ type HealthFunc func(context.Context) HealthReport
 //
 // 调用方应先把所有模块的 Register(mux) 执行完，再调用本函数。
 func NewHandler(mux *http.ServeMux, dist fs.FS, health ...HealthFunc) http.Handler {
+	return NewHandlerWithOptions(mux, dist, Options{}, health...)
+}
+
+// NewHandlerWithOptions 与 NewHandler 相同，并按 opts 决定是否在最外层记录访问日志。
+func NewHandlerWithOptions(mux *http.ServeMux, dist fs.FS, opts Options, health ...HealthFunc) http.Handler {
 	if mux == nil {
 		mux = http.NewServeMux()
 	}
@@ -54,7 +59,7 @@ func NewHandler(mux *http.ServeMux, dist fs.FS, health ...HealthFunc) http.Handl
 	// 避免被 "/" 的 SPA fallback 返回 index.html（evals 发现的契约偏差）。
 	mux.HandleFunc("/api/", handleAPINotFound)
 	mux.Handle("/", newSPAHandler(dist))
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if recovered := recover(); recovered != nil {
 				WriteErrorCode(w, http.StatusInternalServerError, "internal", "服务内部错误")
@@ -76,6 +81,10 @@ func NewHandler(mux *http.ServeMux, dist fs.FS, health ...HealthFunc) http.Handl
 		}
 		mux.ServeHTTP(w, r)
 	})
+	if opts.AccessLog && opts.Logger != nil {
+		handler = withAccessLog(handler, opts.Logger)
+	}
+	return handler
 }
 
 type healthPayload struct {

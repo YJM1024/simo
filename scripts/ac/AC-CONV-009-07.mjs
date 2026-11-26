@@ -21,6 +21,8 @@ const CASES = [
 
 runUiAc('AC-CONV-009-07', async (ctx) => {
   const client = await openSessionPage(ctx, { stub: buildStub() });
+  // 右栏默认停在概览标签，任务卡只在任务标签下渲染。
+  await clickSel(client, 'nav.insp-rail button[data-tab="tasks"]');
   await waitFor(client, `document.querySelectorAll('.task-card').length >= 4`, { timeout: 10000, label: '四态任务卡' });
   const writesBefore = await client.evaluate(`(window.__ac?.calls ?? []).filter((c) => c.method !== 'GET').length`);
 

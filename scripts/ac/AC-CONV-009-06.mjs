@@ -14,6 +14,8 @@ import {
 
 runUiAc('AC-CONV-009-06', async (ctx) => {
   const client = await openSessionPage(ctx, { stub: buildStub() });
+  // 右栏默认停在概览标签，任务卡只在任务标签下渲染。
+  await clickSel(client, 'nav.insp-rail button[data-tab="tasks"]');
   await waitFor(client, `document.querySelector('.task-card[data-task-id="t2"]') !== null`, { timeout: 10000, label: '任务卡 t2' });
   const clicked = await clickSel(client, '.task-card[data-task-id="t2"]');
   ctx.check(clicked, '点开 t2 任务卡', '点击成功', clicked ? '成功' : '元素不存在');

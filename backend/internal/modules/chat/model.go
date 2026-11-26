@@ -7,29 +7,35 @@ import (
 )
 
 // Message 是消息投影（契约 §3 字段；role/status 与前端 v0.1 兼容）。
+// BatchID/TaskCount 只有任务卡片消息有值，任务数取自 task_batches.task_count（§17.5.2、CT-CONV-051/052）。
 type Message struct {
-	ID           string            `json:"id"`
-	SessionID    string            `json:"sessionId"`
-	SessionTitle string            `json:"sessionTitle,omitempty"`
-	Role         string            `json:"role"`
-	Text         string            `json:"text"`
-	At           int64             `json:"at"`
-	FinishedAt   int64             `json:"finishedAt,omitempty"`
-	Status       string            `json:"status"`
-	Attachments  []Attachment      `json:"attachments"`
-	TaskID       string            `json:"taskId"`
-	WorkflowID   string            `json:"workflowId,omitempty"`
-	Tool         string            `json:"tool,omitempty"`
-	ApprovalID   string            `json:"approvalId,omitempty"`
-	Category     string            `json:"category"`
-	SessionPath  []SessionPathItem `json:"sessionPath"`
-	ReplyToID    string            `json:"replyToId,omitempty"`
-	ReplyTo      *ReplySnapshot    `json:"replyTo,omitempty"`
-	AgentID      string            `json:"agentId,omitempty"`
-	RoutedFrom   string            `json:"routedFrom,omitempty"`
-	RoutedTo     string            `json:"routedTo,omitempty"`
-	Internal     bool              `json:"internal,omitempty"`
-	Cards        []Card            `json:"cards,omitempty"`
+	ID           string `json:"id"`
+	SessionID    string `json:"sessionId"`
+	SessionTitle string `json:"sessionTitle,omitempty"`
+	Role         string `json:"role"`
+	Text         string `json:"text"`
+	// ReasoningContent 是思考模式下该条回复的思考原文，只用于重建模型历史；
+	// 不对前端暴露（思考过程走 trace.reasoning 事件）。
+	ReasoningContent string            `json:"-"`
+	At               int64             `json:"at"`
+	FinishedAt       int64             `json:"finishedAt,omitempty"`
+	Status           string            `json:"status"`
+	Attachments      []Attachment      `json:"attachments"`
+	TaskID           string            `json:"taskId"`
+	BatchID          string            `json:"batchId,omitempty"`
+	TaskCount        int               `json:"taskCount,omitempty"`
+	WorkflowID       string            `json:"workflowId,omitempty"`
+	Tool             string            `json:"tool,omitempty"`
+	ApprovalID       string            `json:"approvalId,omitempty"`
+	Category         string            `json:"category"`
+	SessionPath      []SessionPathItem `json:"sessionPath"`
+	ReplyToID        string            `json:"replyToId,omitempty"`
+	ReplyTo          *ReplySnapshot    `json:"replyTo,omitempty"`
+	AgentID          string            `json:"agentId,omitempty"`
+	RoutedFrom       string            `json:"routedFrom,omitempty"`
+	RoutedTo         string            `json:"routedTo,omitempty"`
+	Internal         bool              `json:"internal,omitempty"`
+	Cards            []Card            `json:"cards,omitempty"`
 }
 
 // ReplySnapshot 是被引用消息的只读快照（M15，跨会话允许）。

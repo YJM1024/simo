@@ -323,27 +323,35 @@ func TestConvCancelScopeAndTerminal(t *testing.T) {
 		Tasks: []BatchTaskInput{
 			{Key: "a", Title: "上游"},
 			{Key: "b", Title: "下游", DependsOn: []string{"a"}},
+			{Key: "c", Title: "链尾", DependsOn: []string{"b"}},
 		},
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	upstream, downstream := result.Tasks[0].ID, result.Tasks[1].ID
-	task, cancelled, changed, err := mod.CancelScope(ctx, downstream, "chain")
+	upstream, downstream, tail := result.Tasks[0].ID, result.Tasks[1].ID, result.Tasks[2].ID
+	// ct-conv-535：chain 只取消目标自身，未启动的下游保持 pending 等依赖。
+	task, cancelled, changed, err := mod.CancelScope(ctx, upstream, "chain")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !changed || len(cancelled) != 2 || task.Status != coretask.StatusCancelled {
-		t.Fatalf("chain 应取消 2 个任务，got %v/%d/%s", changed, len(cancelled), task.Status)
+	if !changed || len(cancelled) != 1 || cancelled[0] != upstream || task.Status != coretask.StatusCancelled {
+		t.Fatalf("chain 应只取消目标自身，got %v/%v/%s", changed, cancelled, task.Status)
 	}
-	// 幂等：再次取消返回 changed=false，不报错。
-	_, _, changed2, err := mod.CancelScope(ctx, downstream, "self")
-	if err != nil || changed2 {
-		t.Fatalf("终态取消应返回 changed=false: %v %v", err, changed2)
+	for _, id := range []string{downstream, tail} {
+		got, _ := mod.getTask(ctx, id)
+		if got.Status != coretask.StatusPending || got.WaitingReason != WaitingDependency {
+			t.Fatalf("%s 应保持 pending 等依赖，got %s/%s", id, got.Status, got.WaitingReason)
+		}
 	}
-	up, _ := mod.getTask(ctx, upstream)
-	if up.Status != coretask.StatusCancelled {
-		t.Fatalf("上游应被 chain 取消，got %s", up.Status)
+	// 幂等：对已 cancelled 的目标再次取消返回 changed=false，任务字段不变。
+	again, againCancelled, changed2, err := mod.CancelScope(ctx, upstream, "self")
+	if err != nil || changed2 || len(againCancelled) != 0 || again.Status != coretask.StatusCancelled {
+		t.Fatalf("终态取消应返回 changed=false: %v/%v/%v/%s", err, changed2, againCancelled, again.Status)
+	}
+	// 上游取消后可经重试转 queued，下游继续等待。
+	if retried, _, _, err := mod.RetryConv(ctx, upstream); err != nil || retried.Status != coretask.StatusQueued {
+		t.Fatalf("取消的上游应可重试: %v/%s", err, retried.Status)
 	}
 }
 
@@ -559,14 +567,26 @@ func TestConvDeliverablesGrouping(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if deliverables.Total != 1 || deliverables.FileCount != 2 {
-		t.Fatalf("只应分组 1 个任务 2 个文件，got %d/%d", deliverables.Total, deliverables.FileCount)
+	if deliverables.Total != 2 || deliverables.FileCount != 2 {
+		t.Fatalf("两个任务都应成组，共 2 个文件，got %d/%d", deliverables.Total, deliverables.FileCount)
 	}
-	if deliverables.Groups[0].TaskID != result.Tasks[0].ID || len(deliverables.Groups[0].Files) != 2 {
-		t.Fatalf("分组不对: %+v", deliverables.Groups[0])
+	var aGroup, bGroup *DeliverableGroup
+	for i := range deliverables.Groups {
+		switch deliverables.Groups[i].TaskID {
+		case result.Tasks[0].ID:
+			aGroup = &deliverables.Groups[i]
+		case result.Tasks[1].ID:
+			bGroup = &deliverables.Groups[i]
+		}
+	}
+	if aGroup == nil || len(aGroup.Files) != 2 || aGroup.Count != 2 {
+		t.Fatalf("任务 A 分组不对: %+v", aGroup)
+	}
+	if bGroup == nil || len(bGroup.Files) != 0 || bGroup.Count != 0 || bGroup.Files == nil {
+		t.Fatalf("任务 B 只有 internal 产物，应为空组: %+v", bGroup)
 	}
 	badges := map[string]bool{}
-	for _, file := range deliverables.Groups[0].Files {
+	for _, file := range aGroup.Files {
 		badges[file.TypeBadge] = true
 		if file.DownloadURL == "" || file.PreviewURL == "" {
 			t.Fatal("交付物缺下载/预览 URL")
@@ -574,6 +594,65 @@ func TestConvDeliverablesGrouping(t *testing.T) {
 	}
 	if !badges["doc"] || !badges["image"] {
 		t.Fatalf("typeBadge 不对: %v", badges)
+	}
+}
+
+// 失败任务没有 user_delivery 产物，也必须出现在分组里，给出 files=[]、count=0 的空组。
+func TestConvDeliverablesIncludesFailedTask(t *testing.T) {
+	mod, _, ctx := newConvTestModule(t)
+	result, err := mod.CreateBatch(ctx, "s1", BatchCreateInput{
+		Tasks: []BatchTaskInput{{Key: "ok", Title: "成功任务"}, {Key: "bad", Title: "失败任务"}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var okTask, failedTask coretask.Task
+	for _, task := range result.Tasks {
+		if task.Title == "成功任务" {
+			okTask = task
+		} else {
+			failedTask = task
+		}
+	}
+	if err := mod.store.Write(ctx, func(tx *sql.Tx) error {
+		if _, err := tx.ExecContext(ctx, `UPDATE tasks SET status='failed', fail_reason='执行器异常: mock' WHERE id = ?`, failedTask.ID); err != nil {
+			return err
+		}
+		_, err := tx.ExecContext(ctx, `INSERT INTO task_artifacts(
+			id, task_id, name, rel_path, mime, size, created_at, delivery_kind, storage_scope, workspace_rel_path)
+			VALUES ('art-ok', ?, 'result.md', '', 'text/markdown', 42, ?, 'user_delivery', 'workspace', '')`,
+			okTask.ID, time.Now().UnixMilli())
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	deliverables, err := mod.SessionDeliverables(ctx, "s1", "", 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if deliverables.Total != 2 {
+		t.Fatalf("成功与失败任务都应成组，got %d", deliverables.Total)
+	}
+	var okGroup, failedGroup *DeliverableGroup
+	for i := range deliverables.Groups {
+		switch deliverables.Groups[i].TaskID {
+		case okTask.ID:
+			okGroup = &deliverables.Groups[i]
+		case failedTask.ID:
+			failedGroup = &deliverables.Groups[i]
+		}
+	}
+	if okGroup == nil || okGroup.Count != 1 || len(okGroup.Files) != 1 || okGroup.TaskStatus != "pending" {
+		t.Fatalf("成功组不对: %+v", okGroup)
+	}
+	if failedGroup == nil {
+		t.Fatal("失败任务未出现在交付物分组")
+	}
+	if failedGroup.Files == nil || len(failedGroup.Files) != 0 || failedGroup.Count != 0 {
+		t.Fatalf("失败任务应为空组 files=[] count=0, got %+v", failedGroup)
+	}
+	if failedGroup.TaskStatus != coretask.StatusFailed {
+		t.Fatalf("失败组 taskStatus 应为 failed, got %q", failedGroup.TaskStatus)
 	}
 }
 

@@ -28,7 +28,7 @@ type DecisionRecord struct {
 // listMessages 按 sessionId 过滤消息；未知 sessionId 返回空列表（不返回全量）。
 func (m *Module) listMessages(ctx context.Context, sessionID string) ([]Message, error) {
 	rows, err := m.store.Query(ctx,
-		`SELECT id, session_id, role, text, at, status, task_id, workflow_id, tool, approval_id, category, reply_to_id
+		`SELECT id, session_id, role, text, at, status, task_id, workflow_id, tool, approval_id, category, reply_to_id, batch_id, reasoning_content
 		   FROM messages WHERE session_id = ? AND internal = 0 ORDER BY rowid ASC`, sessionID)
 	if err != nil {
 		return nil, fmt.Errorf("查询消息失败: %w", err)
@@ -38,7 +38,7 @@ func (m *Module) listMessages(ctx context.Context, sessionID string) ([]Message,
 	out := make([]Message, 0, 16)
 	for rows.Next() {
 		var msg Message
-		if err := rows.Scan(&msg.ID, &msg.SessionID, &msg.Role, &msg.Text, &msg.At, &msg.Status, &msg.TaskID, &msg.WorkflowID, &msg.Tool, &msg.ApprovalID, &msg.Category, &msg.ReplyToID); err != nil {
+		if err := rows.Scan(&msg.ID, &msg.SessionID, &msg.Role, &msg.Text, &msg.At, &msg.Status, &msg.TaskID, &msg.WorkflowID, &msg.Tool, &msg.ApprovalID, &msg.Category, &msg.ReplyToID, &msg.BatchID, &msg.ReasoningContent); err != nil {
 			return nil, fmt.Errorf("扫描消息失败: %w", err)
 		}
 		out = append(out, msg)
@@ -48,6 +48,9 @@ func (m *Module) listMessages(ctx context.Context, sessionID string) ([]Message,
 	}
 	_ = rows.Close()
 	if err := m.attachUploads(ctx, out); err != nil {
+		return nil, err
+	}
+	if err := m.attachTaskCounts(ctx, out); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -71,7 +74,7 @@ func (m *Module) listMessagesPage(ctx context.Context, sessionIDs []string, befo
 		args = append(args, id)
 	}
 	query := `SELECT id, session_id, role, text, at, status, task_id, workflow_id, tool, approval_id, category, reply_to_id,
-		rowid FROM messages WHERE session_id IN (` + strings.Join(placeholders, ",") + `) AND internal = 0`
+		batch_id, rowid FROM messages WHERE session_id IN (` + strings.Join(placeholders, ",") + `) AND internal = 0`
 	if before != "" {
 		var beforeRow int64
 		if err := m.store.QueryRow(ctx, `SELECT rowid FROM messages WHERE id = ?`, before).Scan(&beforeRow); err != nil {
@@ -94,7 +97,7 @@ func (m *Module) listMessagesPage(ctx context.Context, sessionIDs []string, befo
 		var msg Message
 		var rowID int64
 		if err := rows.Scan(&msg.ID, &msg.SessionID, &msg.Role, &msg.Text, &msg.At, &msg.Status,
-			&msg.TaskID, &msg.WorkflowID, &msg.Tool, &msg.ApprovalID, &msg.Category, &msg.ReplyToID, &rowID); err != nil {
+			&msg.TaskID, &msg.WorkflowID, &msg.Tool, &msg.ApprovalID, &msg.Category, &msg.ReplyToID, &msg.BatchID, &rowID); err != nil {
 			_ = rows.Close()
 			return nil, fmt.Errorf("扫描分页消息失败: %w", err)
 		}
@@ -111,6 +114,9 @@ func (m *Module) listMessagesPage(ctx context.Context, sessionIDs []string, befo
 	if err := m.attachUploads(ctx, out); err != nil {
 		return nil, err
 	}
+	if err := m.attachTaskCounts(ctx, out); err != nil {
+		return nil, err
+	}
 	return out, nil
 }
 
@@ -125,7 +131,7 @@ func (m *Module) listMessagesForSessions(ctx context.Context, sessionIDs []strin
 		placeholders[i] = "?"
 		args = append(args, id)
 	}
-	query := `SELECT id, session_id, role, text, at, status, task_id, workflow_id, tool, approval_id, category, reply_to_id FROM messages
+	query := `SELECT id, session_id, role, text, at, status, task_id, workflow_id, tool, approval_id, category, reply_to_id, batch_id FROM messages
 		WHERE session_id IN (` + strings.Join(placeholders, ",") + `) AND internal = 0
 		ORDER BY at ASC, rowid ASC`
 	rows, err := m.store.Query(ctx, query, args...)
@@ -136,7 +142,7 @@ func (m *Module) listMessagesForSessions(ctx context.Context, sessionIDs []strin
 	out := make([]Message, 0, 16)
 	for rows.Next() {
 		var msg Message
-		if err := rows.Scan(&msg.ID, &msg.SessionID, &msg.Role, &msg.Text, &msg.At, &msg.Status, &msg.TaskID, &msg.WorkflowID, &msg.Tool, &msg.ApprovalID, &msg.Category, &msg.ReplyToID); err != nil {
+		if err := rows.Scan(&msg.ID, &msg.SessionID, &msg.Role, &msg.Text, &msg.At, &msg.Status, &msg.TaskID, &msg.WorkflowID, &msg.Tool, &msg.ApprovalID, &msg.Category, &msg.ReplyToID, &msg.BatchID); err != nil {
 			return nil, fmt.Errorf("扫描聚合消息失败: %w", err)
 		}
 		out = append(out, msg)
@@ -148,7 +154,65 @@ func (m *Module) listMessagesForSessions(ctx context.Context, sessionIDs []strin
 	if err := m.attachUploads(ctx, out); err != nil {
 		return nil, err
 	}
+	if err := m.attachTaskCounts(ctx, out); err != nil {
+		return nil, err
+	}
 	return out, nil
+}
+
+// attachTaskCounts 按 batch_id 一次性批量补齐批次任务数（task_batches.task_count），
+// 避免逐条消息查询造成的 N+1。只有带 batch_id 的任务卡片消息会被查询；
+// 没有任务卡片的普通消息列表不发起任何额外查询。
+func (m *Module) attachTaskCounts(ctx context.Context, messages []Message) error {
+	if len(messages) == 0 {
+		return nil
+	}
+	ids := make([]string, 0, 4)
+	seen := make(map[string]struct{}, 4)
+	for i := range messages {
+		id := messages[i].BatchID
+		if id == "" {
+			continue
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		ids = append(ids, id)
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	placeholders := make([]string, len(ids))
+	args := make([]any, len(ids))
+	for i, id := range ids {
+		placeholders[i] = "?"
+		args[i] = id
+	}
+	rows, err := m.store.Query(ctx,
+		`SELECT id, task_count FROM task_batches WHERE id IN (`+strings.Join(placeholders, ",")+`)`, args...)
+	if err != nil {
+		return fmt.Errorf("查询批次任务数失败: %w", err)
+	}
+	defer rows.Close()
+	counts := make(map[string]int, len(ids))
+	for rows.Next() {
+		var id string
+		var count int
+		if err := rows.Scan(&id, &count); err != nil {
+			return fmt.Errorf("扫描批次任务数失败: %w", err)
+		}
+		counts[id] = count
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("遍历批次任务数失败: %w", err)
+	}
+	for i := range messages {
+		if n, ok := counts[messages[i].BatchID]; ok && n > 0 {
+			messages[i].TaskCount = n
+		}
+	}
+	return nil
 }
 
 func (m *Module) sessionTitle(ctx context.Context, id string) string {
@@ -220,6 +284,15 @@ func (m *Module) appendMessageText(ctx context.Context, id, delta string) error 
 func (m *Module) setMessageStatus(ctx context.Context, id, status string) error {
 	return m.store.Write(ctx, func(tx *sql.Tx) error {
 		_, err := tx.ExecContext(ctx, `UPDATE messages SET status = ? WHERE id = ?`, status, id)
+		return err
+	})
+}
+
+// setMessageReasoning 持久化本回合的思考原文：下一回合和重启后的历史重放都要把它
+// 原样回传给上游，字段缺失会被拒绝整轮请求。
+func (m *Module) setMessageReasoning(ctx context.Context, id, reasoning string) error {
+	return m.store.Write(ctx, func(tx *sql.Tx) error {
+		_, err := tx.ExecContext(ctx, `UPDATE messages SET reasoning_content = ? WHERE id = ?`, reasoning, id)
 		return err
 	})
 }

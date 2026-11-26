@@ -71,6 +71,7 @@ func decorateTask(task *coretask.Task) {
 	if task == nil {
 		return
 	}
+	task.DisplayStatus = displayStatus(task.Status)
 	if task.ExecutorAgentID == "" {
 		task.ExecutorAgentID = configuredExecutorAgentID()
 	}

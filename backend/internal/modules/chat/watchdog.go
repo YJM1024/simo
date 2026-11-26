@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"simo/internal/core/eventlog"
+	"simo/internal/platform/clock"
 )
 
 const (
@@ -59,7 +60,7 @@ func (m *Module) recoverStaleStreaming(ctx context.Context) {
 		active[id] = true
 	}
 	m.mu.Unlock()
-	now := time.Now().UnixMilli()
+	now := clock.NowUnixMilli()
 	recovered := 0
 	for _, id := range ids {
 		if active[id] {
@@ -96,7 +97,7 @@ func (m *Module) recoverStaleStreaming(ctx context.Context) {
 func (m *Module) checkTurnWatchdog() {
 	idleLimit := streamIdleTimeout()
 	totalLimit := turnTotalTimeout()
-	now := time.Now().UnixMilli()
+	now := clock.NowUnixMilli()
 	m.mu.Lock()
 	active := make([]*activeTurn, 0, len(m.active))
 	for _, turn := range m.active {
@@ -145,7 +146,7 @@ func (m *Module) failTimedOut(active *activeTurn, reason string) {
 		} else {
 			text = strings.TrimRight(text, " \n") + "\n\n[" + label + "]"
 		}
-		now := time.Now().UnixMilli()
+		now := clock.NowUnixMilli()
 		_ = m.store.Write(bg, func(tx *sql.Tx) error {
 			_, err := tx.ExecContext(bg, `UPDATE messages SET status='failed',text=?,finished_at=?
 				WHERE id=? AND status='streaming'`, text, now, active.ReplyID)

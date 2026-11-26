@@ -511,6 +511,11 @@ export interface MessageTaskInfo {
   error?: string
   onOpen?: () => void
   onOpenTask?: (task: TaskView) => void
+  /** 汇总卡整卡点击：进入右栏任务标签（点击单条任务行走 onOpenTask 进详情）。 */
+  onOpenSummary?: () => void
+  /** 汇总卡（batchId）加载失败的原因与重试；与单卡的 error 分开，避免互相覆盖。 */
+  summaryError?: string
+  onRetrySummary?: () => void
   onToggle?: () => void
   onConfirm?: () => void
   onCancel?: () => void
@@ -553,8 +558,25 @@ export function MessageItem({ message, onCardAction, readOnly = false, onRetry, 
   const rawCategory = message.category === 'delivery' ? 'progress' : message.category
   const categoryKey = isUser ? '' : (rawCategory && CATEGORY_LABEL[rawCategory] ? rawCategory : 'consultation')
   const category = categoryKey ? CATEGORY_LABEL[categoryKey] : ''
-  // 任务卡分支必须早于类别回退：taskId 缺失时退回普通消息，batchId 存在时走汇总卡（§17.5）。
-  if (!isUser && message.category === 'task' && (message.taskId || message.batchId)) {
+  // 任务卡分支必须早于类别回退。批量消息同时带首个任务的 taskId 与 batchId、taskCount，
+  // 判定顺序必须是「batchId + taskCount>1」先于 taskId，否则汇总卡分支永远走不到（AC-CONV-009-02、§17.5）。
+  if (!isUser && message.category === 'task') {
+    const batchSummary = Boolean(message.batchId) && (message.taskCount ?? 0) > 1
+    if (batchSummary || (!message.taskId && message.batchId)) {
+      return (
+        <TaskSummaryCard
+          message={message}
+          tasks={taskInfo?.tasks ?? []}
+          total={taskInfo?.total ?? message.taskCount ?? 0}
+          expanded={taskInfo?.expanded}
+          error={taskInfo?.summaryError}
+          onToggle={taskInfo?.onToggle}
+          onRetry={taskInfo?.onRetrySummary}
+          onOpen={taskInfo?.onOpenSummary}
+          onOpenTask={taskInfo?.onOpenTask}
+        />
+      )
+    }
     if (message.taskId) {
       return (
         <TaskMessageCard
@@ -570,16 +592,6 @@ export function MessageItem({ message, onCardAction, readOnly = false, onRetry, 
         />
       )
     }
-    return (
-      <TaskSummaryCard
-        message={message}
-        tasks={taskInfo?.tasks ?? []}
-        total={taskInfo?.total ?? message.taskCount ?? 0}
-        expanded={taskInfo?.expanded}
-        onToggle={taskInfo?.onToggle}
-        onOpenTask={(task) => taskInfo?.onOpenTask?.(task)}
-      />
-    )
   }
   return (
     <article className={`msg ${isUser ? 'from-user' : 'from-agent'}`} data-message-id={message.id} data-task-id={message.taskId} data-session-id={message.sessionId}>
@@ -1323,9 +1335,15 @@ type RightPanelProps = React.ComponentProps<typeof OverviewContent> & {
   onOpenTaskById?: (taskId: string) => void
   onOpenFile?: (file: TaskFile) => void
   detail?: TaskDetailPayload | null
+  /** 详情接口返回前的列表快照：外壳、模式与几何先用它成立。 */
+  detailTask?: TaskView | null
   detailLoading?: boolean
   detailError?: string
   detailMode?: 'overlay' | 'drawer'
+  /** 详情数据到达后要对齐的步骤行；来自任务卡/图节点跳转，空则按任务状态落点。 */
+  jumpStepId?: string | null
+  /** 概览「还有 N 个」：切到任务标签并把首个未显示的任务对齐到滚动口顶。 */
+  onJumpToTasks?: () => void
   graphOpen?: boolean
   graph?: TaskGraphPayload | null
   graphLoading?: boolean
@@ -1342,7 +1360,7 @@ type RightPanelProps = React.ComponentProps<typeof OverviewContent> & {
 
 /** 760–1023 右栏只留竖条，面板改抽屉；其余档位抽屉样式不生效，状态是空操作。 */
 function isDrawerRange(): boolean {
-  return typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(min-width: 760px) and (max-width: 1179px)').matches
+  return typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(min-width: 760px) and (max-width: 1023px)').matches
 }
 
 export function RightPanel(props: RightPanelProps): React.ReactNode {
@@ -1352,7 +1370,12 @@ export function RightPanel(props: RightPanelProps): React.ReactNode {
   const controlledCollapse = collapsed !== undefined
   const [innerCollapsed, setInnerCollapsed] = useState(false)
   const collapsedNow = collapsed ?? innerCollapsed
-  const [drawerOpen, setDrawerOpen] = useState(false)
+  // 抽屉档（760–1023）首次加载一律收起，只留 40px 竖条（V-CONV-008-6：点图标条才展开覆盖层）；
+  // 只有本会话已有用户主动选择（存了 0/1）时才按记忆恢复。
+  const [drawerOpen, setDrawerOpen] = useState(() => {
+    if (!isDrawerRange() || !session?.id) return false
+    return readStored(`${INSP_COLLAPSED_PREFIX}${session.id}`) === '0'
+  })
   const [drawerBottom, setDrawerBottom] = useState<number | null>(null)
   // 非受控用法（组件测试、画廊）自己按会话读收起记忆；受控时由 app.tsx 统一读写。
   useEffect(() => {
@@ -1395,6 +1418,7 @@ export function RightPanel(props: RightPanelProps): React.ReactNode {
     const drawer = isDrawerRange()
     if (drawer) {
       setDrawerOpen(true)
+      if (collapsedNow) setCollapsed(false)
       setInnerTab(key)
       onTabChange?.(key)
       return
@@ -1410,8 +1434,9 @@ export function RightPanel(props: RightPanelProps): React.ReactNode {
   const drawerRange = isDrawerRange()
   const drawerMode = drawerOpen || drawerRange
   // 抽屉档宽度由媒体查询决定，不读也不写收起记忆：收起态只在宽档隐藏面板（§17.2.3）。
-  const panelHidden = collapsedNow && !drawerOpen && !drawerRange
-  const panelExpanded = drawerOpen || !collapsedNow
+  const visualCollapsed = collapsedNow && !drawerOpen
+  const panelHidden = visualCollapsed
+  const panelExpanded = !visualCollapsed
   const countsAll = counts?.all ?? 0
   const countsRunning = counts?.running ?? 0
   const closeDrawer = (): void => setDrawerOpen(false)
@@ -1422,7 +1447,7 @@ export function RightPanel(props: RightPanelProps): React.ReactNode {
       className={drawerOpen ? 'inspector is-drawer-open' : 'inspector'}
       aria-label="会话右栏"
       data-tab={activeTab}
-      data-collapsed={collapsedNow && !drawerRange ? 'true' : 'false'}
+      data-collapsed={visualCollapsed ? 'true' : 'false'}
       data-drawer-open={drawerOpen ? 'true' : undefined}
       data-session={session ? session.id : undefined}
       style={drawerBottom === null ? undefined : ({ '--insp-drawer-bottom': `${drawerBottom}px` } as React.CSSProperties)}
@@ -1451,13 +1476,15 @@ export function RightPanel(props: RightPanelProps): React.ReactNode {
           )
         })}
       </nav>
+      {/* 遮罩与面板是同级：遮罩 z-index 54 排在面板 55 之下，只盖面板之外的区域。
+          放进面板内部会让它压住面板内容，鼠标点在按钮上命中的却是遮罩。 */}
+      {drawerOpen ? <button type="button" className="insp-drawer-scrim" aria-label="关闭右栏" tabIndex={-1} onClick={closeDrawer} /> : null}
       <div className="insp-panel" hidden={panelHidden}>
-        {drawerOpen ? <button type="button" className="insp-drawer-scrim" aria-label="关闭右栏" tabIndex={-1} onClick={closeDrawer} /> : null}
         <div className="insp-head" hidden={panelHidden}>
           <b>{tabTitle}</b>
           <span>{activeTab === 'tasks' ? `${countsAll} 个任务` : activeTab === 'deliverables' ? `${props.deliverablesTotal ?? 0} 个交付物` : session ? '会话投影' : ''}</span>
           {drawerMode && <button type="button" className="insp-drawer-close" aria-label="关闭右栏" onClick={closeDrawer}>×</button>}
-          <button type="button" className="insp-collapse" aria-label={collapsedNow ? '展开右栏' : '收起右栏'} aria-expanded={!collapsedNow} aria-controls="insp-panel" onClick={() => setCollapsed(!collapsedNow)}>{collapsedNow ? '«' : '»'}</button>
+          <button type="button" className="insp-collapse" aria-label={visualCollapsed ? '展开右栏' : '收起右栏'} aria-expanded={!visualCollapsed} aria-controls="insp-panel" onClick={() => { if (drawerRange) { setDrawerOpen(false); setCollapsed(true); return } setCollapsed(!collapsedNow) }}>{visualCollapsed ? '«' : '»'}</button>
         </div>
         <div className="insp-body" id="insp-panel" role="region" hidden={panelHidden}>
           {activeTab === 'overview' ? (
@@ -1470,7 +1497,7 @@ export function RightPanel(props: RightPanelProps): React.ReactNode {
               onTaskClick={props.onTaskClick}
               onArtifactOpen={props.onArtifactOpen}
               counts={counts}
-              onJumpTasks={() => props.onTabChange?.('tasks')}
+              onJumpTasks={props.onJumpToTasks ?? (() => props.onTabChange?.('tasks'))}
               onJumpDeliverables={() => props.onTabChange?.('deliverables')}
             />
           ) : activeTab === 'tasks' ? (
@@ -1506,13 +1533,16 @@ export function RightPanel(props: RightPanelProps): React.ReactNode {
           <span>任务 {countsAll} · 交付物 {props.deliverablesTotal ?? 0}</span>
         </div>
       </div>
-      {props.detail && (
+      {(props.detail || props.detailTask) && (
         <TaskDetailLayer
           open
-          detail={props.detail}
+          detail={props.detail ?? null}
+          fallbackTask={props.detailTask ?? null}
           loading={props.detailLoading ?? false}
           error={props.detailError ?? ''}
           mode={mode}
+          collapsed={visualCollapsed}
+          jumpStepId={props.jumpStepId ?? null}
           onClose={props.onCloseDetail ?? (() => undefined)}
           onRetry={props.onRetryDetail}
           onOpenFile={props.onOpenFile}

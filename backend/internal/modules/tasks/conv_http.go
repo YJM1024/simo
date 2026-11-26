@@ -2,8 +2,8 @@ package tasks
 
 import (
 	"encoding/json"
-	"io"
 	"errors"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -111,8 +111,13 @@ func (m *Module) handleConvList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	counts, _ := m.sessionTaskCounts(r.Context(), sessionID)
+	total, err := m.CountConvTasks(r.Context(), sessionID, filter)
+	if err != nil {
+		writeConvError(w, err)
+		return
+	}
 	httpserver.WriteJSON(w, http.StatusOK, map[string]any{
-		"ok": true, "tasks": tasks, "counts": counts, "total": len(tasks),
+		"ok": true, "tasks": tasks, "counts": counts, "total": total,
 		"hasMore": hasMore, "nextBefore": nextBefore,
 	})
 }

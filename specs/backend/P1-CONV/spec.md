@@ -4,9 +4,9 @@
 |---|---|
 | 域 | P1-CONV（会话域） |
 | 产物类型 | 后端开发 Spec（长期 Spec，随域常驻） |
-| 状态 | implemented（12 个 PRD 中 7 个已实现、1 个部分实现、4 个后端 N/A；行为变更 3 项未实现，见 §13）；`PRD-CONV-009` 见 §17，状态 planned |
-| 版本 | v1.3 |
-| 最后更新 | 2026-11-23 |
+| 状态 | implemented（12 个 PRD 中 7 个已实现、1 个部分实现、4 个后端 N/A；行为变更 3 项未实现，见 §13）；`PRD-CONV-009` 见 §17，已实现（2026-11-25 落地，2026-11-26 复核） |
+| 版本 | v1.4 |
+| 最后更新 | 2026-11-26 |
 | owner | 后端角色（TASK-CHG-CONV-006-10） |
 | 产品输入 | `specs/product/P1-CONV/spec.md`（PRD-CONV-001..008、PRD-CONV-009 见 §17 + PRD-SYNC-001..004；SYNC-005 已于 2026-11-22 移除） |
 | 变更输入 | `specs/changes/CHG-CONV-006/product.md`、`specs/changes/CHG-CONV-006/tasks.md`、`specs/changes/CHG-CONV-007/spec.md` |
@@ -36,7 +36,7 @@
 | §10 | PRD-SYNC-002 多标签 active/祖先/已读 | N/A：浏览器 BroadcastChannel 状态 | 无接口/无字段 | 前端测试，后端无证据 |
 | §11 | PRD-SYNC-003 发送模式跨标签 | N/A：localStorage/BroadcastChannel | 无接口/无字段 | 前端测试，后端无证据 |
 | §12 | PRD-SYNC-004 未读 | 待新增（产品裁决：会话级持久化读游标；当前后端无表/接口） | 需新增读游标表、进入即写已读、刷新/重启读回、多标签共享；不新增全站数字 | 无（产品 AC-SYNC-004-03 记 `missing`） |
-| §17 | PRD-CONV-009 会话内任务与编排 | planned：契约已冻结，实现未落地（2026-11-23） | 9 个新增会话内接口、5 个改造接口、`task.*` 6 个 WS 事件；tasks 模块 v8/v9、chat 模块 v23 | 无实现；待建 `scripts/ac/AC-CONV-009-*.mjs`，当前 18 条 AC 证据均为 `missing` |
+| §17 | PRD-CONV-009 会话内任务与编排 | implemented（2026-11-25 落地，2026-11-26 复核） | 9 个新增会话内接口、5 个改造接口、`task.*` 6 个 WS 事件；tasks 模块 v8/v9、chat 模块 v23 | `scripts/ac/AC-CONV-009-01.mjs` 至 `-18.mjs`、`scripts/ac/AC-CHG-CONV-007-01.mjs` 至 `-08.mjs` 均已建成并通过；26 条 AC 证据见 `specs/changes/CHG-CONV-007/evidence.md` §1（pass 26 条、断言 560 条） |
 
 **通用约定**
 
@@ -106,7 +106,7 @@ N/A：会话树、草稿、置顶均为 HTTP 拉取式；WS 不投递 session �
 
 ### 1.7 未实现/出口预期
 
-- `AC-001-04` “归档不可置顶”：现状 `SetPinned` 无 archived 守卫，`POST /api/sessions/{archived}/pin` 会 200 并置顶；产品要求拒绝（具体码未定，见 §13 C-02）。出口：在 `SetPinned` 内 `Get` 后判 `Archived!=0` 返回 `ErrArchived`（409），并补测试。
+- `AC-001-04` “归档不可置顶”：现状 `SetPinned` 无 archived 守卫，`POST /api/sessions/{archived}/pin` 会 200 并置顶；产品要求拒绝（具体码未定，见 §13 C-02）。出口：在 `SetPinned` 内 `Get` 后判 `Archived!=0` 返回 `ErrArchived`（409），并补测试。判定=人工；脚本=N/A：守卫未实现，见 §13 C-02。
 - 主会话不可归档已实现，见 §2.1/§2.4；错误码为 `main_session_protected`，与产品写的 `main_session_immutable` 不一致（§13 C-01）。
 
 ---
@@ -219,7 +219,7 @@ N/A：搜索为一次性 HTTP 查询，不产生 WS 帧，也不写入事件日�
 ### 3.7 未实现/出口预期
 
 - 消息正文搜索降 P2：接口保留但前端不再作为标题搜索入口；无未读字段（§12）。
-- `AC-003-02` “搜索失败回退空结果 + 提示”是前端行为；后端失败为 500 `internal`，前端需 try/catch 后展示提示并把列表置空（不伪造 0 结果）。
+- `AC-003-02` “搜索失败回退空结果 + 提示”是前端行为；后端失败为 500 `internal`，前端需 try/catch 后展示提示并把列表置空（不伪造 0 结果）。判定=人工；脚本=N/A：该 AC 是前端行为，前端验收见 test-plan。
 
 ---
 
@@ -754,12 +754,13 @@ N/A：投影是 HTTP 拉取（可按 ETag 304 复用）；后端不推送投影�
 | 2026-11-21 | v1.1 | 删除会话改标为**产品显式非目标 / backlog**（`REQ-CONV-002-03`）：`DELETE` 固定 403 `R4_CONFIRM_REQUIRED` 为保护性占位，不实现确认令牌/204/级联；§2 状态改 `implemented`，§2.7 改“非目标与待办”，要求补断言钉住 403 | 产品 `specs/product/P1-CONV/spec.md` §2.1 + `REQ-CONV-002-03`；`sessions/http.go:68-70`、`p1_conv_sessions_http_test.go:355` |
 | 2026-11-22 | v1.2 | §8 投影 ETag 从 `"spec-<id>-<revision>"` 改为响应内容摘要（规范化 JSON + 生效 `taskLimit` 的 SHA-256 前 8 字节），条件请求改走 `etagMatches`，200/304 都带 `Cache-Control: no-cache`；补 304 语义（空 body、前端保留现有数据）与 5 个自动化用例；T-08/T-09 关闭 | `backend/internal/modules/sessions/spec_projection.go:99-162`、`spec_projection_etag_test.go`；`go test ./internal/modules/sessions -run TestSpecProjectionETag -v`、`go test ./... -count=1`（16 包 ok / 0 FAIL） |
 | 2026-11-23 | v1.3 | 新增 §17「会话内任务与编排」（`PRD-CONV-009`）：任务、步骤、轨迹、批次、依赖五组数据的字段与迁移（tasks 模块 v8/v9、chat 模块 v23）；8 个存储状态、4 个展示态、3 类等待与迁移触发者；9 个新增接口与 5 个改造接口；`task.*` 6 个 WS 事件与任务卡片消息落库规则；隔离与审批、禁网禁子进程、上下文与额度、幂等与并发、10 个新增错误码；登记与现有实现（`blocked` 级联、steps JSON、全局 `/api/tasks`）的差异与 8 项未决。§0 索引补 §17 一行，头部版本与最后更新同步 | `specs/product/P1-CONV/spec.md` §4.6 与 `AC-CONV-009-01..18`；`specs/design/P1-CONV/spec.md` §17；`specs/changes/CHG-CONV-007/spec.md`；`docs/plan/DECISIONS.md` DEC-26 至 DEC-29；`backend/internal/modules/tasks/`、`backend/internal/modules/chat/category.go`、`backend/internal/modules/chat/loop.go` |
+| 2026-11-26 | v1.4 | §17 状态从 planned 改为 implemented：头部状态表、§0 索引行、§17 正文三处同步为实现已完成（2026-11-25 落地、2026-11-26 复核），证据指向 §17.12 与 `evidence.md` §1；契约正文、接口、错误码未变 | `specs/changes/CHG-CONV-007/evidence.md` §1（pass 26 条、断言 560 条）；`specs/test/P1-CONV/test-plan.md` §18.2 |
 
 ---
 
 ## 17 PRD-CONV-009 会话内任务与编排
 
-**状态**：契约已冻结，实现未落地（planned，2026-11-23）。本节只写目标契约与可断言口径，不改动 §1 至 §12 已实现的会话、消息、投影与 WS 行为；18 条 AC 中由后端承担的判据见 §17.12，视觉与交互判据见 `specs/design/P1-CONV/spec.md` §17。
+**状态**：实现已完成（2026-11-25 落地，2026-11-26 复核），证据见 §17.12 与 `specs/changes/CHG-CONV-007/evidence.md` §1。本节只写目标契约与可断言口径，不改动 §1 至 §12 已实现的会话、消息、投影与 WS 行为；18 条 AC 中由后端承担的判据见 §17.12，视觉与交互判据见 `specs/design/P1-CONV/spec.md` §17。
 
 **与既有实现的关系**：右栏概览继续使用 `GET /api/sessions/{id}/spec-projection`（§8），四态、ETag 与 304 语义保持不变；任务与交付物两个标签改用本节新增的会话内接口。任务执行器与生命周期引擎归 `P2-TASK`，本轮由 `backend/internal/modules/tasks/` 的记录与编排代码承接；交付物落盘、类型识别与原文件读取归 `P4-FILE`，本节只约束记录、编排、归属、呈现数据与下载入口。
 
@@ -886,7 +887,7 @@ N/A：投影是 HTTP 拉取（可按 ETag 304 复用）；后端不推送投影�
 | 从 | 到 | 触发者 | 条件与副作用 |
 |---|---|---|---|
 | `pending` | `queued` | 系统 | 全部入边满足该边的 `join_mode` 且取得并发槽；写 `started_at` 前置不改，`waiting_reason` 清空 |
-| `pending` | `cancelled` | 用户/系统 | 取消作用于该任务或整链；`fail_reason` 写「已取消」，`trigger_count` 不变，下游保持 `pending` |
+| `pending` | `cancelled` | 用户 | 用户对目标任务显式取消；整链取消只中断已启动的下游，未开始的下游不迁移；`fail_reason` 写「已取消」，`trigger_count` 不变 |
 | `queued` | `running` | 系统 | 执行器领取；`started_at` 若为 0 则写入；进度保持 |
 | `queued` | `cancelled` | 用户/系统 | 同 `pending` 到 `cancelled`；不产生步骤启动 |
 | `running` | `running` | 系统 | 只改 `waiting_reason`：进入 `confirmation` 或 `resource`；不改 `status`、不改进度 |
@@ -921,7 +922,7 @@ N/A：投影是 HTTP 拉取（可按 ETag 304 复用）；后端不推送投影�
 
 **17.3.5 取消的级联规则**
 
-取消接口的 `scope` 取 `self` 或 `chain`，缺省 `self`。`self` 只改目标任务；`chain` 改同批次内尚未开始的任务，把它们置 `cancelled` 并写「已取消」，正在运行的任务走中断流程，已完成的任务不变。下游任务在被取消或前置失败后保持 `pending`（不写 `blocked`），步骤启动 0 次，失败计数不增加。取消整链时不得出现半完成状态：正在运行的步骤被中断后回 `pending`，已完成步骤与产出保留，`attempt` 不增加。
+取消接口的 `scope` 取 `self` 或 `chain`，缺省 `self`。`self` 只改目标任务；`chain` 只对目标链上已启动的下游生效，把它们走中断流程，未启动的下游保持 `pending` 与 `waiting_reason=dependency`，步骤启动 0 次、`trigger_count` 与失败计数不变，图中连线保留且为虚线，已完成的下游结果不动，链外任务不受影响。未启动的下游不因取消转 `cancelled`：`cancelled` 在展示态里映射为「失败」，级联取消等于把下游标成失败，与 §17.3.3 的 `dependency` 退出条件冲突；等待方没有系统清理，上游 `cancelled` 可以经重试转 `queued`，重跑完成后按 `join_mode` 放行下游，作废下游由用户显式取消该任务。取消整链时不得出现半完成状态：正在运行的步骤被中断后回 `pending`，已完成步骤与产出保留，`attempt` 不增加。对终态任务再次取消返回 200 与 `changed=false`，任务字段不变。
 
 ### 17.4 HTTP 契约
 
@@ -972,6 +973,7 @@ N/A：投影是 HTTP 拉取（可按 ETag 304 复用）；后端不推送投影�
 | `messageId` | string | 汇总卡消息 id；单任务批次即该任务的卡片消息 id |
 | `counts` | object | 会话任务计数，字段同 N2 |
 | `idempotent` | bool | 首次创建为 `false`，命中幂等键重放为 `true` |
+| `total` | number | 本批任务数，等于 `tasks` 的长度 |
 
 创建在一个事务内完成批次行、任务行、依赖行与步骤行写入，任一任务校验失败则全部回滚，不产生任务卡片。提交成功后按 §17.5 的顺序发事件，再返回响应。
 
@@ -983,7 +985,7 @@ N/A：投影是 HTTP 拉取（可按 ETag 304 复用）；后端不推送投影�
 | `mode` | string | 空 | `plan` 或 `explore`，非法值 400 `invalid_task_mode` |
 | `batchId` | string | 空 | 按批次筛选；格式不是 `batch-<16 hex>` 返回 400 `invalid_argument` |
 | `limit` | number | 50 | 1–100，越界 400 `invalid_task_limit` |
-| `before` | string | 空 | 上一页最后一条任务 id；不存在时返回空页而非 404 |
+| `before` | string | 空 | 不透明游标，形如 `<updatedAtMs>:<taskId>`，由上一页 `nextBefore` 原样回传；游标失效返回空页而非 404 |
 
 响应 200 字段：
 
@@ -1032,7 +1034,7 @@ N/A：投影是 HTTP 拉取（可按 ETag 304 复用）；后端不推送投影�
 
 **N6 确认**
 
-请求体 `{"decision":"confirm"|"cancel","note":"..."}`，`decision` 必填，其它取值 400 `invalid_argument`，`note` ≤500 字。响应 200 字段 `ok`、`task`、`step`（当前步骤最新投影）、`decision`。`waitingReason` 不是 `confirmation` 时返回 409 `task_state_conflict`。`decision=cancel` 把当前步置 `failed`、`failReason` 写「用户取消」，任务置 `failed`，下游保持 `pending`。
+请求体 `{"decision":"confirm"|"cancel","note":"..."}`，`decision` 必填，其它取值 400 `invalid_argument`，`note` ≤500 字。响应 200 字段 `ok`、`task`、`stepId`（当前步骤 id，无步骤时为空串）、`decision`。`waitingReason` 不是 `confirmation` 时返回 409 `task_state_conflict`。`decision=cancel` 把当前步置 `failed`、`failReason` 写「用户取消」，任务置 `failed`，下游保持 `pending`。
 
 **N7 恢复**
 
@@ -1054,7 +1056,7 @@ N/A：投影是 HTTP 拉取（可按 ETag 304 复用）；后端不推送投影�
 
 **N9 交付物列表**
 
-查询参数 `taskId`（可选，按任务过滤）、`limit`（缺省 50、1–100）、`before`。响应 200：
+查询参数 `taskId`（可选，按任务过滤）、`limit`（缺省 50、1–100）；不接受游标 `before`，`hasMore` 只表示分组被 `limit` 截断。响应 200：
 
 | 字段 | 类型 | 语义 |
 |---|---|---|
@@ -1081,7 +1083,7 @@ N/A：投影是 HTTP 拉取（可按 ETag 304 复用）；后端不推送投影�
 
 **17.5.1 任务卡片落库**
 
-任务卡片是一条普通 `messages` 行，不新增表，只在 `messages` 上加 `batch_id` 列（chat 模块迁移 v23）。卡片字段固定为：
+任务卡片是一条普通 `messages` 行，不新增表，只在 `messages` 上加 `batch_id` 列（chat 模块迁移 v24；v23 已被 `session_read_cursors` 占用，见 `backend/internal/modules/chat/migrations.go:612`，加列在 `:630-642`）。卡片字段固定为：
 
 | 字段 | 值 | 断言口径 |
 |---|---|---|
@@ -1182,9 +1184,9 @@ N/A：投影是 HTTP 拉取（可按 ETag 304 复用）；后端不推送投影�
 |---|---|---|---|
 | tasks | v8 | `tasks` 表加 14 列，全部带默认值；加 `idx_tasks_session_updated(session_id, updated_at)` 与 `idx_tasks_batch(batch_id)` | 加列后旧行按默认值读，`mode` 为 `plan`、`waiting_reason` 为空、时间字段为 0；旧行 `blocked` 只在读取时映射，不批量改写 |
 | tasks | v9 | 新建 `task_steps`、`task_traces`、`task_batches`、`task_deps` 与各自索引 | 迁移末尾逐行读 `tasks.steps` 的 JSON，写入 `task_steps`；解析失败的行跳过并记日志，旧列保留只读，不回删 |
-| chat | v23 | `messages` 加 `batch_id TEXT NOT NULL DEFAULT ''`，加 `idx_messages_batch(batch_id)` | 旧消息 `batch_id` 为空，卡片查询按空值跳过；历史 `category=progress` 不变 |
+| chat | v24 | `messages` 加 `batch_id TEXT NOT NULL DEFAULT ''`，加 `idx_messages_batch(batch_id)`：v23 已被 `session_read_cursors` 占用，本迁移顺延到 v24 | 旧消息 `batch_id` 为空，卡片查询按空值跳过；历史 `category=progress` 不变 |
 
-迁移版本按模块独立记录，库级版本取各模块最大版本，当前 tasks 为 v9、chat 为 v23、核心 eventlog 与 sessions 不变。升级顺序固定为先 tasks v8、再 tasks v9、最后 chat v23，三步都在启动时由 `db.Migrate` 串行执行，失败即启动失败，不进入半迁移状态。回滚采用“保留数据、停写新列”的方式：回滚到旧版本时新列与新表原样保留，旧代码不读它们；不删除表、不清空列、不改写历史 `blocked` 行。`task_steps` 与 `tasks.steps` 并存期间以 `task_steps` 为准，下一轮变更再评估删除旧列。
+迁移版本按模块独立记录，库级版本取各模块最大版本，当前 tasks 为 v9、chat 为 v24、核心 eventlog 与 sessions 不变。升级顺序固定为先 tasks v8、再 tasks v9、最后 chat v24，三步都在启动时由 `db.Migrate` 串行执行，失败即启动失败，不进入半迁移状态。回滚采用“保留数据、停写新列”的方式：回滚到旧版本时新列与新表原样保留，旧代码不读它们；不删除表、不清空列、不改写历史 `blocked` 行。`task_steps` 与 `tasks.steps` 并存期间以 `task_steps` 为准，下一轮变更再评估删除旧列。
 
 ### 17.10 本轮新增错误码
 
@@ -1221,7 +1223,7 @@ N/A：投影是 HTTP 拉取（可按 ETag 304 复用）；后端不推送投影�
 
 ### 17.12 证据与 AC 承载
 
-本轮没有实现，后端证据统一记 `missing`，不写“通过”。建脚本时沿用 `scripts/ac/<AC-ID>.mjs` 的断言 runner，按 HTTP 断言为主，事件与轨迹用事件日志断言。
+后端实现已完成，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1；本节列后端承载的判据与断言脚本，脚本路径统一为 `scripts/ac/AC-CONV-009-*.mjs`。
 
 | AC | 后端判据 | 证据形式 |
 |---|---|---|
@@ -1231,7 +1233,10 @@ N/A：投影是 HTTP 拉取（可按 ETag 304 复用）；后端不推送投影�
 | `AC-CONV-009-04` | 允许工具调用返回成功并落轨迹；越权路径返回 403 `permission_denied` 且在轨迹里留 `403` 记录 | 脚本断言状态码与轨迹 |
 | `AC-CONV-009-05` | 8 步任务详情 `steps` 按 `seq` 1 到 8 返回，第 6 步为 `currentStepId`，已完成步骤有起止时间 | 脚本断言顺序与 `currentStepId` |
 | `AC-CONV-009-06` | `explore` 任务 `steps` 为空、`traces` 14 条、`seq` 单调递增 | 脚本断言条数与序号 |
+| `AC-CONV-009-08` | 右栏宽度由前端渲染；`GET /api/sessions/{id}/tasks` 返回当前会话任务与 `counts`，收起面板不改变后端状态 | 脚本 `scripts/ac/AC-CONV-009-08.mjs` 断言三档宽度与三标签，接口只作数据源 |
 | `AC-CONV-009-09` | 进行中 2 个时 `counts.running=2`，11 个时 `counts.running=11` | 脚本断言计数；角标文案由前端断言 |
+| `AC-CONV-009-10` | 折叠态由前端按会话记在 `localStorage`，后端不落库；接口在切会话后返回目标会话的四块计数 | 脚本 `scripts/ac/AC-CONV-009-10.mjs` 断言刷新与换会话后的折叠态 |
+| `AC-CONV-009-11` | 接口返回任务 `total` 与游标，供「还有 N 个」计算；跳转与滚动定位由前端实现 | 脚本 `scripts/ac/AC-CONV-009-11.mjs` 断言目标首行距滚动口 0–8px |
 | `AC-CONV-009-12` | 四态筛选分别返回 11、2、1、3 条，`counts` 与筛选无关 | 脚本断言四个 `total` |
 | `AC-CONV-009-13` | 任务图 8 个节点、四态之和为 8、失败节点下游边 `style=dashed`、`layers` 覆盖全部节点 | 脚本断言图数据 |
 | `AC-CONV-009-14` | 三个前置依次完成时，`all` 启动 1 次、`any` 启动 1 次、`each` 启动 3 次且 `triggerCount=3` | 脚本断言 `attempt` 与 `triggerCount` |
@@ -1240,7 +1245,7 @@ N/A：投影是 HTTP 拉取（可按 ETag 304 复用）；后端不推送投影�
 | `AC-CONV-009-17` | 会话 B 请求会话 A 的任务返回 404 `task_not_found`，响应体不含任务标题 | 脚本断言状态码与响应体 |
 | `AC-CONV-009-18` | 无时限任务运行 30 分钟不产生取消；有时限任务到点只发 1 条 `task.reminder`，状态不变 | 脚本断言 `task.reminder` 条数与状态 |
 
-纯前端判据的 AC 为 `AC-CONV-009-07`、`08`、`10`、`11`，后端只提供数据与计数，不承担视觉断言。
+纯前端判据的 AC 为 `AC-CONV-009-07`（详情入口与只读）、`08`（右栏宽度）、`10`（折叠记忆）、`11`（跳转定位）中的视觉部分，后端只提供数据与计数，不承担视觉断言；`08`、`10`、`11` 的接口侧承载列在上表，`07` 由前端断言详情入口、后端提供详情数据。
 
 ### 17.13 涉及文件
 
@@ -1257,11 +1262,11 @@ N/A：投影是 HTTP 拉取（可按 ETag 304 复用）；后端不推送投影�
 | `backend/internal/modules/chat/cards.go` | 卡片与汇总卡写入 `batch_id` |
 | `backend/internal/modules/chat/loop.go` | `delegate` 改调会话内创建服务，执行器使用任务级上下文 |
 | `backend/internal/core/eventlog/eventlog.go` | 白名单加入 `task.step`、`task.trace`、`task.reminder` |
-| `scripts/ac/AC-CONV-009-*.mjs` | 本轮只登记待建，未创建 |
+| `scripts/ac/AC-CONV-009-*.mjs` | 18 个断言脚本已建，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1 |
 
 ### 17.14 未实现项与未决问题
 
-未实现项：N1–N9 全部接口、`task_steps`/`task_traces`/`task_batches`/`task_deps` 四张表、tasks v8/v9 与 chat v23 迁移、6 个 `task.*` 事件的发送与白名单、卡片与汇总卡写入、按任务分组的交付物查询、任务级取消上下文。以上都按契约实现后才允许把对应 AC 记为 pass。
+未实现项（0 条）：N1–N9 全部接口、`task_steps`/`task_traces`/`task_batches`/`task_deps` 四张表、tasks v8/v9 与 chat v23 迁移、6 个 `task.*` 事件的发送与白名单、卡片与汇总卡写入、按任务分组的交付物查询、任务级取消上下文均已实现，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1；本节只按断言脚本的实际结果记录实现状态，不写“已验证”。
 
 未决问题：
 

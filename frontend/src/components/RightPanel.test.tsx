@@ -8,7 +8,7 @@ import type { TaskCounts, TaskView } from '../types'
 const counts = (overrides: Partial<TaskCounts> = {}): TaskCounts => ({ all: 6, pending: 2, running: 2, failed: 1, done: 1, ...overrides })
 
 function taskView(overrides: Partial<TaskView> = {}): TaskView {
-  return { id: 'task-1', sessionId: 'main', title: '任务一', mode: 'plan', status: 'running', displayStatus: 'running', createdAt: 1, updatedAt: 2, stepCount: 8, doneStepCount: 5, outputCount: 1, ...overrides }
+  return { id: 'task-1', sessionId: 'main', title: '任务一', mode: 'plan', status: 'running', displayStatus: 'running', createdAt: 1, updatedAt: 2, progress: 63, ...overrides }
 }
 
 beforeEach(() => {

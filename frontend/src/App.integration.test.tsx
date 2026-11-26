@@ -267,7 +267,7 @@ describe('App sidebar counts and task group top-up (CONV-008-02 / CONV-001-05)',
 function taskView(overrides: Partial<TaskView> = {}): TaskView {
   return {
     id: 'task-1', sessionId: 'main', title: '任务一', mode: 'plan', status: 'running', displayStatus: 'running',
-    createdAt: at, updatedAt: at + 1, stepCount: 4, doneStepCount: 1, outputCount: 1, ...overrides,
+    createdAt: at, updatedAt: at + 1, progress: 40, ...overrides,
   }
 }
 
@@ -318,6 +318,34 @@ describe('App task panel and graph (F-CONV-009)', () => {
     expect(screen.getAllByText('任务一')).toHaveLength(1)
   })
 
+  it('keeps the newest task list when an older filtered response lands later', async () => {
+    let releaseFailed: (() => void) | undefined
+    const gate = new Promise<void>((resolve) => { releaseFailed = resolve })
+    server.use(http.get('/api/sessions/:id/tasks', async ({ request, params }) => {
+      const url = new URL(request.url)
+      const status = url.searchParams.get('status')
+      // 子会话切换时带旧筛选 failed 的请求挂起，模拟它比 all 请求更晚返回。
+      if (String(params.id) === 'child' && status === 'failed') {
+        await gate
+        return HttpResponse.json({ tasks: [], counts: taskCounts({ all: 0, running: 0, done: 0 }), total: 0, hasMore: false })
+      }
+      const tasks = status === 'failed' ? [] : [taskView({ id: 'child-task', sessionId: 'child', title: '子会话计划任务' })]
+      return HttpResponse.json({ tasks, counts: taskCounts(), total: tasks.length, hasMore: false })
+    }))
+    const user = userEvent.setup()
+    render(<App />)
+    await screen.findByText('主会话消息')
+    const aside = screen.getByRole('complementary', { name: '会话右栏' })
+    await user.click(await within(aside).findByRole('button', { name: /任务，/ }))
+    await user.click(within(aside).getByRole('button', { name: /失败/ }))
+    await user.click(screen.getByText('子会话', { selector: '.session-title' }).closest('.session-row') as HTMLElement)
+    await user.click(within(aside).getByRole('button', { name: /全部/ }))
+    expect(await within(aside).findByText('子会话计划任务')).toBeInTheDocument()
+    releaseFailed?.()
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)) })
+    expect(within(aside).getByText('子会话计划任务')).toBeInTheDocument()
+  })
+
   it('opens the task graph from the topbar and a node opens its detail', async () => {
     const graph: TaskGraphPayload = {
       nodes: [
@@ -328,11 +356,11 @@ describe('App task panel and graph (F-CONV-009)', () => {
       layers: [{ index: 0, nodeIds: ['task-1'] }, { index: 1, nodeIds: ['task-2'] }],
       total: 2,
     }
-    const detail: TaskDetailPayload = { task: taskView(), steps: [{ id: 's-1', seq: 1, title: '收集素材', status: 'done', traceCount: 0, traces: [] }], currentStepId: 's-1', traces: [], tracesHasMore: false, deliverables: [] }
+    const detail: TaskDetailPayload = { task: taskView(), steps: [{ id: 's-1', seq: 1, title: '收集素材', status: 'done', traceCount: 0 }], currentStepId: 's-1', traces: [], tracesHasMore: false, deliverables: [] }
     server.use(
       http.get('/api/sessions/:id/tasks', () => HttpResponse.json({ tasks: [taskView(), taskView({ id: 'task-2', title: '任务二', displayStatus: 'failed' })], counts: taskCounts(), total: 2, hasMore: false })),
-      http.get('/api/sessions/:id/task-graph', () => HttpResponse.json(graph)),
-      http.get('/api/tasks/:id', () => HttpResponse.json(detail)),
+      http.get('/api/sessions/:id/tasks/graph', () => HttpResponse.json(graph)),
+      http.get('/api/sessions/:id/tasks/:taskId', () => HttpResponse.json(detail)),
     )
     const user = userEvent.setup()
     render(<App />)

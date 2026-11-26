@@ -20,9 +20,13 @@ import (
 )
 
 const (
-	maxMessageRunes   = 4000
-	turnTimeout       = 12 * time.Minute
-	maxModelSteps     = 3
+	maxMessageRunes = 4000
+	turnTimeout     = 12 * time.Minute
+	// 工具回合上限：真机实测“创建任务”回合需要 1 次意图描述 + 2 次查询 +
+	// 1 次发卡 + 1 次总结共 5 次请求，3 步会在发卡前截断、回复为空。
+	// 6 步在真机上仍有用尽后落空回复的实例（msg-7a6133c67b50b970），故放到 8 步；
+	// 用尽后还会再发一次不带工具的收尾请求（不计入本上限），见 streamModel。
+	maxModelSteps     = 8
 	maxContextHistory = 20
 )
 
@@ -86,6 +90,7 @@ type activeTurn struct {
 	InternalPrompt   string
 	lastActivity     atomic.Int64
 	firstTokenAt     atomic.Int64
+	replyRunes       atomic.Int64
 	promptTokens     atomic.Int64
 	completionTokens atomic.Int64
 	reasoningTokens  atomic.Int64
@@ -559,6 +564,30 @@ func (m *Module) delegate(ctx context.Context, active *activeTurn, decision Deci
 	if title == "" {
 		title = truncate(userText, 60)
 	}
+	// DELEGATE 走批量创建（同一服务方法、同一幂等与卡片写入），旧 /api/tasks 保留为兼容层。
+	if creator, ok := m.taskSvc.(coretask.BatchCreator); ok {
+		result, err := creator.CreateBatch(ctx, active.SessionID, coretask.BatchCreateInput{
+			Mode: "plan",
+			Goal: userText,
+			Kind: "mock",
+			Tasks: []coretask.BatchTaskInput{{
+				Key: "t1", Title: title, Mode: "plan", Goal: userText, Payload: userText,
+			}},
+		})
+		if err != nil {
+			m.log.Error("创建后台任务失败（回复继续）", "err", err,
+				"decision_kind", decision.Kind, "taskIntent", taskIntent,
+				"skipReason", "create_failed", "taskId", "")
+			return
+		}
+		taskID := ""
+		if len(result.Tasks) > 0 {
+			taskID = result.Tasks[0].ID
+		}
+		m.log.Info("后台任务已创建", "taskId", taskID, "batchId", result.BatchID, "title", title,
+			"decision_kind", decision.Kind, "taskIntent", taskIntent, "skipReason", "")
+		return
+	}
 	task, err := m.taskSvc.Create(ctx, coretask.NewTask{
 		SessionID: active.SessionID,
 		Title:     title,
@@ -576,6 +605,7 @@ func (m *Module) delegate(ctx context.Context, active *activeTurn, decision Deci
 }
 
 // streamModel 调用真实/mock provider；支持工具回合；content 增量实时落库并推送。
+// 工具步数用尽后还会再发一次不带工具的收尾请求，保证助手回复不会落成空正文。
 func (m *Module) streamModel(ctx context.Context, active *activeTurn, userText string) error {
 	messages := m.buildModelMessages(ctx, active, userText)
 	prefix := strings.Builder{}
@@ -591,120 +621,27 @@ func (m *Module) streamModel(ctx context.Context, active *activeTurn, userText s
 			ReasoningEffort: m.effortForRole("secretary"),
 			MaxTokens:       m.maxOutputTokens,
 		}
-		m.recordLLMRequest(req)
-		ch, err := m.provider.Stream(ctx, req)
+		res, err := m.streamOnce(ctx, active, req, &prefix, &prefixDone)
 		if err != nil {
-			if ctx.Err() != nil {
-				return errTurnCanceled
-			}
 			return err
 		}
-		var stepText, stepReasoning strings.Builder
-		var calls []llm.ToolCall
-		for event := range ch {
-			active.touch()
-			if ctx.Err() != nil {
-				return errTurnCanceled
+		if len(res.calls) == 0 {
+			// 思考原文持久化：下一回合与重启后的历史重放都要原样回传该字段，
+			// 否则上游会以“reasoning_content 必须传回”拒绝整轮请求。
+			if err := m.setMessageReasoning(ctx, active.ReplyID, res.reasoning); err != nil {
+				m.log.Warn("持久化思考内容失败", "err", err, "replyId", active.ReplyID)
 			}
-			switch event.Kind {
-			case llm.KindDelta:
-				if event.Delta == "" {
-					continue
-				}
-				stepText.WriteString(event.Delta)
-				if !prefixDone {
-					prefix.WriteString(event.Delta)
-					buffered := prefix.String()
-					if strings.Contains(buffered, "\n") {
-						category, rest, found := categoryFromFirstLine(buffered)
-						if !found {
-							category = CategoryConsultation
-							rest = buffered
-						}
-						m.setReplyCategory(ctx, active.ReplyID, category)
-						prefixDone = true
-						if rest != "" {
-							if err := m.emitDelta(ctx, active, rest); err != nil {
-								return err
-							}
-						}
-					} else if utf8.RuneCountInString(buffered) > 200 {
-						category, rest, found := categoryFromFirstLine(buffered)
-						if !found {
-							category = CategoryConsultation
-							rest = buffered
-						}
-						m.setReplyCategory(ctx, active.ReplyID, category)
-						prefixDone = true
-						if rest != "" {
-							if err := m.emitDelta(ctx, active, rest); err != nil {
-								return err
-							}
-						}
-					}
-					continue
-				}
-				if err := m.emitDelta(ctx, active, event.Delta); err != nil {
-					return err
-				}
-			case llm.KindReasoning:
-				if event.ReasoningDelta == "" {
-					continue
-				}
-				stepReasoning.WriteString(event.ReasoningDelta)
-				if _, err := m.events.Append(ctx, eventlog.TypeTraceReasoning, deltaPayload{
-					ID: active.ReplyID, Delta: event.ReasoningDelta,
-				}); err != nil {
-					m.log.Warn("写 trace.reasoning 失败", "err", err)
-				}
-			case llm.KindToolCall:
-				if event.ToolCall != nil {
-					calls = append(calls, *event.ToolCall)
-				}
-			case llm.KindUsage:
-				if event.Usage != nil {
-					m.recordUsage(ctx, active, *event.Usage)
-				}
-			case llm.KindError:
-				if ctx.Err() != nil {
-					return errTurnCanceled
-				}
-				if event.Err != nil {
-					return event.Err
-				}
-			case llm.KindDone:
-			}
-		}
-		if !prefixDone && len(calls) == 0 {
-			buffered := prefix.String()
-			category, rest, found := categoryFromFirstLine(buffered)
-			if !found {
-				category = CategoryConsultation
-				rest = buffered
-			}
-			m.setReplyCategory(ctx, active.ReplyID, category)
-			prefixDone = true
-			if rest != "" {
-				if err := m.emitDelta(ctx, active, rest); err != nil {
-					return err
-				}
-			}
-		}
-		if ctx.Err() != nil {
-			return errTurnCanceled
-		}
-		if len(calls) == 0 {
 			return nil
 		}
 
 		// 带工具的 assistant 消息必须回传 reasoning_content（契约 §3 纪律）。
 		messages = append(messages, llm.Message{
 			Role:             "assistant",
-			Content:          stepText.String(),
-			ReasoningContent: stepReasoning.String(),
-			ToolCalls:        calls,
+			Content:          res.text,
+			ReasoningContent: res.reasoning,
+			ToolCalls:        res.calls,
 		})
-		for _, call := range calls {
+		for _, call := range res.calls {
 			result := m.executeTool(ctx, active.SessionID, call)
 			m.log.Debug("工具执行完成", "tool", call.Function.Name, "resultLen", len(result))
 			messages = append(messages, llm.Message{
@@ -714,7 +651,165 @@ func (m *Module) streamModel(ctx context.Context, active *activeTurn, userText s
 			})
 		}
 	}
+	return m.finishWithToolsDisabled(ctx, active, messages, &prefix, &prefixDone)
+}
+
+// modelStreamResult 是一次模型请求消费完流之后的产出。
+type modelStreamResult struct {
+	text      string
+	reasoning string
+	calls     []llm.ToolCall
+}
+
+// streamOnce 发一次模型请求并消费整条流：正文增量经分类行前缀门控后落库，
+// 思考写 trace.reasoning，工具调用收集后返回。prefix 与 prefixDone 跨请求保留，
+// 让“回复第一行是 @@CATEGORY 标记”的剥离只发生一次。
+func (m *Module) streamOnce(ctx context.Context, active *activeTurn, req llm.ChatRequest, prefix *strings.Builder, prefixDone *bool) (modelStreamResult, error) {
+	m.recordLLMRequest(req)
+	ch, err := m.provider.Stream(ctx, req)
+	if err != nil {
+		if ctx.Err() != nil {
+			return modelStreamResult{}, errTurnCanceled
+		}
+		return modelStreamResult{}, err
+	}
+	var text, reasoning strings.Builder
+	var calls []llm.ToolCall
+	for event := range ch {
+		active.touch()
+		if ctx.Err() != nil {
+			return modelStreamResult{}, errTurnCanceled
+		}
+		switch event.Kind {
+		case llm.KindDelta:
+			if event.Delta == "" {
+				continue
+			}
+			text.WriteString(event.Delta)
+			if !*prefixDone {
+				prefix.WriteString(event.Delta)
+				buffered := prefix.String()
+				if strings.Contains(buffered, "\n") || utf8.RuneCountInString(buffered) > 200 {
+					category, rest, found := categoryFromFirstLine(buffered)
+					if !found {
+						category = CategoryConsultation
+						rest = buffered
+					}
+					m.setReplyCategory(ctx, active.ReplyID, category)
+					*prefixDone = true
+					if rest != "" {
+						if err := m.emitDelta(ctx, active, rest); err != nil {
+							return modelStreamResult{}, err
+						}
+					}
+				}
+				continue
+			}
+			if err := m.emitDelta(ctx, active, event.Delta); err != nil {
+				return modelStreamResult{}, err
+			}
+		case llm.KindReasoning:
+			if event.ReasoningDelta == "" {
+				continue
+			}
+			reasoning.WriteString(event.ReasoningDelta)
+			if _, err := m.events.Append(ctx, eventlog.TypeTraceReasoning, deltaPayload{
+				ID: active.ReplyID, Delta: event.ReasoningDelta,
+			}); err != nil {
+				m.log.Warn("写 trace.reasoning 失败", "err", err)
+			}
+		case llm.KindToolCall:
+			if event.ToolCall != nil {
+				calls = append(calls, *event.ToolCall)
+			}
+		case llm.KindUsage:
+			if event.Usage != nil {
+				m.recordUsage(ctx, active, *event.Usage)
+			}
+		case llm.KindError:
+			if ctx.Err() != nil {
+				return modelStreamResult{}, errTurnCanceled
+			}
+			if event.Err != nil {
+				return modelStreamResult{}, event.Err
+			}
+		case llm.KindDone:
+		}
+	}
+	if !*prefixDone && len(calls) == 0 {
+		buffered := prefix.String()
+		category, rest, found := categoryFromFirstLine(buffered)
+		if !found {
+			category = CategoryConsultation
+			rest = buffered
+		}
+		m.setReplyCategory(ctx, active.ReplyID, category)
+		*prefixDone = true
+		if rest != "" {
+			if err := m.emitDelta(ctx, active, rest); err != nil {
+				return modelStreamResult{}, err
+			}
+		}
+	}
+	if ctx.Err() != nil {
+		return modelStreamResult{}, errTurnCanceled
+	}
+	return modelStreamResult{text: text.String(), reasoning: reasoning.String(), calls: calls}, nil
+}
+
+// stepBudgetFinalInstruction 是工具步数用尽后追加的收尾指令：模型必须不带工具、
+// 直接用正文总结，避免回合以空回复结束。
+const stepBudgetFinalInstruction = "工具调用步数已用尽，本轮不能再调用任何工具。请直接用纯文本总结已经完成的操作、当前结果和用户还需要知道的信息，" +
+	"不要再输出工具调用参数，也不要重复询问已经确认过的内容。回复第一行仍必须是 `@@CATEGORY: requirement|clarification|progress|consultation` 机器标记，随后空一行再写正文。"
+
+// finishWithToolsDisabled 在工具步数用尽后再发一次请求，Tools 为 nil（请求体不带
+// 工具定义），因此这次请求不占 maxModelSteps，也不可能再产生工具调用；思考回传沿用
+// 同一份 messages，历史 assistant 的 reasoning_content 已全部带回。
+// 若这次收尾也失败或没有正文，写入带原因的失败说明后返回错误，由 runTurn 置 error。
+func (m *Module) finishWithToolsDisabled(ctx context.Context, active *activeTurn, messages []llm.Message, prefix *strings.Builder, prefixDone *bool) error {
+	if ctx.Err() != nil {
+		return errTurnCanceled
+	}
+	messages = append(messages, llm.Message{Role: "system", Content: stepBudgetFinalInstruction})
+	req := llm.ChatRequest{
+		Model:           m.provider.ModelName(),
+		Messages:        messages,
+		Tools:           nil,
+		ReasoningEffort: m.effortForRole("secretary"),
+		MaxTokens:       m.maxOutputTokens,
+	}
+	res, err := m.streamOnce(ctx, active, req, prefix, prefixDone)
+	if err != nil {
+		if ctx.Err() != nil {
+			return errTurnCanceled
+		}
+		m.emitStepBudgetFailure(ctx, active, prefixDone, "收尾请求失败："+truncate(err.Error(), 160))
+		return fmt.Errorf("工具步数用尽且收尾请求失败: %w", err)
+	}
+	if err := m.setMessageReasoning(ctx, active.ReplyID, res.reasoning); err != nil {
+		m.log.Warn("持久化收尾思考内容失败", "err", err, "replyId", active.ReplyID)
+	}
+	if active.replyRunes.Load() == 0 {
+		m.emitStepBudgetFailure(ctx, active, prefixDone, "收尾请求没有返回任何正文")
+		return errors.New("工具步数用尽且收尾请求未返回正文")
+	}
 	return nil
+}
+
+// emitStepBudgetFailure 把明确的失败说明写进回复正文，避免留下空正文的错误消息。
+func (m *Module) emitStepBudgetFailure(ctx context.Context, active *activeTurn, prefixDone *bool, reason string) {
+	note := "工具步数用尽且收尾失败：" + reason
+	if *prefixDone {
+		if active.replyRunes.Load() > 0 {
+			note = "\n\n" + note
+		}
+	} else {
+		m.setReplyCategory(ctx, active.ReplyID, CategoryProgress)
+		*prefixDone = true
+	}
+	if err := m.emitDelta(ctx, active, note); err != nil {
+		m.log.Error("写收尾失败说明失败", "err", err, "replyId", active.ReplyID)
+	}
 }
 
 const assistantSystemPrompt = "你是本地桌面秘书 simo。用中文简洁回答。\n" +
@@ -769,7 +864,13 @@ func (m *Module) buildModelMessages(ctx context.Context, active *activeTurn, use
 			if msg.ID == active.UserMsgID && active.QuoteContext != "" {
 				content = active.QuoteContext + "\n" + content
 			}
-			messages = append(messages, llm.Message{Role: role, Content: content})
+			item := llm.Message{Role: role, Content: content}
+			if role == "assistant" {
+				// 思考模式的历史重放要带回持久化的思考原文；没有原文的消息
+				// （任务卡、迁移前的旧行）由 provider 补占位，不能让字段缺失。
+				item.ReasoningContent = msg.ReasoningContent
+			}
+			messages = append(messages, item)
 		}
 	}
 	if active.InternalPrompt != "" {
@@ -1016,6 +1117,9 @@ func (m *Module) emitDelta(ctx context.Context, active *activeTurn, delta string
 	active.touch()
 	if delta != "" {
 		active.firstTokenAt.CompareAndSwap(0, time.Now().UnixMilli())
+		// 记录已落库的正文长度：工具步数用尽后用它判断收尾是否真的产出了正文，
+		// 只回了分类标记行也按空回复处理。
+		active.replyRunes.Add(int64(utf8.RuneCountInString(delta)))
 	}
 	if err := m.appendMessageText(ctx, active.ReplyID, delta); err != nil {
 		return fmt.Errorf("追加回复失败: %w", err)

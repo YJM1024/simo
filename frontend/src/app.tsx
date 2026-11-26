@@ -31,6 +31,7 @@ import {
 import type { Card, DeliverableGroup, Message, PermissionState, Session, StatsBucket, StatsTotals, TaskCounts, TaskDetailPayload, TaskEvent, TaskFile, TaskGraphPayload, TaskView } from './types'
 import { publishTabSync, tabId, useTabSync, winsTabSyncTiebreak } from './tabsync'
 import { appendTrace, mergeTaskStep, mergeTaskView, TaskEventLog } from './taskEvents'
+import { normalizeTaskDetail, normalizeTaskGraph, normalizeTaskView, normalizeTrace } from './taskData'
 import { Composer, ConversationPanel, EmptyState, ErrorState, Icon, LoadingState, MessageItem, MetricsDashboard, RightPanel, Segmented, Sidebar, StatusBar, TimelineGroups, WorkbenchChart, formatTime, formatTokens, readInspCollapsed, saveInspCollapsed, type MessageTaskInfo, type RightTab, type TaskFilter } from './components'
 
 type Page = 'chat' | 'workbench'
@@ -191,9 +192,12 @@ export default function App(): React.ReactNode {
   const taskFilterRef = useRef<TaskFilter>('all')
   taskFilterRef.current = taskFilter
   const taskBeforeRef = useRef<string | undefined>(undefined)
+  // 任务列表请求序号：切换会话与切筛选几乎同时发请求时，先发的空结果可能后到。
+  // 只让最后一次请求落地，避免旧响应把新列表覆盖成空（路径 8 曾因此 8 秒看不到计划卡）。
+  const taskLoadSeqRef = useRef(0)
   /** 消息流任务卡可能落在筛选结果之外，单独累积一份 id→任务 的索引。 */
   const [taskIndex, setTaskIndex] = useState<Record<string, TaskView>>({})
-  const [batchTasks, setBatchTasks] = useState<Record<string, { tasks: TaskView[]; total: number; limit: number }>>({})
+  const [batchTasks, setBatchTasks] = useState<Record<string, { tasks: TaskView[]; total: number; limit: number; error?: string }>>({})
   const batchRequestedRef = useRef(new Map<string, number>())
   const [expandedBatches, setExpandedBatches] = useState<Set<string>>(new Set())
   const [taskActionBusyId, setTaskActionBusyId] = useState('')
@@ -205,6 +209,8 @@ export default function App(): React.ReactNode {
   const [tabDeliverablesTotal, setTabDeliverablesTotal] = useState(0)
   const [tabDeliverablesFileCount, setTabDeliverablesFileCount] = useState(0)
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
+  /** 详情打开后要对齐的步骤行：来自图节点或任务卡的跳转；null 时按任务状态落点（§17.7.5）。 */
+  const [jumpStepId, setJumpStepId] = useState<string | null>(null)
   const [taskDetail, setTaskDetail] = useState<TaskDetailPayload | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
   const [detailError, setDetailError] = useState('')
@@ -594,29 +600,33 @@ export default function App(): React.ReactNode {
 
   const mergeTaskIndex = useCallback((items: TaskView[]): void => {
     if (items.length === 0) return
+    const normalized = items.map((task) => normalizeTaskView(task))
     setTaskIndex((current) => {
       let changed = false
       const next = { ...current }
-      for (const task of items) { if (next[task.id] !== task) { next[task.id] = task; changed = true } }
+      for (const task of normalized) { if (next[task.id] !== task) { next[task.id] = task; changed = true } }
       return changed ? next : current
     })
   }, [])
 
   const loadTasks = useCallback(async (sessionId: string, filter: TaskFilter, append = false): Promise<void> => {
+    const seq = ++taskLoadSeqRef.current
     setTasksLoading(true)
     if (!append) setTasksError('')
     try {
       const data = await listSessionTasks(sessionId, { status: filter === 'all' ? undefined : filter, limit: 50, before: append ? taskBeforeRef.current : undefined })
-      if (activeIdRef.current !== sessionId) return
+      // 请求先后即判据：序号落后或会话已切换的响应一律丢弃，否则并发下旧筛选的空结果会覆盖新列表。
+      if (seq !== taskLoadSeqRef.current || activeIdRef.current !== sessionId) return
+      const normalized = data.tasks.map((task) => normalizeTaskView(task, sessionId))
       setTaskCounts(data.counts)
-      setTasks((current) => append ? [...current, ...data.tasks.filter((task) => !current.some((item) => item.id === task.id))] : data.tasks)
+      setTasks((current) => append ? [...current, ...normalized.filter((task) => !current.some((item) => item.id === task.id))] : normalized)
       setTasksHasMore(data.hasMore)
       taskBeforeRef.current = data.nextBefore ?? undefined
-      mergeTaskIndex(data.tasks)
+      mergeTaskIndex(normalized)
     } catch (err) {
-      if (activeIdRef.current === sessionId) setTasksError(err instanceof Error ? err.message : '任务加载失败')
+      if (seq === taskLoadSeqRef.current && activeIdRef.current === sessionId) setTasksError(err instanceof Error ? err.message : '任务加载失败')
     } finally {
-      if (activeIdRef.current === sessionId) setTasksLoading(false)
+      if (seq === taskLoadSeqRef.current && activeIdRef.current === sessionId) setTasksLoading(false)
     }
   }, [mergeTaskIndex])
 
@@ -671,40 +681,48 @@ export default function App(): React.ReactNode {
     if (url) window.open(url, '_blank', 'noopener')
   }, [])
 
-  const loadTaskDetail = useCallback(async (taskId: string): Promise<void> => {    setDetailLoading(true)
+  const loadTaskDetail = useCallback(async (sessionId: string, taskId: string): Promise<void> => {
+    setDetailLoading(true)
     setDetailError('')
     try {
-      const data = await getTaskDetail(taskId)
-      if (activeIdRef.current !== data.task.sessionId) return
+      const raw = await getTaskDetail(sessionId, taskId)
+      if (activeIdRef.current !== sessionId) return
+      const data = normalizeTaskDetail(raw, sessionId)
+      if (data.task.sessionId !== sessionId) return
       setTaskDetail(data)
       mergeTaskIndex([data.task])
     } catch (err) {
-      setDetailError(err instanceof Error ? err.message : '任务详情加载失败')
+      if (activeIdRef.current === sessionId) setDetailError(err instanceof Error ? err.message : '任务详情加载失败')
     } finally {
-      setDetailLoading(false)
+      if (activeIdRef.current === sessionId) setDetailLoading(false)
     }
   }, [mergeTaskIndex])
 
-  /** 打开只读详情：详情打开时不发写请求，也不改右栏边界。 */
-  const openTaskDetail = useCallback((task: TaskView | string): void => {
+  /** 打开只读详情：详情打开时不发写请求，也不改右栏边界；打开详情同时收起任务图（§17.8.3）。 */
+  const openTaskDetail = useCallback((task: TaskView | string, stepId: string | null = null): void => {
+    const sessionId = activeIdRef.current
+    if (!sessionId) return
     const taskId = typeof task === 'string' ? task : task.id
+    setGraphOpen(false)
+    setJumpStepId(stepId)
     setDetailTaskId(taskId)
     setTaskDetail(null)
-    void loadTaskDetail(taskId)
+    void loadTaskDetail(sessionId, taskId)
   }, [loadTaskDetail])
 
   const closeTaskDetail = useCallback((): void => {
     setDetailTaskId(null)
     setTaskDetail(null)
     setDetailError('')
+    setJumpStepId(null)
   }, [])
 
   const loadTaskGraph = useCallback(async (sessionId: string): Promise<void> => {
     setGraphLoading(true)
     setGraphError('')
     try {
-      const data = await getTaskGraph(sessionId)
-      if (activeIdRef.current === sessionId) setTaskGraph(data)
+      const raw = await getTaskGraph(sessionId)
+      if (activeIdRef.current === sessionId) setTaskGraph(normalizeTaskGraph(raw))
     } catch (err) {
       if (activeIdRef.current === sessionId) setGraphError(err instanceof Error ? err.message : '任务图加载失败')
     } finally {
@@ -714,9 +732,10 @@ export default function App(): React.ReactNode {
 
   const openTaskGraph = useCallback((): void => {
     if (taskCounts.all === 0) return
+    closeTaskDetail()
     setGraphOpen(true)
     void loadTaskGraph(activeIdRef.current)
-  }, [loadTaskGraph, taskCounts.all])
+  }, [closeTaskDetail, loadTaskGraph, taskCounts.all])
 
   /** 筛选切换、标签切换、收起右栏都不改变角标，只重取列表与 counts（§17.3）。 */
   const refreshTasksSoon = useCallback((): void => {
@@ -730,12 +749,14 @@ export default function App(): React.ReactNode {
   }, [loadTasks])
 
   const decideTask = useCallback(async (taskId: string, decision: 'confirm' | 'cancel'): Promise<void> => {
+    const sessionId = activeIdRef.current
+    if (!sessionId) return
     setTaskActionBusyId(taskId)
     setTaskActionError(null)
     try {
-      await decideTaskConfirmation(taskId, decision)
+      await decideTaskConfirmation(sessionId, taskId, decision)
       refreshTasksSoon()
-      if (detailTaskId === taskId) void loadTaskDetail(taskId)
+      if (detailTaskId === taskId) void loadTaskDetail(sessionId, taskId)
     } catch (err) {
       setTaskActionError({ taskId, message: err instanceof Error ? err.message : '任务操作失败' })
     } finally {
@@ -744,12 +765,14 @@ export default function App(): React.ReactNode {
   }, [detailTaskId, loadTaskDetail, refreshTasksSoon])
 
   const resumeTaskById = useCallback(async (taskId: string): Promise<void> => {
+    const sessionId = activeIdRef.current
+    if (!sessionId) return
     setTaskActionBusyId(taskId)
     setTaskActionError(null)
     try {
-      await resumeTask(taskId, '用户从消息卡恢复')
+      await resumeTask(sessionId, taskId, '用户从任务卡恢复')
       refreshTasksSoon()
-      if (detailTaskId === taskId) void loadTaskDetail(taskId)
+      if (detailTaskId === taskId) void loadTaskDetail(sessionId, taskId)
     } catch (err) {
       setTaskActionError({ taskId, message: err instanceof Error ? err.message : '任务恢复失败' })
     } finally {
@@ -759,6 +782,11 @@ export default function App(): React.ReactNode {
 
   const changeRightTab = useCallback((tab: RightTab): void => {
     setRightTab(tab)
+    // 交付物标签每次进入都重取一次 N9：任务在页面打开后仍会产出文件，缓存的分组会过期（§17.7）。
+    if (tab === 'deliverables') {
+      if (activeIdRef.current) void loadTabDeliverables(activeIdRef.current)
+      return
+    }
     if (tab !== 'tasks') return
     // 概览「还有 N 个」跳任务标签：重置筛选并把首个任务作为落点，落点距滚动口顶 0–8px。
     setTaskFilter('all')
@@ -767,11 +795,20 @@ export default function App(): React.ReactNode {
     if (target) window.setTimeout(() => setJumpTaskId((current) => current === target ? null : current), 1200)
   }, [tasks])
 
+  /** 概览任务块「还有 N 个」：切任务标签、筛选回全部，落点是首个没在概览里显示的任务（§17.4.1）。 */
+  const jumpToTasks = useCallback((): void => {
+    setRightTab('tasks')
+    setTaskFilter('all')
+    const target = tasks[2]?.id ?? tasks[0]?.id ?? null
+    setJumpTaskId(target)
+    if (target) window.setTimeout(() => setJumpTaskId((current) => current === target ? null : current), 1200)
+  }, [tasks])
+
   const changeRightCollapsed = useCallback((next: boolean): void => {
     setRightCollapsed(next)
     if (activeIdRef.current) saveInspCollapsed(activeIdRef.current, next)
-    if (next) closeTaskDetail()
-  }, [closeTaskDetail])
+    // 详情层随右栏收放改变右缘（vw−320 ⇄ vw−40），收起不销毁详情：CT-CONV-543 要求收起后仍量得到详情右缘。
+  }, [])
 
   /** WS 任务增量：按事件 id / (taskId,stepId,stepSeq) / (taskId,traceSeq) 去重后就地合并，300ms 后对账 counts。 */
   const applyTaskEvent = useCallback((event: TaskEvent): void => {
@@ -780,18 +817,17 @@ export default function App(): React.ReactNode {
     if (event.sessionId && event.sessionId !== activeIdRef.current) return
     if (verdict.gap) refreshTasksSoon()
     if (event.type === 'task.trace') {
-      const trace = {
+      const trace = normalizeTrace({
         id: typeof event.traceId === 'string' ? event.traceId : undefined,
         taskId: event.id,
         stepId: typeof event.stepId === 'string' ? event.stepId : undefined,
-        traceSeq: typeof event.traceSeq === 'number' ? event.traceSeq : 0,
+        traceSeq: typeof event.traceSeq === 'number' ? event.traceSeq : undefined,
         category: typeof event.category === 'string' ? event.category : 'action',
         tool: typeof event.tool === 'string' ? event.tool : undefined,
         text: typeof event.text === 'string' ? event.text : '',
         at: typeof event.at === 'number' ? event.at : Date.now(),
-      }
+      })
       setTaskDetail((prev) => prev && prev.task.id === event.id ? { ...prev, traces: appendTrace(prev.traces, trace) } : prev)
-      setTasks((prev) => prev.map((task) => task.id === event.id ? { ...task, lastTrace: trace } : task))
       return
     }
     if (event.type === 'task.step') {
@@ -889,6 +925,8 @@ export default function App(): React.ReactNode {
     if (!activeId) return
     if (activeSessionRef.current?.draft === true) { setTasks([]); setTaskCounts(EMPTY_TASK_COUNTS); return }
     taskBeforeRef.current = undefined
+    // 切换筛选后列表回顶（前端 spec §17.5.1）：滚动口是右栏内容区。
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => { const scroller = document.getElementById('insp-panel'); if (scroller) scroller.scrollTop = 0 })
     void loadTasks(activeId, taskFilter)
   }, [activeId, taskFilter, loadTasks])
 
@@ -1376,12 +1414,15 @@ export default function App(): React.ReactNode {
     return map
   }, [taskIndex, tasks, taskDetail])
 
-  // 汇总卡按 batchId 取任务：首屏 10 条，展开后 100 条；同一批次同一档只请求一次。
+  // 汇总卡按 batchId 取任务：首屏 10 条，展开后 100 条；同一批次同一档只请求一次；失败保留卡片并可重试。
   useEffect(() => {
     if (!activeId) return
     for (const message of combinedMessages) {
       const batchId = message.batchId
-      if (!batchId || message.taskId) continue
+      if (!batchId) continue
+      // 批量消息同时带首个任务的 taskId 与 batchId：只要按汇总卡渲染就必须取批次条目。
+      // taskCount 为 1 或缺失且带 taskId 时前端按单任务卡渲染，不取批次数据。
+      if (message.taskId && (message.taskCount ?? 0) <= 1) continue
       const limit = expandedBatches.has(batchId) ? 100 : 10
       const requested = batchRequestedRef.current.get(batchId)
       if (requested !== undefined && requested >= limit) continue
@@ -1390,11 +1431,13 @@ export default function App(): React.ReactNode {
         try {
           const data = await listSessionTasks(activeId, { batchId, limit })
           if (activeIdRef.current !== activeId) return
-          setBatchTasks((prev) => ({ ...prev, [batchId]: { tasks: data.tasks, total: data.total, limit } }))
-          mergeTaskIndex(data.tasks)
+          const normalized = data.tasks.map((task) => normalizeTaskView(task, activeId))
+          setBatchTasks((prev) => ({ ...prev, [batchId]: { tasks: normalized, total: data.total, limit } }))
+          mergeTaskIndex(normalized)
         } catch {
-          // 汇总卡加载失败时不阻塞消息流：卡片保留标题与「还有 N 条」，下次展开会重试。
+          // 汇总卡加载失败不阻塞消息流：卡片保留标题与错误提示，重试时重新请求。
           batchRequestedRef.current.delete(batchId)
+          if (activeIdRef.current === activeId) setBatchTasks((prev) => ({ ...prev, [batchId]: { tasks: [], total: message.taskCount ?? 0, limit, error: '任务加载失败' } }))
         }
       })()
     }
@@ -1425,6 +1468,18 @@ export default function App(): React.ReactNode {
       error: task && taskActionError?.taskId === task.id ? taskActionError.message : '',
       onOpen: () => { if (task) openTaskDetail(task) },
       onOpenTask: (item) => openTaskDetail(item),
+      onOpenSummary: () => changeRightTab('tasks'),
+      summaryError: batch?.error,
+      onRetrySummary: () => {
+        if (!batchId) return
+        batchRequestedRef.current.delete(batchId)
+        setBatchTasks((prev) => {
+          if (!prev[batchId]) return prev
+          const next = { ...prev }
+          delete next[batchId]
+          return next
+        })
+      },
       onToggle: () => {
         if (!batchId) return
         setExpandedBatches((prev) => {
@@ -1518,6 +1573,7 @@ export default function App(): React.ReactNode {
                 onCollapsedChange={changeRightCollapsed}
                 onTaskFilterChange={setTaskFilter}
                 onOpenTask={openTaskDetail}
+                onJumpToTasks={jumpToTasks}
                 onLoadMoreTasks={() => { if (activeId) void loadTasks(activeId, taskFilter, true) }}
                 onRetryTasks={() => { if (activeId) { taskBeforeRef.current = undefined; void loadTasks(activeId, taskFilter) } }}
                 deliverableGroups={deliverableGroups}
@@ -1531,10 +1587,12 @@ export default function App(): React.ReactNode {
                 onOpenTaskById={(taskId) => openTaskDetail(taskId)}
                 onOpenFile={openTaskFile}
                 detail={taskDetail}
+                detailTask={taskDetail?.task ?? tasks.find((task) => task.id === detailTaskId) ?? null}
                 detailLoading={detailLoading}
                 detailError={detailError}
+                jumpStepId={jumpStepId}
                 onCloseDetail={closeTaskDetail}
-                onRetryDetail={() => { if (detailTaskId) void loadTaskDetail(detailTaskId) }}
+                onRetryDetail={() => { if (activeId && detailTaskId) void loadTaskDetail(activeId, detailTaskId) }}
                 graphOpen={graphOpen}
                 graph={taskGraph}
                 graphLoading={graphLoading}

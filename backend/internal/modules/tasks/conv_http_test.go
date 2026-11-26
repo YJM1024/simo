@@ -403,8 +403,8 @@ func TestConvHTTPDetailAndCrossSession404(t *testing.T) {
 	budget := objValue(t, payload["budget"], "budget")
 	if numValue(t, budget["maxSteps"], "budget.maxSteps") != 8 ||
 		numValue(t, budget["maxTokens"], "budget.maxTokens") != 12000 ||
-		numValue(t, budget["stepsUsed"], "budget.stepsUsed") != 0 ||
-		numValue(t, budget["tokensUsed"], "budget.tokensUsed") != 0 {
+		numValue(t, budget["usedSteps"], "budget.usedSteps") != 0 ||
+		numValue(t, budget["usedTokens"], "budget.usedTokens") != 0 {
 		t.Fatalf("budget 缺省值不对: %v", budget)
 	}
 
@@ -444,7 +444,7 @@ func TestConvHTTPDetailAndCrossSession404(t *testing.T) {
 
 // ---- N4 取消 ----
 
-func TestConvHTTPCancelChainKeepsDownstreamPending(t *testing.T) {
+func TestConvHTTPCancelSelfKeepsDownstreamPending(t *testing.T) {
 	env := newConvHTTPEnv(t)
 	created := env.create(t, "s1", []map[string]any{
 		{"key": "a", "title": "链首"},
@@ -454,7 +454,8 @@ func TestConvHTTPCancelChainKeepsDownstreamPending(t *testing.T) {
 	tasks := taskList(t, created)
 	aID, bID, cID := taskIDOf(t, tasks[0]), taskIDOf(t, tasks[1]), taskIDOf(t, tasks[2])
 
-	status, payload := env.json(t, http.MethodPost, "/api/sessions/s1/tasks/"+aID+"/cancel?scope=chain", nil)
+	// 缺省 scope=self（AC-CONV-009-15 的判定通道）：只取消目标任务，下游保持依赖等待。
+	status, payload := env.json(t, http.MethodPost, "/api/sessions/s1/tasks/"+aID+"/cancel", nil)
 	if status != http.StatusOK {
 		t.Fatalf("取消应 200，got %d body=%v", status, payload)
 	}
@@ -469,7 +470,7 @@ func TestConvHTTPCancelChainKeepsDownstreamPending(t *testing.T) {
 		t.Fatalf("目标任务应为 cancelled，got %q", got)
 	}
 
-	// 下游任务保持 pending，不写 blocked。
+	// 下游任务保持 pending 并继续等待依赖，不写 blocked、不启动。
 	for _, id := range []string{bID, cID} {
 		status, detail := env.json(t, http.MethodGet, "/api/sessions/s1/tasks/"+id, nil)
 		if status != http.StatusOK {
@@ -477,7 +478,10 @@ func TestConvHTTPCancelChainKeepsDownstreamPending(t *testing.T) {
 		}
 		downstream := objValue(t, detail["task"], "task")
 		if got := strValue(t, downstream["status"], "status"); got != "pending" {
-			t.Fatalf("链式取消后下游应保持 pending，got %q（任务 %s）", got, id)
+			t.Fatalf("取消上游后下游应保持 pending，got %q（任务 %s）", got, id)
+		}
+		if got := strValue(t, downstream["waitingReason"], "waitingReason"); got != "dependency" {
+			t.Fatalf("下游应继续等待依赖，got %q（任务 %s）", got, id)
 		}
 	}
 
@@ -893,7 +897,7 @@ func TestConvHTTPErrorEnvelopes(t *testing.T) {
 		{"任务不存在", http.MethodGet, "/api/sessions/s1/tasks/task-nope", nil, http.StatusNotFound, "task_not_found", ""},
 		{"跨会话", http.MethodGet, "/api/sessions/s2/tasks/" + taskID, nil, http.StatusNotFound, "task_not_found", ""},
 		{"运行中重试", http.MethodPost, "/api/sessions/s1/tasks/" + taskID + "/retry", nil, http.StatusConflict, "task_state_conflict", "running"},
-		{"非法 scope", http.MethodPost, "/api/sessions/s1/tasks/" + taskID + "/cancel?scope=all", nil, http.StatusBadRequest, "invalid_task_status", ""},
+		{"非法 scope", http.MethodPost, "/api/sessions/s1/tasks/" + taskID + "/cancel?scope=all", nil, http.StatusBadRequest, "invalid_argument", ""},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

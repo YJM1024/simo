@@ -107,7 +107,6 @@ export function mergeTaskView(task: TaskView, event: TaskEvent): TaskView {
   }
   if (typeof event.title === 'string') next.title = event.title
   if (typeof event.updatedAt === 'number') next.updatedAt = event.updatedAt
-  if (event.type === 'task.reminder' && typeof event.overdueMinutes === 'number') next.overdueMinutes = event.overdueMinutes
   return next
 }
 
@@ -128,11 +127,11 @@ export function currentStepId(steps: ReadonlyArray<Pick<TaskStep, 'id' | 'status
   return pending ? pending.id : null
 }
 
-/** 轨迹按 traceSeq 追加；已存在同一 (taskId, traceSeq) 时返回原数组，保证 DOM 不重建。 */
+/** 轨迹按 seq 追加；已存在同一 (taskId, seq) 时返回原数组，保证 DOM 不重建。 */
 export function appendTrace(list: ReadonlyArray<TraceItem>, trace: TraceItem, taskId?: string): TraceItem[] {
   const id = taskId ?? trace.taskId ?? ''
-  if (list.some((item) => item.traceSeq === trace.traceSeq && (item.taskId ?? id) === id)) return list as TraceItem[]
-  return [...list, trace].sort((a, b) => a.traceSeq - b.traceSeq)
+  if (list.some((item) => item.seq === trace.seq && (item.taskId ?? id) === id)) return list as TraceItem[]
+  return [...list, trace].sort((a, b) => a.seq - b.seq)
 }
 
 /** 角标/筛选计数：1–9 原样，10 及以上 `9+`，0 返回 null（不渲染节点）。 */

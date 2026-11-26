@@ -1,4 +1,4 @@
-﻿import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TaskGraphDialog, layoutTaskGraph } from './tasks'
@@ -23,8 +23,8 @@ describe('layoutTaskGraph', () => {
     const nodes = Array.from({ length: 10 }, (_, index) => node({ id: `n-${index}` }))
     const placement = layoutTaskGraph(graph({ nodes, edges: [], layers: [] }))
     expect(placement['n-0']).toEqual({ x: 24, y: 24, w: 156, h: 64 })
-    expect(placement['n-3']).toEqual({ x: 24 + 3 * 188, y: 24, w: 156, h: 64 })
-    expect(placement['n-4']).toEqual({ x: 24, y: 24 + 104, w: 156, h: 64 })
+    expect(placement['n-3']).toEqual({ x: 24 + 3 * 180, y: 24, w: 156, h: 64 })
+    expect(placement['n-4']).toEqual({ x: 24, y: 24 + 88, w: 156, h: 64 })
   })
 
   it('stacks layers by index once a graph exceeds twenty nodes', () => {
@@ -43,11 +43,31 @@ describe('layoutTaskGraph', () => {
     }))
     // 22 个节点走分层分支：每层按 index 顺序占用行，单层超过 4 个折行。
     expect(placement['n-0'].y).toBe(24)
-    expect(placement['n-4'].y).toBe(24 + 104)
-    expect(placement['n-8'].y).toBe(24 + 2 * 104)
-    expect(placement['n-12'].y).toBe(24 + 3 * 104)
-    expect(placement['n-16'].y).toBe(24 + 4 * 104)
+    expect(placement['n-4'].y).toBe(24 + 88)
+    expect(placement['n-8'].y).toBe(24 + 2 * 88)
+    expect(placement['n-12'].y).toBe(24 + 3 * 88)
+    expect(placement['n-16'].y).toBe(24 + 4 * 88)
     expect(placement['n-0'].x).toBe(24)
+  })
+
+  it('wraps a twenty-one node graph into four plus one rows per layer', () => {
+    const nodes = Array.from({ length: 21 }, (_, index) => node({ id: `n-${index}` }))
+    const ids = (start: number, count: number): string[] => Array.from({ length: count }, (_, index) => `n-${start + index}`)
+    const placement = layoutTaskGraph(graph({
+      nodes,
+      edges: [],
+      layers: [
+        { index: 0, nodeIds: ids(0, 16) },
+        { index: 1, nodeIds: ids(16, 5) },
+      ],
+      total: 21,
+    }))
+    // 第一层 16 个铺满四行；第二层 5 个排成 4+1，第 5 个回到第二行第一列。
+    expect(placement['n-15'].y).toBe(24 + 3 * 88)
+    expect(placement['n-16'].y).toBe(24 + 4 * 88)
+    expect(placement['n-19'].x).toBe(24 + 3 * 180)
+    expect(placement['n-20'].y).toBe(24 + 5 * 88)
+    expect(placement['n-20'].x).toBe(24)
   })
 })
 
@@ -79,9 +99,12 @@ describe('TaskGraphDialog', () => {
     const edge = document.querySelector('.task-graph-edge') as SVGPathElement
     expect(edge).toHaveAttribute('data-from', 'n-2')
     expect(edge).toHaveAttribute('data-style', 'dashed')
-    expect(edge).toHaveAttribute('stroke-dasharray', '4 4')
+    expect(edge).toHaveAttribute('stroke-dasharray', '4 3')
+    expect(edge).toHaveAttribute('opacity', '0.55')
+    expect(edge).toHaveAttribute('marker-end', 'url(#task-graph-arrow-failed)')
     expect(screen.getByText('失败任务')).toBeInTheDocument()
-    expect(screen.getByText('失败')).toBeInTheDocument()
+    expect(screen.getAllByText('失败').length).toBeGreaterThan(0)
+    expect(document.querySelectorAll('.task-graph-legend-item')).toHaveLength(5)
   })
 
   it('opens a node, closes from the button and Escape', async () => {
@@ -91,15 +114,16 @@ describe('TaskGraphDialog', () => {
     render(<TaskGraphDialog open graph={graph()} loading={false} onClose={onClose} onOpenTask={onOpenTask} />)
     await user.click(screen.getByRole('button', { name: /任务二/ }))
     expect(onOpenTask).toHaveBeenCalledWith('n-2')
-    await user.click(screen.getByRole('button', { name: '关闭任务图' }))
     expect(onClose).toHaveBeenCalledTimes(1)
-    await user.keyboard('{Escape}')
+    await user.click(screen.getByRole('button', { name: '关闭任务图' }))
     expect(onClose).toHaveBeenCalledTimes(2)
+    await user.keyboard('{Escape}')
+    expect(onClose).toHaveBeenCalledTimes(3)
   })
 
-  it('marks loop tasks and keeps a minimum canvas width', () => {
-    render(<TaskGraphDialog open graph={graph({ nodes: [node({ mode: 'loop' })], edges: [], layers: [], total: 1 })} loading={false} onClose={vi.fn()} onOpenTask={vi.fn()} />)
-    expect(screen.getByText('循环')).toBeInTheDocument()
+  it('marks explore tasks and keeps a minimum canvas width', () => {
+    render(<TaskGraphDialog open graph={graph({ nodes: [node({ mode: 'explore' })], edges: [], layers: [], total: 1 })} loading={false} onClose={vi.fn()} onOpenTask={vi.fn()} />)
+    expect(screen.getByText('边做边想')).toBeInTheDocument()
     const canvas = document.querySelector('.task-graph-canvas') as HTMLElement
     expect(canvas.style.width).toBe('920px')
   })

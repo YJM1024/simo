@@ -38,7 +38,7 @@ runUiAc('AC-CONV-009-13', async (ctx) => {
       statuses: nodes.map((n) => n.getAttribute('data-status')),
       nodeSize: fr ? { w: Math.round(fr.width), h: Math.round(fr.height) } : null,
       failed: failed ? { status: failed.getAttribute('data-status'), text: (failed.textContent || '').trim() } : null,
-      downstream: downstream ? { status: downstream.getAttribute('data-status'), text: (downstream.textContent || '').trim(), failReason: downstream.getAttribute('data-fail-reason') } : null,
+      downstream: downstream ? { status: downstream.getAttribute('data-status'), text: (downstream.textContent || '').trim(), label: (downstream.querySelector('.task-graph-node-status')?.textContent || '').trim(), failedClass: downstream.querySelectorAll('.task-status-failed').length, failReason: downstream.getAttribute('data-fail-reason') } : null,
       dashed: edge ? edge.getAttribute('data-style') : null,
       dashArray: edge ? getComputedStyle(edge).strokeDasharray : null,
       edgeCount: edges.length,
@@ -57,7 +57,7 @@ runUiAc('AC-CONV-009-13', async (ctx) => {
   ctx.check(survey.dashed === 'dashed', '失败起点边 d→h 为虚线', 'data-style=dashed', survey.dashed ?? '边不存在');
   ctx.check((survey.dashArray ?? '').split(/[ ,]+/).filter(Boolean).length >= 2, '虚线边有 dasharray', '至少两个 dash 值', survey.dashArray ?? '边不存在');
   ctx.check(survey.downstream?.status === 'pending', '下游 h 仍为未开始', 'pending', survey.downstream?.status ?? '元素不存在');
-  ctx.check(!(survey.downstream?.text ?? '').includes('失败'), '下游 h 未被标失败', '文案不含「失败」', survey.downstream?.text ?? '元素不存在');
+  ctx.check((survey.downstream?.label ?? '') === '未开始' && survey.downstream?.failedClass === 0, '下游 h 未被标失败', '状态文案=未开始', survey.downstream ? `状态文案=${survey.downstream.label} 失败样式=${survey.downstream.failedClass}` : '元素不存在');
 
   // 点失败节点：关闭弹窗、打开只读详情，写请求 0。
   const writesBefore = survey.writes;

@@ -12,6 +12,7 @@ import (
 
 	"simo/internal/core/eventlog"
 	coretask "simo/internal/core/task"
+	"simo/internal/platform/clock"
 )
 
 // P1-CONV-009：任务会话化（创建/列表/详情/取消/重试/确认/恢复/图/交付物）。
@@ -70,6 +71,7 @@ type ConvStep struct {
 	FailReason string `json:"failReason,omitempty"`
 	StartedAt  int64  `json:"startedAt,omitempty"`
 	FinishedAt int64  `json:"finishedAt,omitempty"`
+	TraceCount int    `json:"traceCount"`
 }
 
 // ConvTrace 是 task_traces 的一行。
@@ -84,43 +86,16 @@ type ConvTrace struct {
 	At       int64  `json:"at"`
 }
 
-// BatchTaskInput 是批量创建里的单个任务。
-type BatchTaskInput struct {
-	Key         string   `json:"key"`
-	Title       string   `json:"title"`
-	Mode        string   `json:"mode"`
-	Goal        string   `json:"goal"`
-	Inputs      []string `json:"inputs"`
-	Constraints []string `json:"constraints"`
-	Steps       []string `json:"steps"`
-	DependsOn   []string `json:"dependsOn"`
-	JoinMode    string   `json:"joinMode"`
-	DeadlineAt  int64    `json:"deadlineAt"`
-	Payload     string   `json:"payload"`
-}
+// BatchTaskInput / BatchCreateInput / BatchCreateResult 与 coretask 共用同一套字段，
+// 这样 chat 模块的 DELEGATE 可以直接走 coretask.BatchCreator 而不 import 本模块。
+type BatchTaskInput = coretask.BatchTaskInput
 
-// BatchCreateInput 是 POST /api/sessions/{id}/tasks 的请求体。
-type BatchCreateInput struct {
-	Mode             string           `json:"mode"`
-	Goal             string           `json:"goal"`
-	Inputs           []string         `json:"inputs"`
-	Constraints      []string         `json:"constraints"`
-	Kind             string           `json:"kind"`
-	ClientMutationID string           `json:"clientMutationId"`
-	Tasks            []BatchTaskInput `json:"tasks"`
-	Title            string           `json:"title"`
-	Payload          string           `json:"payload"`
-}
+type BatchCreateInput = coretask.BatchCreateInput
 
-// BatchCreateResult 是创建响应。
-type BatchCreateResult struct {
-	BatchID    string          `json:"batchId"`
-	Tasks      []coretask.Task `json:"tasks"`
-	MessageID  string          `json:"messageId"`
-	Counts     map[string]int  `json:"counts"`
-	Idempotent bool            `json:"idempotent"`
-	Total      int             `json:"total"`
-}
+type BatchCreateResult = coretask.BatchCreateResult
+
+// BatchCreator 由 tasks 模块实现，chat 的 DELEGATE 通过端口调用。
+var _ coretask.BatchCreator = (*Module)(nil)
 
 func displayStatus(status string) string {
 	switch status {
@@ -193,7 +168,32 @@ func (m *Module) loadSteps(ctx context.Context, taskID string) ([]ConvStep, erro
 		}
 		out = append(out, s)
 	}
-	return out, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	// N3：每步补 traceCount（该步骤下已记录的轨迹条数）。
+	countRows, err := m.store.Query(ctx, `SELECT step_id, COUNT(*) FROM task_traces
+		WHERE task_id = ? AND step_id <> '' GROUP BY step_id`, taskID)
+	if err != nil {
+		return nil, err
+	}
+	defer countRows.Close()
+	counts := map[string]int{}
+	for countRows.Next() {
+		var stepID string
+		var n int
+		if err := countRows.Scan(&stepID, &n); err != nil {
+			return nil, err
+		}
+		counts[stepID] = n
+	}
+	if err := countRows.Err(); err != nil {
+		return nil, err
+	}
+	for i := range out {
+		out[i].TraceCount = counts[out[i].ID]
+	}
+	return out, nil
 }
 
 func replaceSteps(ctx context.Context, tx *sql.Tx, taskID string, steps []ConvStep) error {
@@ -242,6 +242,44 @@ func (m *Module) mirrorSteps(ctx context.Context, taskID string) error {
 		_, err := tx.ExecContext(ctx, `UPDATE tasks SET steps = ? WHERE id = ?`, string(payload), taskID)
 		return err
 	})
+}
+
+// syncStepsFromTask 把内存里的步骤状态回写 task_steps（按 seq 顺序逐项对齐）。
+// mock 执行器只改 tasks.steps 这份兼容 JSON，不写规范化步骤表；这里补上同步，
+// 保证详情接口能观察到步骤推进。任务没有规范化步骤行时不做任何事，旧任务不受影响。
+func (m *Module) syncStepsFromTask(ctx context.Context, task coretask.Task) error {
+	steps, err := m.loadSteps(ctx, task.ID)
+	if err != nil || len(steps) == 0 || len(task.Steps) == 0 {
+		return err
+	}
+	n := len(steps)
+	if len(task.Steps) < n {
+		n = len(task.Steps)
+	}
+	now := time.Now().UnixMilli()
+	changed := false
+	for i := 0; i < n; i++ {
+		status := normalizeStepStatus(task.Steps[i].Status)
+		if steps[i].Status == status {
+			continue
+		}
+		steps[i].Status = status
+		switch status {
+		case "running":
+			if steps[i].StartedAt == 0 {
+				steps[i].StartedAt = now
+			}
+		case "done", "failed", "skipped":
+			if steps[i].FinishedAt == 0 {
+				steps[i].FinishedAt = now
+			}
+		}
+		changed = true
+	}
+	if !changed {
+		return nil
+	}
+	return m.saveSteps(ctx, task.ID, steps)
 }
 
 func (m *Module) nextTraceSeq(ctx context.Context, taskID string) (int, error) {
@@ -297,6 +335,7 @@ func (m *Module) emitStepEvent(ctx context.Context, task coretask.Task, step Con
 		"seq": step.Seq, "title": step.Title, "status": step.Status,
 		"summary": step.Summary, "failReason": step.FailReason,
 		"startedAt": step.StartedAt, "finishedAt": step.FinishedAt,
+		"traceCount":    step.TraceCount,
 		"displayStatus": displayStatus(task.Status),
 	})
 }
@@ -360,10 +399,11 @@ func validateMode(mode string) (string, error) {
 	if mode == "" {
 		return "plan", nil
 	}
-	if mode != "plan" && mode != "execute" {
-		return "", newConvError(400, "invalid_task_mode", "mode 只能是 plan 或 execute")
+	switch mode {
+	case "plan", "react", "explore":
+		return mode, nil
 	}
-	return mode, nil
+	return "", newConvError(400, "invalid_task_mode", "mode 只能是 plan、react 或 explore")
 }
 
 func normalizeStringList(values []string, field string) ([]string, error) {
@@ -477,9 +517,9 @@ func validateBatchInput(input BatchCreateInput) (string, BatchCreateInput, error
 			task.JoinMode = "all"
 		}
 		switch task.JoinMode {
-		case "all", "any", "each":
+		case "all", "any", "each", "first":
 		default:
-			return "", input, newConvError(400, "invalid_task_dependency", "joinMode 只能是 all/any/each")
+			return "", input, newConvError(400, "invalid_task_dependency", "joinMode 只能是 all/any/each/first")
 		}
 		key := task.Key
 		if key == "" {
@@ -492,15 +532,48 @@ func validateBatchInput(input BatchCreateInput) (string, BatchCreateInput, error
 		task.Key = key
 	}
 	// 依赖必须指向本批内已声明的 key。
-	for _, task := range input.Tasks {
-		for _, dep := range task.DependsOn {
-			if !seen[strings.TrimSpace(dep)] {
+	for i := range input.Tasks {
+		task := &input.Tasks[i]
+		for j := range task.DependsOn {
+			dep := strings.TrimSpace(task.DependsOn[j])
+			task.DependsOn[j] = dep
+			if !seen[dep] {
 				return "", input, newConvError(400, "invalid_task_dependency", "依赖的任务不在本批次内")
 			}
-			if strings.TrimSpace(dep) == task.Key {
+			if dep == task.Key {
 				return "", input, newConvError(400, "invalid_task_dependency", "任务不能依赖自身")
 			}
 		}
+	}
+	// 依赖环检测：Kahn 拓扑排序，剩余节点即环。
+	indegree := make(map[string]int, len(input.Tasks))
+	adj := make(map[string][]string, len(input.Tasks))
+	for _, task := range input.Tasks {
+		indegree[task.Key] = len(task.DependsOn)
+		for _, dep := range task.DependsOn {
+			adj[dep] = append(adj[dep], task.Key)
+		}
+	}
+	queue := make([]string, 0, len(input.Tasks))
+	for key, n := range indegree {
+		if n == 0 {
+			queue = append(queue, key)
+		}
+	}
+	visited := 0
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+		visited++
+		for _, next := range adj[current] {
+			indegree[next]--
+			if indegree[next] == 0 {
+				queue = append(queue, next)
+			}
+		}
+	}
+	if visited != len(input.Tasks) {
+		return "", input, newConvError(400, "invalid_task_dependency", "任务依赖存在环")
 	}
 	return input.Mode, input, nil
 }
@@ -642,6 +715,12 @@ func (m *Module) CreateBatch(ctx context.Context, sessionID string, input BatchC
 		return BatchCreateResult{}, fmt.Errorf("创建任务失败: %w", err)
 	}
 
+	// 任务目录随任务行落库后立即建好：批量创建是 chat DELEGATE 的唯一入口，
+	// 执行器与内部报告都按 code/data/output/_internal 四个区域写盘。
+	for i := range built {
+		m.ensureTaskDirs(ctx, sessionID, built[i].ID)
+	}
+
 	// 事件顺序：全部 task.created 按 orderIndex，再逐步 task.step，最后 message.created。
 	for i := range built {
 		m.emit(ctx, eventlog.TypeTaskCreated, m.taskEventV2(built[i], nil))
@@ -655,7 +734,7 @@ func (m *Module) CreateBatch(ctx context.Context, sessionID string, input BatchC
 	m.emit(ctx, eventlog.TypeMessageCreated, map[string]any{
 		"id": messageID, "messageId": messageID, "sessionId": sessionID,
 		"role": "agent", "text": messageText, "category": "task",
-		"taskId": built[0].ID, "batchId": batchID, "at": now, "status": "done",
+		"taskId": built[0].ID, "batchId": batchID, "taskCount": len(built), "at": now, "status": "done",
 	})
 
 	// 依赖不满足的任务进入 dependency 等待；其余入队执行。
@@ -792,13 +871,8 @@ type ListFilter struct {
 	Before  string
 }
 
-func (m *Module) ListConvTasks(ctx context.Context, sessionID string, filter ListFilter) ([]coretask.Task, bool, string, error) {
-	if filter.Limit <= 0 {
-		filter.Limit = defaultListLimit
-	}
-	if filter.Limit < 1 || filter.Limit > maxListLimit {
-		return nil, false, "", newConvError(400, "invalid_task_limit", "limit 必须在 1..100")
-	}
+// convTaskFilter 构造列表/计数的 WHERE 子句，保证 total 与列表用同一套筛选。
+func convTaskFilter(sessionID string, filter ListFilter) (string, []any, error) {
 	statuses := make([]string, 0, len(filter.Status))
 	for _, raw := range filter.Status {
 		raw = strings.TrimSpace(raw)
@@ -811,10 +885,18 @@ func (m *Module) ListConvTasks(ctx context.Context, sessionID string, filter Lis
 			coretask.StatusInterrupted, coretask.StatusBlocked:
 			statuses = append(statuses, raw)
 		default:
-			return nil, false, "", newConvError(400, "invalid_task_status", "status 取值非法")
+			return "", nil, newConvError(400, "invalid_task_status", "status 取值非法")
 		}
 	}
-	query := taskSelect + ` WHERE session_id = ?`
+	if filter.Mode != "" {
+		if _, err := validateMode(filter.Mode); err != nil {
+			return "", nil, err
+		}
+	}
+	if filter.BatchID != "" && !isBatchID(filter.BatchID) {
+		return "", nil, newConvError(400, "invalid_argument", "batchId 格式非法")
+	}
+	query := ` WHERE session_id = ?`
 	args := []any{sessionID}
 	if len(statuses) > 0 {
 		// 展示态展开成存储态。
@@ -843,16 +925,42 @@ func (m *Module) ListConvTasks(ctx context.Context, sessionID string, filter Lis
 		args = append(args, filter.Mode)
 	}
 	if filter.BatchID != "" {
-		if !isBatchID(filter.BatchID) {
-			return nil, false, "", newConvError(400, "invalid_task_status", "batchId 格式非法")
-		}
 		query += ` AND batch_id = ?`
 		args = append(args, filter.BatchID)
 	}
+	return query, args, nil
+}
+
+// CountConvTasks 返回当前筛选下的任务总数（N2 的 total；游标不参与计数）。
+func (m *Module) CountConvTasks(ctx context.Context, sessionID string, filter ListFilter) (int, error) {
+	where, args, err := convTaskFilter(sessionID, filter)
+	if err != nil {
+		return 0, err
+	}
+	var total int
+	if err := m.store.QueryRow(ctx, `SELECT COUNT(*) FROM tasks`+where, args...).Scan(&total); err != nil {
+		return 0, err
+	}
+	return total, nil
+}
+
+func (m *Module) ListConvTasks(ctx context.Context, sessionID string, filter ListFilter) ([]coretask.Task, bool, string, error) {
+	if filter.Limit <= 0 {
+		filter.Limit = defaultListLimit
+	}
+	if filter.Limit < 1 || filter.Limit > maxListLimit {
+		return nil, false, "", newConvError(400, "invalid_task_limit", "limit 必须在 1..100")
+	}
+	where, args, err := convTaskFilter(sessionID, filter)
+	if err != nil {
+		return nil, false, "", err
+	}
+	query := taskSelect + where
 	if filter.Before != "" {
 		updatedAt, id, ok := parseBeforeCursor(filter.Before)
 		if !ok {
-			return nil, false, "", newConvError(400, "invalid_task_limit", "before 游标非法")
+			// 游标失效返回空页，不报错（CT-CONV-520）。
+			return []coretask.Task{}, false, "", nil
 		}
 		query += ` AND (updated_at < ? OR (updated_at = ? AND id < ?))`
 		args = append(args, updatedAt, updatedAt, id)
@@ -1031,8 +1139,10 @@ func (m *Module) ConvTaskDetail(ctx context.Context, sessionID, taskID string, t
 	return detail, nil
 }
 
+// parseBudget 返回 N3 契约的 budget 四字段：maxTokens/maxSteps/usedTokens/usedSteps。
+// 历史行可能写成 stepsUsed/tokensUsed，读时统一改成 used 前缀，避免同一响应出现两套键名。
 func parseBudget(raw string) map[string]any {
-	budget := map[string]any{"maxSteps": 8, "maxTokens": 12000, "stepsUsed": 0, "tokensUsed": 0}
+	budget := map[string]any{"maxSteps": 8, "maxTokens": 12000, "usedSteps": 0, "usedTokens": 0}
 	if strings.TrimSpace(raw) == "" {
 		return budget
 	}
@@ -1041,9 +1151,19 @@ func parseBudget(raw string) map[string]any {
 		return budget
 	}
 	for key, value := range parsed {
-		budget[key] = value
+		budget[normalizeBudgetKey(key)] = value
 	}
 	return budget
+}
+
+func normalizeBudgetKey(key string) string {
+	switch key {
+	case "stepsUsed":
+		return "usedSteps"
+	case "tokensUsed":
+		return "usedTokens"
+	}
+	return key
 }
 
 // ---- 取消 / 重试 / 确认 / 恢复 ----
@@ -1082,13 +1202,15 @@ func (m *Module) Transition(ctx context.Context, taskID, to string, touch func(*
 	return coretask.Task{}, errStateConflict(task.Status)
 }
 
-// CancelScope 取消任务；scope=chain 时连带取消未完成的前置依赖，下游保持 pending。
+// CancelScope 取消任务。scope=self 只取消本任务；scope=chain 按依赖关系向下游传播：
+// 已完成的下游保留结果不动，未开始的下游直接取消，进行中的下游中断并落一条中断轨迹。
+// 取消不会级联到上游，也不会把等待中的下游标成失败。
 func (m *Module) CancelScope(ctx context.Context, taskID, scope string) (coretask.Task, []string, bool, error) {
 	if scope == "" {
 		scope = "self"
 	}
 	if scope != "self" && scope != "chain" {
-		return coretask.Task{}, nil, false, newConvError(400, "invalid_task_status", "scope 只能是 self 或 chain")
+		return coretask.Task{}, nil, false, newConvError(400, "invalid_argument", "scope 只能是 self 或 chain")
 	}
 	task, err := m.getTask(ctx, taskID)
 	if err == ErrNotFound {
@@ -1102,31 +1224,38 @@ func (m *Module) CancelScope(ctx context.Context, taskID, scope string) (coretas
 	}
 	targets := []string{task.ID}
 	if scope == "chain" {
-		upstream, err := m.transitiveDeps(ctx, task.ID)
+		downstream, err := m.transitiveDependents(ctx, task.ID)
 		if err != nil {
 			return coretask.Task{}, nil, false, err
 		}
-		targets = append(targets, upstream...)
+		targets = append(targets, downstream...)
 	}
-	cancelled := make([]string, 0, len(targets))
-	for _, id := range targets {
+	ordered, err := m.orderTaskIDs(ctx, targets)
+	if err != nil {
+		return coretask.Task{}, nil, false, err
+	}
+	cancelled := make([]string, 0, len(ordered))
+	interrupted := 0
+	deadline := time.Now().Add(5 * time.Second)
+	for _, id := range ordered {
 		current, err := m.getTask(ctx, id)
 		if err != nil {
 			continue
 		}
-		if isTerminalStatus(current.Status) {
+		if id != task.ID {
+			// 下游不级联改状态：只中断已启动（running）的，未启动的保持 pending 继续等依赖，
+			// 已完成的保留结果。ct-conv-535 裁定：cancelled[] 只含目标自身。
+			if current.Status != coretask.StatusRunning {
+				continue
+			}
+			m.stopAttemptWithin(id, deadline)
+			if _, err := m.markInterruptedConv(ctx, id, "上游任务取消，执行中断"); err != nil {
+				return coretask.Task{}, nil, false, err
+			}
+			interrupted++
 			continue
 		}
-		m.mu.Lock()
-		handle := m.active[id]
-		m.mu.Unlock()
-		if handle != nil {
-			handle.cancel()
-			select {
-			case <-handle.done:
-			case <-time.After(5 * time.Second):
-			}
-		}
+		m.stopAttemptWithin(id, deadline)
 		if _, err := m.markCancelledConv(ctx, id, "已取消"); err != nil {
 			return coretask.Task{}, nil, false, err
 		}
@@ -1137,7 +1266,133 @@ func (m *Module) CancelScope(ctx context.Context, taskID, scope string) (coretas
 		return coretask.Task{}, nil, false, err
 	}
 	decorateTask(&updated)
-	return updated, cancelled, len(cancelled) > 0, nil
+	return updated, cancelled, len(cancelled) > 0 || interrupted > 0, nil
+}
+
+// stopAttempt 取消在跑的执行器并最多等 5 秒，避免取消接口被不响应的执行器拖住。
+func (m *Module) stopAttempt(id string) {
+	m.stopAttemptWithin(id, time.Now().Add(5*time.Second))
+}
+
+// stopAttemptWithin 把等待上限压到同一个截止时间：整链取消时多个执行器共享 5 秒预算，
+// 不会按目标数线性放大接口耗时。
+func (m *Module) stopAttemptWithin(id string, deadline time.Time) {
+	m.mu.Lock()
+	handle := m.active[id]
+	m.mu.Unlock()
+	if handle == nil {
+		return
+	}
+	handle.cancel()
+	wait := time.Until(deadline)
+	if wait <= 0 {
+		return
+	}
+	select {
+	case <-handle.done:
+	case <-time.After(wait):
+	}
+}
+
+// transitiveDependents 按依赖边向下游 BFS（dep_id -> task_id），结果不含任务自身。
+func (m *Module) transitiveDependents(ctx context.Context, taskID string) ([]string, error) {
+	seen := map[string]bool{taskID: true}
+	out := make([]string, 0, 4)
+	frontier := []string{taskID}
+	for len(frontier) > 0 {
+		current := frontier[0]
+		frontier = frontier[1:]
+		rows, err := m.store.Query(ctx, `SELECT task_id FROM task_deps WHERE dep_id = ?`, current)
+		if err != nil {
+			return nil, err
+		}
+		for rows.Next() {
+			var child string
+			if err := rows.Scan(&child); err != nil {
+				rows.Close()
+				return nil, err
+			}
+			if !seen[child] {
+				seen[child] = true
+				out = append(out, child)
+				frontier = append(frontier, child)
+			}
+		}
+		if err := rows.Err(); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		rows.Close()
+	}
+	return out, nil
+}
+
+// orderTaskIDs 按 orderIndex 升序、同序按 id 返回任务 id，查不到的 id 略过。
+func (m *Module) orderTaskIDs(ctx context.Context, ids []string) ([]string, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	args := make([]any, 0, len(ids))
+	for _, id := range ids {
+		args = append(args, id)
+	}
+	rows, err := m.store.Query(ctx, `SELECT id FROM tasks WHERE id IN (`+placeholders(len(ids))+`)
+		ORDER BY order_index ASC, id ASC`, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := make([]string, 0, len(ids))
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		out = append(out, id)
+	}
+	return out, rows.Err()
+}
+
+// markInterruptedConv 让运行中的任务走中断流程：状态置 interrupted，运行中步骤回 pending，
+// 已完成步骤与产出保留，attempt 不增，并落一条中断轨迹。
+func (m *Module) markInterruptedConv(ctx context.Context, id, reason string) (coretask.Task, error) {
+	task, err := m.getTask(ctx, id)
+	if err != nil {
+		return coretask.Task{}, err
+	}
+	if isTerminalStatus(task.Status) {
+		return task, nil
+	}
+	now := time.Now().UnixMilli()
+	runningStep := ""
+	steps, _ := m.loadSteps(ctx, id)
+	for i := range steps {
+		if steps[i].Status == "running" {
+			runningStep = steps[i].ID
+			steps[i].Status = "pending"
+			steps[i].StartedAt = 0
+		}
+	}
+	if len(steps) > 0 {
+		if err := m.saveSteps(ctx, id, steps); err != nil {
+			return coretask.Task{}, err
+		}
+		_ = m.mirrorSteps(ctx, id)
+	}
+	task.Status = coretask.StatusInterrupted
+	task.WaitingReason = ""
+	task.WaitingSince = 0
+	task.Outcome = "interrupted"
+	task.Summary = reason
+	task.FinishedAt = now
+	task.UpdatedAt = now
+	if err := m.saveTask(ctx, task); err != nil {
+		return coretask.Task{}, err
+	}
+	_, _ = m.appendTrace(ctx, task, runningStep, "interrupt", "", reason)
+	m.emit(ctx, eventlog.TypeTaskUpdated, m.taskEventV2(task, []string{"status"}))
+	m.emit(ctx, eventlog.TypeTaskReport, m.taskEventV2(task, nil))
+	return task, nil
 }
 
 func (m *Module) markCancelledConv(ctx context.Context, id, summary string) (coretask.Task, error) {
@@ -1158,6 +1413,10 @@ func (m *Module) markCancelledConv(ctx context.Context, id, summary string) (cor
 	steps, _ := m.loadSteps(ctx, id)
 	now := task.UpdatedAt
 	for i := range steps {
+		if steps[i].Status == "running" {
+			// 回 pending 的步骤不再算已启动，与整链中断路径保持一致。
+			steps[i].StartedAt = 0
+		}
 		if steps[i].Status == "running" || steps[i].Status == "pending" {
 			steps[i].Status = "pending"
 		}
@@ -1205,6 +1464,7 @@ func (m *Module) transitiveDeps(ctx context.Context, taskID string) ([]string, e
 }
 
 // RetryConv 只允许 failed/cancelled/interrupted；其余 409。
+// 重试会连带重跑下游里失败/取消/中断的任务，已完成的下游保持原结果。
 func (m *Module) RetryConv(ctx context.Context, taskID string) (coretask.Task, int, int, error) {
 	task, err := m.getTask(ctx, taskID)
 	if err == ErrNotFound {
@@ -1218,19 +1478,25 @@ func (m *Module) RetryConv(ctx context.Context, taskID string) (coretask.Task, i
 	default:
 		return coretask.Task{}, 0, 0, errStateConflict(task.Status)
 	}
-	m.mu.Lock()
-	handle := m.active[task.ID]
-	m.mu.Unlock()
-	if handle != nil {
-		handle.cancel()
-		select {
-		case <-handle.done:
-		case <-time.After(5 * time.Second):
-		}
-	}
-	steps, err := m.loadSteps(ctx, task.ID)
+	m.stopAttempt(task.ID)
+	task, reset, err := m.requeueConv(ctx, task.ID)
 	if err != nil {
 		return coretask.Task{}, 0, 0, err
+	}
+	m.startAttempt(task.ID, task.Attempt)
+	m.retryDownstreamConv(ctx, task.ID)
+	return task, task.Attempt, reset, nil
+}
+
+// requeueConv 把一条终态任务重置为 queued：attempt 加一、步骤全回 pending、清等待与失败信息。
+func (m *Module) requeueConv(ctx context.Context, taskID string) (coretask.Task, int, error) {
+	task, err := m.getTask(ctx, taskID)
+	if err != nil {
+		return coretask.Task{}, 0, err
+	}
+	steps, err := m.loadSteps(ctx, taskID)
+	if err != nil {
+		return coretask.Task{}, 0, err
 	}
 	now := time.Now().UnixMilli()
 	reset := 0
@@ -1245,8 +1511,8 @@ func (m *Module) RetryConv(ctx context.Context, taskID string) (coretask.Task, i
 		steps[i].FinishedAt = 0
 	}
 	if len(steps) > 0 {
-		if err := m.saveSteps(ctx, task.ID, steps); err != nil {
-			return coretask.Task{}, 0, 0, err
+		if err := m.saveSteps(ctx, taskID, steps); err != nil {
+			return coretask.Task{}, 0, err
 		}
 	}
 	task.Attempt++
@@ -1262,12 +1528,40 @@ func (m *Module) RetryConv(ctx context.Context, taskID string) (coretask.Task, i
 	task.Phases = resetPhases(task.Phases)
 	task.UpdatedAt = now
 	if err := m.saveTask(ctx, task); err != nil {
-		return coretask.Task{}, 0, 0, err
+		return coretask.Task{}, 0, err
 	}
-	_ = m.mirrorSteps(ctx, task.ID)
+	_ = m.mirrorSteps(ctx, taskID)
 	m.emit(ctx, eventlog.TypeTaskUpdated, m.taskEventV2(task, []string{"status", "attempt", "progress"}))
-	m.startAttempt(task.ID, task.Attempt)
-	return task, task.Attempt, reset, nil
+	return task, reset, nil
+}
+
+// retryDownstreamConv 只重跑下游里失败/取消/中断的任务，已完成的下游不动。
+func (m *Module) retryDownstreamConv(ctx context.Context, taskID string) {
+	downstream, err := m.transitiveDependents(ctx, taskID)
+	if err != nil || len(downstream) == 0 {
+		return
+	}
+	ordered, err := m.orderTaskIDs(ctx, downstream)
+	if err != nil {
+		return
+	}
+	for _, id := range ordered {
+		current, err := m.getTask(ctx, id)
+		if err != nil {
+			continue
+		}
+		switch current.Status {
+		case coretask.StatusFailed, coretask.StatusCancelled, coretask.StatusInterrupted:
+		default:
+			continue
+		}
+		m.stopAttempt(id)
+		retried, _, err := m.requeueConv(ctx, id)
+		if err != nil {
+			continue
+		}
+		m.startAttempt(retried.ID, retried.Attempt)
+	}
 }
 
 // ConfirmationInput 是确认接口请求体。
@@ -1279,10 +1573,10 @@ type ConfirmationInput struct {
 // ConfirmConv 处理 confirmation 等待：confirm 继续，cancel 失败收口。
 func (m *Module) ConfirmConv(ctx context.Context, taskID string, input ConfirmationInput) (coretask.Task, string, error) {
 	if input.Decision != "confirm" && input.Decision != "cancel" {
-		return coretask.Task{}, "", newConvError(400, "invalid_task_status", "decision 只能是 confirm 或 cancel")
+		return coretask.Task{}, "", newConvError(400, "invalid_argument", "decision 只能是 confirm 或 cancel")
 	}
 	if len([]rune(input.Note)) > 500 {
-		return coretask.Task{}, "", newConvError(413, "task_context_too_large", "note 不能超过 500 字")
+		return coretask.Task{}, "", newConvError(400, "invalid_argument", "note 不能超过 500 字")
 	}
 	task, err := m.getTask(ctx, taskID)
 	if err == ErrNotFound {
@@ -1332,10 +1626,15 @@ func (m *Module) ConfirmConv(ctx context.Context, taskID string, input Confirmat
 		m.emit(ctx, eventlog.TypeTaskReport, m.taskEventV2(task, nil))
 		return task, currentStepID, nil
 	}
-	// confirm：清等待，继续执行。
+	// confirm：清等待，继续执行。trigger_count 只记依赖放行与资源恢复，
+	// 确认放行不计入，否则 each 的“已完成前置数”会被确认次数挤占。
+	// 确认前挂起的工具审批在这里真正放行（补会话授权），执行器续跑时直接通过；
+	// 放行失败则保持等待，避免出现“已确认但工具仍被拦”的半状态。
+	if err := m.releaseTaskApprovals(ctx, task); err != nil {
+		return coretask.Task{}, "", newConvError(500, "internal", "放行待审批工具失败")
+	}
 	task.WaitingReason = ""
 	task.WaitingSince = 0
-	task.TriggerCount++
 	task.UpdatedAt = now
 	if task.Status != coretask.StatusRunning {
 		task.Status = coretask.StatusRunning
@@ -1372,7 +1671,7 @@ func (m *Module) ConfirmConv(ctx context.Context, taskID string, input Confirmat
 // ResumeConv 解除 resource 等待。
 func (m *Module) ResumeConv(ctx context.Context, taskID, reason string) (coretask.Task, string, error) {
 	if len([]rune(reason)) > 200 {
-		return coretask.Task{}, "", newConvError(413, "task_context_too_large", "reason 不能超过 200 字")
+		return coretask.Task{}, "", newConvError(400, "invalid_argument", "reason 不能超过 200 字")
 	}
 	task, err := m.getTask(ctx, taskID)
 	if err == ErrNotFound {
@@ -1412,6 +1711,7 @@ func (m *Module) ResumeConv(ctx context.Context, taskID, reason string) (coretas
 	task.Status = coretask.StatusRunning
 	task.WaitingReason = ""
 	task.WaitingSince = 0
+	// 恢复计入 trigger_count（T03 卡口径）：预算计数不重置，已完成步骤原样保留。
 	task.TriggerCount++
 	task.UpdatedAt = now
 	if err := m.saveTask(ctx, task); err != nil {
@@ -1431,12 +1731,16 @@ func (m *Module) ResumeConv(ctx context.Context, taskID, reason string) (coretas
 
 // GraphNode / GraphEdge 是任务图元素。
 type GraphNode struct {
-	ID            string `json:"id"`
-	Title         string `json:"title"`
-	Status        string `json:"status"`
-	DisplayStatus string `json:"displayStatus"`
-	WaitingReason string `json:"waitingReason,omitempty"`
-	Layer         int    `json:"layer"`
+	ID            string   `json:"id"`
+	Title         string   `json:"title"`
+	Mode          string   `json:"mode"`
+	Status        string   `json:"status"`
+	DisplayStatus string   `json:"displayStatus"`
+	WaitingReason string   `json:"waitingReason,omitempty"`
+	Progress      int      `json:"progress"`
+	FailReason    string   `json:"failReason,omitempty"`
+	DependsOn     []string `json:"dependsOn"`
+	Layer         int      `json:"layer"`
 }
 
 type GraphEdge struct {
@@ -1466,7 +1770,7 @@ func (m *Module) TaskGraph(ctx context.Context, sessionID, batchID string) (Conv
 	args := []any{sessionID}
 	if batchID != "" {
 		if !isBatchID(batchID) {
-			return ConvGraph{}, newConvError(400, "invalid_task_status", "batchId 格式非法")
+			return ConvGraph{}, newConvError(400, "invalid_argument", "batchId 格式非法")
 		}
 		query += ` AND batch_id = ?`
 		args = append(args, batchID)
@@ -1493,6 +1797,7 @@ func (m *Module) TaskGraph(ctx context.Context, sessionID, batchID string) (Conv
 	edges := make([]GraphEdge, 0, len(tasks))
 	indegree := map[string]int{}
 	adj := map[string][]string{}
+	depsByTask := map[string][]string{}
 	for _, task := range tasks {
 		rows, err := m.store.Query(ctx, `SELECT dep_id, join_mode FROM task_deps WHERE task_id = ?`, task.ID)
 		if err != nil {
@@ -1513,6 +1818,7 @@ func (m *Module) TaskGraph(ctx context.Context, sessionID, batchID string) (Conv
 				style = "dashed"
 			}
 			edges = append(edges, GraphEdge{From: depID, To: task.ID, JoinMode: joinMode, Style: style})
+			depsByTask[task.ID] = append(depsByTask[task.ID], depID)
 			adj[depID] = append(adj[depID], task.ID)
 			indegree[task.ID]++
 		}
@@ -1553,9 +1859,16 @@ func (m *Module) TaskGraph(ctx context.Context, sessionID, batchID string) (Conv
 	}
 	nodes := make([]GraphNode, 0, len(tasks))
 	for _, task := range tasks {
+		dependsOn := depsByTask[task.ID]
+		if dependsOn == nil {
+			dependsOn = []string{}
+		}
 		nodes = append(nodes, GraphNode{
-			ID: task.ID, Title: task.Title, Status: task.Status,
-			DisplayStatus: displayStatus(task.Status), WaitingReason: task.WaitingReason,
+			ID: task.ID, Title: task.Title,
+			Mode:   firstNonEmptyValue(task.Mode, "plan"),
+			Status: task.Status, DisplayStatus: displayStatus(task.Status),
+			WaitingReason: task.WaitingReason, Progress: task.Progress,
+			FailReason: task.FailReason, DependsOn: dependsOn,
 			Layer: layer[task.ID],
 		})
 	}
@@ -1584,6 +1897,7 @@ type DeliverableGroup struct {
 	TaskTitle  string            `json:"taskTitle"`
 	TaskStatus string            `json:"taskStatus"`
 	Files      []DeliverableFile `json:"files"`
+	Count      int               `json:"count"`
 }
 
 // DeliverablesResult 是交付物分组响应。
@@ -1623,15 +1937,16 @@ func (m *Module) SessionDeliverables(ctx context.Context, sessionID, taskID stri
 	if limit > maxListLimit {
 		limit = maxListLimit
 	}
-	query := `SELECT a.id, a.task_id, a.name, a.mime, a.size, a.created_at, t.title, t.status
-		FROM task_artifacts a JOIN tasks t ON t.id = a.task_id
-		WHERE t.session_id = ? AND a.delivery_kind = 'user_delivery'`
+	query := `SELECT a.id, a.name, a.mime, a.size, a.created_at, t.id, t.title, t.status
+		FROM tasks t LEFT JOIN task_artifacts a
+			ON a.task_id = t.id AND a.delivery_kind = 'user_delivery'
+		WHERE t.session_id = ?`
 	args := []any{sessionID}
 	if taskID != "" {
-		query += ` AND a.task_id = ?`
+		query += ` AND t.id = ?`
 		args = append(args, taskID)
 	}
-	query += ` ORDER BY a.created_at ASC, a.id ASC`
+	query += ` ORDER BY CASE WHEN a.id IS NULL THEN 1 ELSE 0 END, a.created_at ASC, t.created_at ASC, t.rowid ASC, a.rowid ASC`
 	rows, err := m.store.Query(ctx, query, args...)
 	if err != nil {
 		return DeliverablesResult{}, err
@@ -1641,29 +1956,41 @@ func (m *Module) SessionDeliverables(ctx context.Context, sessionID, taskID stri
 	index := map[string]int{}
 	fileCount := 0
 	for rows.Next() {
-		var file DeliverableFile
-		var taskTitle, taskStatus string
-		if err := rows.Scan(&file.ID, &file.TaskID, &file.Name, &file.Mime, &file.Size,
-			&file.CreatedAt, &taskTitle, &taskStatus); err != nil {
+		var artifactID, name, mime, rowTaskID, taskTitle, taskStatus sql.NullString
+		var size, createdAt sql.NullInt64
+		if err := rows.Scan(&artifactID, &name, &mime, &size, &createdAt,
+			&rowTaskID, &taskTitle, &taskStatus); err != nil {
 			return DeliverablesResult{}, err
 		}
-		file.TypeBadge = typeBadgeFor(file.Name, file.Mime)
-		file.DownloadURL = "/api/artifacts/" + file.ID + "/content?download=1"
-		file.PreviewURL = "/api/artifacts/" + file.ID + "/content"
-		pos, ok := index[file.TaskID]
+		groupID := rowTaskID.String
+		pos, ok := index[groupID]
 		if !ok {
-			index[file.TaskID] = len(groups)
+			index[groupID] = len(groups)
 			groups = append(groups, DeliverableGroup{
-				TaskID: file.TaskID, TaskTitle: taskTitle, TaskStatus: taskStatus,
+				TaskID: groupID, TaskTitle: taskTitle.String, TaskStatus: taskStatus.String,
 				Files: []DeliverableFile{},
 			})
 			pos = len(groups) - 1
 		}
+		// LEFT JOIN 下没有产物的任务只有一行且 a.id 为 NULL：仍然建组，files 留空。
+		if !artifactID.Valid {
+			continue
+		}
+		file := DeliverableFile{
+			ID: artifactID.String, TaskID: groupID, Name: name.String, Mime: mime.String,
+			Size: size.Int64, CreatedAt: createdAt.Int64,
+		}
+		file.TypeBadge = typeBadgeFor(file.Name, file.Mime)
+		file.DownloadURL = "/api/artifacts/" + file.ID + "/content?download=1"
+		file.PreviewURL = "/api/artifacts/" + file.ID + "/content"
 		groups[pos].Files = append(groups[pos].Files, file)
 		fileCount++
 	}
 	if err := rows.Err(); err != nil {
 		return DeliverablesResult{}, err
+	}
+	for i := range groups {
+		groups[i].Count = len(groups[i].Files)
 	}
 	hasMore := len(groups) > limit
 	if hasMore {
@@ -1694,7 +2021,7 @@ func (m *Module) startReminderLoop(ctx context.Context) {
 
 // scanDeadlines 对到期待提醒任务各发一条 task.reminder，并写 deadline_reminded_at。
 func (m *Module) scanDeadlines(ctx context.Context) int {
-	now := time.Now().UnixMilli()
+	now := clock.NowUnixMilli()
 	rows, err := m.store.Query(ctx, taskSelect+` WHERE deadline_at > 0 AND deadline_reminded_at = 0
 		AND deadline_at <= ? AND status NOT IN ('done','failed','cancelled','interrupted')`, now)
 	if err != nil {
@@ -1731,57 +2058,11 @@ func (m *Module) scanDeadlines(ctx context.Context) int {
 }
 
 // ---- 执行器接入 ----
-
-// applyExecutionResult 把执行结果映射到 8 状态与三类等待（预算/resource，暂停/confirmation）。
-func (m *Module) applyExecutionResult(ctx context.Context, task coretask.Task, result coretask.ExecutionResult, execErr error) {
-	now := time.Now().UnixMilli()
-	switch {
-	case execErr != nil:
-		if canTransition(task.Status, coretask.StatusFailed) {
-			task.Status = coretask.StatusFailed
-		}
-		task.Outcome = "failed"
-		task.FailReason = execErr.Error()
-		task.Summary = truncateRunes(execErr.Error(), 500)
-		task.FinishedAt = now
-	case result.Budget:
-		task.Status = coretask.StatusRunning
-		task.WaitingReason = WaitingResource
-		task.WaitingSince = now
-		task.Outcome = "budget_exceeded"
-		if strings.TrimSpace(result.Summary) != "" {
-			task.Summary = result.Summary
-		}
-	case result.Paused:
-		task.Status = coretask.StatusRunning
-		task.WaitingReason = WaitingConfirmation
-		task.WaitingSince = now
-		task.Outcome = "paused"
-		if strings.TrimSpace(result.Summary) != "" {
-			task.Summary = result.Summary
-		}
-	default:
-		if canTransition(task.Status, coretask.StatusDone) {
-			task.Status = coretask.StatusDone
-		}
-		task.Outcome = "success"
-		task.Progress = 100
-		task.FinishedAt = now
-		if strings.TrimSpace(result.Summary) != "" {
-			task.Summary = result.Summary
-		}
-	}
-	task.UpdatedAt = now
-	if err := m.saveTask(ctx, task); err != nil {
-		m.log.Error("保存执行结果失败", "err", err, "taskId", task.ID)
-		return
-	}
-	changed := []string{"status"}
-	if task.WaitingReason != "" {
-		changed = append(changed, "waitingReason")
-	}
-	m.emit(ctx, eventlog.TypeTaskUpdated, m.taskEventV2(task, changed))
-}
+//
+// T03 裁决：原 applyExecutionResult 无任何调用点，real_executor.go 已内联等价的状态映射
+// （失败/预算 resource/审批 confirmation/完成），且 T03 的禁止项不改执行器。保留这份死代码
+// 会让两处映射继续分叉，因此删除；映射口径以 real_executor.go 与 spec §17.3 为准。
+// 统一执行器接入时由后续卡重新接线，不在本卡范围内。
 
 // notifyDependents 在任务完成后唤醒依赖它的等待任务。
 func (m *Module) notifyDependents(ctx context.Context, taskID string) {
@@ -1802,40 +2083,137 @@ func (m *Module) notifyDependents(ctx context.Context, taskID string) {
 	}
 }
 
+type convDepState struct {
+	ID       string
+	JoinMode string
+	Status   string
+}
+
+func (m *Module) loadConvDepStates(ctx context.Context, taskID string) ([]convDepState, error) {
+	rows, err := m.store.Query(ctx, `SELECT d.dep_id, d.join_mode, t.status
+		FROM task_deps d JOIN tasks t ON t.id = d.dep_id WHERE d.task_id = ? ORDER BY d.dep_id`, taskID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	deps := make([]convDepState, 0, 4)
+	for rows.Next() {
+		var dep convDepState
+		if err := rows.Scan(&dep.ID, &dep.JoinMode, &dep.Status); err != nil {
+			return nil, err
+		}
+		deps = append(deps, dep)
+	}
+	return deps, rows.Err()
+}
+
+func joinModeOf(deps []convDepState) string {
+	if len(deps) == 0 {
+		return ""
+	}
+	if strings.TrimSpace(deps[0].JoinMode) == "" {
+		return "all"
+	}
+	return deps[0].JoinMode
+}
+
+func countDoneDeps(deps []convDepState) int {
+	done := 0
+	for _, dep := range deps {
+		if dep.Status == coretask.StatusDone {
+			done++
+		}
+	}
+	return done
+}
+
+// markDependencyReady 是依赖等待的退出路径：只对正在等待依赖的任务放行，
+// 已放行过（等待已清空）或正在等确认/资源的任务不因前置完成被重复启动。
 func (m *Module) markDependencyReady(ctx context.Context, taskID string) {
 	task, err := m.getTask(ctx, taskID)
-	if err != nil || task.WaitingReason != WaitingDependency {
+	if err != nil || isTerminalStatus(task.Status) {
 		return
 	}
-	deps, err := m.store.Query(ctx, `SELECT dep_id FROM task_deps WHERE task_id = ?`, taskID)
+	if task.WaitingReason != WaitingDependency {
+		return // 没在等依赖：已放行、等确认或等资源，都不该被前置完成再次启动
+	}
+	deps, err := m.loadConvDepStates(ctx, taskID)
+	if err != nil || len(deps) == 0 {
+		return
+	}
+	done := countDoneDeps(deps)
+	switch joinModeOf(deps) {
+	case "each":
+		// each：每个前置完成各触发一次，串行；触发次数由 trigger_count 记账。
+		if done <= task.TriggerCount {
+			return
+		}
+		m.triggerConvAttempt(ctx, task, true, 1, []string{"status", "attempt", "triggerCount"})
+	case "any", "first":
+		if done == 0 {
+			return
+		}
+		m.triggerConvAttempt(ctx, task, false, 1, []string{"waitingReason", "triggerCount"})
+	default: // all
+		if done != len(deps) {
+			return
+		}
+		m.triggerConvAttempt(ctx, task, false, 1, []string{"waitingReason", "triggerCount"})
+	}
+}
+
+// triggerConvAttempt 清等待后启动一次执行；reset=true 表示 each 的下一轮（attempt 加一、步骤重置）。
+func (m *Module) triggerConvAttempt(ctx context.Context, task coretask.Task, reset bool, triggerDelta int, changed []string) {
+	task.WaitingReason = ""
+	task.WaitingSince = 0
+	task.TriggerCount += triggerDelta
+	if reset {
+		task.Attempt++
+		task.Status = coretask.StatusQueued
+		task.Progress = 0
+		task.Summary = ""
+		task.Outcome = ""
+		task.FailReason = ""
+		task.StartedAt = 0
+		task.FinishedAt = 0
+		task.Steps = resetSteps(task.Steps)
+		m.resetConvSteps(ctx, task.ID)
+	}
+	task.UpdatedAt = time.Now().UnixMilli()
+	if err := m.saveTask(ctx, task); err != nil {
+		m.log.Error("保存依赖唤醒状态失败", "err", err, "taskId", task.ID)
+		return
+	}
+	m.emit(ctx, eventlog.TypeTaskUpdated, m.taskEventV2(task, changed))
+	m.startAttempt(task.ID, task.Attempt)
+}
+
+// resetConvSteps 把 task_steps 的状态重置为 pending，已完成步骤的轨迹保留在 task_traces。
+func (m *Module) resetConvSteps(ctx context.Context, taskID string) {
+	steps, err := m.loadSteps(ctx, taskID)
 	if err != nil {
 		return
 	}
-	allDone := true
-	anyDone := false
-	for deps.Next() {
-		var depID string
-		if err := deps.Scan(&depID); err != nil {
-			continue
-		}
-		dep, err := m.getTask(ctx, depID)
-		if err != nil {
-			allDone = false
-			continue
-		}
-		if dep.Status == coretask.StatusDone {
-			anyDone = true
-		} else {
-			allDone = false
-		}
+	for i := range steps {
+		steps[i].Status = "pending"
+		steps[i].Summary = ""
+		steps[i].FailReason = ""
+		steps[i].StartedAt = 0
+		steps[i].FinishedAt = 0
 	}
-	deps.Close()
-	// 依赖未达成则保持 pending（不级联失败）。
-	if !allDone && !anyDone {
+	if err := m.saveSteps(ctx, taskID, steps); err != nil {
+		m.log.Error("重置任务步骤失败", "err", err, "taskId", taskID)
+	}
+}
+
+// retriggerEach 在 each 任务完成后再看是否还有未消费的前置完成事件。
+func (m *Module) retriggerEach(ctx context.Context, task coretask.Task) {
+	deps, err := m.loadConvDepStates(ctx, task.ID)
+	if err != nil || joinModeOf(deps) != "each" {
 		return
 	}
-	if _, err := m.leaveWaiting(ctx, taskID); err != nil {
+	if countDoneDeps(deps) <= task.TriggerCount {
 		return
 	}
-	m.startAttempt(taskID, task.Attempt)
+	m.triggerConvAttempt(ctx, task, true, 1, []string{"status", "attempt", "triggerCount"})
 }

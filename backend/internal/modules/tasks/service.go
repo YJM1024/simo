@@ -475,6 +475,9 @@ func (m *Module) runAttempt(ctx context.Context, id string, attempt int) {
 		markPhase(task.Phases, step.PhaseID, "running")
 		task.UpdatedAt = time.Now().UnixMilli()
 		m.saveAndEmit(context.Background(), task, step.PhaseID, step.ID)
+		if ctx.Err() == nil {
+			_ = m.syncStepsFromTask(context.Background(), task)
+		}
 		select {
 		case <-time.After(stepDelay):
 		case <-ctx.Done():
@@ -491,6 +494,9 @@ func (m *Module) runAttempt(ctx context.Context, id string, attempt int) {
 		}
 		task.UpdatedAt = time.Now().UnixMilli()
 		m.saveAndEmit(context.Background(), task, step.PhaseID, step.ID)
+		if ctx.Err() == nil {
+			_ = m.syncStepsFromTask(context.Background(), task)
+		}
 	}
 
 	if strings.Contains(strings.ToLower(task.Title), "mock:fail") {
@@ -499,6 +505,7 @@ func (m *Module) runAttempt(ctx context.Context, id string, attempt int) {
 		task.UpdatedAt = time.Now().UnixMilli()
 		if task.Attempt <= 2 {
 			task.Summary = "Mock 执行器模拟失败（将自动重试）"
+			task.FailReason = truncateFailReason(fmt.Sprintf("执行器异常: Mock 执行器模拟失败（第 %d 次尝试，将自动重试）", task.Attempt))
 			m.saveAndEmit(context.Background(), task, "", "")
 			if task.WorkflowID != "" {
 				m.reportWorkflowTask(task, coretask.StatusFailed, task.Summary)
@@ -507,6 +514,7 @@ func (m *Module) runAttempt(ctx context.Context, id string, attempt int) {
 			return
 		}
 		task.Summary = "Mock 执行器模拟失败（重试已用尽）"
+		task.FailReason = truncateFailReason(fmt.Sprintf("执行器异常: Mock 执行器模拟失败（重试已用尽，共 %d 次）", task.Attempt))
 		m.saveAndEmit(context.Background(), task, "", "")
 		if task.WorkflowID != "" {
 			m.reportWorkflowTask(task, coretask.StatusFailed, task.Summary)
@@ -517,6 +525,7 @@ func (m *Module) runAttempt(ctx context.Context, id string, attempt int) {
 	task.Status = coretask.StatusDone
 	task.Progress = 100
 	task.Outcome = "success"
+	task.FailReason = ""
 	task.Summary = "Mock 执行器完成：" + task.Title
 	for i := range task.Phases {
 		task.Phases[i].Status = "done"
@@ -564,6 +573,7 @@ func (m *Module) saveAndEmit(ctx context.Context, task coretask.Task, phaseID, s
 	m.emit(ctx, eventlog.TypeTaskUpdated, taskEvent(task, phaseID, stepID))
 	if task.Status == coretask.StatusDone {
 		m.notifyDependents(ctx, task.ID)
+		m.retriggerEach(ctx, task)
 	}
 }
 
@@ -670,11 +680,14 @@ func defaultPhases() []coretask.Phase {
 	}
 }
 
+// defaultSteps 返回默认三步。id 与 plan 分支同用 step-<hex> 生成：
+// task_steps.id 是主键，写死 id 会让同一隔离库的第二个 execute 任务插入冲突。
+// 一次调用内生成一次，落库后同一任务复用同一批 id；跨任务不重复。
 func defaultSteps() []coretask.Step {
 	return []coretask.Step{
-		{ID: "collect", PhaseID: "plan", Title: "收集信息", Status: "pending"},
-		{ID: "draft", PhaseID: "execute", Title: "产出草稿", Status: "pending"},
-		{ID: "finalize", PhaseID: "verify", Title: "整理结果", Status: "pending"},
+		{ID: "step-" + randomHex(8), PhaseID: "plan", Title: "收集信息", Status: "pending"},
+		{ID: "step-" + randomHex(8), PhaseID: "execute", Title: "产出草稿", Status: "pending"},
+		{ID: "step-" + randomHex(8), PhaseID: "verify", Title: "整理结果", Status: "pending"},
 	}
 }
 

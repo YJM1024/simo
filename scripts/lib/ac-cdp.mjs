@@ -76,27 +76,51 @@ export function apiGet(baseUrl, route, options = {}) {
   return http(baseUrl + route, { ...options, method: 'GET' });
 }
 
-/** 探活 CDP：跑 scripts/probe-cdp.mjs，非 0 即环境不可用（3 = 明确不可用）。 */
+/**
+ * CDP 环境不可用（端口没有可用浏览器、探针启动失败）。
+ * 故意不继承 AcBlocked：UI 断言套件把 AcBlocked 记成 SKIP，缺浏览器应当是明确的
+ * 失败而不是 0 断言的静默跳过。
+ */
+export class AcCdpUnavailable extends Error {}
+
+/** 探活 CDP：跑 scripts/probe-cdp.mjs --port <AC_CDP_PORT>，非 0 即环境不可用。 */
 export function ensureCdp() {
+  if (!Number.isInteger(CDP_PORT) || CDP_PORT < 1 || CDP_PORT > 65535) {
+    throw new AcCdpUnavailable(`CDP 端口配置无效：AC_CDP_PORT=${JSON.stringify(process.env.AC_CDP_PORT)}`);
+  }
   const probe = path.join(ROOT, 'scripts', 'probe-cdp.mjs');
+  // 必须带上端口：探针默认 9223，不带端口时 AC_CDP_PORT 实际无效，
+  // 表现为脚本连 9250、探针探 9223，随后 /json/list 报 fetch failed 或静默 skip。
   // stdio 继承会被沙箱的 piped-stdio 限制拦住；ignore 只取退出码，输出不进 stdout（必须保持一行 JSON）。
-  const run = spawnSync(process.execPath, [probe], { stdio: 'ignore', timeout: 60000, windowsHide: true });
-  if (run.error) throw new AcBlocked(`CDP 探活进程启动失败：${run.error.message}`);
-  if (run.status !== 0) throw new AcBlocked(`CDP 不可用：node scripts/probe-cdp.mjs 退出码 ${run.status}（3=环境不可用）`);
+  const run = spawnSync(process.execPath, [probe, '--port', String(CDP_PORT)], { stdio: 'ignore', timeout: 60000, windowsHide: true });
+  if (run.error) throw new AcCdpUnavailable(`CDP 端口 ${CDP_PORT} 无可用实例：探针进程启动失败（${run.error.message}）`);
+  if (run.status !== 0) {
+    throw new AcCdpUnavailable(
+      `CDP 端口 ${CDP_PORT} 无可用实例：node scripts/probe-cdp.mjs --port ${CDP_PORT} 退出码 ${run.status}`
+      + '（3=环境不可用；先手工跑该命令看失败原因与 hint）',
+    );
+  }
 }
 
 /**
  * 打开 CDP 页面会话。返回 client：{ send, once, evaluate, navigate, reload, close }。
  * 复用 probe 已经启动/复用的那个浏览器进程里的 page target。
  */
-export async function connect(baseUrl, { targetId = '' } = {}) {
+export async function connect(baseUrl, { targetId = '', newTarget = false } = {}) {
   ensureCdp();
   const list = await http(`${CDP_HTTP}/json/list`, { timeout: 5000 });
   const pages = Array.isArray(list.json) ? list.json.filter((item) => item.type === 'page' && item.webSocketDebuggerUrl) : [];
-  if (pages.length === 0) throw new AcBlocked('CDP 没有可用的 page target');
-  const target = (targetId ? pages.find((item) => item.id === targetId) : null)
+  if (pages.length === 0 && !newTarget) throw new AcBlocked('CDP 没有可用的 page target');
+  // newTarget：批次并行时每条脚本开自己的标签页，避免并行脚本互相导航到对方的页面。
+  let target = (targetId ? pages.find((item) => item.id === targetId) : null)
     ?? pages.find((item) => typeof item.url === 'string' && item.url.startsWith(baseUrl))
-    ?? pages[0];
+    ?? (newTarget ? null : pages[0]);
+  if (!target && newTarget) {
+    const created = await http(`${CDP_HTTP}/json/new?url=about:blank`, { method: 'PUT', timeout: 5000 });
+    if (!created.json || !created.json.webSocketDebuggerUrl) throw new AcBlocked('CDP 新建 page target 失败');
+    target = created.json;
+  }
+  if (!target) throw new AcBlocked('CDP 没有可用的 page target');
 
   const ws = new WebSocket(target.webSocketDebuggerUrl);
   const pending = new Map();

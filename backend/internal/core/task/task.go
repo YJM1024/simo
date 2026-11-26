@@ -101,11 +101,13 @@ type Artifact struct {
 
 // Task 是后台任务投影。
 type Task struct {
-	ID              string     `json:"id"`
-	SessionID       string     `json:"sessionId"`
-	Title           string     `json:"title"`
-	Kind            string     `json:"kind"`
-	Status          string     `json:"status"`
+	ID        string `json:"id"`
+	SessionID string `json:"sessionId"`
+	Title     string `json:"title"`
+	Kind      string `json:"kind"`
+	Status    string `json:"status"`
+	// DisplayStatus 是 8 个存储态映射出的 4 个展示态（pending/running/done/failed），只读投影。
+	DisplayStatus   string     `json:"displayStatus"`
 	Payload         string     `json:"payload,omitempty"`
 	Phases          []Phase    `json:"phases"`
 	Steps           []Step     `json:"steps"`
@@ -174,6 +176,58 @@ type ExecutionResult struct {
 	Tokens  int
 	Paused  bool
 	Budget  bool
+	// Permissions 是执行中遇到的权限拒绝（路径越界/工具白名单/禁网/禁子进程）。
+	Permissions []PermissionDenied
+}
+
+// PermissionDenied 是一次权限拒绝，由 tasks 模块写成 observe 轨迹（403 permission_denied）。
+type PermissionDenied struct {
+	Tool   string
+	Path   string
+	Reason string
+}
+
+// BatchTaskInput 是批量创建里的单个任务；字段与 POST /api/sessions/{id}/tasks 请求体一致。
+type BatchTaskInput struct {
+	Key         string   `json:"key"`
+	Title       string   `json:"title"`
+	Mode        string   `json:"mode"`
+	Goal        string   `json:"goal"`
+	Inputs      []string `json:"inputs"`
+	Constraints []string `json:"constraints"`
+	Steps       []string `json:"steps"`
+	DependsOn   []string `json:"dependsOn"`
+	JoinMode    string   `json:"joinMode"`
+	DeadlineAt  int64    `json:"deadlineAt"`
+	Payload     string   `json:"payload"`
+}
+
+// BatchCreateInput 是批量创建请求体。
+type BatchCreateInput struct {
+	Mode             string           `json:"mode"`
+	Goal             string           `json:"goal"`
+	Inputs           []string         `json:"inputs"`
+	Constraints      []string         `json:"constraints"`
+	Kind             string           `json:"kind"`
+	ClientMutationID string           `json:"clientMutationId"`
+	Tasks            []BatchTaskInput `json:"tasks"`
+	Title            string           `json:"title"`
+	Payload          string           `json:"payload"`
+}
+
+// BatchCreateResult 是批量创建响应。
+type BatchCreateResult struct {
+	BatchID    string         `json:"batchId"`
+	Tasks      []Task         `json:"tasks"`
+	MessageID  string         `json:"messageId"`
+	Counts     map[string]int `json:"counts"`
+	Idempotent bool           `json:"idempotent"`
+	Total      int            `json:"total"`
+}
+
+// BatchCreator 是任务批量创建端口；chat 的 DELEGATE 通过它建批次，不依赖 tasks 模块类型。
+type BatchCreator interface {
+	CreateBatch(ctx context.Context, sessionID string, input BatchCreateInput) (BatchCreateResult, error)
 }
 
 // Executor 由 chat 模块实现（LLM + 工具 + M9 审批），tasks 模块调用。

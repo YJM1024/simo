@@ -81,21 +81,17 @@ func TestM87TaskMessageMapping(t *testing.T) {
 		t.Fatalf("spec-projection task messageId 未映射: %s", body)
 	}
 
-	// 第二个任务没有任务关联消息，messageId 必须序列化为空字符串。
-	if status, _ := postChat(t, ts.URL, "帮我整理一份本周周报，输出成文档。"); status != http.StatusAccepted {
-		t.Fatalf("second task chat = %d", status)
-	}
-	waitTaskDone(t, ts.URL, "main")
-	tasks = listTasks(t, ts.URL)
-	if len(tasks) < 2 {
-		t.Fatalf("tasks = %+v", tasks)
-	}
-	var unmappedID string
-	for _, task := range tasks {
-		if id, _ := task["id"].(string); id != taskID {
-			unmappedID = id
-			break
-		}
+	// 批量创建会给每个任务写 category=task 卡片消息（N1、§17.5.1），所以「无映射」
+	// 不能靠再发一条 chat 来构造；直接落一条没有消息的任务行，覆盖 §8.3 / §8.4
+	// 第 5 条与 spec.md:522 的 messageId="" 分支。
+	unmappedID := "task-m87-unmapped"
+	if err := a.db.Write(context.Background(), func(tx *sql.Tx) error {
+		_, err := tx.ExecContext(context.Background(), `INSERT INTO tasks(
+			id, session_id, title, kind, status, payload, created_at, updated_at)
+			VALUES (?, 'main', '无消息任务', 'mock', 'done', '', 1000, 1000)`, unmappedID)
+		return err
+	}); err != nil {
+		t.Fatal(err)
 	}
 	_, body = httpGet(t, ts.URL+"/api/sessions/main/spec-projection")
 	var second struct {

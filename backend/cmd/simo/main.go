@@ -278,7 +278,10 @@ func buildAppWithProvider(ctx context.Context, cfg config.Config, logger *slog.L
 		}
 		return report
 	}
-	handler := httpserver.NewHandler(mux, dist, healthFn)
+	handler := httpserver.NewHandlerWithOptions(mux, dist, httpserver.Options{
+		AccessLog: cfg.AccessLog,
+		Logger:    logger,
+	}, healthFn)
 
 	ok = true
 	return &app{cfg: cfg, db: db, registry: registry, handler: handler, logger: logger, sandbox: sandbox}, nil

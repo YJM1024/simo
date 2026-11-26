@@ -15,6 +15,16 @@ var _ coretask.Executor = (*Module)(nil)
 
 // ExecuteTask 是 M10.1 真实任务执行：LLM + M9 工具 + 预算。
 func (m *Module) ExecuteTask(ctx context.Context, request coretask.ExecutionRequest) (coretask.ExecutionResult, error) {
+	return m.executeTask(ctx, request, nil)
+}
+
+// ExecuteTaskWithTrace 与 ExecuteTask 相同，额外把成功的工具调用回传给调用方。
+// tasks 模块用它把工具调用写成任务 action 轨迹；不改变 coretask.Executor 契约。
+func (m *Module) ExecuteTaskWithTrace(ctx context.Context, request coretask.ExecutionRequest, onAction func(tool, text string)) (coretask.ExecutionResult, error) {
+	return m.executeTask(ctx, request, onAction)
+}
+
+func (m *Module) executeTask(ctx context.Context, request coretask.ExecutionRequest, onAction func(tool, text string)) (coretask.ExecutionResult, error) {
 	if m.provider == nil {
 		return coretask.ExecutionResult{}, fmt.Errorf("LLM provider 未配置")
 	}
@@ -103,6 +113,13 @@ func (m *Module) ExecuteTask(ctx context.Context, request coretask.ExecutionRequ
 		})
 		for _, call := range calls {
 			toolResult := m.executeTool(ctx, request.Task.SessionID, call)
+			if denied, ok := permissionDeniedFromToolResult(call, toolResult); ok {
+				result.Permissions = append(result.Permissions, denied)
+			} else if onAction != nil && !strings.Contains(toolResult, "PENDING_APPROVAL") &&
+				!strings.HasPrefix(strings.TrimSpace(toolResult), "Error:") {
+				name := canonicalToolName(call.Function.Name)
+				onAction(name, "工具 "+name+" 调用成功")
+			}
 			if strings.Contains(toolResult, "PENDING_APPROVAL") {
 				result.Paused = true
 				result.Summary = "任务需要审批：" + firstLine(toolResult)

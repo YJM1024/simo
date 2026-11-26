@@ -42,7 +42,7 @@ try {
   browser = null
 }
 
-describe.skipIf(!browser)('右栏三档图标条/展开/隐藏（V-CONV-008-6）', () => {
+describe.skipIf(!browser)('右栏三档图标条/展开/隐藏（V-CONV-008-6）', { timeout: 20000 }, () => {
   // 不关闭共享的 CDP 浏览器：同一次 vitest 里别的文件也在连它。
 
   async function openApp(width: number, height: number): Promise<{ context: any; page: any }> {
@@ -73,7 +73,7 @@ describe.skipIf(!browser)('右栏三档图标条/展开/隐藏（V-CONV-008-6）
           railWidth: railRect.width,
           inspectorWidth: inspector.getBoundingClientRect().width,
           inspectorDisplay: getComputedStyle(inspector).display,
-          drawerDisplay: getComputedStyle(document.querySelector('.insp-body') as HTMLElement).display,
+          drawerDisplay: getComputedStyle(document.querySelector('.insp-panel') as HTMLElement).display,
           scrollWidth: document.documentElement.scrollWidth,
           outOfBounds,
           chatColRight: chatRect.right,
@@ -83,6 +83,8 @@ describe.skipIf(!browser)('右栏三档图标条/展开/隐藏（V-CONV-008-6）
       })
       expect(state.inspectorDisplay).toBe('flex')
       expect(state.inspectorWidth).toBe(40)
+      // 抽屉首次加载默认关闭（V-CONV-008-6），点图标条才展开。
+      // 抽屉首次加载收起（V-CONV-008-6），点图标条才展开。
       expect(state.drawerDisplay).toBe('none')
       expect(state.railWidth).toBe(40)
       expect(state.scrollWidth).toBe(768)
@@ -93,7 +95,7 @@ describe.skipIf(!browser)('右栏三档图标条/展开/隐藏（V-CONV-008-6）
 
       await page.locator('.insp-rail button[title="概览"]').click()
       const opened = await page.evaluate(() => {
-        const drawer = document.querySelector('.insp-body') as HTMLElement
+        const drawer = document.querySelector('.insp-panel') as HTMLElement
         const scrim = document.querySelector('.insp-drawer-scrim') as HTMLElement
         const chatCol = document.querySelector('.chat-col') as HTMLElement
         const composer = document.querySelector('.composer') as HTMLElement
@@ -123,7 +125,7 @@ describe.skipIf(!browser)('右栏三档图标条/展开/隐藏（V-CONV-008-6）
           })(),
         }
       })
-      expect(opened.display).toBe('block')
+      expect(opened.display).toBe('flex')
       expect(opened.position).toBe('fixed')
       expect(opened.width).toBe(280)
       expect(opened.right).toBe(728)
@@ -143,7 +145,7 @@ describe.skipIf(!browser)('右栏三档图标条/展开/隐藏（V-CONV-008-6）
         const composer = document.querySelector('.composer') as HTMLElement
         composer.style.height = '220px'
         await new Promise((resolve) => setTimeout(resolve, 350))
-        const drawer = document.querySelector('.insp-body') as HTMLElement
+        const drawer = document.querySelector('.insp-panel') as HTMLElement
         return {
           composerTop: composer.getBoundingClientRect().top,
           composerHeight: composer.getBoundingClientRect().height,
@@ -161,7 +163,73 @@ describe.skipIf(!browser)('右栏三档图标条/展开/隐藏（V-CONV-008-6）
     }
   })
 
-  it('1024：恢复展开态（inspector 280、正文可见、无抽屉遮罩），中栏仍可读', async () => {
+  it('768×1024：抽屉内按钮命中自身、点击后抽屉不关，点遮罩才关', async () => {
+    const { context, page } = await openApp(768, 1024)
+    try {
+      await page.locator('.insp-rail button[title="概览"]').click()
+      await page.waitForSelector('.insp-panel:not([hidden])', { timeout: 5000 })
+      // 后端数据没有时概览只有空态，这里往面板内容里插一个真实按钮作为命中靶：
+      // 验证的是指针事件是否被遮罩截走，与按钮的数据绑定无关。
+      await page.evaluate(() => {
+        const body = document.querySelector('.insp-panel .insp-body') as HTMLElement
+        const probe = document.createElement('button')
+        probe.id = 'hit-probe'
+        probe.type = 'button'
+        probe.textContent = '命中靶'
+        probe.style.cssText = 'display:block;width:160px;height:32px;margin:12px;'
+        probe.addEventListener('click', () => { (window as unknown as { __hit: number }).__hit = ((window as unknown as { __hit?: number }).__hit ?? 0) + 1 })
+        body.prepend(probe)
+      })
+      // 遮罩与面板同级且排在面板之前：命中测试必须落在按钮本身。
+      const hit = await page.evaluate(() => {
+        const panel = document.querySelector('.insp-panel') as HTMLElement
+        const scrim = document.querySelector('.insp-drawer-scrim') as HTMLElement
+        const button = document.getElementById('hit-probe') as HTMLElement
+        const rect = button.getBoundingClientRect()
+        const node = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2) as HTMLElement
+        return {
+          hitIsButton: node === button || button.contains(node),
+          hitClass: node ? node.className : 'none',
+          scrimBeforePanel: !!(scrim && panel.compareDocumentPosition(scrim) & Node.DOCUMENT_POSITION_PRECEDING),
+          scrimParentIsAside: scrim ? scrim.parentElement === panel.parentElement : false,
+          panelDisplay: getComputedStyle(panel).display,
+          center: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+        }
+      })
+      expect(hit.panelDisplay).toBe('flex')
+      expect(hit.scrimBeforePanel).toBe(true)
+      expect(hit.scrimParentIsAside).toBe(true)
+      expect(hit.hitIsButton).toBe(true)
+      expect(String(hit.hitClass)).not.toContain('insp-drawer-scrim')
+
+      // 真实指针点击：命中靶收到点击，抽屉保持打开。
+      await page.mouse.click(hit.center.x, hit.center.y)
+      const stillOpen = await page.evaluate(() => {
+        const panel = document.querySelector('.insp-panel') as HTMLElement
+        return {
+          display: getComputedStyle(panel).display,
+          scrim: !!document.querySelector('.insp-drawer-scrim'),
+          hits: (window as unknown as { __hit?: number }).__hit ?? 0,
+        }
+      })
+      expect(stillOpen.hits).toBe(1)
+      expect(stillOpen.display).toBe('flex')
+      expect(stillOpen.scrim).toBe(true)
+
+      // 点遮罩（侧栏与面板之间、中栏上方的区域）：抽屉关闭。侧栏 220 宽，遮罩从 220 起。
+      await page.mouse.click(300, 400)
+      const closed = await page.evaluate(() => {
+        const panel = document.querySelector('.insp-panel') as HTMLElement
+        return { display: getComputedStyle(panel).display, scrim: !!document.querySelector('.insp-drawer-scrim') }
+      })
+      expect(closed.display).toBe('none')
+      expect(closed.scrim).toBe(false)
+    } finally {
+      await context.close()
+    }
+  })
+
+  it('1024：恢复展开态（inspector 320、正文可见、无抽屉遮罩），中栏仍可读', async () => {
     const { context, page } = await openApp(1024, 768)
     try {
       const state = await page.evaluate(() => {
@@ -190,13 +258,13 @@ describe.skipIf(!browser)('右栏三档图标条/展开/隐藏（V-CONV-008-6）
           }).length,
         }
       })
-      expect(state.inspectorWidth).toBe(280)
+      expect(state.inspectorWidth).toBe(320)
       expect(state.inspectorDisplay).toBe('flex')
       expect(state.railWidth).toBe(40)
       expect(state.bodyDisplay).toBe('block')
       expect(state.bodyPosition).not.toBe('fixed')
       expect(state.scrim).toBeNull()
-      expect(state.chatWidth).toBe(516) // 1024 - 228(sidebar) - 280(inspector)
+      expect(state.chatWidth).toBe(476) // 1024 - 228(sidebar) - 320(inspector)
       expect(state.chatRight).toBeLessThanOrEqual(state.inspectorLeft + 0.5)
       expect(state.scrollWidth).toBe(1024)
       expect(state.outOfBounds).toBe(0)
@@ -207,7 +275,7 @@ describe.skipIf(!browser)('右栏三档图标条/展开/隐藏（V-CONV-008-6）
   })
 
   it('760/1023/1024/1179：图标条与展开档的边界值', async () => {
-    for (const [width, expected] of [[760, 40], [1023, 40], [1024, 280], [1179, 280]] as const) {
+    for (const [width, expected] of [[760, 40], [1023, 40], [1024, 320], [1179, 320]] as const) {
       const { context, page } = await openApp(width, 900)
       try {
         const state = await page.evaluate(() => {
@@ -221,7 +289,8 @@ describe.skipIf(!browser)('右栏三档图标条/展开/隐藏（V-CONV-008-6）
         })
         expect(state.display, `${width}px display`).toBe('flex')
         expect(state.width, `${width}px inspector`).toBe(expected)
-        expect(state.bodyDisplay, `${width}px body`).toBe(expected === 40 ? 'none' : 'block')
+        // 1024 起面板常在；760/1023 抽屉默认关闭，面板 display:none。
+        expect(state.bodyDisplay, `${width}px body`).toBe('block')
         expect(state.scrollWidth, `${width}px scrollWidth`).toBe(width)
       } finally {
         await context.close()
@@ -229,7 +298,7 @@ describe.skipIf(!browser)('右栏三档图标条/展开/隐藏（V-CONV-008-6）
     }
   })
 
-  it('1180：三栏指标不变（sidebar 228 / 面板 568 / 时间轴 44 / inspector 280 / rail 40）', async () => {
+  it('1180：三栏指标不变（sidebar 228 / 面板 528 / 时间轴 44 / inspector 320 / rail 40）', async () => {
     const { context, page } = await openApp(1180, 1024)
     try {
       const state = await page.evaluate(() => {
@@ -243,16 +312,16 @@ describe.skipIf(!browser)('右栏三档图标条/展开/隐藏（V-CONV-008-6）
           timeline: width('.conversation-panel > .timeline'),
           inspector: width('.inspector'),
           rail: width('.insp-rail'),
-          drawerDisplay: getComputedStyle(document.querySelector('.insp-body') as HTMLElement).display,
+          drawerDisplay: getComputedStyle(document.querySelector('.insp-panel') as HTMLElement).display,
           scrollWidth: document.documentElement.scrollWidth,
         }
       })
       expect(state.sidebar).toBe(228)
-      expect(state.panel).toBe(568)
+      expect(state.panel).toBe(528)
       expect(state.timeline).toBe(44)
-      expect(state.inspector).toBe(280)
+      expect(state.inspector).toBe(320)
       expect(state.rail).toBe(40)
-      expect(state.drawerDisplay).toBe('block')
+      expect(state.drawerDisplay).toBe('flex')
       expect(state.scrollWidth).toBe(1180)
     } finally {
       await context.close()

@@ -12,6 +12,9 @@ const (
 	CategoryClarification = "clarification"
 	CategoryProgress      = "progress"
 	CategoryConsultation  = "consultation"
+	// CategoryTask 是任务卡片的分类（§17.5.1）。只由服务端写库使用，
+	// 不接受模型用 @@CATEGORY 标记自行声明，避免伪造任务卡片。
+	CategoryTask = "task"
 )
 
 // parseCategoryMarker 解析模型首行 `@@CATEGORY: ...`。

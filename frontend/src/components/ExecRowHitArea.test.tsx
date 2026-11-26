@@ -24,7 +24,7 @@ try {
 }
 
 /** 只有真实浏览器能给出布局与命中测试；CDP 不可用时整组 skip，并在用例里写明原因。 */
-describe.skipIf(!browser)('coarse hit areas and narrow-layout occlusion in Chromium', () => {
+describe.skipIf(!browser)('coarse hit areas and narrow-layout occlusion in Chromium', { timeout: 20000 }, () => {
   afterAll(async () => {
     await browser?.close()
   })
@@ -52,10 +52,10 @@ describe.skipIf(!browser)('coarse hit areas and narrow-layout occlusion in Chrom
   }
 
   it('measures every exec row of every expanded task group at >=44px, not only the first', async () => {
-    // 在 jsdom 里展开三组，取得真实组件的展开态 DOM，再交给 Chromium 量布局
+    // 概览四块（DEC-36）：目标/输入/任务/交付物各一个可折叠头，展开后任务 2 行 + 交付物 1 行
     const view = render(<RightPanel session={session()} projection={projection()} loading={false} />)
-    const heads = [...view.container.querySelectorAll<HTMLButtonElement>('button.exec-head')]
-    expect(heads).toHaveLength(3)
+    const heads = [...view.container.querySelectorAll<HTMLButtonElement>('button.insp-block-head')]
+    expect(heads).toHaveLength(4)
     for (const head of heads) {
       if (head.getAttribute('aria-expanded') === 'false') fireEvent.click(head)
       expect(head).toHaveAttribute('aria-expanded', 'true')
@@ -71,8 +71,8 @@ describe.skipIf(!browser)('coarse hit areas and narrow-layout occlusion in Chrom
         const rect = node.getBoundingClientRect()
         return { height: rect.height, width: rect.width, text: node.textContent ?? '' }
       }))
-      // done 4 + running 1 + deliverable 1
-      expect(rows).toHaveLength(6)
+      // 任务行最多 2 行 + 交付物行 1 行（DEC-36）
+      expect(rows).toHaveLength(3)
       for (const row of rows) expect(row.height, `命中区不足 44px：${row.text}`).toBeGreaterThanOrEqual(44)
     } finally {
       await context.close()
@@ -283,7 +283,7 @@ describe.skipIf(!browser)('coarse hit areas and narrow-layout occlusion in Chrom
           const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)
           return !(hit === node || node.contains(hit))
         }
-        const keys = [...document.querySelectorAll<HTMLElement>('.insp-spec-status, .exec-head')]
+        const keys = [...document.querySelectorAll<HTMLElement>('.insp-spec-status, .insp-block-head')]
         const inspectorRect = inspector.getBoundingClientRect()
         const composerRect = composer.getBoundingClientRect()
         const sendRect = send.getBoundingClientRect()
@@ -301,9 +301,9 @@ describe.skipIf(!browser)('coarse hit areas and narrow-layout occlusion in Chrom
       expect(state.inspectorWidth).toBeGreaterThan(0)
       expect(state.overlapWithComposer).toBe(false)
       expect(state.overlapWithSend).toBe(false)
-      expect(state.keyCount).toBe(4) // 1 个状态块 + 3 个任务组头
+      expect(state.keyCount).toBe(5) // 1 个状态块 + 4 块折叠头
       for (const ratio of state.ratios) expect(ratio).toBeGreaterThan(0.99)
-      expect(state.coveredFlags).toEqual([false, false, false, false])
+      expect(state.coveredFlags).toEqual([false, false, false, false, false])
     } finally {
       await wide.context.close()
     }

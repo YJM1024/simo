@@ -14,6 +14,8 @@ import {
 
 runUiAc('AC-CONV-009-05', async (ctx) => {
   const client = await openSessionPage(ctx, { stub: buildStub() });
+  // 右栏默认停在概览标签，任务卡只在任务标签下渲染。
+  await clickSel(client, 'nav.insp-rail button[data-tab="tasks"]');
   await waitFor(client, `document.querySelector('.task-card[data-task-id="t1"]') !== null`, { timeout: 10000, label: '任务卡 t1' });
   const clicked = await clickSel(client, '.task-card[data-task-id="t1"]');
   ctx.check(clicked, '点开 t1 任务卡', '点击成功', clicked ? '成功' : '元素不存在');
@@ -75,7 +77,7 @@ runUiAc('AC-CONV-009-05', async (ctx) => {
   ctx.check(s5After?.expanded === 'true', '第 5 步点击后展开', 'aria-expanded=true', s5After?.expanded ?? '元素不存在');
   ctx.check((s5After?.title ?? '').includes('已归档'), '第 5 步展开标题含「已归档」', '含「已归档」', s5After?.title ?? '元素不存在');
 
-  ctx.check(survey.s7?.head === false, '第 7 步未开始无展开入口', '无 button', survey.s7?.head ? '有 button' : (survey.s7 ? '无 button' : '元素不存在'));
+  ctx.check(survey.s7 !== null && survey.s7.tag !== 'BUTTON' && survey.s7.role !== 'button', '第 7 步未开始无展开入口（非按钮）', '非 BUTTON 且无 role=button', survey.s7 ? `tag=${survey.s7.tag} role=${survey.s7.role}` : '元素不存在');
   ctx.check(survey.s7?.tabindex === null, '第 7 步无 tabindex', 'null', survey.s7?.tabindex ?? '元素不存在');
   ctx.check(survey.s7?.role !== 'button', '第 7 步无 role=button', 'null/非 button', survey.s7?.role ?? 'null');
   ctx.check((survey.s7?.height ?? 0) >= 30, '第 7 步行高 ≥30', '≥30px', survey.s7?.height ?? '元素不存在');

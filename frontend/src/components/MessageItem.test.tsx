@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MessageItem } from '../components'
 import { card, message } from '../test/fixtures'
+import type { TaskView } from '../types'
 
 describe('MessageItem', () => {
   it('renders a user message without a category tag', () => {
@@ -265,6 +266,106 @@ describe('MessageItem', () => {
     render(<MessageItem message={message({ text })} onCardAction={vi.fn()} />)
     expect(document.querySelector('.msg-text strong, .msg-text em, .msg-text del')).toBeNull()
     expect(document.querySelector('.msg-text p')).toHaveTextContent(text)
+  })
+})
+
+// 批量消息同时带首个任务的 taskId 与 batchId、taskCount：判定顺序必须先看 batchId + taskCount>1，
+// 否则真实后端消息会永远渲染成单任务卡（AC-CONV-009-02、§17.5）。
+describe('MessageItem task messages', () => {
+  const taskViews = (count: number): TaskView[] => Array.from({ length: count }, (_, index) => ({
+    id: `t-${index}`,
+    sessionId: 'main',
+    title: `任务 ${index}`,
+    mode: 'plan',
+    status: 'done',
+    displayStatus: 'done',
+    createdAt: 1_700_000_100_000,
+    updatedAt: 1_700_000_100_000,
+  }))
+
+  it('renders one summary card with ten rows for batchId + taskCount=10 even when taskId is present', () => {
+    const tasks = taskViews(10)
+    render(
+      <MessageItem
+        message={message({ category: 'task', taskId: 't-0', batchId: 'b-1', taskCount: 10 })}
+        onCardAction={vi.fn()}
+        taskInfo={{ tasks, total: 10 }}
+      />,
+    )
+    expect(document.querySelectorAll('.msg-task-summary')).toHaveLength(1)
+    expect(document.querySelector('.msg-task-card')).toBeNull()
+    expect(screen.getByText('已创建 10 个任务')).toBeInTheDocument()
+    expect(document.querySelectorAll('.msg-task-summary-item')).toHaveLength(10)
+  })
+
+  it('renders ten rows plus 还有 2 条 for taskCount=12 and no second fold', () => {
+    const tasks = taskViews(12)
+    render(
+      <MessageItem
+        message={message({ category: 'task', taskId: 't-0', batchId: 'b-2', taskCount: 12 })}
+        onCardAction={vi.fn()}
+        taskInfo={{ tasks, total: 12 }}
+      />,
+    )
+    const rows = document.querySelectorAll('.msg-task-summary-item')
+    expect(rows).toHaveLength(10)
+    expect(rows[9]).toHaveTextContent('任务 9')
+    expect(screen.getByRole('button', { name: '还有 2 条' })).toBeInTheDocument()
+    expect(screen.queryByText('任务 10', { selector: '.msg-task-summary-title' })).not.toBeInTheDocument()
+  })
+
+  it('renders a single task card for taskCount=1 with batchId present', () => {
+    const tasks = taskViews(1)
+    render(
+      <MessageItem
+        message={message({ category: 'task', taskId: 't-0', batchId: 'b-3', taskCount: 1 })}
+        onCardAction={vi.fn()}
+        taskInfo={{ task: tasks[0], onOpen: vi.fn() }}
+      />,
+    )
+    expect(document.querySelectorAll('.msg-task-card')).toHaveLength(1)
+    expect(document.querySelector('.msg-task-summary')).toBeNull()
+  })
+
+  it('keeps the plain message fallback when neither batchId nor taskCount nor taskId exists', () => {
+    render(<MessageItem message={message({ category: 'task', text: '任务消息回退' })} onCardAction={vi.fn()} />)
+    expect(document.querySelector('.msg-text')).toHaveTextContent('任务消息回退')
+    expect(document.querySelector('.msg-task-card')).toBeNull()
+    expect(document.querySelector('.msg-task-summary')).toBeNull()
+  })
+
+  it('still renders a single task card when batchId is absent', () => {
+    render(
+      <MessageItem
+        message={message({ category: 'task', taskId: 't-0', taskCount: 1 })}
+        onCardAction={vi.fn()}
+        taskInfo={{ onOpen: vi.fn() }}
+      />,
+    )
+    expect(document.querySelectorAll('.msg-task-card')).toHaveLength(1)
+    expect(document.querySelector('.msg-task-summary')).toBeNull()
+  })
+
+  it('opens the tasks tab from the whole summary card and a task detail from a row', async () => {
+    const user = userEvent.setup()
+    const onOpenSummary = vi.fn()
+    const onOpenTask = vi.fn()
+    const tasks = taskViews(2)
+    render(
+      <MessageItem
+        message={message({ category: 'task', taskId: 't-0', batchId: 'b-4', taskCount: 2 })}
+        onCardAction={vi.fn()}
+        taskInfo={{ tasks, total: 2, onOpenSummary, onOpenTask }}
+      />,
+    )
+    await user.click(screen.getByRole('button', { name: '查看任务：任务 0' }))
+    expect(onOpenTask).toHaveBeenCalledWith(tasks[0])
+    expect(onOpenSummary).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: '已创建 2 个任务' }))
+    expect(onOpenSummary).toHaveBeenCalledTimes(1)
+    await user.click(document.querySelector('.msg-task-summary-preview') as HTMLElement)
+    expect(onOpenSummary).toHaveBeenCalledTimes(2)
+    expect(onOpenTask).toHaveBeenCalledTimes(1)
   })
 })
 

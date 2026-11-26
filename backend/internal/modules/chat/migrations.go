@@ -640,5 +640,15 @@ func migrations() []sqlite.Migration {
 				return err
 			},
 		},
+		{
+			// 思考模式的历史重放：assistant 消息的 reasoning_content 必须随请求回传，
+			// 所以把它和消息一起持久化。旧行默认空串，重放时由 provider 补占位。
+			Version: 25,
+			Name:    "message reasoning content",
+			Up: func(ctx context.Context, tx *sql.Tx) error {
+				_, err := tx.ExecContext(ctx, `ALTER TABLE messages ADD COLUMN reasoning_content TEXT NOT NULL DEFAULT ''`)
+				return err
+			},
+		},
 	}
 }

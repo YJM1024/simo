@@ -1,0 +1,39 @@
+{
+  "note": "AC → 共享 harness 组。backend/backend-tools 两组由 run-ac 起隔离后端分片，ui 组复用页面服务（同一 Chrome 多标签）。未登记的脚本走单脚本模式。时间类判据（AC-CONV-009-18、AC-CHG-CONV-007-08）必须走单脚本模式：它们要用带 -tags testclock 的测试构建并自带 SIMO_TEST_CLOCK=rate=200，共享后端用的是生产构建、不含时钟开关，登记进共享组会让「30 分钟窗口」判据必然失败。",
+  "groups": {
+    "backend": [
+      "AC-CONV-009-01",
+      "AC-CONV-009-02",
+      "AC-CONV-009-03",
+      "AC-CONV-009-14",
+      "AC-CONV-009-15",
+      "AC-CONV-009-16",
+      "AC-CONV-009-17",
+      "AC-CHG-CONV-007-02",
+      "AC-CHG-CONV-007-03"
+    ],
+    "backend-tools": [
+      "AC-CONV-009-04",
+      "AC-CHG-CONV-007-04"
+    ],
+    "backend-clock": [
+      "AC-CONV-009-18",
+      "AC-CHG-CONV-007-08"
+    ],
+    "ui": [
+      "AC-CONV-009-05",
+      "AC-CONV-009-06",
+      "AC-CONV-009-07",
+      "AC-CONV-009-08",
+      "AC-CONV-009-09",
+      "AC-CONV-009-10",
+      "AC-CONV-009-11",
+      "AC-CONV-009-12",
+      "AC-CONV-009-13",
+      "AC-CHG-CONV-007-01",
+      "AC-CHG-CONV-007-05",
+      "AC-CHG-CONV-007-06",
+      "AC-CHG-CONV-007-07"
+    ]
+  }
+}

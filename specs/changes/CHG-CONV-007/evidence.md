@@ -1,127 +1,246 @@
-# EVIDENCE · CHG-CONV-007
+# CHG-CONV-007 · 证据索引
 
-> 只写真跑过的证据；命令、路径、测量值可复现。未执行写 `missing`，不写“通过”。
+本文件按 `docs/framework/templates/evidence-index.md` 的十五列登记证据，只写真实执行过的结果。2026-11-26 08:58:56–09:01:07 在隔离环境（`AC_HARNESS_PORT_OFFSET=300`，mock 后端 9089/9092、tools 9091、testclock 9093/9094、假上游 9090，页面 9087/9076/9066，CDP 9250）用 2026-11-26 08:58:31 重建的产物重跑 26 条验收批，runId `20261126005856`：`pass` 26 条、`blocked` 0 条、`partial` 0 条、`missing` 0 条、`skip` 0 条，断言 560 条，退出码 0。同轮真机 16 条路径 16/16（见 §11）。此前各轮记录保留在验收报告与 `.tmp/` 下，不再作为本轮状态依据。
 
-## 1. 结论
+结果：`pass` 26 条、`partial` 0 条、`blocked` 0 条、`missing` 0 条、`skip` 0 条，共 26 条，断言 560 条。`pass` 为 `spec.md` Covers 的 18 条产品 AC 与 §5 的 8 条变更级 AC（AC-CHG-CONV-007-01 至 -08）。本轮 26 条共享批（`AC_HARNESS_PORT_OFFSET=300`、`AC_CDP_PORT=9250`）实测 pass 26 / fail 0 / skip 0 / timeout 0，断言 560 条，耗时 130916ms，退出码 0；原始输出 `.tmp/evidence-final-fix/gates/batch-26.json` 与 `.tmp/evidence-final-fix/gates/batch-26.stdout.txt`。
 
-- 结果：**部分完成**（W0-01、W0-02、W1-01、W1-05 有证据；W1-02 至 W1-04 与 W2–W5 未执行，记 `missing`）
-- 范围：`PRD-CONV-009` 的 18 条 AC 与 `AC-CHG-CONV-007-01..08`
-- 版本/buildId：文档阶段，无构建
-- 执行人/时间：产品角色，2026-11-23
+变更号 CHG-CONV-007；状态 进行中；证据轮次 R9；对账口径 `spec.md` 的 Covers 18 条加 §5 的 8 条变更级 AC，共 26 条。
 
-W0 的两项已完成：产品 spec 定稿（含四项裁决写回）、变更包四文件与 test-plan §18 锚点落盘。W0-02 的门禁结果为 `PASS (checks: 683)`，失败项 0、提示项 0。W1-01 的设计 spec §17 已落盘于 `specs/design/P1-CONV/spec.md`；W1-05 的对照核验已完成，原 4 处旧值已由设计列回写，DEC-30/31 对齐同日完成，落点见 §5。
+## 1 证据登记表
 
-## 2. 命令与输出
+| 证据编号 | AC 编号 | 证据类型 | 路径 | 生成命令 | 生成时间 | 判定人 | 判定结果 | 未验证原因码 | 关联任务卡 | 轮次 | 可复跑 | 构建版本 | 失效标记 | 备注 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| E-AC-CONV-009-01-01 | AC-CONV-009-01 | 断言脚本 | `scripts/ac/AC-CONV-009-01.mjs` | `$NODE scripts/run-ac.mjs --only AC-CONV-009-01 --json`（先设 `AC_HARNESS_PORT_OFFSET=300`；mock 后端 9089/9092、假上游 9090） | 2026-11-26T08:59+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-06 | R9 | 是 | 2026-11-26 08:58:28 本轮重建 `.tmp/chg-007-T06/simo.exe`（22537728 B） | 有效 | 25 条断言，耗时 0.2s，runId `20261126005856`；证据 `.tmp/ac/AC-CONV-009-01.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：batch-10 单任务创建/列表/幂等；负例 13 条批量 400、空 tasks 400、goal 2001 字 413、跨会话 404。 |
+| E-AC-CONV-009-02-01 | AC-CONV-009-02 | 断言脚本 | `scripts/ac/AC-CONV-009-02.mjs` | `$NODE scripts/run-ac.mjs --only AC-CONV-009-02 --json`（先设 `AC_HARNESS_PORT_OFFSET=300`；mock 后端 9089/9092、假上游 9090） | 2026-11-26T08:59+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-06 | R9 | 是 | 2026-11-26 08:58:28 本轮重建 `.tmp/chg-007-T06/simo.exe`（22537728 B） | 有效 | 33 条断言，耗时 1.6s，runId `20261126005856`；证据 `.tmp/ac/AC-CONV-009-02.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：接口 17 条（12 条批量只写 1 条 category=task 消息，batch_id/task_id/internal 一致；limit=10 两页 10+2）加界面 16 条（汇总卡 1 张、标题「已创建 12 个任务」、默认 10 行、「还有 2 条」展开 12 行）。 |
+| E-AC-CONV-009-03-01 | AC-CONV-009-03 | 断言脚本 | `scripts/ac/AC-CONV-009-03.mjs` | `$NODE scripts/run-ac.mjs --only AC-CONV-009-03 --json`（先设 `AC_HARNESS_PORT_OFFSET=300`；mock 后端 9089/9092、假上游 9090） | 2026-11-26T08:59+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-06 | R9 | 是 | 2026-11-26 08:58:28 本轮重建 `.tmp/chg-007-T06/simo.exe`（22537728 B） | 有效 | 16 条断言，耗时 0.3s，runId `20261126005856`；证据 `.tmp/ac/AC-CONV-009-03.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：historyCount=0、goal 恰 1 条、constraints≥1、正文不含历史；traceLimit 越界 400。 |
+| E-AC-CONV-009-14-01 | AC-CONV-009-14 | 断言脚本 | `scripts/ac/AC-CONV-009-14.mjs` | `$NODE scripts/run-ac.mjs --only AC-CONV-009-14 --json`（先设 `AC_HARNESS_PORT_OFFSET=300`；mock 后端 9089/9092、假上游 9090） | 2026-11-26T09:00+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-06 | R9 | 是 | 2026-11-26 08:58:28 本轮重建 `.tmp/chg-007-T06/simo.exe`（22537728 B） | 有效 | 17 条断言，耗时 65.5s，runId `20261126005856`；证据 `.tmp/ac/AC-CONV-009-14.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：all/any 各 1 次、each 3 次且 attempt=4；自依赖/未知依赖/环均 400 invalid_task_dependency。 |
+| E-AC-CONV-009-15-01 | AC-CONV-009-15 | 断言脚本 | `scripts/ac/AC-CONV-009-15.mjs` | `$NODE scripts/run-ac.mjs --only AC-CONV-009-15 --json`（先设 `AC_HARNESS_PORT_OFFSET=300`；mock 后端 9089/9092、假上游 9090） | 2026-11-26T08:59+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-06 | R9 | 是 | 2026-11-26 08:58:28 本轮重建 `.tmp/chg-007-T06/simo.exe`（22537728 B） | 有效 | 34 条断言，耗时 34.7s，runId `20261126005856`；证据 `.tmp/ac/AC-CONV-009-15.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：取消后 category=task 恰 1 条、上游 failed、下游 pending 且 waitingReason=dependency、汇总卡 data-status 与卡片行一致。 |
+| E-AC-CONV-009-16-01 | AC-CONV-009-16 | 断言脚本 | `scripts/ac/AC-CONV-009-16.mjs` | `$NODE scripts/run-ac.mjs --only AC-CONV-009-16 --json`（先设 `AC_HARNESS_PORT_OFFSET=300`；mock 后端 9089/9092、假上游 9090） | 2026-11-26T09:00+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-06 | R9 | 是 | 2026-11-26 08:58:28 本轮重建 `.tmp/chg-007-T06/simo.exe`（22537728 B） | 有效 | 46 条断言，耗时 8.4s，runId `20261126005856`；证据 `.tmp/ac/AC-CONV-009-16.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：4 组 total=4 fileCount=3，失败组排最后且 files=[]/count=0，limit 0/101 → 400，跨会话空页。 |
+| E-AC-CONV-009-17-01 | AC-CONV-009-17 | 断言脚本 | `scripts/ac/AC-CONV-009-17.mjs` | `$NODE scripts/run-ac.mjs --only AC-CONV-009-17 --json`（先设 `AC_HARNESS_PORT_OFFSET=300`；mock 后端 9089/9092、假上游 9090） | 2026-11-26T08:59+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-06 | R9 | 是 | 2026-11-26 08:58:28 本轮重建 `.tmp/chg-007-T06/simo.exe`（22537728 B） | 有效 | 17 条断言，耗时 0.2s，runId `20261126005856`；证据 `.tmp/ac/AC-CONV-009-17.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：B 任务/图/交付物三处 0；B 请求 A 详情 404；不存在会话 404。 |
+| E-AC-CHG-CONV-007-02-01 | AC-CHG-CONV-007-02 | 断言脚本 | `scripts/ac/AC-CHG-CONV-007-02.mjs` | `$NODE scripts/run-ac.mjs --only AC-CHG-CONV-007-02 --json`（先设 `AC_HARNESS_PORT_OFFSET=300`；mock 后端 9089/9092、假上游 9090） | 2026-11-26T08:59+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-06 | R9 | 是 | 2026-11-26 08:58:28 本轮重建 `.tmp/chg-007-T06/simo.exe`（22537728 B） | 有效 | 14 条断言，耗时 8.6s，runId `20261126005856`；证据 `.tmp/ac/AC-CHG-CONV-007-02.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：失败任务 failed、failReason 非空且分类、图节点一致、counts.failed=1、retry 200 attempt=2 且 task_id 不变、无关任务 done。 |
+| E-AC-CHG-CONV-007-03-01 | AC-CHG-CONV-007-03 | 断言脚本 | `scripts/ac/AC-CHG-CONV-007-03.mjs` | `$NODE scripts/run-ac.mjs --only AC-CHG-CONV-007-03 --json`（先设 `AC_HARNESS_PORT_OFFSET=300`；mock 后端 9089/9092、假上游 9090） | 2026-11-26T08:59+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-06 | R9 | 是 | 2026-11-26 08:58:28 本轮重建 `.tmp/chg-007-T06/simo.exe`（22537728 B） | 有效 | 52 条断言，耗时 39s，runId `20261126005856`；证据 `.tmp/ac/AC-CHG-CONV-007-03.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：A 取消后 B 30 秒内 0 启动、pending 且 triggerCount=0、图边 dashed；A 步骤 [done,running,pending]→[done,pending,pending]；B2 interrupted 且不进 cancelled[]。 |
+| E-AC-CONV-009-04-01 | AC-CONV-009-04 | 断言脚本 | `scripts/ac/AC-CONV-009-04.mjs` | `$NODE scripts/run-ac.mjs --only AC-CONV-009-04 --json`（先设 `AC_HARNESS_PORT_OFFSET=300`；tools 后端 9091、假上游 9090） | 2026-11-26T08:59+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-06 | R9 | 是 | 2026-11-26 08:58:28 本轮重建 `.tmp/chg-007-T06/simo.exe`（22537728 B） | 有效 | 12 条断言，耗时 6.7s，runId `20261126005856`；证据 `.tmp/ac/AC-CONV-009-04.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：mode=react 下权限越界 observe 403 且落轨迹 1 条，产出文件 43 字节。 |
+| E-AC-CHG-CONV-007-04-01 | AC-CHG-CONV-007-04 | 断言脚本 | `scripts/ac/AC-CHG-CONV-007-04.mjs` | `$NODE scripts/run-ac.mjs --only AC-CHG-CONV-007-04 --json`（先设 `AC_HARNESS_PORT_OFFSET=300`；tools 后端 9091、假上游 9090） | 2026-11-26T08:59+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-06 | R9 | 是 | 2026-11-26 08:58:28 本轮重建 `.tmp/chg-007-T06/simo.exe`（22537728 B） | 有效 | 15 条断言，耗时 6.9s，runId `20261126005856`；证据 `.tmp/ac/AC-CHG-CONV-007-04.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：确认放行后任务 done、403 轨迹 1 条、无越权写；脚本 mode=react。 |
+| E-AC-CONV-009-18-01 | AC-CONV-009-18 | 断言脚本 | `scripts/ac/AC-CONV-009-18.mjs` | `$NODE scripts/run-ac.mjs --only AC-CONV-009-18 --json`（先设 `AC_HARNESS_PORT_OFFSET=300`；testclock 后端 9093、假上游 9094） | 2026-11-26T08:59+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-06 | R9 | 是 | `simo-testclock.exe`（2026-11-26 02:29:05；源码 02:26 后未变） | 有效 | 17 条断言，耗时 59.2s，runId `20261126005856`；证据 `.tmp/ac/AC-CONV-009-18.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：1 分钟时限提醒落库 1 条、cancelled 0、offset>60000ms 证明测试时钟生效；30 分钟探针在 rate=200 下按真实 9 秒采样后到期；无时限任务 deadline_at=0。 |
+| E-AC-CHG-CONV-007-08-01 | AC-CHG-CONV-007-08 | 断言脚本 | `scripts/ac/AC-CHG-CONV-007-08.mjs` | `$NODE scripts/run-ac.mjs --only AC-CHG-CONV-007-08 --json`（先设 `AC_HARNESS_PORT_OFFSET=300`；testclock 后端 9093、假上游 9094） | 2026-11-26T08:59+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-06 | R9 | 是 | `simo-testclock.exe`（2026-11-26 02:29:05；源码 02:26 后未变） | 有效 | 25 条断言，耗时 59.2s，runId `20261126005856`；证据 `.tmp/ac/AC-CHG-CONV-007-08.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：historyCount=0、goal 1 条、constraints≥1；b 会话三处 0；1 分钟提醒 1 次、取消 0；30 分钟探针到期提醒。 |
+| E-AC-CONV-009-05-01 | AC-CONV-009-05 | 断言脚本 | `scripts/ac/AC-CONV-009-05.mjs` | `$NODE scripts/run-ac.mjs --only AC-CONV-009-05 --json`（先设 `$env:AC_HARNESS_PORT_OFFSET='300'`、`$env:AC_CDP_PORT='9250'`；页面实例由 run-ac 共享批自动拉起：`.tmp/chg-007-T07/serve.mjs` 起静态页 9087/9076/9066，`.tmp/chg-007-T06/simo.exe` 起后端 9088/9077/9067；9250 无浏览器时 `scripts/probe-cdp.mjs --port 9250` 自动拉起 headless Chrome（profile `.tmp/chrome9250`）；不设 `AC_CDP_PORT` 则走默认 9223） | 2026-11-26T08:59+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-07 | R9 | 是 | 2026-11-26 08:58:29 本轮重建 `frontend/dist/assets/app.js`（369501 B） | 有效 | 18 条断言，耗时 21.7s，runId `20261126005856`；证据 `.tmp/ac/AC-CONV-009-05.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：8 步计划详情，第 5 步可回看、第 6 步默认展开且内联轨迹 8 条、第 7 步非按钮。 |
+| E-AC-CONV-009-06-01 | AC-CONV-009-06 | 断言脚本 | `scripts/ac/AC-CONV-009-06.mjs` | `$NODE scripts/run-ac.mjs --only AC-CONV-009-06 --json`（先设 `$env:AC_HARNESS_PORT_OFFSET='300'`、`$env:AC_CDP_PORT='9250'`；页面实例由 run-ac 共享批自动拉起：`.tmp/chg-007-T07/serve.mjs` 起静态页 9087/9076/9066，`.tmp/chg-007-T06/simo.exe` 起后端 9088/9077/9067；9250 无浏览器时 `scripts/probe-cdp.mjs --port 9250` 自动拉起 headless Chrome（profile `.tmp/chrome9250`）；不设 `AC_CDP_PORT` 则走默认 9223） | 2026-11-26T09:00+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-07 | R9 | 是 | 2026-11-26 08:58:29 本轮重建 `frontend/dist/assets/app.js`（369501 B） | 有效 | 12 条断言，耗时 21.6s，runId `20261126005856`；证据 `.tmp/ac/AC-CONV-009-06.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：explore 详情 14 行、时间单调不减、最后一行 is-current、步骤分组入口 0。 |
+| E-AC-CONV-009-07-01 | AC-CONV-009-07 | 断言脚本 | `scripts/ac/AC-CONV-009-07.mjs` | `$NODE scripts/run-ac.mjs --only AC-CONV-009-07 --json`（先设 `$env:AC_HARNESS_PORT_OFFSET='300'`、`$env:AC_CDP_PORT='9250'`；页面实例由 run-ac 共享批自动拉起：`.tmp/chg-007-T07/serve.mjs` 起静态页 9087/9076/9066，`.tmp/chg-007-T06/simo.exe` 起后端 9088/9077/9067；9250 无浏览器时 `scripts/probe-cdp.mjs --port 9250` 自动拉起 headless Chrome（profile `.tmp/chrome9250`）；不设 `AC_CDP_PORT` 则走默认 9223） | 2026-11-26T09:00+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-07 | R9 | 是 | 2026-11-26 08:58:29 本轮重建 `frontend/dist/assets/app.js`（369501 B） | 有效 | 33 条断言，耗时 22.7s，runId `20261126005856`；证据 `.tmp/ac/AC-CONV-009-07.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：四态厚卡点开详情 data-task-id 一致、role=dialog aria-modal、关闭 1、写入口 0、表单控件 0。 |
+| E-AC-CONV-009-08-01 | AC-CONV-009-08 | 断言脚本 | `scripts/ac/AC-CONV-009-08.mjs` | `$NODE scripts/run-ac.mjs --only AC-CONV-009-08 --json`（先设 `$env:AC_HARNESS_PORT_OFFSET='300'`、`$env:AC_CDP_PORT='9250'`；页面实例由 run-ac 共享批自动拉起：`.tmp/chg-007-T07/serve.mjs` 起静态页 9087/9076/9066，`.tmp/chg-007-T06/simo.exe` 起后端 9088/9077/9067；9250 无浏览器时 `scripts/probe-cdp.mjs --port 9250` 自动拉起 headless Chrome（profile `.tmp/chrome9250`）；不设 `AC_CDP_PORT` 则走默认 9223） | 2026-11-26T09:00+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-07 | R9 | 是 | 2026-11-26 08:58:29 本轮重建 `frontend/dist/assets/app.js`（369501 B） | 有效 | 16 条断言，耗时 22.6s，runId `20261126005856`；证据 `.tmp/ac/AC-CONV-009-08.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：展开 320、面板 280、竖条 40、三标签 32×32、收起 40、刷新后仍收起。 |
+| E-AC-CONV-009-09-01 | AC-CONV-009-09 | 断言脚本 | `scripts/ac/AC-CONV-009-09.mjs` | `$NODE scripts/run-ac.mjs --only AC-CONV-009-09 --json`（先设 `$env:AC_HARNESS_PORT_OFFSET='300'`、`$env:AC_CDP_PORT='9250'`；页面实例由 run-ac 共享批自动拉起：`.tmp/chg-007-T07/serve.mjs` 起静态页 9087/9076/9066，`.tmp/chg-007-T06/simo.exe` 起后端 9088/9077/9067；9250 无浏览器时 `scripts/probe-cdp.mjs --port 9250` 自动拉起 headless Chrome（profile `.tmp/chrome9250`）；不设 `AC_CDP_PORT` 则走默认 9223） | 2026-11-26T09:00+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-07 | R9 | 是 | 2026-11-26 08:58:29 本轮重建 `frontend/dist/assets/app.js`（369501 B） | 有效 | 15 条断言，耗时 23.3s，runId `20261126005856`；证据 `.tmp/ac/AC-CONV-009-09.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：角标计数=进行中数、0 不渲染、1–9 显示数字、≥10 显示「9+」。 |
+| E-AC-CONV-009-10-01 | AC-CONV-009-10 | 断言脚本 | `scripts/ac/AC-CONV-009-10.mjs` | `$NODE scripts/run-ac.mjs --only AC-CONV-009-10 --json`（先设 `$env:AC_HARNESS_PORT_OFFSET='300'`、`$env:AC_CDP_PORT='9250'`；页面实例由 run-ac 共享批自动拉起：`.tmp/chg-007-T07/serve.mjs` 起静态页 9087/9076/9066，`.tmp/chg-007-T06/simo.exe` 起后端 9088/9077/9067；9250 无浏览器时 `scripts/probe-cdp.mjs --port 9250` 自动拉起 headless Chrome（profile `.tmp/chrome9250`）；不设 `AC_CDP_PORT` 则走默认 9223） | 2026-11-26T09:00+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-07 | R9 | 是 | 2026-11-26 08:58:29 本轮重建 `frontend/dist/assets/app.js`（369501 B） | 有效 | 13 条断言，耗时 24.1s，runId `20261126005856`；证据 `.tmp/ac/AC-CONV-009-10.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：四节折叠态按会话记忆、刷新后一致、换会话默认全开。 |
+| E-AC-CONV-009-11-01 | AC-CONV-009-11 | 断言脚本 | `scripts/ac/AC-CONV-009-11.mjs` | `$NODE scripts/run-ac.mjs --only AC-CONV-009-11 --json`（先设 `$env:AC_HARNESS_PORT_OFFSET='300'`、`$env:AC_CDP_PORT='9250'`；页面实例由 run-ac 共享批自动拉起：`.tmp/chg-007-T07/serve.mjs` 起静态页 9087/9076/9066，`.tmp/chg-007-T06/simo.exe` 起后端 9088/9077/9067；9250 无浏览器时 `scripts/probe-cdp.mjs --port 9250` 自动拉起 headless Chrome（profile `.tmp/chrome9250`）；不设 `AC_CDP_PORT` 则走默认 9223） | 2026-11-26T09:00+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-07 | R9 | 是 | 2026-11-26 08:58:29 本轮重建 `frontend/dist/assets/app.js`（369501 B） | 有效 | 9 条断言，耗时 21.7s，runId `20261126005856`；证据 `.tmp/ac/AC-CONV-009-11.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：11 任务概览「还有 9 个」点跳后首行距滚动口顶 0–8px、500ms 复测 ±1px 内。 |
+| E-AC-CONV-009-12-01 | AC-CONV-009-12 | 断言脚本 | `scripts/ac/AC-CONV-009-12.mjs` | `$NODE scripts/run-ac.mjs --only AC-CONV-009-12 --json`（先设 `$env:AC_HARNESS_PORT_OFFSET='300'`、`$env:AC_CDP_PORT='9250'`；页面实例由 run-ac 共享批自动拉起：`.tmp/chg-007-T07/serve.mjs` 起静态页 9087/9076/9066，`.tmp/chg-007-T06/simo.exe` 起后端 9088/9077/9067；9250 无浏览器时 `scripts/probe-cdp.mjs --port 9250` 自动拉起 headless Chrome（profile `.tmp/chrome9250`）；不设 `AC_CDP_PORT` 则走默认 9223） | 2026-11-26T09:00+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-07 | R9 | 是 | 2026-11-26 08:58:29 本轮重建 `frontend/dist/assets/app.js`（369501 B） | 有效 | 18 条断言，耗时 23.2s，runId `20261126005856`；证据 `.tmp/ac/AC-CONV-009-12.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：四筛选 11/2/1/3、选中态 1、未开始只在全部、切筛选后 scrollTop=0。 |
+| E-AC-CONV-009-13-01 | AC-CONV-009-13 | 断言脚本 | `scripts/ac/AC-CONV-009-13.mjs` | `$NODE scripts/run-ac.mjs --only AC-CONV-009-13 --json`（先设 `$env:AC_HARNESS_PORT_OFFSET='300'`、`$env:AC_CDP_PORT='9250'`；页面实例由 run-ac 共享批自动拉起：`.tmp/chg-007-T07/serve.mjs` 起静态页 9087/9076/9066，`.tmp/chg-007-T06/simo.exe` 起后端 9088/9077/9067；9250 无浏览器时 `scripts/probe-cdp.mjs --port 9250` 自动拉起 headless Chrome（profile `.tmp/chrome9250`）；不设 `AC_CDP_PORT` 则走默认 9223） | 2026-11-26T09:00+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-07 | R9 | 是 | 2026-11-26 08:58:29 本轮重建 `frontend/dist/assets/app.js`（369501 B） | 有效 | 16 条断言，耗时 21.4s，runId `20261126005856`；证据 `.tmp/ac/AC-CONV-009-13.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：任务图 11 节点、失败节点 d=failed、下游 h=pending、d→h 虚线 1 条、四态之和 8。 |
+| E-AC-CHG-CONV-007-01-01 | AC-CHG-CONV-007-01 | 断言脚本 | `scripts/ac/AC-CHG-CONV-007-01.mjs` | `$NODE scripts/run-ac.mjs --only AC-CHG-CONV-007-01 --json`（先设 `$env:AC_HARNESS_PORT_OFFSET='300'`、`$env:AC_CDP_PORT='9250'`；页面实例由 run-ac 共享批自动拉起：`.tmp/chg-007-T07/serve.mjs` 起静态页 9087/9076/9066，`.tmp/chg-007-T06/simo.exe` 起后端 9088/9077/9067；9250 无浏览器时 `scripts/probe-cdp.mjs --port 9250` 自动拉起 headless Chrome（profile `.tmp/chrome9250`）；不设 `AC_CDP_PORT` 则走默认 9223） | 2026-11-26T08:59+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-07 | R9 | 是 | 2026-11-26 08:58:29 本轮重建 `frontend/dist/assets/app.js`（369501 B） | 有效 | 14 条断言，耗时 24.1s，runId `20261126005856`；证据 `.tmp/ac/AC-CHG-CONV-007-01.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：只读消息流夹具汇总卡 695ms ≤ 5000ms；详情 720×810、8 步、1 个产出文件；下载落盘 3200 字节；三档无横向溢出。 |
+| E-AC-CHG-CONV-007-05-01 | AC-CHG-CONV-007-05 | 断言脚本 | `scripts/ac/AC-CHG-CONV-007-05.mjs` | `$NODE scripts/run-ac.mjs --only AC-CHG-CONV-007-05 --json`（先设 `$env:AC_HARNESS_PORT_OFFSET='300'`、`$env:AC_CDP_PORT='9250'`；页面实例由 run-ac 共享批自动拉起：`.tmp/chg-007-T07/serve.mjs` 起静态页 9087/9076/9066，`.tmp/chg-007-T06/simo.exe` 起后端 9088/9077/9067；9250 无浏览器时 `scripts/probe-cdp.mjs --port 9250` 自动拉起 headless Chrome（profile `.tmp/chrome9250`）；不设 `AC_CDP_PORT` 则走默认 9223） | 2026-11-26T09:00+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-07 | R9 | 是 | 2026-11-26 08:58:29 本轮重建 `frontend/dist/assets/app.js`（369501 B） | 有效 | 31 条断言，耗时 66.1s，runId `20261126005856`；证据 `.tmp/ac/AC-CHG-CONV-007-05.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：1280 竖条 320/面板 280/竖条 40、768 抽屉 280、375 不渲染；五处几何与滚动落点全过。 |
+| E-AC-CHG-CONV-007-06-01 | AC-CHG-CONV-007-06 | 断言脚本 | `scripts/ac/AC-CHG-CONV-007-06.mjs` | `$NODE scripts/run-ac.mjs --only AC-CHG-CONV-007-06 --json`（先设 `$env:AC_HARNESS_PORT_OFFSET='300'`、`$env:AC_CDP_PORT='9250'`；页面实例由 run-ac 共享批自动拉起：`.tmp/chg-007-T07/serve.mjs` 起静态页 9087/9076/9066，`.tmp/chg-007-T06/simo.exe` 起后端 9088/9077/9067；9250 无浏览器时 `scripts/probe-cdp.mjs --port 9250` 自动拉起 headless Chrome（profile `.tmp/chrome9250`）；不设 `AC_CDP_PORT` 则走默认 9223） | 2026-11-26T08:59+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-07 | R9 | 是 | 2026-11-26 08:58:29 本轮重建 `frontend/dist/assets/app.js`（369501 B） | 有效 | 17 条断言，耗时 22.6s，runId `20261126005856`；证据 `.tmp/ac/AC-CHG-CONV-007-06.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：详情与任务图均 role=dialog aria-modal、操作入口只有关闭 1、写请求 0、失败下游虚线。 |
+| E-AC-CHG-CONV-007-07-01 | AC-CHG-CONV-007-07 | 断言脚本 | `scripts/ac/AC-CHG-CONV-007-07.mjs` | `$NODE scripts/run-ac.mjs --only AC-CHG-CONV-007-07 --json`（先设 `$env:AC_HARNESS_PORT_OFFSET='300'`、`$env:AC_CDP_PORT='9250'`；页面实例由 run-ac 共享批自动拉起：`.tmp/chg-007-T07/serve.mjs` 起静态页 9087/9076/9066，`.tmp/chg-007-T06/simo.exe` 起后端 9088/9077/9067；9250 无浏览器时 `scripts/probe-cdp.mjs --port 9250` 自动拉起 headless Chrome（profile `.tmp/chrome9250`）；不设 `AC_CDP_PORT` 则走默认 9223） | 2026-11-26T08:59+08:00 | 自动 | pass | — | TASK-CHG-CONV-007-07 | R9 | 是 | 2026-11-26 08:58:29 本轮重建 `frontend/dist/assets/app.js`（369501 B） | 有效 | 25 条断言，耗时 23.8s，runId `20261126005856`；证据 `.tmp/ac/AC-CHG-CONV-007-07.json`、`.tmp/evidence-final-fix/gates/batch-26.json`；判据：汇总卡 data-batch-id=b-1、10 条平铺、展开仍 10 条无「还有 N 条」；四筛选 11/2/1/3 与卡片数逐一相等、scrollTop 全 0。 |
 
-命令中的 `node` 指运行时绝对路径 `E:\dsh_home\dsh-runtimes\dsh-primary-runtime\dependencies\node\bin\node.exe`；PATH 中没有 node。
+表内合计 26 行：`AC-CONV-009-01` 至 `-18` 共 18 行，`AC-CHG-CONV-007-01` 至 `-08` 共 8 行。其中 `pass` 26 行、`partial` 0 行、`blocked` 0 行、`missing` 0 行、`skip` 0 行，26+0+0+0+0=26。26 条断言合计 560 条（18 条产品 AC 367 条 + 8 条变更级 AC 193 条）。本轮逐条耗时合计 629534ms（共享批串行总耗时 130916ms，各条耗时含组内并发等待）。runId `20261126005856`，构建时间 2026-11-26 08:58:31。
 
-```powershell
-& "E:\dsh_home\dsh-runtimes\dsh-primary-runtime\dependencies\node\bin\node.exe" scripts/check-trace.mjs
-```
+R10 命令复核（2026-11-26 09:21–09:24）：修复 CDP 端口贯通后，按上表命令形态实跑界面 3 条——`AC-CONV-009-11` 单条 pass（9 条断言，runId `20261126012230`），`AC-CONV-009-13` 与 `AC-CHG-CONV-007-07` 并入同一批 pass（16、25 条断言，runId `20261126012101`），合计 pass 3 / skip 0 / 断言 50；另在 9250 无监听时用最终代码（含失败清理）冷启动 `AC-CONV-009-11`，探针自动拉起 Chrome 后同样 pass（9 条断言，runId `20261126012639`）。其余 10 条界面行命令与上述同形，本轮未逐条重跑，结果沿用 R9。实跑输出在 `.tmp/evidence-cmd-fix/runs/`，命令与失败路径见 `.tmp/evidence-cmd-fix/report.md`。
 
-```text
-check-trace: PRD 追溯结构门禁
-  PRD 总数：TREE 72，TRACEABILITY 声明 72，TRACEABILITY 实际 72
-  缺失（TRACEABILITY 未收录）：0
-  坏 TEST 锚点：0
-  缺失 TEST 计划：0
-  非法 TEST 链接：0
-  产品 spec PRD 声明：72，产品 spec 问题：0
-  change 包：19，change 问题：0，治理豁免：1
-  E2E README：存在；R4 检查行：72
-  失败项：0，提示项：0
-PASS (checks: 683)
-```
+## 2 逐卡应交证据
 
-2026-11-23 21:45 文档回写后复跑同一条命令：失败项 0、提示项 0，`PASS (checks: 683)`，退出码 0；本次只复核追溯结构，18 条 AC 的断言脚本仍未建。
+每张卡在完成时必须交出下表的证据，未交的保持 `missing`，不提前写成通过。
 
-```powershell
-& "E:\dsh_home\dsh-runtimes\dsh-primary-runtime\dependencies\node\bin\node.exe" scripts/check-spec-language.mjs
-```
+| 卡号 | 应交证据 | 路径 | 状态 |
+|---|---|---|---|
+| T01 | 契约冻结复核记录与 `check-contract.mjs` 输出 | `.tmp/chg-007-T01/contract-review.md` | pass（2026-11-25；回写 6 个文件，逐处见该文件 §7；`check-contract.mjs` 7 项 0 告警、`check-trace.mjs` 684 项 0 失败、`check-gates.mjs` struct 120 项 0 失败 1 条既有 WARN）；D-05 已定案（用户 2026-11-25 裁定出口 B），§11 八项至此全部定案、无 blocked |
+| T02 | 后端单测日志、消息与下载响应 JSON、6 条 AC 的断言 JSON | `.tmp/chg-007-T02/`、`.tmp/ac/` | partial（2026-11-25；tasks/chat 单测与 vet 全绿，日志 `.tmp/chg-007-T02/test.log`、`vet.log`；六处投影、joinMode 三态、403 轨迹接线、DELEGATE 改 CreateBatch 已落码并有单测；6 条 AC 的端到端断言 JSON 待 T04/T05 联调后补；22:40 执行链修复：`service.go` 的 `defaultSteps` 改为每个任务生成 `step-<hex>`、确认时由 `ConfirmConv` 调 chat 的 `ReleaseTaskApprovals` 放行挂起审批并续跑，真实执行器补 running 步、成功工具写 action 轨迹；`tasks`+`chat` 单测与 `go vet ./...` 复跑全绿；隔离库实测 14 条断言通过（同库两个 execute 任务均 201、`task_steps` id 不重复、确认后 done、产出 `notes/ac-04-output.md`、403 observe 1 条），证据 `.tmp/ac/FIX-CHG-007-CONFIRM.json`；22:56 失败原因补齐：`tasks.fail_reason` 复用迁移 v8 已有列（`migrations.go:167`，未加新版本），`real_executor.go` 失败分支写 `failureReason(result, err)`——有权限拒绝时记「工具拒绝: permission_denied tool=<工具名> path=<路径>；<原因>」，`context.DeadlineExceeded` 记「步骤超时」，其余记「执行器异常」，按字符截到 500；`service.go` 的 mock:fail 两处同写「执行器异常: Mock 执行器模拟失败…」，真实执行器与 mock 的成功路径清空；新增 `fail_reason_test.go` 覆盖三类前缀与 500 字截断；`tasks` 单测 3.965s 与 `go vet ./...` 复跑全绿，`chat` 单测 8.234s 全绿；真实执行器 + 恒 500 假上游实测失败任务详情与图节点 `failReason` 同为「执行器异常: 模型请求失败: 模型返回 HTTP 500…」（`.tmp/chg-007-failcheck/result.json`）；mock 复刻 AC-CHG-CONV-007-02 全部断言 9/9 通过（failed、failReason 非空且分类、图节点非空、retry 200/attempt=2/task_id 不变/不重复建行、其它任务 done，`.tmp/chg-007-failcheck/result-mock.json`）；脚本本轮仍判 fail（19s，末尾无条件 `throw AcError('R-EXT')`，detail 显示 failReason 已非空），不改脚本无法 pass） ；23:59 交付物空组：`tasks/conv.go` 的 `SessionDeliverables` 由 `task_artifacts JOIN tasks` 改为 `tasks LEFT JOIN task_artifacts`（连接条件保留 `delivery_kind='user_delivery'`，过滤改 `t.session_id`/`t.id`，无产物任务只有一行 NULL 产物仍建组），`ORDER BY` 让有产物组按产物时间、空组置后；`DeliverableGroup` 新增 `count` 字段，空组返回 `files:[]`、`count:0`，`taskStatus` 仍取任务投影，失败原因不进文件列表；新增单测 `TestConvDeliverablesIncludesFailedTask`（成功 1 文件 + 失败空组 2 组，断言空组与状态），`TestConvDeliverablesGrouping` 同步为 2 组 2 文件；`tasks` 单测 4.502s、`chat` 8.202s、`go vet ./...` 无输出 exit 0；`.tmp/chg-007-T06/simo.exe` 23:58:37 重建，`AC-CONV-009-16` pass（2026-11-26 复核 46 条断言，`.tmp/ac/AC-CONV-009-16.json`）；`AC-CHG-CONV-007-07` 脚本不存在，未跑 |
+| T03 | 编排单测日志、取消级联日志、可控时钟说明、6 条 AC 的断言 JSON | `.tmp/chg-007-T03/`、`.tmp/ac/` | partial（2026-11-25；三类等待与取消级联、恢复、重试已落码，`tasks` 与 `chat` 单测全绿（exit 0）、`go vet ./...` 无输出（exit 0），日志 `.tmp/chg-007-T03/test.log`、`vet.log`；可控时钟做法见 `.tmp/chg-007-T03/clock.md`；`parseBudget` 改名 usedSteps/usedTokens 并同步 HTTP 断言；`applyExecutionResult` 无调用点已删除并在 `conv.go` 原位记录裁决；整链取消共享 5 秒等待预算（`stopAttemptWithin`），对不响应的执行器仍能在 5 秒内返回；同日 22:05 按 CT-CONV-535 复核修正：chain 分支只中断 running 下游，未启动下游保持 pending 与 waitingReason=dependency，cancelled[] 只含目标自身（`conv.go:1199-1220`），同步改 `conv_t03_test.go` 的级联用例与 `conv_test.go` 的 `TestConvCancelScopeAndTerminal`，修正后两类单测与 vet 复跑仍 exit 0；用当前代码重建 `.tmp/chg-007-T06/simo.exe` 后 `scripts/ac/AC-CONV-009-15.mjs` 21 条断言全过（exit 0：上游 cancelled、下游 pending 与 waitingReason=dependency、triggerCount 0、startedAt 空、30 秒 0 启动、连线 dashed、scope=bogus 返回 400 invalid_argument、跨会话 404 task_not_found），证据 `.tmp/ac/AC-CONV-009-15.json` 与 `.tmp/chg-007-T03/ac-15-direct.log`；其余 5 条 AC 的断言 JSON 依赖 T06 脚本与 T05 联调，未产出；22:40 确认放行接线：`ConfirmConv` 在 confirm 分支调用 `ReleaseTaskApprovals`（补会话授权、审批行标 `approved/allow_session`），失败返回 500 并保持等待；`runRealAttempt` 执行前置当前步 running（确认续跑复用原 running 步），成功后步骤全部 done，失败置 failed；探针实测确认 200 → done、action 轨迹 1 条、越权 observe 403 1 条、产出文件 43 字节；`AC-CONV-009-04` 复跑由 R-BUILD 变为 R-ENV 等待超时（脚本全程不调确认接口），`AC-CHG-CONV-007-04` 仍 R-EXT（脚本走 mock 执行器且末尾无条件抛出），两者均属脚本缺口，不改脚本） |；23:58 可控时钟接线：chat/runtime.go 的 runtimeNow（审批到期扫描）、chat/watchdog.go 的轮次空闲/总时长看门狗、chat/task_release.go 与 chat/approval.go 的审批时间戳、tasks/real_executor.go 的等待起点与步骤时间戳均改读 platform/clock；tasks 单测 8.646s、chat 10.015s 全绿，go vet 无输出；测试构建下 AC-CHG-CONV-007-08 23.3s 通过全部前置断言，同样仅末尾 R-ENV。
+| T04 | 前端单测日志、DOM 快照、3 条 AC 的断言 JSON | `.tmp/chg-007-T04/`、`.tmp/ac/` | partial（2026-11-25；四条会话内路径、类型改名与 8 字段删除、入口归一化、任务卡/汇总卡、空错态均已落，`tsc --noEmit` 0 error、vitest 全量 327 pass / 11 skip（均为既有 PRD-CONV-008 红测试，未新增 skip），用例见 `frontend/src/api.tasks.test.ts`、`frontend/src/taskData.test.ts`、`frontend/src/components/TaskMessageCard.test.tsx`、`frontend/src/components/TaskDetail.test.tsx`；DOM 快照与 3 条 AC 断言 JSON 未产出，本卡可写范围仅 `frontend/` 与本行，未写 `.tmp/chg-007-T04/`） |
+| T05 | 前端单测日志、CDP `metrics.json`、三档截图 | `.tmp/chg-007-T05/`、`.tmp/chg-007-T05-fix/` | partial（2026-11-25 第四轮修复，22:37–23:07；四处缺陷已修：① 详情默认展开步骤在兜底 `TaskView` 切真详情时不重算，`tasks.tsx` 依赖改为 `[detail?.task.id, loadedDetail]`；② 切筛选不回顶，`tasks.tsx` 用 `prevFilter`/`jumpEpoch` 在筛选变化时回顶并作废待落点跳转、筛选片点击先作废再置 `#insp-panel.scrollTop=0`（点当前片也回顶）；③ 760–1023 抽屉档详情补几何，`components.css` 加 `.task-detail{left:auto;right:var(--rail-strip);width:min(280,100vw−40−8);top:calc(--topbar+--context+8);bottom:--insp-drawer-bottom}`；④ 768 抽屉口径按 V-CONV-008-6 改为**首次加载一律收起**，只有该会话已存过用户选择记录（`simo.insp.collapsed.<id>` 为 `0`）才恢复展开，点竖条展开 280 覆盖层，`library.tsx:1366-1372`；`RightPanelRail.cdp.test.tsx` 断言同步回抽屉 `none`。768 实测（`probe-drawer768.mjs`）：首次 rail 40 / drawerOpen false / 面板 0 / 中栏 508；点竖条后 rail 40 / drawerOpen true / 面板 280 / 中栏 508（宽差 Δ0）；打开 t1 详情 detailRight 728。`AC-CONV-009-05` **18 passed / 0 failed**；`AC-CONV-009-12` **18 passed / 0 failed**（切筛选回顶 scrollTop=0、四片与四态全过）；`AC-CHG-CONV-007-05` **31 passed / 0 failed**（脚本已按 768 初始收起更新）；其余全过：1280 展开 320/280/40、收起 40、详情 960→1240，768 竖向 40、详情 r728/l448/w280、收起后 detailRight null、中栏宽差 Δ0、跳转 3.6 且 500ms 复测 0 漂移，375 rail 0 / scrollWidth 375 / 竖条 0 重叠 / 跳转 0。`tsc --noEmit` 0 error；全量 vitest `--pool=threads`：`Test Files 1 failed | 31 passed (32)`、`Tests 1 failed | 345 passed (346)`，唯一失败为 `RightPanelRail.cdp.test.tsx` 1180 用例取不到 `.conversation-panel > .timeline`（既有环境问题，按指令不改）。证据：`.tmp/ac/AC-CHG-CONV-007-05.json`、`AC-CONV-009-05.json`、`AC-CONV-009-12.json`、`.tmp/chg-007-T05-fix/full-final.log`，检查点 `.tmp/chg-007-T05-fix/checkpoint.md`。第五轮（23:20–23:45）：交付物标签空态根因是缓存过期，`app.tsx:778-791` 在 `changeRightTab` 进入交付物时重取 N9，探针实测 3 组 3 文件、8 行徽标与 `HH:MM · size` 正确，失败组虚线空卡；1280 收起几何加 250ms 看门狗（`library.tsx:1436-1452`，宽度未到目标就关过渡直接落位），后台/冻结页不再停在 320，前后台实测收起后 260ms 与 760ms 均 40、面板 0、中栏 1000；`AC-CONV-009-08` **16 passed / 0 failed**（原 16/3 转绿）、`AC-CHG-CONV-007-05` **31 passed / 0 failed**、`tsc --noEmit` 0 error；CDP `metrics.json` 与三档截图仍按任务表归 T07/T08）。第六轮（00:00–00:10，m01684）：768 抽屉点不到内容的根因是遮罩渲染在 `.insp-panel` 内部并被 `z-index:54` 压住面板内容，`library.tsx` 把遮罩移到 aside 下、与面板同级且排在面板之前（遮罩 54、面板 55，只盖面板外区域）；右栏宽度过渡在冻结页/后台标签会停在起点（1280 收起量到 320、768 展开量到 40），`components.css:1150-1155` 改为 `.inspector{transition:none}` 并删掉看门狗与 `asideRef`，收起/展开几何一步到位，动效留在面板内容自身（与设计 §17.2.1 的 160ms 过渡有偏差，理由是两条 AC 在点击后立即量整栏宽，过渡会让同一提交两次采样落在不同帧）；新增回归用例「768×1024：抽屉内按钮命中自身、点击后抽屉不关，点遮罩才关」（`RightPanelRail.cdp.test.tsx`，`elementFromPoint` + `compareDocumentPosition` + `page.mouse.click` + 插桩 `#hit-probe`）。`tsc --noEmit` 0 error；全量 vitest `--pool=threads --maxWorkers=2`：`Test Files 1 failed | 31 passed (32)`、`Tests 1 failed | 346 passed (347)`，唯一失败仍是既有 1180 用例，日志 `.tmp/chg-007-T05-fix/full-scrim3.log`；`AC-CHG-CONV-007-05` 第二次 **31 passed / 0 failed**（首次 `Page.captureScreenshot 超时 20000ms` 属 CDP 抖动）、`AC-CONV-009-08` **16 passed / 0 failed**；真实 CDP 点击探针 `.tmp/chg-007-T05-fix/probe-scrim.mjs`：点击 (560,300) 命中 `task-card-title`、`insidePanel true`、`isScrim false`，点击后抽屉仍 flex、遮罩在，点 300,400 后面板 none、遮罩消失。检查点 `.tmp/chg-007-T05-fix/checkpoint.md`） |
+| T06 | 13 条脚本与夹具、运行日志、13 个断言 JSON | `scripts/ac/`、`.tmp/ac/`、`.tmp/chg-007-T06/` | partial（2026-11-26 复核：04/chg-04 两条脚本曾因 mode 不符 0 断言失败，mode 改 react 后各 12 条与 15 条断言 pass（§1）；原「12 pass、1 blocked、0 fail」只覆盖当时批次，不再据此宣称全过；本轮改动三处：① `AC-CONV-009-16` 按交付物分组改为「任务为主表」补 11 条失败组断言（35→46 条，断言 4 组、失败组在最后且 files=[]/count=0/taskStatus=failed、前 3 组各 1 文件、按失败 taskId 过滤返回 1 个空组）；② `AC-CONV-009-18` 与 `AC-CHG-CONV-007-08` 删掉末尾无条件 `throw AcError('R-ENV')`，改用测试构建 `simo-testclock.exe` + `SIMO_TEST_CLOCK=rate=200` 把 30 分钟窗口压到真实 9 秒，分别 17 条与 25 条断言全过；③ 公共层 `scripts/ac/lib/conv-backend.mjs` 支持 `AC_CONV_BASE`/`AC_CONV_HOME`/`AC_CONV_UPSTREAM_PORT` 派生端口与假上游（并行任务占 8789，本轮用 8799 + `.tmp/ac-conv-009-t06/home`），并把时间类脚本从 `scripts/ac/groups.json` 的共享组移出（共享后端是生产构建，没有时钟开关）。独立验收批次 2026-11-26 02:04 复跑 `AC-CONV-009-04`、`AC-CHG-CONV-007-04` 为 0 断言失败（`invalid_task_mode`）；另一卡 02:12 报 mode 改 react 后隔离复跑：两条脚本的 `mode=execute` 改为 `react`，契约 CT-CONV-001 同步为 plan、react、explore，`AC_HARNESS_PORT_OFFSET=100`、后端 8891、假上游 8890、隔离 home；2026-11-26 02:35 复核：两条脚本各 12 条与 15 条断言 pass（§1），旧「修复中」登记作废；`check-contract.mjs` 7 项 PASS、`check-trace.mjs` 684 项 PASS。原 0 断言失败根因是后端 `validateMode` 拒绝 `execute` 并返回 400 `invalid_task_mode`。日志 `.tmp/chg-007-T06/run-16-failgroup2.log`、`run-window-fix3.log`、`run-prod-regress.log`、`runner-batch-fix.log`） |
+| T07 | 13 条脚本（9 条修补、4 条新建）、截图与采样 | `scripts/ac/`、`.tmp/ac/`、`.tmp/chg-007-T07/` | pass（2026-11-26 第五轮 R5；隔离环境：后端 8791 跑 `backend/simo-8787-ancestor.exe serve -model mock`、`SIMO_HOME=.tmp/chg-007-T07/home`，临时前端 5174 服务当前 `frontend/src` 构建产物 `buildId mwwbiaet-voft4`，未改 `frontend/dist`）；9 条既有 CDP 脚本 9 条 pass（`-05` 18/18、`-06` 12/12、`-07` 33/33、`-08` 16/16、`-09` 15/15、`-10` 13/13、`-11` 9/9、`-12` 18/18、`-13` 16/16）；4 条新建：`AC-CHG-CONV-007-01`（CT-539，14/14）、`-05`（CT-543，31/31）、`-06`（CT-544，17/17）、`-07`（CT-545，25/25），只读消息流夹具 `scripts/ac/lib/conversation-fixture.mjs`；三档六项在 `.tmp/chg-007-T07/metrics.json`（1280 rail 320、panel 279、strip 40、详情右缘 960、收起详情右缘 1240、落点 0；768 首屏 rail 40、panel 0、中栏 508，点竖条后 panel 280、详情右缘 728／左缘 448／宽 280、落点 3.6；375 右栏 0、落点 0，各 2 次 ≤±1px），截图 18 张在 `shots/`；服务已停，8791/5174/9223 无端口占用） |
+| T08 | 集成与端到端脚本、断言 JSON、三档截图、8 条变更级 AC 的矩阵登记 | `.tmp/chg-007-T08/`、`.tmp/chg-007-T08c/`、`.tmp/ac/`、`scripts/ac/` | pass（2026-11-26 03:03–03:06 T08d 用当前源码重建的后端重跑集成层：9 pass / 1 skip / 0 fail、214 条断言，逐条见 §9 与 `.tmp/chg-007-T08d/t08-summary.json`；任务图 `AC-CONV-009-13` 集成层按既有规则 skip（无页面），UI 层单跑 16/16 另记；00:12 T08c 的 4 条端到端失败项已由 T02 的 `LEFT JOIN` 与 T05 的抽屉遮罩层级修复，本轮未重跑端到端套件，端到端结论沿用 §10.1，前一轮 24 pass / 0 fail / 3 skip 仍有效；8 条 AC 已登记 `test-plan.md` 第 52–59 行） |
+| T09 | 全量回归日志、四条门禁输出、对账后的本文件、验收报告与签字 | `docs/testing/ACCEPT-CONV-007-20261126.md` | partial（2026-11-26 独立验收报告结论 partial、不签发；本轮完成 26 条验收批与真机复跑，§1 为 26 条 pass、0 条 blocked、0 条 skip，断言 560 条，runId `20261126005856`；签字待验收方复验） |
+| T10 | 复盘文件（含请求数、总输入与占比）与 proposal 回写 | `docs/plan/RETRO-CHG-CHG-CONV-007.md` | missing |
 
-```text
-FAILED: 96 error(s), 137 warning(s)
-```
+## 3 复跑命令入口
 
-全仓语言门禁的 96 条错误全部落在既有产品 spec（`specs/product/P4-FILE/spec.md` 等），`specs/changes/CHG-CONV-007/spec.md` 命中 0 条。本包不修既有错误，也不把这条全局 FAILED 记为本包失败。
+`$NODE` 指 `E:\dsh_home\dsh-runtimes\dsh-primary-runtime\dependencies\node\bin\node.exe`，在仓库根执行。
 
-## 3. 逐卡证据要求
-
-| 卡 | 复现命令 | 产物路径 | 通过判据 | 状态 |
-|---|---|---|---|---|
-| W0-01 | 人工核对产品 spec `:310-363`、`:377`、`:395-397`、`:406`，四项裁决写回 `:323`、`:329`、`:336-341`、`:345`、`:357`、`:359`、`:408` | `specs/product/P1-CONV/spec.md` | 15 条行为、18 条 AC、A9、状态行、裁决 ⑧ 与 DEC-26..29 齐备 | done |
-| W0-02 | `node scripts/check-trace.mjs` | `.tmp/chg-conv-007/check-trace.log` | 退出码 0，失败项 0，锚点 `tc-p1-conv-009` 可解析 | done |
-| W1-01 | 人工核对 `specs/design/P1-CONV/spec.md:756-1042` | `specs/design/P1-CONV/spec.md` §17（`:756-1042`）；§17.12 判据 `:981-1027`；§16 变更记录 v0.3 `:748` | §17.1 至 §17.13 各节齐备；右栏壳 280+40、概览四节、任务厚卡与等待标签、两种详情、交付物、任务图、消息流任务卡、三档断点、45 条 `V-CONV-009-*`（`:983-1026`）均有落点 | done |
-| W1-02 | `node scripts/check-spec-language.mjs`；与设计 spec 逐项比对 | `specs/frontend/P1-CONV/task-panel.md` | 18 条 AC 的前端判定面全部有落点；组件、props、事件、接口、失败态各 1 节 | missing |
-| W1-03 | 人工评审 + 前端 owner 确认接口形状 | `specs/backend/P1-CONV/task-orchestration.md` | 路由表、表结构、错误码、开关与回滚各 1 节；与 W1-02 的请求响应一致 | missing |
-| W1-04 | `node scripts/ac-coverage.mjs --json` | `specs/test/P1-CONV/test-plan.md` §18；`.tmp/chg-conv-007/ac-coverage.json` | 18 条 AC 均有 TC 行；`items` 中 18 条无 `missing` | missing |
-| W1-05 | 人工对照 `specs/product/P1-CONV/spec.md:343-366`、`:350-351`、`:355-358` 与 `docs/plan/DECISIONS.md:121-124`、`:128-129` | `specs/design/P1-CONV/spec.md` §17（`:756-1042`）、§17.12（`:981-1027`）、§16 v0.4（`:747`） | 18 条 AC 均有设计侧落点；DEC-26..31 逐条可对照；原 4 处差异已回写：§17.8.3 `:936-938`、§17.9.3 `:958`、§17.9.2 `:950`、§17.13 `:1028-1042`；DEC-30/31 落点见 §5 | done |
-| W2-01 | `go test ./internal/modules/chat/ ./internal/modules/tasks/` | 测试输出 `.tmp/chg-conv-007/w2-01-test.log`；消息样例 `.tmp/chg-conv-007/task-message.json` | 退出码 0；样例含 `category="task"`、`task_id`，批量 10 条有汇总字段 | missing |
-| W2-02 | `go test ./internal/modules/tasks/ -run 'Test.*(Depend|Wait|Cancel)'` | `.tmp/chg-conv-007/w2-02-test.log`；`.tmp/chg-conv-007/cancel.log` | 三种等待各 1 组断言通过；取消 A 后 B 启动 0 次 | missing |
-| W2-03 | `go test ./internal/modules/tasks/ ./internal/modules/chat/`；`Invoke-RestMethod` 请求越权路径 | `.tmp/chg-conv-007/forbidden.json`；`.tmp/chg-conv-007/download.json` | 越权响应 403 且正文不含任务数据；下载字节数等于响应 `size` | missing |
-| W3-01 | `cd frontend; pnpm test -- TaskCard` | `.tmp/chg-conv-007/w3-01-vitest.log`；`.tmp/chg-conv-007/task-card.html` | 单卡与 10 条汇总各 1 组用例通过；汇总标题计数 10 | missing |
-| W3-02 | `cd frontend; pnpm test -- RightPanel`；CDP 测宽 | `.tmp/chg-conv-007/shots/metrics.json`；`.tmp/chg-conv-007/shots/right-panel-1280.png` | 收起 40px±1、展开整栏 320px（面板 280 + 竖条 40）、图标 3 个、角标与进行中数一致 | missing |
-| W3-03 | `cd frontend; pnpm test -- Overview`；CDP 测首行位置 | `.tmp/chg-conv-007/shots/overview-375.png`；`metrics.json` 的 `firstRowTop` | 刷新前后折叠态一致；首行距滚动口顶部 0–8px；另一会话默认全开 | missing |
-| W3-04 | `cd frontend; pnpm test -- TaskList TaskDetail` | `.tmp/chg-conv-007/w3-04-vitest.log` | 四筛选计数 11/2/1/3；计划第 6 步展开、第 7 步无入口；边做边想步骤节点 0 | missing |
-| W3-05 | `cd frontend; pnpm test -- TaskGraph Deliverables`；CDP 截图 | `.tmp/chg-conv-007/shots/task-graph.png`；`.tmp/chg-conv-007/w3-05-vitest.log` | 8 节点四态齐全、失败下游虚线 1 条；交付物行含类型徽标与来源任务名 | missing |
-| W4-01 | `node scripts/run-ac.mjs --only AC-CONV-009-01`（逐条 18 次）；`node scripts/run-ac.mjs --group cdp` | `.tmp/ac/AC-CONV-009-01..18.json`；`.tmp/chg-conv-007/run-ac-*.log` | 18 条各自退出码 0；JSON 含 `pass`、判据明细与采样时间 | missing |
-| W5-01 | `cd frontend; pnpm test`；`go test ./...`；`node scripts/check-trace.mjs` | `docs/testing/CHG-CONV-007-E2E-20261123.md`；`.tmp/chg-conv-007/shots/{375,768,1280}.png` | 全量回归退出码 0；三档无横向溢出；8 条变更级 AC 全部有证据；验收签字 1 条 | missing |
-
-## 4. 截图 / DOM / 测量
-
-| 项 | 档位 | 路径 / 数值 |
+| 用途 | 命令 | 当前结果 |
 |---|---|---|
-| 右栏展开宽 | 375 / 768 / 1280 | 280px ±1；`.tmp/chg-conv-007/shots/right-panel-{375,768,1280}.png` |
-| 右栏收起宽 | 375 / 768 / 1280 | 40px ±1；同上 `metrics.json` |
-| 任务卡片 | 1280 | `.tmp/chg-conv-007/shots/task-card.png` |
-| 计划详情第 6 步 | 1280 | `.tmp/chg-conv-007/shots/task-detail-plan.png` |
-| 边做边想时间线 | 1280 | `.tmp/chg-conv-007/shots/task-detail-live.png` |
-| 任务图弹窗 | 1280 | `.tmp/chg-conv-007/shots/task-graph.png` |
-| 「还有 N 个」首行距滚动口顶部 | 1280 | 0–8px；`metrics.json` 的 `firstRowTop`（采样 `target.top − scroller.top`） |
-| 横向溢出 | 375 | `document.documentElement.scrollWidth` = 视口宽 |
+| 单条 AC | `$NODE scripts/run-ac.mjs AC-CONV-009-05` | 可执行；2026-11-26 02:11–02:12 已用 `--only` 复跑 7 条（`.tmp/acc-fix-evidence/run-subset.log`） |
+| 结构门禁 | `$NODE scripts/check-gates.mjs --change CHG-CONV-007` | 见 `docs/testing/CHG-CONV-007-ACCEPT-20261125.md` |
+| 追溯门禁 | `$NODE` `scripts/check-trace.mjs` | 同上 |
+| 契约门禁 | `$NODE` `scripts/check-contract.mjs` `--domain CONV` | 同上 |
+| 证据门禁 | `$NODE` `scripts/check-evidence.mjs` `--change CHG-CONV-007` | 同上 |
 
-几何判据只取 CDP 真渲染或真机结果，jsdom 的 `getBoundingClientRect` 不充当尺寸证据。
+门禁输出在 T09 统一贴入验收报告，本文件不预填结果。
 
-## 5. 未跑 / 豁免 / 文档一致性
+## 4 文档校验记录
 
-- 已完成：W0-01、W0-02、W1-01、W1-05，证据见 §3。
-- 未跑：W1-02 至 W1-04、W2-01 至 W5-01，状态 `missing`。
-- 原因：本角色只写变更包文档；其余卡按 [tasks.md](tasks.md) 派发。
-- 语言门禁：全仓 96 条既有错误不在本包修复范围；本包 spec 命中 0 条，证据见 §2。
-- 覆盖统计：test-plan §18 目前只有占位，`scripts/ac-coverage.mjs` 会把这 18 条记为 `missing`，W1-04 填完 TC 行后复跑。
+| 检查项 | 检查对象 | 判据 | 结论 | 问题数 | 修复数 | 核对人 | 核对时间 |
+|---|---|---|---|---|---|---|---|
+| 链接与引用 | 本包四文件（`specs/changes/CHG-CONV-007/`） | 相对链接可解析、行号与文件实际行一致 | 通过 | 0 | 0 | chg-007-rebase | 2026-11-25 20:50 +08:00 |
+| 编号与锚点 | 26 条 AC 与 10 张卡 | AC 编号与 `spec.md` 逐字一致、卡号 T01 至 T10 连续 | 通过 | 0 | 0 | chg-007-rebase | 2026-11-25 20:50 +08:00 |
+| 术语与命名 | 四文件（`specs/changes/CHG-CONV-007/`） | 统一用「变更级 AC」「变更包」「任务卡」，不混用旧词 | 通过 | 0 | 0 | chg-007-rebase | 2026-11-25 20:50 +08:00 |
+| 示例可复跑 | 第 3 节命令（`scripts/check-trace.mjs`、`scripts/check-contract.mjs`、`scripts/check-evidence.mjs`） | `$NODE` 路径存在、脚本名存在 | 通过 | 0 | 0 | chg-007-rebase | 2026-11-25 20:50 +08:00 |
+| 章节结构 | 四文件 | 与 `change.md`、`task-card.md`、`evidence-index.md` 模板节次对齐 | 通过 | 0 | 0 | chg-007-rebase | 2026-11-25 20:50 +08:00 |
+| 破坏性命令 | 四文件 | 无 `git reset --hard`、`git clean`、`Remove-Item` 类命令 | 通过 | 0 | 0 | chg-007-rebase | 2026-11-25 20:50 +08:00 |
 
-已消除的不一致（2026-11-23 回写后复核）：
+本轮核对 4 个文件，问题 0 条，修复 0 条，无未修复项；下一次核对在 T09 对账时执行。
 
-1. 设计 spec §17.8.3（`:936-938`）已按 DEC-29 改写：按依赖层分行、单层每 4 个换行、画布双向滚动、缩放固定 1.0。
-2. 设计 spec §17.9.3（`:958`）已改为单卡最多平铺 10 条，第 11 条起收进「还有 N 条」。
-3. 设计 spec §17.13（`:1028-1042`）未决项 0 条，原三项以已裁记录保留，含 DEC-30/31 与 AC-11 措辞。
-4. 设计 spec §17.9.2（`:950`）已补等待确认的「确认」「取消」与等待资源的「恢复」入口，任务详情保持 0 入口（DEC-27）。
-5. DEC-30/31 对齐：§17.4.5（`:868`）写四态卡可点、可聚焦、只读；`V-CONV-009-19`/`-20`（`:1001-1002`）、`V-CONV-009-21`（`:1003`）同步；§17.13 已裁记录在 `:1040-1042`。对照 `docs/plan/DECISIONS.md:128-129` 与产品 `specs/product/P1-CONV/spec.md:350-351`、`:355-358`。
-6. `proposal.md` 风险 5/6 已按 DEC-29、DEC-26 改写，`:72` 的几何口径改为距滚动口顶部 0–8px，`:13` 已记变更包立起。
-7. `specs/product/P1-CONV/spec.md:398` 已写变更包已立、17 张任务卡；`:317` 的六类状态已同步为 CHANGE ✅、任务卡 ✅。
+## 5 对账
 
-仍存在的文档漂移（行号引用，不影响口径）：
+| 指标 | 数值 | 说明 |
+|---|---|---|
+| AC 总数 | 26 | 产品 18 条加变更级 8 条，见 `specs/changes/CHG-CONV-007/spec.md` §3、§5 |
+| 有证据行 | 26 | 每 AC 一行，缺失 0 行，见 `specs/changes/CHG-CONV-007/evidence.md` §1 |
+| pass | 26 | 本轮共享批 26 条全部真跑通过，0 skip、0 fail，断言 560 条，runId `20261126005856`，原始输出 `.tmp/evidence-final-fix/gates/batch-26.json` |
+| partial | 0 | 无 partial 行，`AC-CHG-CONV-007-05` 31/31 条断言本轮通过，证据 `.tmp/ac/AC-CHG-CONV-007-05.json` |
+| skip | 0 | 无 skip 行，26 条均实际执行，逐条状态见 `.tmp/ac/` 下同名 JSON |
+| blocked | 0 | 无 blocked 行，`AC-CHG-CONV-007-07` 的 R-ENV 已由共享批环境变量下发修复，本轮 25 条断言通过，证据 `.tmp/evidence-final-fix/gates/batch-26.json` |
+| missing | 0 | 26 条均有断言脚本入口，逐条见 `specs/changes/CHG-CONV-007/evidence.md` §1 的「路径」列 |
+| 合计 | 26 | pass 26 + partial 0 + skip 0 + blocked 0 + missing 0 = 26；断言 560 条，批串行耗时 130916ms，逐条耗时合计 629534ms |
+| 到期日 | 2026-12-02 | 未验证项的统一解除期限 |
 
-1. `specs/changes/CHG-CONV-007/spec.md:11` 写 §4.6 `:310-363`、A9 `:377`，产品 spec 现为 `:310-366`、`:380`。
-2. 同文件 `:17` 写 AC `:343-363`、A9 `:377`、状态 `:395-397`、裁决 ⑧ `:406`，现为 `:343-366`、`:380`、`:398`、`:409`。
-3. 同文件 `:37` 写编号与产品 `:336-353` 一致，现为 `:342-366`。
-4. `specs/changes/CHG-CONV-007/tasks.md:32`（W0-01 行）与 `:41`（W1-01 行）仍用 `:310-363`/`:377`/`:755-1039` 等旧区间；`:89` 同。
-5. `specs/changes/CHG-CONV-007/evidence.md:52` 的 W0-01 行区间是核验当时的旧值，未随文档刷新。
-6. `specs/product/P1-CONV/spec.md:317` 前端 spec 落点写 `frontend.md`，`tasks.md:42` 的 W1-02 落点为 `specs/frontend/P1-CONV/task-panel.md`（两文件均未建）。
+## 6 未验证清单
 
-## 6. 风险
+26 条 AC 无未验证项，状态与断言数见 `specs/changes/CHG-CONV-007/evidence.md` §1；真机小节的唯一未取到项是消息统计（`budget.stats`），说明见下。
 
-1. `backend/internal/modules/tasks` 的开关 `cfg.Modules["tasks"]` 默认关闭，W2/W3 期间断言必须用夹具；W5 打开开关后要重跑一次，避免夹具与真实路径分叉。
-2. `P4-FILE` 未提供真实文件时，下载字节判据只能用夹具；夹具必须走正式响应路径，路径与字节数写进 §3 的 `download.json`。
-3. CDP 9223 不可用时改用 8787 真机，截图与 `metrics.json` 缺一即记 `missing`，不以 jsdom 结果顶替。
-4. 任务图只覆盖 8 个节点；超过 20 个节点的排布已由 DEC-29（`:124`）裁决，本包不实现超限排布，W4 脚本按裁决补超限判据。
+- 26 条 AC 全部 pass：本轮 2026-11-26 08:58–09:01 的共享批 26 条全部真跑通过，0 条 skip、0 条 fail，断言 560 条，runId `20261126005856`（`AC-CHG-CONV-007-01` 与 `-07` 各 14、25 条断言）；0 条 partial，0 条 blocked，0 条 missing，原始输出 `.tmp/evidence-final-fix/gates/batch-26.json`。
 
-## 7. 链接
+- 服务与开关：界面组脚本用隔离环境（后端 8791 + 临时前端 5174 + `SIMO_HOME=.tmp/chg-007-T07/home`）跑通，任务模块开关在隔离 home 的配置里已开；生产服务未动，跑完已停。9 条脚本入口为 `scripts/ac/AC-CONV-009-05.mjs` 至 `scripts/ac/AC-CONV-009-13.mjs`，逐条复跑用 `node scripts/run-ac.mjs --only <AC>`，`node` 取 §3 的 `$NODE` 绝对路径。
+- 夹具：任务与图的桩数据在 `scripts/ac/lib/task-ui-helpers.mjs` 内，未另建 `scripts/fixtures/cdp/`，与 T07 原计划的路径不同，按实际落地口径登记。
+- 覆盖率：`AC-CHG-CONV-007-01..08` 已在 `specs/test/P1-CONV/test-plan.md` 登记；本轮 `scripts/ac-coverage.mjs` 实测 71 条 AC 为 script 58 / manual 13 / missing 0，输出 `.tmp/evidence-final-fix/gates/ac-coverage.log`。
+- 组件 spec 未立：`COMP-task-card`、`COMP-right-panel-tabs`、`COMP-task-graph` 不在本包可写范围，登记于 `specs/changes/CHG-CONV-007/proposal.md` §11 的 D-04。
+- 出口 B 已由用户于 2026-11-25 裁定；11 条红测试归属见 `specs/changes/CHG-CONV-007/proposal.md` §11 的 D-06，与该归属相关的失败不计为本变更缺陷。
 
-- 变更 spec：[spec.md](spec.md)；任务卡：[tasks.md](tasks.md)；提案：[proposal.md](proposal.md)
-- 产品 spec：[`specs/product/P1-CONV/spec.md`](../../product/P1-CONV/spec.md) §4.6
-- 测试计划：[`specs/test/P1-CONV/test-plan.md`](../../test/P1-CONV/test-plan.md) §18
-- 追溯：[`docs/product/TREE.md`](../../../docs/product/TREE.md) `:148`、[`docs/product/TRACEABILITY.md`](../../../docs/product/TRACEABILITY.md) `:75`
-- 设计 spec：[`specs/design/P1-CONV/spec.md`](../../design/P1-CONV/spec.md) §17（`:756-1042`）
-- 裁决：[`docs/plan/DECISIONS.md`](../../../docs/plan/DECISIONS.md) 的 DEC-25（B1-01 部分取代）、DEC-26（`:121`）、DEC-27（`:122`）、DEC-28（`:123`）、DEC-29（`:124`）
-- 原型：[`docs/design/task-prototype-v3-20261123.html`](../../../docs/design/task-prototype-v3-20261123.html)
+## 7 链接
+
+- 变更需求与判据：[`spec.md`](spec.md)。
+- 立项与判级：[`proposal.md`](proposal.md)。
+- 任务卡与步骤：[`tasks.md`](tasks.md)。
+- 测试计划 §18：[`test-plan.md`](../../test/P1-CONV/test-plan.md#L900)。
+- 契约表类 6：[`contract.md`](../../contract/CONV/contract.md#L218)。
+- 异常登记：[`FAIL-20261124-CHG-CONV-007`](../../../docs/plan/FAIL-20261124-CHG-CONV-007.md)。
+
+## 8 契约裁定追加
+
+- 2026-11-25 21:57（+08:00）裁定：取消上游后下游保持 `pending`（未开始），不随上游转 `cancelled`。依据：产品 §4.6 等待语义 `:340`、`AC-CONV-009-15` `:365`、`AC-CHG-CONV-007-03` 判据 1 至 3（`spec.md:110-112`）、后端 §17.3 迁移表 `:889` 与 §17.3.3 `:906`；代码 `backend/internal/modules/tasks/conv.go:1215` 对未开始下游调用 `markCancelledConv` 属实现偏差，归 T03 修。回写：`specs/contract/CONV/contract.md:350`（CT-CONV-535）与判据表后新增的传播口径段、`specs/backend/P1-CONV/spec.md:889` 与 `:924`、`specs/test/P1-CONV/test-plan.md:939` 与 `:1116`。裁决人：设计（T01）。
+- 2026-11-25（+08:00）设计裁定：DEC-35 定 768 档右栏为 40 竖条加 280 抽屉浮层（`position: fixed`、不占布局、详情右缘 728），CT-CONV-543 的「768 展开同 1280」作废，AC-05 脚本 768 期望改为 `rail` 40 / `panel` 280 / `detailRight` 728（1280 与 375 不动，收起后详情随抽屉关闭记 `null`）；DEC-36 定概览任务块保留可点行结构（块头 `button.insp-block-head`、行 `.exec-row`），任务厚卡只用于任务标签，旧三组 `button.exec-head` 不再作概览锚点，4 条断言语义保留、锚点按 §17.3 四节重签，改成 `task-card` 属实现走偏。回写：`specs/design/P1-CONV/spec.md` 的 `V-CONV-008-6`、§17.3.2、§17.10、§16 v0.8，`specs/contract/CONV/contract.md:358`，`docs/plan/DECISIONS.md` 的 DEC-35/36。门禁：`check-contract.mjs` 7 项 0 告警、`check-trace.mjs` 684 项 0 失败。裁决人：设计（CHG-CONV-007 裁定卡）。
+- 2026-11-26（+08:00）设计裁定：DEC-37 定右栏容器宽度不做过渡、几何立即落位，面板内容的淡入与位移保留；理由是宽度过渡触发整列重排，且在冻结页、后台标签、无头降频等不推进动画帧的环境下 `transition: width` 停在起点（1280 收起量到 320、768 展开量到 40），250ms 看门狗会被新的样式变更重启；实现已是 `frontend/src/components/components.css:1150-1156` 的 `transition: none`。回写：`specs/design/P1-CONV/spec.md` §17.2.1、§17.2.7、`V-CONV-009-1`、§16 v0.9。判据状态：`AC-CHG-CONV-007-05` 脚本改条件轮询后连续三遍各 31 条断言全过（2026-11-26 02:26 改判 pass，见 §1）、`AC-CONV-009-08` 16 条断言全过（过渡关闭后复跑，证据行见第 1 节 `E-AC-CHG-CONV-007-05-01` 与 `E-AC-CONV-009-08-01`）。门禁：`check-trace.mjs` PASS（checks: 684）、`check-contract.mjs` PASS（7 项 0 告警）。裁决人：设计（CHG-CONV-007 裁定卡）。
+- 2026-11-26（+08:00）`AC-CHG-CONV-007-03` 判定与修复：旧脚本第 50 行要求「上游取消后至少 1 个 failed 步骤」，与契约 `specs/contract/CONV/contract.md:363` 及后端 spec `specs/backend/P1-CONV/spec.md:895`、`:922-924` 冲突（running→cancelled 时未完成步骤回 pending、已完成保留、取消不产生 failed），属判据过期，按原 AC 文本改为「步骤数保留、无 running、状态仅 pending/done、已完成保留」。排查时另发现实现缺陷：mock 执行器 `service.go:442-534` 只写 `tasks.steps` 兼容 JSON，从不写 `task_steps`，而详情 `ConvTaskDetail` 只读 `task_steps`，导致任务已 done 时每一步仍显示 pending。修法：`conv.go` 新增 `syncStepsFromTask`，`runAttempt` 每次步骤状态变化后按 seq 回写已存在的 `task_steps` 行（无行时 no-op，不影响旧任务）；`markCancelledConv` 对 running→pending 的步骤清零 `started_at`，与中断路径一致。补后端用例 `backend/internal/modules/tasks/conv_mock_steps_test.go` 两条（完成后步骤全 done 且带起止时间；取消保留 done 步、其余回 pending 且 started_at 为 0）。验证：`toolchain/go.ps1 test ./internal/modules/tasks/... -count=1` 通过（5.111s）；重建 `.tmp/chg-007-T06/simo.exe`（00:51:15）后隔离复跑 `AC-CHG-CONV-007-03` 52 条断言全过（`.tmp/ac/AC-CHG-CONV-007-03.json`，步骤实测 `[done,running,pending]`→`[done,pending,pending]`）。未改 `spec.md` §5 判据。
+
+## 9 T08 集成层结果（2026-11-25 首跑；2026-11-26 03:03–03:06 T08d 用当前代码重跑）
+
+环境（T08d）：后端为当前 `backend` 源码在 03:02:18 重建的 `.tmp/chg-007-T08d/simo.exe`（22,481,408 B，构建命令 `cd backend; ..\toolchain\go.ps1 build -trimpath -buildvcs=false -o ..\.tmp\chg-007-T08d\simo.exe ./cmd/simo`）；mock 后端起于 `127.0.0.1:8898`、tools 后端起于 `127.0.0.1:8899`，两者的 `SIMO_HOME` 分别是 `.tmp/chg-007-T08d/home` 与 `.tmp/chg-007-T08d/home-tools`（都从 `.tmp/chg-007-harness/snapshots/ui-main.db` 复制）；假上游 `scripts/ac/lib/mock-llm.mjs --port 8910 --mode tools`；静态页 `serve.mjs --port 8897 --dist frontend/dist --api http://127.0.0.1:8898`；CDP 9241。端口避开 8787/8788/8789/5174/9223，未占用共享 8789。
+
+runner 为 `.tmp/chg-007-T08d/run-t08.mjs`，逐条执行 `node scripts/run-ac.mjs --only <AC> --legacy --base-url http://127.0.0.1:8897 --json --timeout N`，并设 `AC_CONV_SHARED=1`，脚本因此不自起后端，断言全部打到上述隔离后端。每条输出与证据副本在 `.tmp/chg-007-T08d/t08-<AC>.json` 与 `.log`，汇总在 `t08-summary.json`、`run-manifest.json`。复跑先执行 `node .tmp/chg-007-T08d/env.mjs` 起环境，再执行 `node .tmp/chg-007-T08d/run-t08.mjs`；单条按表中 `--only` 参数运行，并设 `AC_CONV_SHARED=1`、`AC_CONV_BASE`（默认 mock，009-04 用 tools）、`AC_CONV_HOME`、`AC_CDP_PORT=9241`。表中「复跑」列把这些变量与单条命令写成一段可直接粘贴的 PowerShell 片段，`$NODE` 取 §3 的绝对路径，证据列即该条运行后复制到 `.tmp/chg-007-T08d/` 的 JSON 副本。
+
+`AC-CONV-009-02` 与 `AC-CONV-009-15` 的界面断言在接口断言之后接着跑，做法由 `scripts/ac/lib/conversation-ui.mjs` 提供：取一个空闲端口起 `frontend/dist` 静态服务，把 `/api` 原样反代到本批隔离后端，用 CDP 新标签打开脚本自己创建的那个真实会话（预置 `localStorage` 的 `simo.active-session`），断言直接读汇总卡 DOM。不另造会话夹具、不改 `frontend/dist`、不占 5174 与 8787；静态页与接口断言看的是同一份数据。CDP 不可用时该脚本按 R-SCRIPT 失败而不是跳过，避免界面判据无证据却被记为通过。复跑按本节 runner 与环境变量执行，或直接 `node .tmp/chg-007-T08d/run-t08.mjs`。
+
+| TC | AC | 结果 | 断言 | 备注 | 复跑 |
+|---|---|---|---|---|---|
+| 单任务全链路 | AC-CONV-009-01 | pass | 25/25（339ms） | 创建→步骤→交付物→详情 | `$env:AC_CONV_SHARED='1'; $env:AC_CONV_BASE='http://127.0.0.1:8898'; $env:AC_CONV_HOME='.tmp/chg-007-T08d/home'; $env:AC_CDP_PORT='9241'; $NODE scripts/run-ac.mjs --only AC-CONV-009-01 --legacy --base-url http://127.0.0.1:8897 --json --timeout 120000`；证据 `.tmp/chg-007-T08d/t08-AC-CONV-009-01.json` |
+| 批量汇总卡 | AC-CONV-009-02 | pass | 33/33（接口 17 + 界面 16，1569ms） | 汇总卡 1 张、标题计数、10 行折叠、「还有 2 条」展开 12 行 | `$env:AC_CONV_SHARED='1'; $env:AC_CONV_BASE='http://127.0.0.1:8898'; $env:AC_CONV_HOME='.tmp/chg-007-T08d/home'; $env:AC_CDP_PORT='9241'; $env:AC_UI_SHARED='1'; $env:AC_UI_BASE='http://127.0.0.1:8897'; $env:AC_UI_NEW_TARGET='1'; $NODE scripts/run-ac.mjs --only AC-CONV-009-02 --legacy --base-url http://127.0.0.1:8897 --json --timeout 120000`；证据 `.tmp/chg-007-T08d/t08-AC-CONV-009-02.json` |
+| 无历史上下文（historyCount=0） | AC-CONV-009-03 | pass | 16/16（338ms） | 新会话历史 0、目标与约束仍注入 | `$env:AC_CONV_SHARED='1'; $env:AC_CONV_BASE='http://127.0.0.1:8898'; $env:AC_CONV_HOME='.tmp/chg-007-T08d/home'; $env:AC_CDP_PORT='9241'; $NODE scripts/run-ac.mjs --only AC-CONV-009-03 --legacy --base-url http://127.0.0.1:8897 --json --timeout 120000`；证据 `.tmp/chg-007-T08d/t08-AC-CONV-009-03.json` |
+| 权限越界 | AC-CONV-009-04 | pass | 12/12（6919ms） | tools 后端 + 假上游 real 模式，后端接受 plan/react/explore | `$env:AC_CONV_SHARED='1'; $env:AC_CONV_BASE='http://127.0.0.1:8899'; $env:AC_CONV_HOME='.tmp/chg-007-T08d/home-tools'; $env:AC_CDP_PORT='9241'; $NODE scripts/run-ac.mjs --only AC-CONV-009-04 --legacy --base-url http://127.0.0.1:8897 --json --timeout 120000`；证据 `.tmp/chg-007-T08d/t08-AC-CONV-009-04.json` |
+| 任务图 | AC-CONV-009-13 | skip | 0/0 | 集成层无页面，按既有规则 skip，不计 pass；UI 层单跑 16/16 见本节合计段 | `$env:AC_UI_SHARED='1'; $env:AC_UI_BASE='http://127.0.0.1:8897'; $env:AC_UI_NEW_TARGET='1'; $env:AC_CDP_PORT='9241'; $NODE scripts/run-ac.mjs --only AC-CONV-009-13 --legacy --base-url http://127.0.0.1:8897 --json --timeout 60000`；证据 `.tmp/chg-007-T08d/ui-AC-CONV-009-13.json` |
+| 三种等待 | AC-CONV-009-14 | pass | 17/17（65552ms） | 确认/时限/依赖三类等待 | `$env:AC_CONV_SHARED='1'; $env:AC_CONV_BASE='http://127.0.0.1:8898'; $env:AC_CONV_HOME='.tmp/chg-007-T08d/home'; $env:AC_CDP_PORT='9241'; $NODE scripts/run-ac.mjs --only AC-CONV-009-14 --legacy --base-url http://127.0.0.1:8897 --json --timeout 180000`；证据 `.tmp/chg-007-T08d/t08-AC-CONV-009-14.json` |
+| 取消级联 | AC-CONV-009-15 | pass | 34/34（34689ms） | 下游 pending、30s 0 启动、连线保留；取消确认 1 条实查 | `$env:AC_CONV_SHARED='1'; $env:AC_CONV_BASE='http://127.0.0.1:8898'; $env:AC_CONV_HOME='.tmp/chg-007-T08d/home'; $env:AC_CDP_PORT='9241'; $env:AC_UI_SHARED='1'; $env:AC_UI_BASE='http://127.0.0.1:8897'; $env:AC_UI_NEW_TARGET='1'; $NODE scripts/run-ac.mjs --only AC-CONV-009-15 --legacy --base-url http://127.0.0.1:8897 --json --timeout 180000`；证据 `.tmp/chg-007-T08d/t08-AC-CONV-009-15.json` |
+| 交付物 | AC-CONV-009-16 | pass | 46/46（8549ms） | 分组、下载、详情文件；本轮复跑 | `$env:AC_CONV_SHARED='1'; $env:AC_CONV_BASE='http://127.0.0.1:8898'; $env:AC_CONV_HOME='.tmp/chg-007-T08d/home'; $env:AC_CDP_PORT='9241'; $NODE scripts/run-ac.mjs --only AC-CONV-009-16 --legacy --base-url http://127.0.0.1:8897 --json --timeout 120000`；证据 `.tmp/chg-007-T08d/t08-AC-CONV-009-16.json` |
+| 跨会话隔离 | AC-CONV-009-17 | pass | 17/17（269ms） | 会话 B 三处 0 | `$env:AC_CONV_SHARED='1'; $env:AC_CONV_BASE='http://127.0.0.1:8898'; $env:AC_CONV_HOME='.tmp/chg-007-T08d/home'; $env:AC_CDP_PORT='9241'; $NODE scripts/run-ac.mjs --only AC-CONV-009-17 --legacy --base-url http://127.0.0.1:8897 --json --timeout 120000`；证据 `.tmp/chg-007-T08d/t08-AC-CONV-009-17.json` |本轮（R9）未重跑集成层，沿用 T08d 记录，合计 9 pass / 1 skip / 214 条断言。
+| 重试 | AC-CHG-CONV-007-02 | pass | 14/14（8520ms） | failReason、attempt=2、task_id 不变 | `$env:AC_CONV_SHARED='1'; $env:AC_CONV_BASE='http://127.0.0.1:8898'; $env:AC_CONV_HOME='.tmp/chg-007-T08d/home'; $env:AC_CDP_PORT='9241'; $NODE scripts/run-ac.mjs --only AC-CHG-CONV-007-02 --legacy --base-url http://127.0.0.1:8897 --json --timeout 120000`；证据 `.tmp/chg-007-T08d/t08-AC-CHG-CONV-007-02.json` |
+
+合计 9 pass / 1 skip / 0 fail，214 条断言通过；集成层逐条耗时合计 126,744ms，不含 009-13 的 UI 层单跑 21,674ms。任务图 `AC-CONV-009-13` 记 skip 的依据是 test-plan §18 把它列为端到端层，脚本 `scripts/ac/AC-CONV-009-13.mjs` 走 `runUiAc`，需要页面与 CDP，而集成层无页面；按既有「集成层无页面、UI 层另记」规则 skip，0 断言，不计 pass。本轮另用同一隔离环境的 UI 栈单跑该脚本，16/16 pass（21,674ms，`.tmp/chg-007-T08d/ui-AC-CONV-009-13.json`），只作 UI 层证据，不改变集成层 skip。
+
+静态页反代到 8898 时，后端日志出现 `WebSocket 升级失败 ... Origin "127.0.0.1:8897" is not authorized for Host "127.0.0.1:8898"` 的 WARN；本轮界面断言 16/16 仍通过，未据此判 fail，记为静态页反代的 Origin 口径限制。
+
+## 10 T08 端到端结果（2026-11-25）
+
+构建沿用 `.tmp/chg-007-T08/build.mjs` 从当前 `frontend/src` 产出的 `.tmp/chg-007-T08/dist`（`buildId mww9asmq-d2nwj`，`app.js` sha256 `cdb08434d0e97c7b5232824750b245fc4f0b2220c9114c8e2e1526cf720801a5`），未改 `frontend/dist`。runner 为 `.tmp/chg-007-T08/e2e2.mjs`，父进程收尾脚本 `.tmp/chg-007-T08/run-e2e2.mjs`；断言结果 `.tmp/chg-007-T08/e2e2-result.json`，收尾复查 `.tmp/chg-007-T08/e2e2-cleanup.json`。
+
+环境：后端 `.tmp/chg-007-T06/simo.exe` 自管起停于 `127.0.0.1:8789`，隔离库 `SIMO_HOME=.tmp/ac-conv-009/home`，mock 执行器（本轮不需要 8790 假上游）；静态服务 5188 反代 `/api` 到 8789。CDP 改为自拉 headless Chrome 157.0.8103.80，参数 `--headless=new --no-sandbox --disable-dev-shm-usage --remote-debugging-port=9224 --user-data-dir=.tmp/chg-007-T08b/chrome-profile`。上一轮 9224 拉不起的原因是未加 `--no-sandbox`/`--disable-dev-shm-usage` 且没有独立 profile；补齐后 4 秒内 `/json/version` 可用。第一轮复跑仍用残留的 9223，Chrome 在 375 档截图时崩溃（`Page.captureScreenshot` 超时、进程退出）；第二轮换新拉的 9224 后三档全部跑完。
+
+数据只造一次：主会话 `sess-5e524046fd7ac919` 批量创建 10 条任务（`mode:'plan'`），落定 `done=9 / failed=1`、`counts.all=10`；空会话 `sess-a47da3a81a3a5ee3` 0 任务。三个档位共用同一份数据，未重建。
+
+| 项 | 1280×900 | 768×900 | 375×812 | 关键实测 | 复跑 |
+|---|---|---|---|---|---|
+| 1 右栏三标签 | pass（3/3） | pass（3/3） | skip | `data-tab` 与唯一 `aria-current=page` 同步，头部标题依次为「概览/任务/交付物」，面板内对应内容非空；1280 面板 279（含 1px 边框，整栏 320） | `.tmp/chg-007-T08/e2e2.mjs`（三标签用例） |
+| 2 四态筛选 | pass（3/3） | pass（3/3） | skip | 四片计数 `10/0/1/9`，列表条数 `10/0/1/9`，状态构成 `failed=1`、`done=9`；先滚到底再切筛选，`#insp-panel.scrollTop` 回到 0（1280 从 538、768 从 720），点当前片同样回顶 | `node scripts/run-ac.mjs --only AC-CONV-009-12` |
+| 3 无任务态 | pass | pass | pass | 空会话任务标签 `aria-disabled=true`、`title=本会话还没有任务`、无角标、点击不切标签（tab 保持 overview、抽屉保持关闭）；顶栏 `button.topbar-task-graph` 数量 0（切换前主会话为 1），无弹窗 | `.tmp/chg-007-T08/e2e2.mjs`（空态用例） |
+| 4 窄档几何 | pass | pass | pass | 1280 竖条 40、面板 279、右缘 1240；768 首屏 rail 40 / panel 0 / 中栏 476，点开后 panel 280、`position:fixed`、右缘 728、中栏仍 476；375 右栏 `display:none`、可见竖条 0、`scrollWidth=375` | `node scripts/run-ac.mjs --only AC-CONV-009-08`、`--only AC-CHG-CONV-007-05` |
+| 5 详情只读 | pass（2/2） | pass（2/2） | skip | 详情内仅「关闭任务详情」1 个按钮，`form/input/textarea/select` 0、写入口 0、只读文案「只读」；1280 右缘 960、宽 720，768 右缘 728、宽 280；关闭后 `scrollTop` 保持 538/720、焦点回原卡、`body.overflow` 复原 | `node scripts/run-ac.mjs --only AC-CONV-009-07`、`--only AC-CHG-CONV-007-06` |
+
+合计 24 条断言 pass、0 fail、3 skip。375 档右栏按设计 `display:none`，三标签、四态筛选、详情入口三项不可达，记 skip，不记 pass。任务图沿用上一轮 1280 档结果（`div.task-graph-dialog[role=dialog]`、10 个 `.task-graph-node`，截图 `shots/1280-4-graph.png`），本轮补空态入口三项（1280/768/375），见第 3 项。
+
+截图 27 张在 `.tmp/chg-007-T08/shots/`：1280 与 768 各 11 张（三标签、四筛选、详情、关闭、空态、布局），375 5 张（布局、空态、三条 skip 说明）；目录共 33 张，含上一轮 `1280-0-main.png`、`1280-1-tabs.png`、`1280-2-cards.png`、`1280-3-detail.png`、`1280-4-graph.png`、`probe-tasks.png`。已目视 `375-4-layout.png`（右栏消失、对话区正常）与 `768-4-layout.png`（280 抽屉、中栏未挤压）。
+
+规范口径分歧：设计 spec `specs/design/P1-CONV/spec.md:941` 要求任务数 0 时顶栏入口元素数 0 且不占位；前端 spec `specs/frontend/P1-CONV/spec.md:1322` 仍写「置 aria-disabled」。实现按设计不渲染（实测 0 个），本轮按设计判 pass，并在本节登记前端 spec 待同步，不判实现 fail。
+
+交付物面板数据项 pending：切到交付物标签后显示「本会话还没有交付物」，而交付物接口返回分组与下载 URL（上一轮与 `probe-ui.json` 同现象）。按本轮要求不跑该路径，由前端修复后复跑 1280/768/375，未计入 24 条 pass，T08 行保持 partial。
+
+第一轮复跑的 7 条 fail 均来自断言口径或环境崩溃，不是实现缺陷：1280 面板实测 279（1px 边框）被写成必须 280；768 抽屉右缘 728 被写成 `768−8=760`；切空会话前未把右栏复位到概览并关抽屉；375 截图时旧 Chrome 崩溃。另有 1280/768 各一条滚动复位异常只出现在旧 9223 上，新 Chrome 上打开与关闭详情各测一次均保持 538/720，节点同一性与 `window.__t08` 采样一致。修正后第二轮 24/24 通过。
+
+清理：`.tmp/chg-007-T08/e2e2-cleanup.json` 显示 8789、8790、5188、9224 均无监听，`.tmp/chg-007-T06/backend.lock` 不存在，`simo.exe` 无任务，9224 Chrome 已退出、残留 0。收尾复查另发现 9223 上有一个父进程已退出的孤儿 headless Chrome（PID 54476，profile `.tmp/chrome9223`），已停止其进程树；复查 9223 无监听、无匹配 Chrome 残留。
+### 10.1 T08c 交付物面板三档复跑（2026-11-26 00:05–00:12）
+
+前端修复已生效：进入交付物标签时 `app.tsx:780-781` 重取 N9，面板不再显示空态。本轮只跑交付物路径，构建与 runner 都在 `.tmp/chg-007-T08c/`：`build.mjs` 从当前 `frontend/src` 产出 `dist/`（`buildId mwwaq1lt-4xeod`、`app.js` 360.2kb、sha256 `143cda13f6ce7b3ef53d4b5bd6a88803ca0ac4f7e031a2532e7689de16a6b2eb`），未改 `frontend/dist`。runner `e2e-deliverables.mjs` 自起自停后端（`.tmp/chg-007-T06/simo.exe serve -addr 127.0.0.1:8793 -model mock`，隔离库 `SIMO_HOME=.tmp/chg-007-T08c/home`），静态服务 5190 反代 `/api`，CDP 9225 自拉 Chrome（profile `.tmp/chg-007-T08c/chrome-profile`）。断言结果 `result.json`，日志 `logs/e2e2.log`。
+
+场景造数：1 个会话 3 个任务，`T08c report task` 与 `T08c chart task` 落定 done，标题 `mock:fail T08c failed task` 重试两次后 failed（`counts {all:3,done:2,failed:1,pending:0,running:0}`）。两个 done 任务各由 `seedArtifact` 造一条 `delivery_kind=user_delivery` 产物：`T08c-report.md` 1200B `text/markdown`、`T08c-chart.png` 2400B `image/png`（夹具路径 `HOME/artifacts/conv-fixtures/<taskId>-<name>`，与 AC-CONV-009-16 同口径）。
+
+| 档位 | 分组/行数 | 元信息 | 下载按钮 | 点下载 | 失败组空卡 | 截图 | 结论 |
+|---|---|---|---|---|---|---|---|
+| 1280 | 2 组各 1 行，summary「共 2 个任务 · 2 个文件」，组标题 `T08c report task`/`T08c chart task`，组计数「1 个」 | `23:54 · 1.2 KB`、`23:54 · 2.3 KB`（`formatClock · formatBytes`） | 38×28，文案「打开」，`aria-label=下载 <文件名>`，未禁用，命中自身 | `window.open(/api/artifacts/<id>/content)`，预览 200/1200B/`Content-Length 1200`/`text/markdown` | fail：失败任务无组，无虚线空卡 | `shots/1280-deliverables.png` | 分组与下载 pass，空卡 fail |
+| 768 | 2 组各 1 行，元信息与按钮同 1280 | 同上 | 存在且文案正确，但按钮中心 (696,278) 的 `elementFromPoint` 返回 `BUTTON.insp-drawer-scrim` | 程序化 click 可打开正确 URL、1200B 可取；鼠标点击被遮罩吃掉并关闭抽屉 | fail：同 1280 | `shots/768-deliverables.png` | 数据渲染 pass，鼠标可点 fail |
+| 375 | 0 组 | — | — | — | — | `shots/375-deliverables.png` | skip：`aside.inspector` 实测 `display:none`、宽 0、可见 rail 按钮 0、`.deliverable-group` 0，交付物标签不可达（<760 右栏按设计不渲染） |
+
+合计 19 条断言：15 pass / 4 fail / 1 skip。4 条 fail 的根因分两类，均不是前端重取修复引入：
+
+1. 失败组虚线空卡 3 条（`api-failed-group`、`vp-1280-failed-empty`、`vp-768-failed-empty`）。后端 `SessionDeliverables`（`backend/internal/modules/tasks/conv.go:1883-1937`）用 `JOIN tasks t ON t.id=a.task_id` 内连接 `task_artifacts`，只返回有 `delivery_kind='user_delivery'` 产物的任务；失败任务不写产物，于是没有组，前端 `.deliverable-empty` 分支（`frontend/src/components/tasks.tsx:377-380`，样式 `components.css:1415` 虚线）永远走不到。任务执行器成功时只写 `_internal/report-attempt-1.md` 且 `delivery_kind=internal`（`service.go:785-840`），被 `deliverableStoragePredicate`（`service.go:966-976`）排除；聊天侧 `registerUserDeliveryFile`（`chat/delivery.go:70-74`）的 `task_id` 恒为 `session:<sid>`，也不进按任务分组。仓库里另有两条 `report-attempt-1.md` 内部产物实测存在但被谓词过滤，佐证这条链路。修法在 `conv.go` 改 `LEFT JOIN` 并按 `tasks` 补空组（或前端补失败组占位），属后端改动，本轮可写范围外，未改。
+2. 768 抽屉命中遮罩 1 条（`vp-768-dl-content`）。`frontend/src/components/library.tsx:1488` 把 `.insp-drawer-scrim` 渲染成 `.insp-panel` 的第一个子节点，`frontend/src/components/components.css:403-411` 给它 `position:fixed`、`z-index:54`、`right:var(--rail-strip)`，覆盖面板 448–728 区域；面板本身 `z-index:55`（`frontend/src/components/components.css:388-402`），子节点 54 在面板的堆叠上下文内压在 `.insp-head`/`.insp-body`（auto）之上，所以 768 抽屉里点任何内容都先命中遮罩并触发 `closeDrawer`。程序化点击能打开正确 URL 且字节数、`Content-Length` 都对，说明按钮与数据绑定正确，缺陷是交互层级。
+
+覆盖率同步：`scripts/ac-coverage.mjs` 重跑（日志 `.tmp/chg-007-T08c/logs/coverage.log`，退出码 1 因 missing>0）：`FRAMEWORK` 12 条 script 0 / manual 12 / missing 0；`P1-CONV` 58 条 script 55 / manual 1 / missing 2；2026-11-26 复核：`scripts/ac-coverage.mjs` 当前汇总 70 条 script 57 / manual 13 / missing 0，当时记的 2 条 missing 已消解。
+<!-- CHG-CONV-007-REALRUN -->
+## 11 真机实测（CHG-CONV-007，2026/11/26 09:35:50）
+
+一条命令：`node scripts/ac/CHG-CONV-007-realrun.mjs`（本轮用 `SIMO_REALRUN_DIR=.tmp/chg-007-realrun`）。脚本从源码 `backend/cmd/simo` 做正式构建（`go build -trimpath -buildvcs=false`，不带 testclock/mock 分支），写临时部署目录 `.tmp/chg-007-realrun/home-run`，在 8788 端口起服务并驱动 headless Chrome（CDP 9224），结束后停服务、停浏览器。
+
+- 构建产物：`.tmp/chg-007-realrun/simo-realrun.exe`（本轮从源码构建）；服务日志 `.tmp/chg-007-realrun/server.log`。
+- 真实模型：`deepseek-flash`（凭据取自 `backend/config.local.json`）。本机策略代理对 `api.deepseek.com` 返回 403，服务进程需 `NO_PROXY=api.deepseek.com` 才能直连；脚本已设置。
+- 覆盖：16 条路径，通过 16 条，失败 0 条；截图 31 张，存 `.tmp/chg-007-realrun/shots/`。
+- 访问日志自检：**264 条**访问行（2xx 198 条，阈值 20）通过；示例：`time=2026-11-26T09:35:43.240+08:00 level=INFO msg=http_access method=GET path=/api/sessions/sess-783bc79ed9cefb12/tasks/task-8b27392aa2462f44 status=200 duration_ms=0 session_id=sess-783bc79ed9cefb12 query="traceLimit=200"`。计数与明细见 `.tmp/chg-007-realrun/result.json` 的 `accessLog`。
+- 总耗时 **37895ms**；模型等待 37ms（0.1%），脚本动作 37858ms（99.9%）。三个字段分别是 `.tmp/chg-007-realrun/result.json` 的 `totalMs`、`modelMs`、`actionMs`。
+- 真实模型调用（已去重）：**14 次**，输入 **54404 token**，输出 **3763 token**；每条路径平均 **0.9 次 / 3400 token / 235 token**（按 16 条已取到用量的路径计算）。计数以 `events` 的 `usage.recorded` 逐次明细为准，按 `reply_id`/`request_id` 归一，`turn_metrics` 汇总行只在对应轮次没有明细时计入，避免同一次调用被算两次。任务执行器的首字延迟没有落库，表中只对聊天轮次有 ttft；任务轮次以“模型等待”列为准。逐次明细与去重结果见 `.tmp/chg-007-realrun/result.json` 的 `metrics` 与 `budget.dedup`。
+- 预算（≤60 次 / ≤120000 输入 / ≤15000 输出 / 并发 ≤4）：在预算内；实测总量 14 次、54404 输入、3763 输出，每条路径平均 0.9 次、3400 输入、235 输出；并发 1（串行）。测试用户消息 0 条，最长 0 字符（上限 80）；模型聊天回复最长 0 行（上限 3）。预算上限与实测值见 `.tmp/chg-007-realrun/result.json` 的 `budget`。
+
+| # | 路径 | 模型/数据来源 | 耗时ms | 模型等待ms | 动作ms | 调用 | 输入tok | 输出tok | 首字ms | 结果 | 截图 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | 建任务-计划模式（右栏任务卡片出现） | 真实模型 | 12521 | 37 | 12484 | 10 | 35817 | 2833 | — | 通过 | `.tmp/chg-007-realrun/shots/1280-01-session-a.png`<br>`.tmp/chg-007-realrun/shots/1280-02-create-task.png` |
+| 2 | 批量汇总卡（真实批量 2 任务） | 无模型（计划任务不执行） | 625 | 0 | 625 | 0 | 0 | 0 | — | 通过 | `.tmp/chg-007-realrun/shots/1280-03-batch-card.png` |
+| 3 | 任务卡片可点（打开详情） | 真实模型 | 447 | 0 | 447 | 0 | 0 | 0 | — | 通过 | `.tmp/chg-007-realrun/shots/1280-04-task-card-open.png` |
+| 4 | 右栏三标签 | 夹具/真实混合 | 959 | 0 | 959 | 1 | 8038 | 325 | — | 通过 | `.tmp/chg-007-realrun/shots/1280-05-tab-overview.png`<br>`.tmp/chg-007-realrun/shots/1280-05-tab-tasks.png`<br>`.tmp/chg-007-realrun/shots/1280-05-tab-deliverables.png` |
+| 5 | 概览四行折叠并记忆 | 夹具 | 674 | 0 | 674 | 0 | 0 | 0 | — | 通过 | `.tmp/chg-007-realrun/shots/1280-06-overview-collapsed.png`<br>`.tmp/chg-007-realrun/shots/1280-07-overview-reloaded.png` |
+| 6 | 任务厚卡与四态筛选（四态各点一次） | 夹具 | 1040 | 0 | 1040 | 0 | 0 | 0 | — | 通过 | `.tmp/chg-007-realrun/shots/1280-08-filter-all.png`<br>`.tmp/chg-007-realrun/shots/1280-09-filter-进行中.png`<br>`.tmp/chg-007-realrun/shots/1280-09-filter-失败.png`<br>`.tmp/chg-007-realrun/shots/1280-09-filter-已完成.png`<br>`.tmp/chg-007-realrun/shots/1280-09-filter-全部.png` |
+| 7 | 切筛选回顶 | 夹具 | 326 | 0 | 326 | 0 | 0 | 0 | — | 通过 | `.tmp/chg-007-realrun/shots/1280-10-scroll-reset.png` |
+| 8 | 计划详情与轨迹 | 真实模型（计划任务） | 668 | 0 | 668 | 0 | 0 | 0 | — | 通过 | `.tmp/chg-007-realrun/shots/1280-11-plan-detail.png` |
+| 9 | 边做边想详情（14 条轨迹） | 夹具 | 645 | 0 | 645 | 0 | 0 | 0 | — | 通过 | `.tmp/chg-007-realrun/shots/1280-12-explore-detail.png` |
+| 10 | 任务图与失败下游 | 夹具 | 338 | 0 | 338 | 0 | 0 | 0 | — | 通过 | `.tmp/chg-007-realrun/shots/1280-13-graph.png` |
+| 11 | 等待确认与取消 | 夹具 | 446 | 0 | 446 | 0 | 0 | 0 | — | 通过 | `.tmp/chg-007-realrun/shots/1280-14-waiting.png`<br>`.tmp/chg-007-realrun/shots/1280-15-cancelled.png` |
+| 12 | 失败任务与重试（详情只读 / 入口在卡上） | 夹具 | 6072 | 0 | 6072 | 3 | 10549 | 605 | — | 通过 | `.tmp/chg-007-realrun/shots/1280-16-failed-detail.png`<br>`.tmp/chg-007-realrun/shots/1280-17-retried.png` |
+| 13 | 交付物分组与下载 | 夹具 | 461 | 0 | 461 | 0 | 0 | 0 | — | 通过 | `.tmp/chg-007-realrun/shots/1280-18-deliverables.png`<br>`.tmp/chg-007-realrun/shots/1280-19-download.png` |
+| 14 | 跨会话取不到 / 无任务态 | 夹具 | 699 | 0 | 699 | 0 | 0 | 0 | — | 通过 | `.tmp/chg-007-realrun/shots/1280-20-empty-session.png` |
+| 15 | 三档右栏（1280 竖条 / 768 覆盖层 / 375 不渲染） | 夹具 | 1474 | 0 | 1474 | 0 | 0 | 0 | — | 通过 | `.tmp/chg-007-realrun/shots/1280-21-breakpoint-1280.png`<br>`.tmp/chg-007-realrun/shots/1280-22-collapsed.png`<br>`.tmp/chg-007-realrun/shots/768-01-collapsed.png`<br>`.tmp/chg-007-realrun/shots/768-02-drawer.png`<br>`.tmp/chg-007-realrun/shots/375-01-no-inspector.png` |
+| 16 | 建任务-边做边想（真实后端创建） | 真实模型（explore） | 519 | 0 | 519 | 0 | 0 | 0 | — | 通过 | `.tmp/chg-007-realrun/shots/1280-23-explore-created.png` |
+
+### 失败项与判断
+
+本次没有失败项。
+
+### 关键结论
+
+- 计划任务由聊天真实创建；任务详情默认步骤数与轨迹数见路径 8 的明细。截图 `.tmp/chg-007-realrun/shots/1280-11-plan-detail.png`。
+- 批量创建 2 个计划任务后出现了汇总卡：{"summary":1,"cards":1,"texts":["已创建 2 个任务展开批量任务 A、批量任务 B批量任务 A计划批量任务 B计划","任务帮我创建两个计划任务：读取规格、写摘要进行中等待资源计划查看任务→恢复"]}。截图 `.tmp/chg-007-realrun/shots/1280-03-batch-card.png`。
+- 边做边想真实创建（explore）通过：POST 201 id=task-8b27392aa2462f44 创建mode=explore 详情mode=explore；详情 tip="这一任务按 ReAct 循环推进，轨迹只有先后顺" labels=["循环轨迹","启动上下文","产出文件"] count="0 条 · 正序" traces=0 暂无轨迹。截图 `.tmp/chg-007-realrun/shots/1280-23-explore-created.png`。
+- 每条路径的判定都叠加了服务端判据：只看访问日志中间件写出的访问行，本轮窗口内命中 `status=400`/`status=5xx`，或出现非流式的空回复，即判 fail 并带上服务端原文；本次运行共 264 条访问行（阈值 20），自检通过。访问行计数见 `.tmp/chg-007-realrun/result.json` 的 `accessLog`。
+- 四态筛选、等待确认/取消、失败详情零写入口与重试入口、任务图失败下游、交付物分组与下载、跨会话 404 与空会话禁用标签、三档右栏均由 SQLite 夹具或真实动作验证，逐条结果见上表，原始行记录见 `.tmp/chg-007-realrun/result.json` 的 `rows`。
+
+### 环境清理
+
+脚本退出时关闭 CDP、taskkill 浏览器进程、停 8788 服务；8788/9224 释放；8787 基线未触碰。截图与结果 JSON 保留在 `.tmp/chg-007-realrun/`。夹具目录 `home-run` 每次运行前移入 `E:\\dsh_home\\trash\\pending-delete\\chg-007-realrun\\`。

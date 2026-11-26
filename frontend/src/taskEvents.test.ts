@@ -108,9 +108,9 @@ describe('合并与派生工具', () => {
     expect(task.status).toBe('running')
   })
 
-  it('task.reminder 写入超时分钟', () => {
+  it('task.reminder 不改写无后端来源的超时分钟字段', () => {
     const next = mergeTaskView(task, ev({ type: 'task.reminder', overdueMinutes: 3 }))
-    expect(next.overdueMinutes).toBe(3)
+    expect(next).toEqual(task)
   })
 
   it('mergeTaskStep 不改变步骤 id 与标题', () => {
@@ -131,11 +131,11 @@ describe('合并与派生工具', () => {
   })
 
   it('appendTrace 按序号排序，重复项返回原数组引用', () => {
-    const a: TraceItem = { id: 'x1', traceSeq: 2, category: 'action', text: 'b', at: 2 }
-    const b: TraceItem = { id: 'x0', traceSeq: 1, category: 'thought', text: 'a', at: 1 }
+    const a: TraceItem = { id: 'x1', seq: 2, category: 'action', text: 'b', at: 2 }
+    const b: TraceItem = { id: 'x0', seq: 1, category: 'think', text: 'a', at: 1 }
     const once = appendTrace([], a, 't1')
     const twice = appendTrace(once, b, 't1')
-    expect(twice.map((t) => t.traceSeq)).toEqual([1, 2])
+    expect(twice.map((t) => t.seq)).toEqual([1, 2])
     expect(appendTrace(twice, a, 't1')).toBe(twice)
   })
 

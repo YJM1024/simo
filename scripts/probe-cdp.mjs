@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // probe-cdp.mjs - check whether a Chrome DevTools Protocol endpoint is reachable.
 //
-//   node scripts/probe-cdp.mjs            # probe 127.0.0.1:9223, launch headless Chrome if needed
+//   node scripts/probe-cdp.mjs            # probe 127.0.0.1:9223 (or $AC_CDP_PORT), launch headless Chrome if needed
+//   node scripts/probe-cdp.mjs --port 9250  # probe an explicit port, overrides $AC_CDP_PORT
 //   node scripts/probe-cdp.mjs --json     # machine-readable result
 //   node scripts/probe-cdp.mjs --self-test  # verify the failure path returns exit 3 without throwing
 //
@@ -15,11 +16,14 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const TMP = path.join(ROOT, '.tmp');
-const LOG_FILE = path.join(TMP, 'chrome9223.probe.log');
-const USER_DATA_DIR = path.join(TMP, 'chrome9223');
 const DEFAULT_PORT = 9223;
 const WAIT_MS = 20000;
 const MAX_LAUNCHES = 2;
+
+// 每个端口一套日志与 user-data-dir：同一 user-data-dir 再开第二个端口时，Chrome 会把
+// 参数交给已有实例，新端口不会监听，AC_CDP_PORT 看似生效实则连回旧端口。
+const logFile = (port) => path.join(TMP, `chrome${port}.probe.log`);
+const userDataDir = (port) => path.join(TMP, `chrome${port}`);
 
 const BROWSER_CANDIDATES = [
   'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
@@ -30,6 +34,7 @@ const BROWSER_CANDIDATES = [
 
 function usage() {
   console.log('usage: node scripts/probe-cdp.mjs [--port <n>] [--json] [--self-test] [--no-launch]');
+  console.log('       port defaults to $AC_CDP_PORT, then 9223');
 }
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -69,13 +74,13 @@ function findBrowser() {
 
 function launchBrowser(browser, port, attempt) {
   fs.mkdirSync(TMP, { recursive: true });
-  fs.mkdirSync(USER_DATA_DIR, { recursive: true });
-  const fd = fs.openSync(LOG_FILE, 'a');
+  fs.mkdirSync(userDataDir(port), { recursive: true });
+  const fd = fs.openSync(logFile(port), 'a');
   fs.writeSync(fd, `\n[probe-cdp] ${new Date().toISOString()} attempt ${attempt}: ${browser} --remote-debugging-port=${port}\n`);
   const args = [
     '--headless=new',
     `--remote-debugging-port=${port}`,
-    `--user-data-dir=${USER_DATA_DIR}`,
+    `--user-data-dir=${userDataDir(port)}`,
     '--no-first-run',
     '--disable-crash-reporter',
     '--disable-breakpad',
@@ -103,24 +108,33 @@ function launchBrowser(browser, port, attempt) {
   });
 }
 
-function readLogTail(lines = 40) {
+/** 结束探针自己拉起的进程树；探活失败时不能把 Chrome 留在后台占着端口。 */
+function killTree(pid) {
   try {
-    const content = fs.readFileSync(LOG_FILE, 'utf8');
+    spawnSync('taskkill', ['/PID', String(pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true });
+  } catch {
+    // 进程可能已自行退出
+  }
+}
+
+function readLogTail(port, lines = 40) {
+  try {
+    const content = fs.readFileSync(logFile(port), 'utf8');
     return content.split(/\r?\n/).slice(-lines).join('\n');
   } catch {
     return '';
   }
 }
 
-function crashHint(logTail) {
+function crashHint(logTail, port) {
   if (/openprocess/i.test(logTail) || /crashpad/i.test(logTail)) {
     return 'Chrome 启动日志里有 crashpad/OpenProcess 访问拒绝，是本机已知沙箱现象；'
-      + '关闭已有的 Chrome 实例，或让调用方提供可用的 CDP 端口。';
+      + `关闭已有的 Chrome 实例，或换一个空闲的 CDP 端口（当前 ${port}）。`;
   }
   if (/access is denied|拒绝访问/i.test(logTail)) {
     return '浏览器启动被拒绝访问；可能已有同 user-data-dir 的实例占用，或进程创建被沙箱拦截。';
   }
-  return '确认 127.0.0.1:9223 未被其它程序占用，并检查浏览器是否安装、能否在本机启动。';
+  return `确认 127.0.0.1:${port} 未被其它程序占用，并检查浏览器是否安装、能否在本机启动。`;
 }
 
 /**
@@ -154,11 +168,13 @@ async function probe(port, { launch = true } = {}) {
 
   const deadline = Date.now() + WAIT_MS;
   let lastError = direct.error || `no CDP endpoint on 127.0.0.1:${port}`;
+  const launchedPids = [];
   for (let attempt = 1; attempt <= MAX_LAUNCHES && Date.now() < deadline; attempt += 1) {
     const spawned = await launchBrowser(browserPath, port, attempt);
     if (!spawned.ok) {
       lastError = `failed to launch ${browserPath}: ${spawned.error}`;
     } else {
+      launchedPids.push(spawned.pid);
       while (Date.now() < deadline) {
         await sleep(500);
         const polled = await readVersion(port);
@@ -170,14 +186,17 @@ async function probe(port, { launch = true } = {}) {
     }
   }
 
-  const logTail = readLogTail(40);
+  // 探活失败：清掉本次拉起的 Chrome，避免残留进程占住端口。
+  for (const pid of launchedPids) killTree(pid);
+
+  const logTail = readLogTail(port, 40);
   return {
     ok: false,
     port,
     browser: null,
     error: lastError,
-    hint: crashHint(logTail),
-    logFile: LOG_FILE,
+    hint: crashHint(logTail, port),
+    logFile: logFile(port),
     logTail,
   };
 }
@@ -234,7 +253,10 @@ async function main() {
   let asJson = false;
   let selfTestMode = false;
   let launch = true;
-  let port = DEFAULT_PORT;
+  // 端口优先级：--port > $AC_CDP_PORT > 9223。AC_CDP_PORT 是断言脚本公共层的契约，
+  // 这里必须真正接收，否则脚本连 9250、探针探 9223，表现为 fetch failed 或静默 skip。
+  const envPort = process.env.AC_CDP_PORT;
+  let port = envPort !== undefined && envPort !== '' ? Number(envPort) : DEFAULT_PORT;
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];

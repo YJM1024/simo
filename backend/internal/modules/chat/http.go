@@ -172,7 +172,7 @@ func (m *Module) handleMessageSearch(w http.ResponseWriter, r *http.Request) {
 		args = append(args, id)
 	}
 	args = append(args, "%"+query+"%")
-	rows, err := m.store.Query(r.Context(), `SELECT id, session_id, role, text, at, status, task_id, workflow_id, tool, approval_id, category, reply_to_id
+	rows, err := m.store.Query(r.Context(), `SELECT id, session_id, role, text, at, status, task_id, workflow_id, tool, approval_id, category, reply_to_id, batch_id
 		FROM messages WHERE session_id IN (`+strings.Join(placeholders, ",")+`) AND internal = 0 AND text LIKE ?
 		ORDER BY rowid ASC LIMIT 50`, args...)
 	if err != nil {
@@ -183,7 +183,7 @@ func (m *Module) handleMessageSearch(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var msg Message
 		if err := rows.Scan(&msg.ID, &msg.SessionID, &msg.Role, &msg.Text, &msg.At, &msg.Status,
-			&msg.TaskID, &msg.WorkflowID, &msg.Tool, &msg.ApprovalID, &msg.Category, &msg.ReplyToID); err != nil {
+			&msg.TaskID, &msg.WorkflowID, &msg.Tool, &msg.ApprovalID, &msg.Category, &msg.ReplyToID, &msg.BatchID); err != nil {
 			_ = rows.Close()
 			httpserver.WriteError(w, http.StatusInternalServerError, "搜索消息失败")
 			return
@@ -195,6 +195,11 @@ func (m *Module) handleMessageSearch(w http.ResponseWriter, r *http.Request) {
 	m.attachSessionPaths(r.Context(), list)
 	m.attachReplySnapshots(r.Context(), list)
 	m.attachAgentIDs(r.Context(), list)
+	// 搜索结果同样是 Message DTO：任务卡片也要带批次数量，否则前端按单卡渲染。
+	if err := m.attachTaskCounts(r.Context(), list); err != nil {
+		httpserver.WriteError(w, http.StatusInternalServerError, "搜索消息失败")
+		return
+	}
 	httpserver.WriteJSON(w, http.StatusOK, map[string]any{"ok": true, "messages": list, "total": len(list)})
 }
 

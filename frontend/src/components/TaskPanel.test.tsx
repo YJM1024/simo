@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { TaskBadge, TaskCard, TaskFilterBar, TasksTab } from './tasks'
+import { TaskBadge, TaskCard, TaskFilterBar, TasksTab, alignTaskListJump } from './tasks'
 import type { TaskCounts, TaskView } from '../types'
 
 const counts = (overrides: Partial<TaskCounts> = {}): TaskCounts => ({ all: 6, pending: 2, running: 2, failed: 1, done: 1, ...overrides })
@@ -9,7 +9,7 @@ const counts = (overrides: Partial<TaskCounts> = {}): TaskCounts => ({ all: 6, p
 function task(overrides: Partial<TaskView> = {}): TaskView {
   return {
     id: 'task-1', sessionId: 'main', title: '任务一', mode: 'plan', status: 'running', displayStatus: 'running',
-    createdAt: 1, updatedAt: 2, stepCount: 8, doneStepCount: 5, outputCount: 1, ...overrides,
+    createdAt: 1, updatedAt: 2, progress: 63, attempt: 2, ...overrides,
   }
 }
 
@@ -35,22 +35,51 @@ describe('TaskFilterBar', () => {
 })
 
 describe('TaskCard', () => {
-  it('renders status, step progress, output count and waiting reason', () => {
-    render(<TaskCard task={task({ waitingReason: 'confirmation' })} onOpen={vi.fn()} />)
+  it('renders status, mode, artifacts, step ticks, foot and waiting reason', () => {
+    render(<TaskCard task={task({
+      waitingReason: 'confirmation',
+      steps: [
+        { id: 's1', title: '读需求', status: 'done' },
+        { id: 's2', title: '写初稿', status: 'running' },
+        { id: 's3', title: '校对', status: 'pending' },
+      ],
+      artifacts: [{ id: 'a1', name: 'a.md', size: 10 }],
+    })} onOpen={vi.fn()} />)
     const card = document.querySelector('.task-card') as HTMLElement
     expect(card).toHaveAttribute('data-status', 'running')
+    expect(card).toHaveAttribute('data-mode', 'plan')
     expect(screen.getByText('任务一')).toBeInTheDocument()
     expect(screen.getByText('进行中')).toBeInTheDocument()
-    expect(screen.getByText('步骤 5/8')).toBeInTheDocument()
     expect(screen.getByText('产出 1 个')).toBeInTheDocument()
+    expect(screen.getByText('尝试 2')).toBeInTheDocument()
     expect(screen.getByText('等待确认')).toBeInTheDocument()
+    expect(card.querySelectorAll('.task-tick')).toHaveLength(3)
+    expect(card.querySelectorAll('.task-tick[data-state="done"]')).toHaveLength(1)
+    expect(card.querySelectorAll('.task-tick[data-state="running"]')).toHaveLength(1)
+    expect(screen.getByText('已完成 1/3 步')).toBeInTheDocument()
+    expect(screen.getByText('第 2 步 · 进行中')).toBeInTheDocument()
+  })
+
+  it('merges step ticks beyond twelve segments and marks a failed segment', () => {
+    const steps = Array.from({ length: 24 }, (_, index) => ({ id: `s${index}`, title: `步骤${index}`, status: index === 5 ? 'failed' : index < 5 ? 'done' : 'pending' }))
+    render(<TaskCard task={task({ displayStatus: 'failed', steps, failReason: '第 6 步写初稿超时' })} onOpen={vi.fn()} />)
+    const card = document.querySelector('.task-card') as HTMLElement
+    expect(card.querySelectorAll('.task-tick')).toHaveLength(12)
+    expect(card.querySelectorAll('.task-tick[data-state="failed"]')).toHaveLength(1)
+    expect(screen.getByText('第 6 步写初稿超时')).toBeInTheDocument()
+  })
+
+  it('falls back to the percent bar when the task carries no steps', () => {
+    render(<TaskCard task={task()} onOpen={vi.fn()} />)
+    const card = document.querySelector('.task-card') as HTMLElement
     expect(card.querySelector('.task-progress i')).toHaveStyle({ width: '63%' })
+    expect(card.querySelector('.task-tick')).toBeNull()
   })
 
   it('opens the task on click and marks a jump target', async () => {
     const user = userEvent.setup()
     const onOpen = vi.fn()
-    render(<TaskCard task={task({ stepCount: undefined, doneStepCount: undefined, displayStatus: 'failed', failReason: '超时' })} isJumpTarget onOpen={onOpen} />)
+    render(<TaskCard task={task({ progress: undefined, displayStatus: 'failed', failReason: '超时' })} isJumpTarget onOpen={onOpen} />)
     const card = document.querySelector('.task-card') as HTMLElement
     expect(card).toHaveClass('is-jump-target')
     expect(card.querySelector('.task-progress')).toBeNull()
@@ -60,9 +89,27 @@ describe('TaskCard', () => {
   })
 
   it('maps unknown waiting reasons through and falls back to 未开始', () => {
-    render(<TaskCard task={task({ displayStatus: 'pending', waitingReason: 'quota' })} onOpen={vi.fn()} />)
+    render(<TaskCard task={task({ displayStatus: 'pending', waitingReason: 'quota', steps: [{ id: 's1', title: '读需求', status: 'pending' }] })} onOpen={vi.fn()} />)
     expect(screen.getByText('未开始')).toBeInTheDocument()
     expect(screen.getByText('quota')).toBeInTheDocument()
+    expect(screen.getByText('等待前置')).toBeInTheDocument()
+  })
+})
+
+describe('alignTaskListJump', () => {
+  it('lands the target 4px below the scroller top and stays inside the 0–8px band', () => {
+    const scroller = document.createElement('div')
+    const target = document.createElement('div')
+    document.body.append(scroller, target)
+    scroller.scrollTop = 0
+    scroller.getBoundingClientRect = () => ({ top: 100, left: 0, right: 280, bottom: 500, width: 280, height: 400, x: 0, y: 100, toJSON: () => ({}) })
+    target.getBoundingClientRect = () => ({ top: 340 - scroller.scrollTop, left: 0, right: 280, bottom: 460, width: 280, height: 120, x: 0, y: 340, toJSON: () => ({}) })
+    const offset = alignTaskListJump(scroller, target)
+    expect(scroller.scrollTop).toBe(236)
+    expect(offset).toBeGreaterThanOrEqual(0)
+    expect(offset).toBeLessThanOrEqual(8)
+    target.remove()
+    scroller.remove()
   })
 })
 

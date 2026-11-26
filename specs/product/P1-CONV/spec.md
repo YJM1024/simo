@@ -72,15 +72,15 @@
   6. 左栏底部显示连接状态、用量/配额、会话数/消息数；底部汇总报**全局**口径（全部会话数、归档数、全部消息数），会话行内出现的消息数字报**该会话自身**消息数（不含子会话）；统计失败显示占位文案而非 0；
   7. 历史会话可展开/收起（归档列表开关）。
 - AC：
-  - `AC-CONV-001-01` 主语=左栏 `.session-item` 与中栏消息列；条件=`main` 与 ≥1 子会话，`pointerup` 命中另一行；动作=切换 active 会话；判据=切换后 500ms 内 `aria-current` 行 `data-session-id`=目标 ID，旧会话 `messageId` 出现 0 条（容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-001-01.mjs。
+  - `AC-CONV-001-01` 主语=左栏 `.session-item` 与中栏消息列；条件=`main` 与 ≥1 子会话，`pointerup` 命中另一行；动作=切换 active 会话；判据=切换后 500ms 内 `aria-current` 行 `data-session-id`=目标 ID，旧会话 `messageId` 出现 0 条（容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-001-01.mjs。
     其余情形：中栏渲染该会话消息、新建/重命名/切换后右侧统计与会话数一致；证据：`Sidebar.test.tsx`（render/select/rename）、`TestM4SessionTreeAndRenamePersistAcrossRestart`、`TestTreeCreateRenameAndDescendants`、`CDP 01a`；缺：切换后中栏变化的 E2E。
-  - `AC-CONV-001-02` 主语=左栏四态占位节点；条件=会话树接口返回空集/未响应/500/`stats=null`；动作=打开页面；判据=四种占位各 1 个、数字 `0` 出现 0 处（采样=首帧后 1s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-001-02.mjs；待拆：四态占位与重命名 Escape、草稿清理、父链守卫四条判据被并成一行。
+  - `AC-CONV-001-02` 主语=左栏四态占位节点；条件=会话树接口返回空集/未响应/500/`stats=null`；动作=打开页面；判据=四种占位各 1 个、零值数字出现 0 处（采样=首帧后 1s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-001-02.mjs；待拆：四态占位与重命名 Escape、草稿清理、父链守卫四条判据被并成一行。
     其余情形：Escape 提交后 `PUT /api/sessions/{id}` 调用 0 次、重启后空草稿 0 条、三级父链路径 3 段、循环父链被拒；证据：`Sidebar.test.tsx`、`TestM70*`、`TestM14SessionPathCycleGuard`。
-  - `AC-CONV-001-03` 主语=归档端点响应与 `main` 行；条件=`main` 为 active 主会话；动作=归档；判据=HTTP 409、code=main_session_protected、archived=false 保持（采样=响应体，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-001-03.mjs；待拆：归档拒绝、unarchive no-op、其他会话可归档分属三个端点。
+  - `AC-CONV-001-03` 主语=归档端点响应与 `main` 行；条件=`main` 为 active 主会话；动作=归档；判据=HTTP 409、code=main_session_protected、archived=false 保持（采样=响应体，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-001-03.mjs；待拆：归档拒绝、unarchive no-op、其他会话可归档分属三个端点。
     证据：`spec.go:297-301`（拒绝 main）、`http.go:334-345`（409 信封）、`m81_all_messages_test.go:85`、`App.conversation.test.tsx:107-120`（仍按旧行为断言，需随本 AC 改写）。
-  - `AC-CONV-001-04` 主语=会话行菜单置顶项与 `session.pinned`；条件=非主/非草稿/未归档会话且 `pinned=0`；动作=点击置顶；判据=文案变“取消置顶”、`pin` 端点调用 1 次、该行成为同级第一条且其余同级行保持原有相对顺序、取消置顶后恢复原序、跨层级不上浮且子会话始终在父会话之下（采样=重排后，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-001-04.mjs；待拆：切换动作（含取消置顶恢复原序）、同级排序、入口可见性、重启保持四种取样。
-    证据：`Sidebar.test.tsx:148/184`、`App.conversation.test.tsx:103/116`、`App.operation-errors.test.tsx:101`、`tree_order_test.go:76/97/117`、`pin_guard_test.go:40/86/129`、`management_test.go:44`（`pinned DESC, created_at DESC`）。
-  - `AC-CONV-001-05` 主语=会话行 `.session-count` 与底部汇总；条件=`main` 与 ≥1 子会话；动作=渲染并切换会话；判据=行内数=该会话 `messageCount`、底部=全部会话之和，切换后行内变而底部不变（采样=切换后 500ms，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-001-05.mjs；待拆：行内单会话计数与底部全局汇总共用一行，口径不同、对象不同。
+  - `AC-CONV-001-04` 主语=会话行菜单置顶项与 `session.pinned`；条件=非主/非草稿/未归档会话且 `pinned=0`；动作=点击置顶；判据=文案变“取消置顶”、`pin` 端点调用 1 次、该行成为同级第一条且其余同级行保持原有相对顺序、取消置顶后恢复原序、跨层级不上浮且子会话始终在父会话之下（采样=重排后，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-001-04.mjs。
+    待拆：切换动作（含取消置顶恢复原序）、同级排序、入口可见性、重启保持四种取样。证据：`Sidebar.test.tsx:148/184`、`App.conversation.test.tsx:103/116`、`App.operation-errors.test.tsx:101`、`tree_order_test.go:76/97/117`、`pin_guard_test.go:40/86/129`、`management_test.go:44`（`pinned DESC, created_at DESC`）。
+  - `AC-CONV-001-05` 主语=会话行 `.session-count` 与底部汇总；条件=`main` 与 ≥1 子会话；动作=渲染并切换会话；判据=行内数=该会话 `messageCount`、底部=全部会话之和，切换后行内变而底部不变（采样=切换后 500ms，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-001-05.mjs；待拆：行内单会话计数与底部全局汇总共用一行，口径不同、对象不同。
     其余情形：统计失败时两处各显示占位、数字 `0` 出现 0 处；样例 `main=75`、15 会话和 209；证据：`Sidebar.test.tsx:53/306`、`App.integration.test.tsx:222/244`、`message_count_test.go`、`view.go:12`、`counts.go:16`。
 
 #### PRD-CONV-002 · 会话生命周期
@@ -97,9 +97,9 @@
   5. 恢复（unarchive）后会话回到普通列表，可继续对话；
   6. 生命周期请求失败时有可见反馈，不产生重复行、不出现“界面成功但库里没变”。
 - AC：
-  - `AC-CONV-002-01` 主语=`data-archived`、`.composer` 与 `sessions.name`；条件=新会话走新建→重命名→归档→恢复；动作=依次提交四步；判据=每步后 500ms 列表态与中栏态同源：归档后 `disabled` 1 个、恢复后 0 个，重启后 `name` 与 `archived` 逐字段相等（容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-002-01.mjs。
+  - `AC-CONV-002-01` 主语=`data-archived`、`.composer` 与 `sessions.name`；条件=新会话走新建→重命名→归档→恢复；动作=依次提交四步；判据=每步后 500ms 列表态与中栏态同源：归档后 `disabled` 1 个、恢复后 0 个，重启后 `name` 与 `archived` 逐字段相等（容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-002-01.mjs。
     证据：`Sidebar.test.tsx`（archive/restore）、`TestM6ArchiveReadonlyAndUnarchive`、`TestM6ArchivedChatWSReturnsErrorNotReply`、`TestM6CanArchiveGateBlocksRunningTask`、`TestM70DraftNotPersistedThenMaterialized`。
-  - `AC-CONV-002-02` 主语=四个端点失败响应与列表行数；条件=创建/重命名/归档/恢复各返回 500；动作=失败后手动重试 1 次（不要求自动重试）；判据=错误提示节点 1 个、创建/重命名失败后输入框值等于提交值、列表行数差 0、`archived` 不变（采样=失败响应后 500ms，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-002-02.mjs；待拆：创建/重命名/归档/恢复四种失败各要一次取样。
+  - `AC-CONV-002-02` 主语=四个端点失败响应与列表行数；条件=创建/重命名/归档/恢复各返回 500；动作=失败后手动重试 1 次（不要求自动重试）；判据=错误提示节点 1 个、创建/重命名失败后输入框值等于提交值、列表行数差 0、`archived` 不变（采样=失败响应后 500ms，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-002-02.mjs；待拆：创建/重命名/归档/恢复四种失败各要一次取样。
     证据：`App.operation-errors.test.tsx:49/75/96/115`、`Sidebar.test.tsx:77`、`app.tsx:465-476`（toggleArchive）、`:552-562`（rename）；重试计数 POST /api/sessions 2、archive 2、unarchive 2、read 2。
   - 删除会话不在本 PRD 验收面：显式非目标，见 §2.1 `REQ-CONV-002-03`（backlog）。
 
@@ -115,11 +115,11 @@
   3. 产品语义（**P1，默认裁决**）：“会话搜索”= **标题搜索**（`GET /api/sessions?q=`，后端 `title LIKE %q%`，跨全部会话含子会话、含归档会话的可见范围）；UI 调 `GET /api/sessions?q=`（`api.ts:34`、`app.tsx:435`，`test-plan.md:140` 记 pass）；消息正文搜索降为 P2、不在本阶段验收（见 AC-CONV-003-03），全局正文搜索进 backlog；
   4. 未读：会话内有新消息且用户未进入该会话时，左栏该行显示**会话级未读点**（有/无两态，非数字、非全站汇总）；进入会话即标记已读；**读游标持久化**（刷新/重启后仍能正确显示），多标签共享同一游标（任一标签已读，全部标签已读）；实现需新增后端读游标表与接口，**属本阶段新增能力，不是收口**；通知中心另立项。原“回到底部 · N 条新消息”按钮计数保留为会话内提示，不承担未读口径。
 - AC：
-  - `AC-CONV-003-01` 主语=搜索框与 `GET /api/sessions?q=` 响应 id 集；条件=≥1 会话标题含唯一关键词；动作=输入关键词；判据=请求含 `q=` 1 次、列表行 `data-session-id` 集=响应集（差 0）、`/api/messages/search` 0 次（采样=防抖后 300ms，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-003-01.mjs。
+  - `AC-CONV-003-01` 主语=搜索框与 `GET /api/sessions?q=` 响应 id 集；条件=≥1 会话标题含唯一关键词；动作=输入关键词；判据=请求含 `q=` 1 次、列表行 `data-session-id` 集=响应集（差 0 行）、`/api/messages/search` 0 次（采样=防抖后 300ms，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-003-01.mjs。
     其余情形：搜索中状态节点 1 个、无匹配空提示 1 个、失败错误 1 个；证据：`Sidebar.test.tsx`（search/filter/server ids/searching/no-match）、`TestUI1SessionSearchAndPin`、`api.ts:34`、`app.tsx:435`。
-  - `AC-CONV-003-02` 主语=搜索失败态与未读点；条件=标题搜索 500，或刷新后看已读会话；动作=重开页面；判据=失败后列表 0 行且错误节点 1 个、已读会话未读点 0 个（采样=加载后 1s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-003-02.mjs；待拆：搜索失败与未读游标恢复是两套机制，分属两个 PRD。
+  - `AC-CONV-003-02` 主语=搜索失败态与未读点；条件=标题搜索 500，或刷新后看已读会话；动作=重开页面；判据=失败后列表 0 行且错误节点 1 个、已读会话未读点 0 个（采样=加载后 1s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-003-02.mjs；待拆：搜索失败与未读游标恢复是两套机制，分属两个 PRD。
     其余情形：任一标签已读后其他标签未读点清除、粒度只有有/无两点、无数字节点；证据：`Sidebar.test.tsx:114`、`App.conversation.test.tsx:161/179/213`、`unread_test.go:93`。
-  - `AC-CONV-003-03` 主语=标题搜索请求；条件=关键词命中标题（含子会话与归档会话）；动作=输入关键词；判据=`/api/sessions?q=` 1 次、`/api/messages/search` 0 次、行集与响应 id 集差 0（采样=防抖后 300ms，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-003-03.mjs；待拆：与 AC-CONV-003-01 同一断言重复。
+  - `AC-CONV-003-03` 主语=标题搜索请求；条件=关键词命中标题（含子会话与归档会话）；动作=输入关键词；判据=`/api/sessions?q=` 1 次、`/api/messages/search` 0 次、行集与响应 id 集差 0 行（采样=防抖后 300ms，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-003-03.mjs；待拆：与 AC-CONV-003-01 同一断言重复。
     其余情形：无匹配空提示、请求中“搜索中”、失败可重试；正文搜索降 P2 不作判据；证据：`Sidebar.test.tsx:102`、`App.conversation.test.tsx:227`、`TestUI1SessionSearchAndPin`、E2E 14/15。
 
 ### 4.2 L2 · 消息与渲染
@@ -139,11 +139,11 @@
   6. 消息流只含对话消息，不含 system/internal 控制消息；消息不可编辑（编辑端点返回禁用错误）；
   7. 消息分页加载（默认 100 条），翻页不重复、不乱序。
 - AC：
-  - `AC-CONV-004-01` 主语=用户条目与司墨条目；条件=会话含两类消息条，视口 1180 与 375；动作=目视两档截图；判据=用户条目左对齐 4/4、司墨右对齐 4/4，底色与 `--msg-user`/`--msg-assistant` 一致（采样=两档首屏，容差 0）；判定=`人工:目视`；脚本=`N/A：角色对齐与底色无 DOM 判据`；待拆：渲染多项、溢出数值、复制反馈、视觉区分混在一条。
+  - `AC-CONV-004-01` 主语=用户条目与司墨条目；条件=会话含两类消息条，视口宽 1180px 与 375px；动作=目视两档截图；判据=用户条目左对齐 4/4、司墨右对齐 4/4，底色与 `--msg-user`/`--msg-assistant` 一致（采样=两档首屏，容差 ±0）；判定=`人工:目视`；脚本=`N/A：角色对齐与底色无 DOM 判据`；待拆：渲染多项、溢出数值、复制反馈、视觉区分混在一条。
     实测：1180 档 `.msg-table-wrap` 496/819、375 档 331/819、`table` 819/819 不自溢；表格溢出、复制反馈、流式光标、卡片态待拆后各挂脚本；证据：`MessageItem.test.tsx` 18/18、`CDP 04a`、ACCEPT-CONV-9 §2.5。
-  - `AC-CONV-004-02` 主语=复制反馈与卡片失败态；条件=剪贴板抛错、卡片 500、有 internal 消息；动作=复制、提交、拉取；判据=已复制 0 个且 execCommand 1 次、卡片输入值不变且错误 1 个、接口 internal 0 条（采样=响应后 500ms，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-004-02.mjs；待拆：剪贴板降级、卡片失败、只读、internal 四条独立路径。
+  - `AC-CONV-004-02` 主语=复制反馈与卡片失败态；条件=剪贴板抛错、卡片 500、有 internal 消息；动作=复制、提交、拉取；判据=已复制 0 个且 execCommand 1 次、卡片输入值不变且错误 1 个、接口 internal 0 条（采样=响应后 500ms，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-004-02.mjs；待拆：剪贴板降级、卡片失败、只读、internal 四条独立路径。
     证据：`MessageItem.test.tsx`（fallback/failed card/readOnly）、`TestM78InternalCardDoesNotPolluteMessageStream`、`TestM78ManualInternalTextRejected`、`TestM79LegacyInternalMessagesHiddenFromAPI`、`TestM50MessageEditingDisabled`。
-  - `AC-CONV-004-03` 主语=消息接口、WS 帧与 UI 条目；条件=库中有 internal 消息与卡片事件；动作=拉取并连 WS；判据=三处 internal 计数 0、卡片 `data-kind=card` ≥1、编辑端点禁用（采样=加载后 1s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-004-03.mjs；待拆：接口纯度、WS 纯度、UI 纯度、卡片保留、编辑禁用五处判据。
+  - `AC-CONV-004-03` 主语=消息接口、WS 帧与 UI 条目；条件=库中有 internal 消息与卡片事件；动作=拉取并连 WS；判据=三处 internal 计数 0 条、卡片 `data-kind=card` ≥1、编辑端点禁用（采样=加载后 1s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-004-03.mjs；待拆：接口纯度、WS 纯度、UI 纯度、卡片保留、编辑禁用五处判据。
     证据：`TestM78InternalCardDoesNotPolluteMessageStream`、`TestM78ManualInternalTextRejected`、`TestM79LegacyInternalMessagesHiddenFromAPI`、`TestM50MessageEditingDisabled`。
 
 #### PRD-CONV-007 · 祖先消息整级加载
@@ -159,9 +159,9 @@
   4. 上级加载返回 413（过大）时显示错误并可重试，重试成功后补齐；403（无权）时给出 1 条非阻断中性提示并继续当前会话对话；空上级静默按无上级处理；
   5. 切换会话清空祖先链，不串消息；切回时恢复各会话滚动位置。
 - AC：
-  - `AC-CONV-007-01` 主语=`messages/all` 结果与轨道条数；条件=≥2 级父子会话、祖先 12 条；动作=进入子会话；判据=去重后 12 条、`createdAt` 逆序对 0、条数=消息数、切会话后祖先 0 条（采样=加载后 1s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-007-01.mjs；待拆：整级加载、时间轴条数、键盘跳转、清链、滚动恢复五种取样。
+  - `AC-CONV-007-01` 主语=`messages/all` 结果与轨道条数；条件=≥2 级父子会话、祖先 12 条；动作=进入子会话；判据=去重后 12 条、`createdAt` 逆序对 0 个、条数=消息数、切会话后祖先 0 条（采样=加载后 1s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-007-01.mjs；待拆：整级加载、时间轴条数、键盘跳转、清链、滚动恢复五种取样。
     证据：`App.integration.test.tsx`（祖先加载/去重/清链/滚动恢复）、`TimelineGroups.test.tsx` 8/8、`TestM81AllSessionMessages`、`CDP 04a–04d`。
-  - `AC-CONV-007-02` 主语=上级响应与 `.tl-track` 命中；条件=上级接口 413/403/空；动作=进入子会话点轨道；判据=413 时提示 1 条且重试补祖先；403 时提示 1 条、无「失败」「错误」字样、发送 1 次、切会话不残留、再触发仍 1 条；空上级时错误与提示各 0 条；采样=点击后 900ms、容差 0；判定=`自动`；脚本=scripts/ac/AC-CONV-007-02.mjs；待拆：三条错误路径与时间轴整列命中。
+  - `AC-CONV-007-02` 主语=上级响应与 `.tl-track` 命中；条件=上级接口 413/403/空；动作=进入子会话点轨道；判据=413 时提示 1 条且重试补祖先；403 时提示 1 条、无「失败」「错误」字样、发送 1 次、切会话不残留、再触发仍 1 条；空上级时错误与提示各 0 条；采样=点击后 900ms、容差 ±0；判定=`自动`；脚本=scripts/ac/AC-CONV-007-02.mjs；待拆：三条错误路径与时间轴整列命中。
     时间轴：轨道宽 44px，轨道内任一点映射纵向最近刻度，点击后 900ms 目标进入视口且 active=被点刻度；18 点矩阵偏差 0、19 点扫描死区 0、列外 1px 不触发；祖先链：用 fetch 桩（`Page.addScriptToEvaluateOnNewDocument` 包装 `window.fetch`，规则经 `sessionStorage('__acStub')` 注入）对父级 `messages?scope=all` 返回 413/403/200 空数组，403 与空上级按上述条数判；证据：`App.integration.test.tsx`、`TestM89AllMessagesLimitsAndErrors`、`TimelineGroups.test.tsx`、`.tmp/ac/AC-CONV-007-02.json`、ACCEPT-CONV-9 §2.3。
 
 ### 4.3 L2 · 输入与发送
@@ -180,9 +180,9 @@
   5. 断线：WS 断开显示重连中，按退避（800ms 起 ×1.8，上限 5000ms）重连，重连后用 `since` 续传，不丢消息、不重复渲染；
   6. 幂等：请求携带 `clientMutationId`，服务端据此去重（已实现，见 `backend/internal/modules/chat/idempotency.go`；`client_mutations` 表、TTL 7d、在途等待 5s，7 条测试在 `backend/cmd/simo/p1_conv_chat_idempotency_test.go`）。
 - AC：
-  - `AC-CONV-005-01` 主语=`POST /api/chat` 消息、delta 与输入框；条件=active 可发送，输入 1 条；动作=发送并在流中停止；判据=消息 500ms 内 1 条、`done` 后输入长度 0、停止后 messageId 增量 0、他流 >0（采样=帧到达，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-005-01.mjs；待拆：发送主路径与按 messageId 定向停止共用一行。
+  - `AC-CONV-005-01` 主语=`POST /api/chat` 消息、delta 与输入框；条件=active 可发送，输入 1 条；动作=发送并在流中停止；判据=消息 500ms 内 1 条、`done` 后输入长度 = 0、停止后 messageId 增量 = 0、他流 >0（采样=帧到达，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-005-01.mjs；待拆：发送主路径与按 messageId 定向停止共用一行。
     证据：`Composer.test.tsx`（send/clear/streaming-stop）、`TestWebSocketEventOrder`、`stop_interrupt_test.go:402`、`App.conversation.test.tsx:455`、`CDP 02/05`。
-  - `AC-CONV-005-02` 主语=上游 context 与 delta 数；条件=假上游 SSE 流式中；动作=发停止帧；判据=停止后 10ms context 关闭、两类 delta 0 帧、落库 0 条、回 idle、retracted 先于 idle（采样=10ms、2s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-005-02.mjs；待拆：失败保留、防重复提交、断线退避、停止机制四类判据。
+  - `AC-CONV-005-02` 主语=上游 context 与 delta 数；条件=假上游 SSE 流式中；动作=发停止帧；判据=停止后 10ms context 关闭、两类 delta 0 帧、落库 0 条、回 idle、retracted 先于 idle（采样=10ms、2s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-005-02.mjs；待拆：失败保留、防重复提交、断线退避、停止机制四类判据。
     环境限制：真实厂商 `api.deepseek.com` 本机 403，连接级中断未观测，不作判据；证据：`stop_upstream_test.go`、`STOP-UPSTREAM-EVIDENCE-20261122.md`（5 PASS/0 FAIL）、`TestWebSocketSinceContinuation`。
 
 #### PRD-CONV-006 · Composer 输入与快捷键
@@ -198,9 +198,9 @@
   4. 无 active 会话或会话已归档时 Composer 禁用；流式中显示停止；
   5. 发送失败错误区可读；长文本不截断。
 - AC：
-  - `AC-CONV-006-01` 主语=输入框 keydown 与 `.mode-toggle`；条件=`enter` 与 `shift-enter` 两态；动作=按 Enter/Shift+Enter/Ctrl+Enter/⌘+Enter；判据=键后 100ms 发送数符合 4×2 映射、`aria-pressed` 与模式一致、刷新后 localStorage 值不变（容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-006-01.mjs。
+  - `AC-CONV-006-01` 主语=输入框 keydown 与 `.mode-toggle`；条件=`enter` 与 `shift-enter` 两态；动作=按 Enter/Shift+Enter/Ctrl+Enter/⌘+Enter；判据=键后 100ms 发送数符合 4×2 映射、`aria-pressed` 与模式一致、刷新后 localStorage 值不变（容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-006-01.mjs。
     证据：`Composer.test.tsx`（Enter、Shift+Enter、Ctrl/Meta、模式持久化）、`CDP 03`。
-  - `AC-CONV-006-02` 主语=输入框与错误节点；条件=IME 组合中、发送 500、无 active；动作=按 Enter、发送、重试；判据=组合中 Enter 发送 0 次且 isComposing=true、失败后输入不变且错误 1 个、禁用属性 1 个（采样=100ms，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-006-02.mjs；待拆：IME、失败恢复、禁用态、长文本四条件合写。
+  - `AC-CONV-006-02` 主语=输入框与错误节点；条件=IME 组合中、发送 500、无 active；动作=按 Enter、发送、重试；判据=组合中 Enter 发送 0 次且 isComposing=true、失败后输入不变且错误 1 个、禁用属性 1 个（采样=100ms，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-006-02.mjs；待拆：IME、失败恢复、禁用态、长文本四条件合写。
     长文本：输入 5000 字后 `scrollHeight`≥内容高度、截断 0 处；证据：`Composer.test.tsx`、`IME-EVIDENCE-20261122.md`（五点验证）、`test-plan.md` §15 M-05。
 
 ### 4.4 L2 · 多标签与同步
@@ -219,9 +219,9 @@
   5. 归档会话的 WS 聊天请求返回错误帧，不继续回复；
   6. 启动时发现“流式中”残留消息会被恢复为失败态（避免永远转圈），流式看门狗超时同样收尾。
 - AC：
-  - `AC-SYNC-001-01` 主语=WS 连接态节点与 `seq`；条件=两个客户端订阅同一会话；动作=打开并订阅；判据=连接态 1 个、`seq` 严格递增且重复 0、`since` 补发数=断开期帧数、两客户端 `seq` 集相等（采样=订阅后 2s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-SYNC-001-01.mjs；待拆：连接态、事件有序、since 补发、双客户端 fanout 四条判据。
+  - `AC-SYNC-001-01` 主语=WS 连接态节点与 `seq`；条件=两个客户端订阅同一会话；动作=打开并订阅；判据=连接态 1 个、`seq` 严格递增且重复 = 0、`since` 补发数=断开期帧数、两客户端 `seq` 集相等（采样=订阅后 2s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-SYNC-001-01.mjs；待拆：连接态、事件有序、since 补发、双客户端 fanout 四条判据。
     证据：`TestWebSocketEventOrder`、`TestWebSocketSinceContinuation`、`TestM88WebSocketFanoutTwoClients`、`App.integration.test.tsx`（seq 去重）。
-  - `AC-SYNC-001-02` 主语=重连中节点与归档错误帧；条件=WS 断开、归档会话发消息、有残留流式；动作=重连、发送、重载；判据=重连中 1 个且 5000ms 内 connected、归档错误帧 1 个且回复 0 个、残留 1s 内变 `failed`（采样=各事件后，容差 0）；判定=`自动`；脚本=scripts/ac/AC-SYNC-001-02.mjs；待拆：断线重连、归档错误帧、残留恢复三条独立路径。
+  - `AC-SYNC-001-02` 主语=重连中节点与归档错误帧；条件=WS 断开、归档会话发消息、有残留流式；动作=重连、发送、重载；判据=重连中 1 个且 5000ms 内 connected、归档错误帧 1 个且回复 0 个、残留 1s 内变 `failed`（采样=各事件后，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-SYNC-001-02.mjs；待拆：断线重连、归档错误帧、残留恢复三条独立路径。
     证据：`TestM6ArchivedChatWSReturnsErrorNotReply`、`TestM55StartupRecoversStaleStreaming`、`TestM55StreamingWatchdogTimeout`、`App.conversation.test.tsx:486`。
 
 #### PRD-SYNC-002 · 多标签 active/ancestor/read cursor
@@ -236,9 +236,9 @@
   3. 标签 A 读到最新 → 广播 `read_cursor_changed`，其他标签在 `at >= 本地游标` 时清未读；
   4. BroadcastChannel 不可用时静默降级（不影响单标签使用）。
 - AC：
-  - `AC-SYNC-002-01` 主语=标签 B 的 active、祖先与未读点；条件=同源 A/B，通道可用；动作=A 切会话、加载祖先、读消息；判据=B 的 active=A、祖先去重重复 0 条、未读随 at 清 0、回跳 0 次（采样=A 广播后 500ms，容差 0）；判定=`自动`；脚本=scripts/ac/AC-SYNC-002-01.mjs；待拆：active 跟随、祖先合并、读游标三条同步通道。
+  - `AC-SYNC-002-01` 主语=标签 B 的 active、祖先与未读点；条件=同源 A/B，通道可用；动作=A 切会话、加载祖先、读消息；判据=B 的 active=A、祖先去重重复 0 条、未读随 at 清 0 个、回跳 0 次（采样=A 广播后 500ms，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-SYNC-002-01.mjs；待拆：active 跟随、祖先合并、读游标三条同步通道。
     peer 为 `CapturingBroadcastChannel` 模拟，真双标签缺；证据：`App.tabsync.test.tsx:115/148/165/340`、`App.tabsync.channel.test.tsx:98/113`。
-  - `AC-SYNC-002-02` 主语=`at`+`tabId` tiebreak 与降级路径；条件=两标签同 `at`、重复广播、无通道；动作=两种到达序广播并重挂；判据=两序终态相同、重复广播后未读增量 0、无通道挂载异常 0 次且切会话仍生效（采样=广播后 500ms，容差 0）；判定=`自动`；脚本=scripts/ac/AC-SYNC-002-02.mjs；待拆：同 at 冲突、重复广播、无通道降级三条独立路径。
+  - `AC-SYNC-002-02` 主语=`at`+`tabId` tiebreak 与降级路径；条件=两标签同 `at`、重复广播、无通道；动作=两种到达序广播并重挂；判据=两序终态相同、重复广播后未读增量 = 0、无通道挂载异常 0 次且切会话仍生效（采样=广播后 500ms，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-SYNC-002-02.mjs；待拆：同 at 冲突、重复广播、无通道降级三条独立路径。
     tiebreak 只由 `at`+`tabId` 字典序决定，`opId` 不参与；证据：`App.tabsync.test.tsx:189/211/297`、`App.tabsync.degrade.test.tsx`。
 
 #### PRD-SYNC-003 · 发送模式/设置跨标签同步
@@ -253,9 +253,9 @@
   3. 无 BroadcastChannel 时退化为 `storage` 事件，仍可用；
   4. 按钮 aria-pressed/aria-label 与模式一致。
 - AC：
-  - `AC-SYNC-003-01` 主语=`.mode-toggle` 的 `aria-pressed` 与 `localStorage`；条件=当前 `enter`；动作=点切换；判据=点击后 100ms `aria-pressed` 反转、Enter 行为反转、`localStorage`=`shift-enter`，刷新后不变（采样=点击后 100ms 与刷新后 1s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-SYNC-003-01.mjs。
+  - `AC-SYNC-003-01` 主语=`.mode-toggle` 的 `aria-pressed` 与 `localStorage`；条件=当前 `enter`；动作=点切换；判据=点击后 100ms `aria-pressed` 反转、Enter 行为反转、`localStorage`=`shift-enter`，刷新后不变（采样=点击后 100ms 与刷新后 1s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-SYNC-003-01.mjs。
     证据：`Composer.test.tsx::toggles send mode, persists it and changes keyboard behavior`、`CDP 03`。
-  - `AC-SYNC-003-02` 主语=标签 B 的 `.mode-toggle`；条件=两标签同源或通道构造抛错；动作=A 切换模式；判据=B 的 `aria-pressed` 500ms 内=A、广播 1 次、抛错 0 次且仍持久化（采样=切换后 500ms，容差 0）；判定=`自动`；脚本=scripts/ac/AC-SYNC-003-02.mjs；待拆：跨标签一致与无通道降级两条路径。
+  - `AC-SYNC-003-02` 主语=标签 B 的 `.mode-toggle`；条件=两标签同源或通道构造抛错；动作=A 切换模式；判据=B 的 `aria-pressed` 500ms 内=A、广播 1 次、抛错 0 次且仍持久化（采样=切换后 500ms，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-SYNC-003-02.mjs；待拆：跨标签一致与无通道降级两条路径。
     证据：`Composer.test.tsx:144/178/198/219`、`test-plan.md:155`；单进程双实例，真两标签缺。
 
 #### PRD-SYNC-004 · 未读与已读游标
@@ -271,11 +271,11 @@
   4. **持久化读游标**：刷新/重启后仍能正确显示未读；读游标按会话保存，进入即写已读；多标签共享同一游标（任一标签已读，全部标签已读）；**需新增后端读游标表与接口，属本阶段新增能力，不是收口**；
   5. 通知中心/系统级提醒不在本域范围（原 SYNC-005 已移除，编号不复用）。
 - AC：
-  - `AC-SYNC-004-01` 主语=B 行未读点；条件=两会话、active=A，B 收新消息；动作=收帧后切到 B；判据=收帧后 500ms B 行点 1 个、A 行 0 个；切到 B 后 500ms 点 0 个，刷新后仍 0（采样=三处，容差 0）；判定=`自动`；脚本=scripts/ac/AC-SYNC-004-01.mjs；待拆：置位、进入清除、刷新保持三个取样点。
+  - `AC-SYNC-004-01` 主语=B 行未读点；条件=两会话、active=A，B 收新消息；动作=收帧后切到 B；判据=收帧后 500ms B 行点 1 个、A 行 0 个；切到 B 后 500ms 点 0 个，刷新后仍为 0 个（采样=三处，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-SYNC-004-01.mjs；待拆：置位、进入清除、刷新保持三个取样点。
     证据：`App.conversation.test.tsx:148/179`、`Sidebar.test.tsx:126`（只出点、无数字）、`unread_test.go:93`（重启持久化）。
-  - `AC-SYNC-004-02` 主语=重启后未读点与写失败 toast；条件=服务端重启、另一标签已读、`read` 端点 500；动作=重载并进入会话；判据=已读会话点 0 个、未读会话 1 个、写失败保留点 1 个且 toast 1 个（采样=加载后 1s 与响应后 500ms，容差 0）；判定=`自动`；脚本=scripts/ac/AC-SYNC-004-02.mjs；待拆：重启恢复、跨标签清除、写失败三条独立路径。
+  - `AC-SYNC-004-02` 主语=重启后未读点与写失败 toast；条件=服务端重启、另一标签已读、`read` 端点 500；动作=重载并进入会话；判据=已读会话点 0 个、未读会话 1 个、写失败保留点 1 个且 toast 1 个（采样=加载后 1s 与响应后 500ms，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-SYNC-004-02.mjs；待拆：重启恢复、跨标签清除、写失败三条独立路径。
     证据：`App.conversation.test.tsx:161/179/213`、`unread_test.go:93`、`p1_conv_unread_test.go:93`。
-  - `AC-SYNC-004-03` 主语=读游标 `read_at` 与未读点；条件=任一标签收到非 active 会话新消息；动作=进入会话标记已读；判据=点由 1 变 0（差 1）、`read_at`≥消息 `createdAt`、刷新后点 0 个（采样=标记后 500ms，容差 0）；判定=`自动`；脚本=scripts/ac/AC-SYNC-004-03.mjs；待拆：与 AC-SYNC-004-01、-02 语义重复。
+  - `AC-SYNC-004-03` 主语=读游标 `read_at` 与未读点；条件=任一标签收到非 active 会话新消息；动作=进入会话标记已读；判据=点由 1 个变 0 个（差 1 个）、`read_at`≥消息 `createdAt`、刷新后点 0 个（采样=标记后 500ms，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-SYNC-004-03.mjs；待拆：与 AC-SYNC-004-01、-02 语义重复。
     不显示全站汇总数字节点（0 个）、不做跨设备同步、不含通知中心；证据：`App.conversation.test.tsx:161/179`、`unread_test.go:93`、`test-plan.md:158`。
 
 > PRD-SYNC-005 已移除（2026-11-22 用户裁决）：远程访问与通知中心不在范围内，编号不复用。
@@ -296,21 +296,23 @@
   5. 契约：`GET /api/sessions/{id}/spec-projection?taskLimit=1..50`（默认 3；越界 400 `invalid_task_limit`；会话不存在 404）；响应带 `ETag`，`If-None-Match` 命中 304；
   6. 窄屏（375）：右栏不渲染（sidebar 与 inspector 均 `display:none`，无抽屉入口），中栏主操作不被遮挡，遮挡判定不适用；投影内容在右栏显示的宽度档（>1024px）可读。
 - AC：
-  - `AC-CONV-008-01` 主语=`aside.inspector` 三组文本与 `rev`；条件=投影接口返回数据；动作=打开右栏；判据=三组节点各 1 个、`rev N` 与 `待确认 N` 等于响应字段（差 0）、无投影时空态 1 个且数字 0 处（采样=加载后 1s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-008-01.mjs；待拆：三组渲染与无投影空态两套前置条件。
+  - `AC-CONV-008-01` 主语=`aside.inspector` 三组文本与 `rev`；条件=投影接口返回数据；动作=打开右栏；判据=三组节点各 1 个、`rev N` 与 `待确认 N` 等于响应字段（差 0 条）、无投影时空态 1 个且数字 0 处（采样=加载后 1s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-008-01.mjs；待拆：三组渲染与无投影空态两套前置条件。
     其余情形：三类文案按中文渲染、进度行带 rev 标识；证据：`RightPanel.test.tsx`（目标/输入/状态/rev/待确认）、`m75_spec_projection_test.go`。
-  - `AC-CONV-008-02` 主语=执行组展开态与定位；条件=三组任务与交付物存在；动作=展开、点带 messageId 的行、点交付物；判据=展开后可见行数=首屏数+补取数、目标 data-message-id 相等、右栏提交/重试/取消入口 0 个（采样=点击后 500ms，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-008-02.mjs；待拆：展开、messageId 定位、交付物下载、无提交入口四条判据。
+  - `AC-CONV-008-02` 主语=执行组展开态与定位；条件=三组任务与交付物存在；动作=展开、点带 messageId 的行、点交付物；判据=展开后可见行数=首屏数+补取数、目标 data-message-id 相等、右栏提交/重试/取消入口 0 个（采样=点击后 500ms，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-008-02.mjs；待拆：展开、messageId 定位、交付物下载、无提交入口四条判据。
     证据：`RightPanel.test.tsx`（分组展开 + `messageId` 透传 + 交付物打开）、`m87_task_message_mapping_test.go`；下载落盘一项另挂 `人工:下载核验`（目录新增文件 1 个、字节数=响应 size）。
-  - `AC-CONV-008-03` 主语=右栏四态与 375 档 scrollWidth；条件=投影在途/500/无投影/无会话，375 宽；动作=开页面；判据=四态各 1、侧栏/右栏 0×0、display:none 2 处、scrollWidth=375、Composer 可见 1.0（采样=首屏 1s，容差 ±1px）；判定=`自动`；脚本=scripts/ac/AC-CONV-008-03.mjs；待拆：四态占位与 375 窄屏布局两组对象。
+  - `AC-CONV-008-03` 主语=右栏四态与 375 档 scrollWidth；条件=投影在途/500/无投影/无会话，375px 宽；动作=开页面；判据=四态各 1 种、侧栏/右栏 0×0px、display:none 2 处、scrollWidth=375、Composer 可见 = 1.0（采样=首屏 1s，容差 ±1px）；判定=`自动`；脚本=scripts/ac/AC-CONV-008-03.mjs；待拆：四态占位与 375px 窄屏布局两组对象。
     证据：`RightPanel.test.tsx:21/29/175`、`ExecRowHitArea.test.tsx:254`、`test-plan.md:163`、ACCEPT-CONV-9 §2.4（Composer 359×144、发送 54×28）；375 档遮挡判定不适用。
-  - `AC-CONV-008-04` 主语=状态码与 ETag；条件=taskLimit 0/51、会话不存在、If-None-Match 命中；动作=发四类；判据=400 invalid_task_limit、404、304，304 体 0 字节、留 ETag、前端重渲染 0 次（采样=响应头与首帧，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-008-04.mjs；待拆：400/404/304 与前端不闪空四条判据。
+  - `AC-CONV-008-04` 主语=状态码与 ETag；条件=taskLimit 0/51、会话不存在、If-None-Match 命中；动作=发四类；判据=400 invalid_task_limit、404、304，304 体 0 字节、留 ETag、前端重渲染 0 次（采样=响应头与首帧，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-008-04.mjs；待拆：400/404/304 与前端不闪空四条判据。
     证据：`spec_projection_etag_test.go:67/97/145/182/207`、`m75_spec_projection_test.go:23/71`、`api.test.ts:244/260/282`、`spec_projection.go:127-141`、`.tmp/accept8/304-live.json`。
-  - `AC-CONV-008-05` 主语=组头 `{shown}/{total}` 与可见条目数；条件=首屏 3 条、`total`=6 或 4；动作=展开该组；判据=展开后 1s 可见条目=`total`、组头分子=分母=`total`，补取 500 时错误 1 个且条目数不变（采样=展开后 1s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-008-05.mjs。
+  - `AC-CONV-008-05` 主语=组头 `{shown}/{total}` 与可见条目数；条件=首屏 3 条、`total`=6 或 4；动作=展开该组；判据=展开后 1s 可见条目=`total`、组头分子=分母=`total`，补取 500 时错误 1 个且条目数不变（采样=展开后 1s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-008-05.mjs。
     证据：`RightPanel.test.tsx:59`、`App.integration.test.tsx:262/289/315`、`library.tsx:1001`、`app.tsx:424-457`、`test-plan.md:166`；残余：错误态与已加载列表同时可读的负断言仍缺（G18）。
 
 ### 4.6 L2 · 会话内任务与编排
 
 #### PRD-CONV-009 · 会话内任务与编排（本轮新增）
 <a id="prd-conv-009"></a>
+
+- 需求点编号：`REQ-CONV-009.1` 至 `REQ-CONV-009.7`，映射见 `specs/changes/CHG-CONV-007/proposal.md` §4；后续卡片与判据的 REQ 字段引用这七个编号，不再另编。
 
 - 优先级：P1
 - 实现状态：`unimplemented`（覆盖 `gap`；形态由用户确认，证据为原型 `docs/design/task-prototype-v3-20261123.html` 九屏，2026-11-23）
@@ -340,30 +342,30 @@
 - 等待资源或额度：任务执行暂停，已完成步骤与产出保留；任务卡显示「等待资源」标记 1 个、恢复入口 1 个，恢复入口同在任务卡内联区；暂停期间进度增量 0、后续步骤启动 0 次；资源恢复后从暂停步继续，已完成步骤不重跑。暂停是执行态，任务图仍按四态渲染，等待中的节点计为 `进行中` 并带等待标记，四态节点数之和仍等于节点总数。
 - 三类等待均不设系统自动超时：等待 30 分钟内自动失败 0 次、自动取消 0 次；用户设定时限到点只发提醒 1 条，不取消任务；改变等待状态只有三种途径，前置完成、用户确认或取消、资源恢复。
 - AC：
-  - `AC-CONV-009-01` 主语=消息流任务卡片与右栏任务计数；条件=会话空闲、右栏展开；动作=发起 1 个任务；判据=消息流任务卡片 1 张、右栏任务计数自 N 增至 N 加 1（差 = 1 个）、卡片带 task_id 1 个（采样=发起后 5s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-01.mjs；待实现。
-  - `AC-CONV-009-02` 主语=消息流汇总卡与展开项；条件=一次发起 10 个任务；动作=展开汇总卡；判据=消息流卡片 1 张、汇总卡标题计数 = 10 个、展开后子条目 10 条（采样=展开后 500ms，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-02.mjs；待实现。
-    - 超限判据：一次发起 12 个任务时，消息流汇总卡 1 张、标题计数 = 12 个、默认可见子条目 10 条、「还有 2 条」入口 1 个；点开后子条目 12 条、入口 0 个（采样=点开后 500ms，容差 0）。
-  - `AC-CONV-009-03` 主语=任务启动上下文；条件=会话已有 20 条历史消息；动作=发起任务并读取上下文；判据=上下文历史消息 0 条、目标 1 个、约束 ≥ 1 个（采样=启动后 1s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-03.mjs；待实现。
-  - `AC-CONV-009-04` 主语=任务工具调用与会话权限边界；条件=会话可用工具 1 个、会话权限外路径 1 条；动作=调工具并请求越权路径；判据=工具调用成功 1 次、越权请求拒绝 1 次且状态码 = 403（采样=调用后 5s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-04.mjs；待实现。
-  - `AC-CONV-009-05` 主语=计划任务步骤列表；条件=8 步任务进行到第 6 步；动作=打开详情、点第 5 步与第 7 步；判据=步骤按序 1..8、第 6 步默认展开且轨迹 ≥ 1 条、第 5 步展开后轨迹 ≥ 1 条、第 7 步展开入口 0 个（采样=打开后 1s 与点击后 500ms，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-05.mjs；待实现。
-  - `AC-CONV-009-06` 主语=边做边想详情时间线；条件=轨迹 14 条；动作=打开详情；判据=步骤节点 0 个、轨迹行 = 14 条、时间戳单调不减且展开入口 0 个（采样=打开后 1s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-06.mjs；待实现。
-  - `AC-CONV-009-07` 主语=任务详情操作入口；条件=任意状态任务 1 个；动作=打开详情并扫描入口；判据=重试/取消/编辑/删除入口 0 个、关闭入口 1 个（采样=打开后 1s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-07.mjs；待实现。
-    - 四态可点判据：未开始、进行中、已完成、失败四种状态的任务卡各 1 张时，四张卡均可点且可聚焦，点击各打开同一只读详情 1 次；打开前后任务状态相同（差 0）、任务事件条数差 0、写请求 0 条（采样=点击后 1s，容差 0）。可点只表示能进入详情，不改变任务状态、不产生任务事件，与本条详情只读判据并存。
-  - `AC-CONV-009-08` 主语=右栏竖条与面板宽度；条件=右栏在任务标签；动作=点收起、点任务图标、再点任务图标；判据=收起后整栏宽 = 40px（容差 ±1px）、图标 3 个；展开后整栏宽 = 320px（= 面板 280px + 竖条 40px）且任务标签选中 1 个；再点后回到 40px（采样=每次点击后 300ms，容差 ±1px）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-08.mjs；待实现。
-  - `AC-CONV-009-09` 主语=右栏任务图标角标；条件=进行中任务 0 个、2 个、10 个与 11 个；动作=切换四种数据；判据=0 个时角标不渲染、2 个时角标 = 2、10 个与 11 个时文本 = `9+`、两位数字节点 0 个（采样=数据更新后 5s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-09.mjs；待实现。
-  - `AC-CONV-009-10` 主语=概览四节折叠态；条件=当前会话折叠目标与交付物两节；动作=刷新页面、切到另一会话；判据=刷新后展开态与刷新前一致（差 0 处）、四节标题与计数各 1 个、另一会话为默认全开（采样=刷新后 1s 与切换后 1s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-10.mjs；待实现。
-  - `AC-CONV-009-11` 主语=「还有 N 个」入口与定位；条件=任务 11 个、当前在概览；动作=点任务节「还有 9 个」；判据=任务标签选中 1 个、目标任务卡成为列表首行且距滚动口顶部 0–8px、可见任务卡 ≥ 1 张（采样=点击后 500ms，容差 ±1px）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-11.mjs；待实现。
+  - `AC-CONV-009-01` 主语=消息流任务卡片与右栏任务计数；条件=会话空闲、右栏展开；动作=发起 1 个任务；判据=消息流任务卡片 1 张、右栏任务计数自 N 增至 N 加 1 个（差 = 1 个）、卡片带 task_id 1 个（采样=发起后 5s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-01.mjs；已实现，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1。
+  - `AC-CONV-009-02` 主语=消息流汇总卡与展开项；条件=一次发起 10 个任务；动作=展开汇总卡；判据=消息流卡片 1 张、汇总卡标题计数 = 10 个、展开后子条目 10 条（采样=展开后 500ms，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-02.mjs；已实现，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1。
+    - 超限判据：一次发起 12 个任务时，消息流汇总卡 1 张、标题计数 = 12 个、默认可见子条目 10 条、「还有 2 条」入口 1 个；点开后子条目 12 条、入口 0 个（采样=点开后 500ms，容差 ±0）。
+  - `AC-CONV-009-03` 主语=任务启动上下文；条件=会话已有 20 条历史消息；动作=发起任务并读取上下文；判据=上下文历史消息 0 条、目标 1 个、约束 ≥ 1 个（采样=启动后 1s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-03.mjs；已实现，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1。
+  - `AC-CONV-009-04` 主语=任务工具调用与会话权限边界；条件=会话可用工具 1 个、会话权限外路径 1 条；动作=调工具并请求越权路径；判据=工具调用成功 1 次、越权请求拒绝 1 次且状态码 = 403（采样=调用后 5s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-04.mjs；已实现，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1。
+  - `AC-CONV-009-05` 主语=计划任务步骤列表；条件=8 步任务进行到第 6 步；动作=打开详情、点第 5 步与第 7 步；判据=步骤按序 1..8、第 6 步默认展开且轨迹 ≥ 1 条、第 5 步展开后轨迹 ≥ 1 条、第 7 步展开入口 0 个（采样=打开后 1s 与点击后 500ms，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-05.mjs；已实现，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1。
+  - `AC-CONV-009-06` 主语=边做边想详情时间线；条件=轨迹 14 条；动作=打开详情；判据=步骤节点 0 个、轨迹行 = 14 条、时间戳单调不减且展开入口 0 个（采样=打开后 1s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-06.mjs；已实现，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1。
+  - `AC-CONV-009-07` 主语=任务详情操作入口；条件=任意状态任务 1 个；动作=打开详情并扫描入口；判据=重试/取消/编辑/删除入口 0 个、关闭入口 1 个（采样=打开后 1s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-07.mjs；已实现，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1。
+    - 四态可点判据：未开始、进行中、已完成、失败四种状态的任务卡各 1 张时，四张卡均可点且可聚焦，点击各打开同一只读详情 1 次；打开前后任务状态相同（差 0）、任务事件条数差 0、写请求 0 条（采样=点击后 1s，容差 ±0）。可点只表示能进入详情，不改变任务状态、不产生任务事件，与本条详情只读判据并存。
+  - `AC-CONV-009-08` 主语=右栏竖条与面板宽度；条件=右栏在任务标签；动作=点收起、点任务图标、再点任务图标；判据=收起后整栏宽 = 40px（容差 ±1px）、图标 3 个；展开后整栏宽 = 320px（= 面板 280px + 竖条 40px）且任务标签选中 1 个；再点后回到 40px（采样=每次点击后 300ms，容差 ±1px）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-08.mjs；已实现，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1。
+  - `AC-CONV-009-09` 主语=右栏任务图标角标；条件=进行中任务 0 个、2 个、10 个与 11 个；动作=切换四种数据；判据=0 个时角标不渲染、2 个时角标 = 2、10 个与 11 个时文本 = `9+`、两位数字节点 0 个（采样=数据更新后 5s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-09.mjs；已实现，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1。
+  - `AC-CONV-009-10` 主语=概览四节折叠态；条件=当前会话折叠目标与交付物两节；动作=刷新页面、切到另一会话；判据=刷新后展开态与刷新前一致（差 0 处）、四节标题与计数各 1 个、另一会话为默认全开（采样=刷新后 1s 与切换后 1s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-10.mjs；已实现，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1。
+  - `AC-CONV-009-11` 主语=「还有 N 个」入口与定位；条件=任务 11 个、当前在概览；动作=点任务节「还有 9 个」；判据=任务标签选中 1 个、目标任务卡成为列表首行且距滚动口顶部 0–8px、可见任务卡 ≥ 1 张（采样=点击后 500ms，容差 ±1px）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-11.mjs；已实现，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1。
     - 几何口径：滚动口取常驻头（面板头 44px、筛选条 40px）之下的列表内容区顶边，采样只按该顶边计算；宽档滚动口顶边在视口顶下方 174px（=48+42+44+40），768 档为 182px（=48+42+8+44+40）；采样取 `target.getBoundingClientRect().top − scroller.getBoundingClientRect().top`，判据与容差同设计 `V-CONV-009-10`。
-  - `AC-CONV-009-12` 主语=任务标签四枚筛选与列表；条件=全部 11、进行中 2、失败 1、已完成 3；动作=依次点四枚；判据=列表卡片数分别为 11/2/1/3（差 0 张）、选中态 1 个（采样=每次点击后 300ms，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-12.mjs；待实现。
-    - 未开始归属注记：筛选条固定四项「全部 / 进行中 / 失败 / 已完成」，不单列「未开始」；未开始任务只出现在「全部」中，靠状态胶囊「未开始」区分，另外三枚不含未开始任务（采样=进入任务标签后 300ms，容差 0）。
-  - `AC-CONV-009-13` 主语=任务图节点状态与依赖；条件=8 个节点含 1 个失败且有下游；动作=打开任务图；判据=四态节点数之和 = 8、失败节点 1 个、其下游 1 个为未开始且虚线 1 条（采样=打开后 1s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-13.mjs；待实现。
+  - `AC-CONV-009-12` 主语=任务标签四枚筛选与列表；条件=全部 11 条、进行中 2 条、失败 1 条、已完成 3 条；动作=依次点四枚；判据=列表卡片数分别为 11/2/1/3（差 0 张）、选中态 1 个（采样=每次点击后 300ms，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-12.mjs；已实现，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1。
+    - 未开始归属注记：筛选条固定四项「全部 / 进行中 / 失败 / 已完成」，不单列「未开始」；未开始任务只出现在「全部」中，靠状态胶囊「未开始」区分，另外三枚不含未开始任务（采样=进入任务标签后 300ms，容差 ±0）。
+  - `AC-CONV-009-13` 主语=任务图节点状态与依赖；条件=8 个节点含 1 个失败且有下游；动作=打开任务图；判据=四态节点数之和 = 8、失败节点 1 个、其下游 1 个为未开始且虚线 1 条（采样=打开后 1s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-13.mjs；已实现，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1。
     - 超限判据：节点 21 个且最大单层 5 个时，缩放 = 1.0（差 0）、画布可滚动（scrollHeight 大于 clientHeight 或 scrollWidth 大于 clientWidth）、最大层占 2 行且首行 4 个、次行 1 个、层间节点重叠 0 处（采样=打开后 1s，容差 ±1px）。
-  - `AC-CONV-009-14` 主语=三种等待语义的触发次数；条件=前置 3 个、等待方 1 个；动作=依次完成前置；判据=全部完成在第 3 个完成后启动 1 次、任一完成在第 1 个完成后 500ms 内启动 1 次、每个完成各自触发累计 3 次（采样=每次完成后 1s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-14.mjs；待实现。
-    - 等待原因判据：等待依赖时下游状态 = 未开始且失败计数差 0；等待确认时当前步保持进行中、确认与取消入口各 1 个、后续步骤启动 0 次；等待资源或额度时进度增量 0、等待标记 1 个、恢复入口 1 个（采样=进入等待后 1s，容差 0）。
-  - `AC-CONV-009-15` 主语=取消后的下游启动；条件=上游 A 与下游 B 各 1 个；动作=经接口层调用取消接口取消 A；判定通道=接口层调用取消接口 + 集成层观察下游状态（前端无整链取消入口，不以界面点击取消取证）；判据=B 启动 0 次、B 状态 = 未开始、取消确认 1 条（采样=取消后 30s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-15.mjs；待实现。
-  - `AC-CONV-009-16` 主语=交付物行与下载结果；条件=任务产出文档 1 个；动作=点下载；判据=类型徽标 1 个、来源任务名 1 个、下载文件 1 个且字节数 = 响应 size（采样=下载完成后 5s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-16.mjs；待实现。
-  - `AC-CONV-009-17` 主语=任务归属；条件=会话 A 发起任务 1 个；动作=切到会话 B 看右栏与任务图；判据=B 的任务数 = 0 个、任务图节点 0 个、跨会话查询返回 0 条（采样=切到 B 后 1s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-17.mjs；待实现。
-  - `AC-CONV-009-18` 主语=超时与时限行为；条件=无时限任务 1 个、时限 1 分钟任务 1 个；动作=运行 30 分钟并等到时限；判据=自动取消 0 个、到点后取消 0 个且提醒 1 条（采样=运行 30 分钟与到点后 10s，容差 0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-18.mjs；待实现。
+  - `AC-CONV-009-14` 主语=三种等待语义的触发次数；条件=前置 3 个、等待方 1 个；动作=依次完成前置；判据=全部完成在第 3 个完成后启动 1 次、任一完成在第 1 个完成后 500ms 内启动 1 次、每个完成各自触发累计 3 次（采样=每次完成后 1s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-14.mjs；已实现，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1。
+    - 等待原因判据：等待依赖时下游状态 = 未开始且失败计数差 0；等待确认时当前步保持进行中、确认与取消入口各 1 个、后续步骤启动 0 次；等待资源或额度时进度增量 0、等待标记 1 个、恢复入口 1 个（采样=进入等待后 1s，容差 ±0）。
+  - `AC-CONV-009-15` 主语=取消后的下游启动；条件=上游 A 与下游 B 各 1 个；动作=经接口层调用取消接口取消 A；判定通道=接口层调用取消接口 + 集成层观察下游状态（前端无整链取消入口，不以界面点击取消取证）；判据=B 启动 0 次、B 状态 = 未开始、取消确认 1 条（采样=取消后 30s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-15.mjs；已实现，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1。
+  - `AC-CONV-009-16` 主语=交付物行与下载结果；条件=任务产出文档 1 个；动作=点下载；判据=类型徽标 1 个、来源任务名 1 个、下载文件 1 个且字节数 = 响应 size（采样=下载完成后 5s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-16.mjs；已实现，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1。
+  - `AC-CONV-009-17` 主语=任务归属；条件=会话 A 发起任务 1 个；动作=切到会话 B 看右栏与任务图；判据=B 的任务数 = 0 个、任务图节点 0 个、跨会话查询返回 0 条（采样=切到 B 后 1s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-17.mjs；已实现，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1。
+  - `AC-CONV-009-18` 主语=超时与时限行为；条件=无时限任务 1 个、时限 1 分钟任务 1 个；动作=运行 30 分钟并等到时限；判据=自动取消 0 个、到点后取消 0 个且提醒 1 条（采样=运行 30 分钟与到点后 10s，容差 ±0）；判定=`自动`；脚本=scripts/ac/AC-CONV-009-18.mjs；已实现，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1。
 
 ## 5. 验收标准（A1–A9）
 

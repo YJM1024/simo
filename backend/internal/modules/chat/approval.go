@@ -7,8 +7,8 @@ import (
 	"errors"
 	"net/http"
 	"strings"
-	"time"
 
+	"simo/internal/platform/clock"
 	"simo/internal/platform/httpserver"
 )
 
@@ -35,7 +35,7 @@ var errApprovalNotFound = errors.New("审批不存在")
 
 func (m *Module) createApproval(ctx context.Context, sessionID, tool string, args map[string]any, risk, sandbox string) (Approval, error) {
 	raw, _ := json.Marshal(args)
-	now := time.Now().UnixMilli()
+	now := clock.NowUnixMilli()
 	storedTool := strings.TrimSpace(tool)
 	// M19 评测脚本等待的旧工具别名 write；仅对长时审批会话做兼容投影。
 	if canonicalToolName(storedTool) == "write" {
@@ -211,7 +211,7 @@ func (m *Module) handleApprovalDecision(w http.ResponseWriter, r *http.Request) 
 			"id": approval.ID, "tool": approval.Tool, "decision": decision, "status": status,
 		})
 	}
-	now := time.Now().UnixMilli()
+	now := clock.NowUnixMilli()
 	// 审批执行必须独立于 HTTP/WS 连接；连接断开不能吞掉已批准的写操作。
 	if err := m.store.Write(context.Background(), func(tx *sql.Tx) error {
 		_, err := tx.ExecContext(context.Background(), `UPDATE approvals SET status = ?, result = ?, decision = ?, decided_at = ?, decided_by = 'user' WHERE id = ?`,

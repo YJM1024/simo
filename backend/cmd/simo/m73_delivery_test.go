@@ -31,9 +31,14 @@ func TestM73DeliveryArtifactsOnlyUserDeliverables(t *testing.T) {
 	a, ts := newM2App(t, nil, nil)
 	now := time.Now().UnixMilli()
 	if err := a.db.Write(context.Background(), func(tx *sql.Tx) error {
+		if _, err := tx.ExecContext(context.Background(), `INSERT INTO tasks(
+			id, session_id, title, kind, status, payload, created_at, updated_at)
+			VALUES ('task-user-1','main','周报任务','mock','done','',?,?)`, now, now); err != nil {
+			return err
+		}
 		if _, err := tx.ExecContext(context.Background(), `INSERT INTO task_artifacts(
 			id, task_id, name, rel_path, mime, size, created_at, delivery_kind)
-			VALUES ('art-user-1','session:main','交付报告.pdf','main/交付报告.pdf','application/pdf',10,?, 'user_delivery')`, now); err != nil {
+			VALUES ('art-user-1','task-user-1','交付报告.pdf','main/交付报告.pdf','application/pdf',10,?, 'user_delivery')`, now); err != nil {
 			return err
 		}
 		if _, err := tx.ExecContext(context.Background(), `INSERT INTO tasks(
@@ -79,10 +84,56 @@ func TestM73DeliveryArtifactsOnlyUserDeliverables(t *testing.T) {
 	if status != http.StatusOK || strings.Contains(string(body), "report-attempt-1.md") || !strings.Contains(string(body), "交付报告.pdf") {
 		t.Fatalf("session artifacts = %d %s", status, body)
 	}
-	// 交付物别名接口。
+	// N9：交付物按任务分组（CT-CONV-027/028/029、后端 §17.4.1 N9，spec.md:1056-1069）。
+	// 分组以任务为主表：每个属于本会话的任务都成组，无产物的任务返回空组。
 	status, body = httpGet(t, ts.URL+"/api/sessions/main/deliverables")
-	if status != http.StatusOK || strings.Contains(string(body), "report-attempt-1.md") || !strings.Contains(string(body), "交付报告.pdf") {
-		t.Fatalf("deliverables alias = %d %s", status, body)
+	if status != http.StatusOK {
+		t.Fatalf("deliverables = %d %s", status, body)
+	}
+	var deliverables struct {
+		Groups []struct {
+			TaskID     string `json:"taskId"`
+			TaskTitle  string `json:"taskTitle"`
+			TaskStatus string `json:"taskStatus"`
+			Files      []struct {
+				ID          string `json:"id"`
+				Name        string `json:"name"`
+				TypeBadge   string `json:"typeBadge"`
+				DownloadURL string `json:"downloadUrl"`
+				PreviewURL  string `json:"previewUrl"`
+			} `json:"files"`
+			Count int `json:"count"`
+		} `json:"groups"`
+		Total     int  `json:"total"`
+		FileCount int  `json:"fileCount"`
+		HasMore   bool `json:"hasMore"`
+	}
+	if err := json.Unmarshal(body, &deliverables); err != nil {
+		t.Fatalf("deliverables JSON: %v %s", err, body)
+	}
+	// 两个任务各成一组：task-user-1 有用户交付物，task-internal-1 只有内部产物（不算交付物）故为空组。
+	// ORDER BY 把有产物的组排在前面，空组排在后面。
+	if deliverables.Total != 2 || deliverables.FileCount != 1 || deliverables.HasMore || len(deliverables.Groups) != 2 {
+		t.Fatalf("deliverables 分组计数错误: %s", body)
+	}
+	group := deliverables.Groups[0]
+	if group.TaskID != "task-user-1" || group.TaskTitle != "周报任务" || group.TaskStatus != "done" ||
+		len(group.Files) != 1 || group.Count != 1 {
+		t.Fatalf("deliverables 有产物分组错误: %s", body)
+	}
+	file := group.Files[0]
+	if file.Name != "交付报告.pdf" || file.TypeBadge != "doc" ||
+		file.DownloadURL != "/api/artifacts/art-user-1/content?download=1" ||
+		file.PreviewURL != "/api/artifacts/art-user-1/content" {
+		t.Fatalf("deliverables 文件投影错误: %s", body)
+	}
+	emptyGroup := deliverables.Groups[1]
+	if emptyGroup.TaskID != "task-internal-1" || emptyGroup.TaskTitle != "内部任务" ||
+		emptyGroup.TaskStatus != "done" || len(emptyGroup.Files) != 0 || emptyGroup.Count != 0 {
+		t.Fatalf("deliverables 空产物分组错误: %s", body)
+	}
+	if strings.Contains(string(body), "report-attempt-1.md") {
+		t.Fatalf("内部 report 不应出现在分组交付物: %s", body)
 	}
 	// 详情仍可查询，但带分类标记。
 	status, body = httpGet(t, ts.URL+"/api/artifacts/art-internal-1")

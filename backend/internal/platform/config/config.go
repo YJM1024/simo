@@ -74,6 +74,8 @@ type Config struct {
 	Tools     ToolsConfig
 	// Debug 默认关闭；仅打开只读 debug 端点（本机排障用）。
 	Debug bool
+	// AccessLog 默认开启；每个 HTTP 请求输出一条 info 级访问日志（不记正文与敏感头）。
+	AccessLog bool
 }
 
 // HomeDir 返回 SIMO_HOME（环境变量优先，默认 %USERPROFILE%\.simo）。
@@ -126,6 +128,7 @@ func defaultForHome(home string) Config {
 		ModelMode:    ModelReal,
 		Modules:      modules,
 		LLM:          defaultLLM(),
+		AccessLog:    true,
 	}
 }
 
@@ -152,6 +155,7 @@ type fileConfig struct {
 	LLM             string      `json:"llm"` // mock | deepseek（确定性测试/真模型切换）
 	Tools           ToolsConfig `json:"tools"`
 	Debug           bool        `json:"debug"`
+	AccessLog       *bool       `json:"accessLog,omitempty"`
 	Reasoning       struct {
 		Default string            `json:"default"`
 		ByRole  map[string]string `json:"byRole"`
@@ -196,6 +200,7 @@ func Parse(args []string) (Config, error) {
 	fs.StringVar(&cfg.ModelMode, "model", cfg.ModelMode, "模型模式：mock | real")
 	fs.StringVar(&llmModelFlag, "llm-model", cfg.LLM.Model, "LLM 模型名（默认 deepseek-flash）")
 	fs.BoolVar(&cfg.Debug, "debug", cfg.Debug, "打开只读 debug 端点（仅本机，默认关闭）")
+	fs.BoolVar(&cfg.AccessLog, "access-log", cfg.AccessLog, "记录 HTTP 访问日志（默认开启）")
 	fs.StringVar(&enableFlag, "enable-modules", "", "启用的模块（逗号分隔；覆盖其他来源）")
 	fs.StringVar(&disableFlag, "disable-modules", "", "禁用的模块（逗号分隔）")
 	if err := fs.Parse(args); err != nil {
@@ -320,6 +325,9 @@ func applyFileConfig(cfg *Config, fc fileConfig) {
 	if fc.Debug {
 		cfg.Debug = true
 	}
+	if fc.AccessLog != nil {
+		cfg.AccessLog = *fc.AccessLog
+	}
 	if llm := strings.ToLower(strings.TrimSpace(fc.LLM)); llm != "" {
 		switch llm {
 		case "mock":
@@ -373,6 +381,9 @@ func applyEnv(cfg *Config) {
 	}
 	if v := strings.TrimSpace(os.Getenv("SIMO_DEBUG")); v != "" {
 		cfg.Debug = v == "1" || strings.EqualFold(v, "true") || strings.EqualFold(v, "yes")
+	}
+	if v := strings.TrimSpace(os.Getenv("SIMO_ACCESS_LOG")); v != "" {
+		cfg.AccessLog = v == "1" || strings.EqualFold(v, "true") || strings.EqualFold(v, "yes")
 	}
 	if v := strings.TrimSpace(os.Getenv("SIMO_PROVIDER")); v != "" {
 		cfg.LLM.Provider = v

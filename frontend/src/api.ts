@@ -3,7 +3,14 @@ import type { SessionSpecProjection, Artifact, Message, PermissionState, Session
 export class ApiError extends Error {
   status: number
   code: string
-  constructor(message: string, status = 0, code = '') { super(message); this.status = status; this.code = code }
+  /** 409 状态冲突时服务端回传的当前存储状态，供界面展示；其它错误为空。 */
+  currentStatus: string
+  constructor(message: string, status = 0, code = '', currentStatus = '') {
+    super(message)
+    this.status = status
+    this.code = code
+    this.currentStatus = currentStatus
+  }
 }
 
 async function send(path: string, init?: RequestInit): Promise<Response> {
@@ -25,6 +32,37 @@ async function readBody<T>(response: Response): Promise<T> {
   }
   if (response.status === 204) return undefined as T
   return (await response.json()) as T
+}
+
+const STORAGE_STATUS_LABEL: Record<string, string> = {
+  queued: '未开始', pending: '未开始', blocked: '未开始', running: '进行中',
+  done: '已完成', failed: '失败', cancelled: '已取消', interrupted: '已中断',
+}
+
+/**
+ * 任务接口的错误分流（契约 CT-CONV-519）：404 只表示任务不存在或不属于当前会话，
+ * 403 表示路径/工具/子进程越权，409 分状态冲突与幂等占位；网络错误由 send 以 status 0 抛出。
+ */
+async function readTaskBody<T>(response: Response): Promise<T> {
+  if (response.ok) return readBody<T>(response)
+  const text = await response.text().catch(() => '')
+  let code = ''
+  let currentStatus = ''
+  try {
+    const body = JSON.parse(text) as { code?: string; currentStatus?: string }
+    code = body.code ?? ''
+    currentStatus = body.currentStatus ?? ''
+  } catch { /* not json */ }
+  if (response.status === 404) throw new ApiError('任务不存在或不属于当前会话', 404, code || 'task_not_found')
+  if (response.status === 403) throw new ApiError('没有权限执行该任务操作', 403, code || 'permission_denied')
+  if (response.status === 409) {
+    if (code === 'task_state_conflict') {
+      const current = STORAGE_STATUS_LABEL[currentStatus]
+      throw new ApiError(current ? `任务状态已变化（当前${current}），请刷新后重试` : '任务状态已变化，请刷新后重试', 409, code, currentStatus)
+    }
+    if (code === 'mutation_in_progress') throw new ApiError('同一操作正在处理中，请稍后重试', 409, code)
+  }
+  throw new ApiError(`请求失败（${response.status}），请稍后重试`, response.status, code)
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -402,15 +440,19 @@ export function listSessionTasks(sessionId: string, query: TaskQuery = {}): Prom
   return request(`/api/sessions/${encodeURIComponent(sessionId)}/tasks?${params.toString()}`)
 }
 
-export function getTaskDetail(taskId: string, opts: { traceLimit?: number; traceBefore?: string } = {}): Promise<TaskDetailPayload> {
+export async function getTaskDetail(sessionId: string, taskId: string, opts: { traceLimit?: number; traceBefore?: string } = {}): Promise<TaskDetailPayload> {
   const params = new URLSearchParams()
   params.set('traceLimit', String(opts.traceLimit ?? 200))
   if (opts.traceBefore) params.set('traceBefore', opts.traceBefore)
-  return request(`/api/tasks/${encodeURIComponent(taskId)}?${params.toString()}`)
+  const response = await send(`/api/sessions/${encodeURIComponent(sessionId)}/tasks/${encodeURIComponent(taskId)}?${params.toString()}`)
+  return readTaskBody<TaskDetailPayload>(response)
 }
 
-export function getTaskGraph(sessionId: string): Promise<TaskGraphPayload> {
-  return request(`/api/sessions/${encodeURIComponent(sessionId)}/task-graph`)
+export async function getTaskGraph(sessionId: string, opts: { batchId?: string } = {}): Promise<TaskGraphPayload> {
+  const params = new URLSearchParams()
+  if (opts.batchId) params.set('batchId', opts.batchId)
+  const query = params.toString()
+  return readTaskBody<TaskGraphPayload>(await send(`/api/sessions/${encodeURIComponent(sessionId)}/tasks/graph${query ? `?${query}` : ''}`))
 }
 
 export function getSessionDeliverables(sessionId: string, query: { taskId?: string; limit?: number; before?: string } = {}): Promise<DeliverablesPayload> {
@@ -422,11 +464,13 @@ export function getSessionDeliverables(sessionId: string, query: { taskId?: stri
 }
 
 /** 等待确认的任务：确认或取消（N6，DEC-27 唯一可写入口在消息卡内联区）。 */
-export function decideTaskConfirmation(taskId: string, decision: 'confirm' | 'cancel'): Promise<unknown> {
-  return afterSessionMutation(request(`/api/tasks/${encodeURIComponent(taskId)}/confirmation`, { method: 'POST', body: JSON.stringify({ decision }) }))
+export async function decideTaskConfirmation(sessionId: string, taskId: string, decision: 'confirm' | 'cancel'): Promise<unknown> {
+  const pending = readTaskBody<unknown>(await send(`/api/sessions/${encodeURIComponent(sessionId)}/tasks/${encodeURIComponent(taskId)}/confirmation`, { method: 'POST', body: JSON.stringify({ decision }) }))
+  return afterSessionMutation(pending)
 }
 
 /** 等待资源或额度：恢复任务（N7）。 */
-export function resumeTask(taskId: string, reason: string): Promise<unknown> {
-  return afterSessionMutation(request(`/api/tasks/${encodeURIComponent(taskId)}/resume`, { method: 'POST', body: JSON.stringify({ reason }) }))
+export async function resumeTask(sessionId: string, taskId: string, reason: string): Promise<unknown> {
+  const pending = readTaskBody<unknown>(await send(`/api/sessions/${encodeURIComponent(sessionId)}/tasks/${encodeURIComponent(taskId)}/resume`, { method: 'POST', body: JSON.stringify({ reason }) }))
+  return afterSessionMutation(pending)
 }

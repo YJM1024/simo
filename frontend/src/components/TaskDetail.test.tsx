@@ -7,22 +7,22 @@ import type { TaskDetailPayload, TaskStep, TraceItem, TaskView } from '../types'
 function task(overrides: Partial<TaskView> = {}): TaskView {
   return {
     id: 'task-1', sessionId: 'main', title: '整理周报', mode: 'plan', status: 'running', displayStatus: 'running',
-    createdAt: 1, updatedAt: 2, stepCount: 2, doneStepCount: 1, outputCount: 1, attempt: 2, ...overrides,
+    createdAt: 1, updatedAt: 2, attempt: 2, ...overrides,
   }
 }
 
 function trace(overrides: Partial<TraceItem> = {}): TraceItem {
-  return { id: 'tr-1', traceSeq: 1, category: 'action', text: '读取文件', at: 1_760_000_000_000, ...overrides }
+  return { id: 'tr-1', stepId: 's-1', seq: 1, category: 'action', text: '读取文件', at: 1_760_000_000_000, ...overrides }
 }
 
 function step(overrides: Partial<TaskStep> = {}): TaskStep {
-  return { id: 's-1', seq: 1, title: '收集素材', status: 'done', traceCount: 1, traces: [trace()], ...overrides }
+  return { id: 's-1', seq: 1, title: '收集素材', status: 'done', traceCount: 1, ...overrides }
 }
 
 function detail(overrides: Partial<TaskDetailPayload> = {}): TaskDetailPayload {
   return {
     task: task(),
-    steps: [step(), step({ id: 's-2', seq: 2, title: '撰写正文', status: 'running', traceCount: 0, traces: [] })],
+    steps: [step(), step({ id: 's-2', seq: 2, title: '撰写正文', status: 'running', traceCount: 0 })],
     currentStepId: 's-2',
     traces: [],
     tracesHasMore: false,
@@ -46,22 +46,25 @@ describe('TaskDetailLayer', () => {
     expect(screen.getByText('任务详情加载中…')).toBeInTheDocument()
     rerender(<TaskDetailLayer open detail={null} loading={false} error="详情失败" onRetry={onRetry} onClose={vi.fn()} />)
     expect(screen.getByText('任务详情加载失败')).toBeInTheDocument()
+    expect(screen.getByText('详情失败')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: '重试' }))
     expect(onRetry).toHaveBeenCalledTimes(1)
     rerender(<TaskDetailLayer open detail={null} loading={false} onClose={vi.fn()} />)
     expect(screen.getByText('暂无任务详情')).toBeInTheDocument()
   })
 
-  it('renders the header, metadata, context, budget and deliverable files', () => {
+  it('renders the header, computed metadata, context, budget and deliverable files', () => {
     render(<TaskDetailLayer open detail={detail()} loading={false} onClose={vi.fn()} onOpenFile={vi.fn()} />)
     const dialog = screen.getByRole('dialog', { name: '任务详情' })
     expect(dialog).toHaveAttribute('data-task-id', 'task-1')
-    expect(dialog).toHaveAttribute('data-mode', 'overlay')
-    expect(within(dialog.querySelector('.task-detail-head') as HTMLElement).getByText('整理周报')).toBeInTheDocument()
-    expect(within(dialog.querySelector('.task-detail-head') as HTMLElement).getByText('进行中')).toBeInTheDocument()
-    expect(screen.getByText('1/2')).toBeInTheDocument()
-    expect(screen.getByText('尝试')).toBeInTheDocument()
-    expect(within(document.querySelector('.task-detail-meta') as HTMLElement).getByText('2')).toBeInTheDocument()
+    expect(dialog).toHaveAttribute('data-mode', 'plan')
+    expect(dialog).toHaveAttribute('data-layout', 'overlay')
+    const head = dialog.querySelector('.task-detail-head') as HTMLElement
+    expect(within(head).getByText('任务详情 · 计划')).toBeInTheDocument()
+    expect(within(head).getByText('只读')).toBeInTheDocument()
+    expect(within(dialog.querySelector('.task-detail-title-row') as HTMLElement).getByText('整理周报')).toBeInTheDocument()
+    expect(within(dialog.querySelector('.task-detail-title-row') as HTMLElement).getByText('进行中')).toBeInTheDocument()
+    expect(screen.getByText('2 步 · 已完成 1 · 产出 1 个')).toBeInTheDocument()
     expect(screen.getByText('输出周报')).toBeInTheDocument()
     expect(screen.getByText('中文')).toBeInTheDocument()
     expect(screen.getByText('素材.md')).toBeInTheDocument()
@@ -71,10 +74,14 @@ describe('TaskDetailLayer', () => {
     expect(screen.getByRole('button', { name: '打开 report.md' })).toBeInTheDocument()
   })
 
-  it('opens the current step and shows trace labels, then toggles a long trace', async () => {
+  it('opens the current step, groups flat traces by stepId and toggles a long trace', async () => {
     const user = userEvent.setup()
     const longText = '很长的轨迹'.repeat(30)
-    const data = detail({ steps: [step({ id: 's-1', traces: [trace({ id: 'tr-long', text: longText })] }), step({ id: 's-2', title: '撰写正文', status: 'running', traceCount: 0, traces: [] })], currentStepId: 's-1' })
+    const data = detail({
+      steps: [step(), step({ id: 's-2', title: '撰写正文', status: 'running', traceCount: 0 })],
+      traces: [trace({ id: 'tr-long', stepId: 's-1', text: longText })],
+      currentStepId: 's-1',
+    })
     render(<TaskDetailLayer open detail={data} loading={false} onClose={vi.fn()} />)
     const stepHead = screen.getByRole('button', { name: /收集素材/ })
     expect(stepHead).toHaveAttribute('aria-expanded', 'true')
@@ -88,29 +95,94 @@ describe('TaskDetailLayer', () => {
   })
 
   it('keeps pending steps non-interactive', () => {
-    render(<TaskDetailLayer open detail={detail({ steps: [step({ id: 's-3', seq: 3, title: '待办步骤', status: 'pending', traceCount: 0, traces: undefined })] })} loading={false} onClose={vi.fn()} />)
+    render(<TaskDetailLayer open detail={detail({ steps: [step({ id: 's-3', seq: 3, title: '待办步骤', status: 'pending', traceCount: 0 })], traces: [], currentStepId: 's-3' })} loading={false} onClose={vi.fn()} />)
     expect(screen.queryByRole('button', { name: /待办步骤/ })).not.toBeInTheDocument()
     expect(document.querySelector('.task-step-head')).toHaveTextContent('待办步骤')
   })
 
-  it('adds the loop timeline and expands older traces in pages of 200', async () => {
+  it('renders the explore timeline as a flat trace list and pages older traces', async () => {
     const user = userEvent.setup()
-    const traces = [trace({ id: 't-1', text: '循环轨迹一' }), trace({ id: 't-2', traceSeq: 2, text: '循环轨迹二' })]
-    render(<TaskDetailLayer open detail={detail({ task: task({ mode: 'loop' }), traces, tracesHasMore: true })} loading={false} onClose={vi.fn()} />)
-    expect(document.querySelectorAll('.task-timeline-row')).toHaveLength(2)
+    const traces = [trace({ id: 't-1', text: '探索轨迹一' }), trace({ id: 't-2', seq: 2, text: '探索轨迹二' })]
+    render(<TaskDetailLayer open detail={detail({ task: task({ mode: 'explore' }), traces, tracesHasMore: true })} loading={false} onClose={vi.fn()} />)
+    const dialog = screen.getByRole('dialog', { name: '任务详情' })
+    expect(dialog).toHaveAttribute('data-mode', 'explore')
+    expect(dialog.querySelector('.task-detail-tip')).toBeInTheDocument()
+    expect(dialog.querySelectorAll('.task-trace')).toHaveLength(2)
+    expect(dialog.querySelectorAll('.task-step')).toHaveLength(0)
     await user.click(screen.getByRole('button', { name: '加载更早轨迹' }))
     expect(screen.getByText('仅显示最近 400 条')).toBeInTheDocument()
   })
 
-  it('closes on Escape and the close button, and shows failure and waiting labels', async () => {
+  it('shows the failure reason or the waiting reason, never both at once', async () => {
     const user = userEvent.setup()
     const onClose = vi.fn()
-    render(<TaskDetailLayer open detail={detail({ task: task({ displayStatus: 'failed', failReason: '模型超时', waitingReason: 'confirmation' }) })} loading={false} onClose={onClose} />)
+    const { rerender } = render(<TaskDetailLayer open detail={detail({ task: task({ displayStatus: 'failed', failReason: '模型超时' }) })} loading={false} onClose={onClose} />)
     expect(screen.getByText('失败：模型超时')).toBeInTheDocument()
+    expect(screen.queryByText('等待确认')).not.toBeInTheDocument()
+    rerender(<TaskDetailLayer open detail={detail({ task: task({ displayStatus: 'running', waitingReason: 'confirmation' }) })} loading={false} onClose={onClose} />)
     expect(screen.getByText('等待确认')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: '关闭任务详情' }))
     expect(onClose).toHaveBeenCalledTimes(1)
     await user.keyboard('{Escape}')
     expect(onClose).toHaveBeenCalledTimes(2)
+  })
+
+  it('lands the requested step 4px below the detail scroller top and focuses it', () => {
+    const proto = HTMLElement.prototype.getBoundingClientRect
+    const rect = (top: number): DOMRect => ({ top, left: 0, right: 280, bottom: top + 30, width: 280, height: 30, x: 0, y: top, toJSON: () => ({}) }) as DOMRect
+    HTMLElement.prototype.getBoundingClientRect = function (this: HTMLElement) {
+      if (this.classList.contains('task-detail-body')) return rect(100)
+      if (this.getAttribute('data-step-id') === 's-1') return rect(500 - (document.querySelector('.task-detail-body')?.scrollTop ?? 0))
+      return proto.call(this)
+    }
+    try {
+      render(<TaskDetailLayer open detail={detail()} jumpStepId="s-1" loading={false} onClose={vi.fn()} />)
+      const body = document.querySelector('.task-detail-body') as HTMLElement
+      expect(body.scrollTop).toBe(396)
+      const row = document.querySelector('[data-step-id="s-1"]') as HTMLElement
+      expect(row).toHaveFocus()
+      expect(row).toHaveAttribute('tabindex', '-1')
+      expect(row).toHaveClass('is-jump-target')
+      expect(row.getBoundingClientRect().top - body.getBoundingClientRect().top).toBe(4)
+    } finally {
+      HTMLElement.prototype.getBoundingClientRect = proto
+    }
+  })
+
+  it('locks body scroll, marks the middle column inert and returns focus to the source on close', () => {
+    const middle = document.createElement('div')
+    middle.className = 'conversation-panel'
+    const source = document.createElement('button')
+    source.textContent = '来源任务卡'
+    middle.append(source)
+    document.body.append(middle)
+    source.focus()
+    const view = render(<TaskDetailLayer open detail={detail()} loading={false} onClose={vi.fn()} />)
+    expect(middle).toHaveAttribute('inert')
+    expect(document.body.style.overflow).toBe('hidden')
+    const dialog = screen.getByRole('dialog', { name: '任务详情' })
+    expect(dialog.contains(document.activeElement)).toBe(true)
+    view.unmount()
+    expect(middle).not.toHaveAttribute('inert')
+    expect(document.body.style.overflow).toBe('')
+    expect(source).toHaveFocus()
+    middle.remove()
+  })
+
+  it('exposes no write entry: the only controls are close, step and trace toggles and file open', () => {
+    render(<TaskDetailLayer open detail={detail({
+      task: task({ displayStatus: 'failed', failReason: '超时' }),
+      steps: [step(), step({ id: 's-2', seq: 2, title: '撰写正文', status: 'failed', traceCount: 1 })],
+      traces: [trace({ stepId: 's-2', text: '写失败' })],
+      currentStepId: 's-2',
+    })} loading={false} onClose={vi.fn()} onOpenFile={vi.fn()} />)
+    const buttons = [...document.querySelectorAll('.task-detail button')]
+    expect(buttons).toHaveLength(4)
+    expect(screen.getByRole('button', { name: '关闭任务详情' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '打开 report.md' })).toBeInTheDocument()
+    for (const forbidden of ['重试', '取消', '编辑', '删除', '确认', '恢复']) {
+      expect(screen.queryByRole('button', { name: new RegExp(forbidden) })).not.toBeInTheDocument()
+    }
+    expect(document.querySelectorAll('.task-detail form, .task-detail input, .task-detail textarea')).toHaveLength(0)
   })
 })

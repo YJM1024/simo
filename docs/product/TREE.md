@@ -67,7 +67,7 @@ mindmap
 
 | 域 | 名称 | 技术域码 | L2 | L3 | implemented | partial | unimplemented | 产品 spec | TEST |
 |---|---|---|---:|---:|---:|---:|---:|---|---|
-| [`P1`](#p1) | 会话与消息 | `CONV`/`SYNC` | 6 | 13 | 12 | 0 | 1 | [spec](../../specs/product/P1-CONV/spec.md) | [test](../../specs/test/P1-CONV/test-plan.md) |
+| [`P1`](#p1) | 会话与消息 | `CONV`/`SYNC` | 6 | 13 | 13 | 0 | 0 | [spec](../../specs/product/P1-CONV/spec.md) | [test](../../specs/test/P1-CONV/test-plan.md) |
 | [`P2`](#p2) | 任务与执行 | `TASK` | 3 | 6 | 0 | 3 | 3 | [spec](../../specs/product/P2-TASK/spec.md) | [test](../../specs/test/P2-TASK/test-plan.md) |
 | [`P3`](#p3) | 工作台与视图 | `WORK` | 4 | 5 | 3 | 1 | 1 | [spec](../../specs/product/P3-WORK/spec.md) | [test](../../specs/test/P3-WORK/test-plan.md) |
 | [`P4`](#p4) | 文件与交付物 | `FILE` | 5 | 6 | 1 | 5 | 0 | [spec](../../specs/product/P4-FILE/spec.md) | [test](../../specs/test/P4-FILE/test-plan.md) |
@@ -90,7 +90,7 @@ mindmap
 
 证据（2026-11-22 收口，同日移除 `PRD-SYNC-005`）：33 条 AC = **33 通过 / 0 部分**（`AC-CONV-006-02` 由 CDP 合成组合态证据转 pass，物理输入法只作环境限制）。P1 覆盖 **12 covered / 0 conditional / 0 not covered / 0 gap**（验收面 12 = `CONV-001..008` + `SYNC-001..004`：`CONV-006` 已闭环（`IME-EVIDENCE-20261122.md`）；`CONV-005` 已闭环，停止按消息定向、双流只停目标（`stop_interrupt_test.go:402`），停止机制由 `stop_upstream_test.go` 按假上游证明（`STOP-UPSTREAM-EVIDENCE-20261122.md`）；`CONV-008` 已闭环，真机 304 已补）。逐项见 [STOP-UPSTREAM-EVIDENCE](../testing/STOP-UPSTREAM-EVIDENCE-20261122.md)、[IME 证据](../testing/IME-EVIDENCE-20261122.md)、[第八轮验收](../testing/ACCEPT-CONV-8-20261122.md)、[test-plan](../../specs/test/P1-CONV/test-plan.md) 与 [CONV-CLOSURE](CONV-CLOSURE.md)。
 
-2026-11-23 补入 `PRD-CONV-009`（会话内任务与编排，新增 L2）：实现状态 `unimplemented`、覆盖 `gap`，形态以原型 `docs/design/task-prototype-v3-20261123.html` 九屏为准；18 条 AC 编号已冻结，断言脚本与 test-plan 用例待建。该功能组只承担会话内任务的呈现、编排与归属，任务执行器与生命周期仍归 P2-TASK。
+2026-11-26 完成 `PRD-CONV-009`（会话内任务与编排，新增 L2）：实现状态 `implemented`、覆盖 `covered`，26 条 AC 全部 pass（560 条断言），变更包 `CHG-CONV-007` 已签发，验收报告 [`ACCEPT-CONV-007-R5`](../testing/ACCEPT-CONV-007-R5-20261126.md)、复盘 [`RETRO-CHG-CHG-CONV-007`](../plan/RETRO-CHG-CHG-CONV-007.md)。形态以原型 `docs/design/task-prototype-v3-20261123.html` 九屏为准。该功能组只承担会话内任务的呈现、编排与归属，任务执行器与生命周期仍归 P2-TASK。
 
 #### L2 · 会话管理
 
@@ -145,7 +145,7 @@ mindmap
 
 | PRD | L3 功能点 | P | 实现状态 | 覆盖 | 产品 spec | CHANGE | 开发 | COMP | TEST |
 |---|---|---|---|---|---|---|---|---|---|
-| `PRD-CONV-009` | 会话内任务与编排（新增） | P1 | `unimplemented` | `gap`（18 条 AC 未建脚本与用例；原型九屏已由用户确认） | [spec](../../specs/product/P1-CONV/spec.md#prd-conv-009) | 待建 `CHG-CONV-007`（暂未立包） | — | — | [TC-P1-CONV-009](../../specs/test/P1-CONV/test-plan.md#tc-p1-conv-009)（待补） |
+| `PRD-CONV-009` | 会话内任务与编排（新增） | P1 | `implemented` | `covered`（26 条 AC pass、560 条断言；见 [ACCEPT-CONV-007-R5](../testing/ACCEPT-CONV-007-R5-20261126.md)） | [spec](../../specs/product/P1-CONV/spec.md#prd-conv-009) | [CHG-CONV-007](../../specs/changes/CHG-CONV-007/proposal.md) | — | — | [TC-P1-CONV-009](../../specs/test/P1-CONV/test-plan.md#tc-p1-conv-009) |
 
 ### P2 · 任务与执行
 <a id="p2"></a>

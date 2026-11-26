@@ -1,93 +1,252 @@
 # CHG-CONV-007 · 任务卡
 
-状态：**异常（前向修）**（2026-11-24 18:13；异常登记与现场见 [`FAIL-20261124-CHG-CONV-007`](../../../docs/plan/FAIL-20261124-CHG-CONV-007.md)，裁决待用户确认，当前按出口 B 执行；转异常前为 `进行中`，W0、W1-01、W1-05 已完成）
+状态：已完成并签发（2026-11-26；验收报告 [`ACCEPT-CONV-007-R5-20261126.md`](../../../docs/testing/ACCEPT-CONV-007-R5-20261126.md)，复盘 [`RETRO-CHG-CHG-CONV-007.md`](../../../docs/plan/RETRO-CHG-CHG-CONV-007.md)；2026-11-25 20:45 重立，2026-11-24 的异常登记见 [`FAIL-20261124-CHG-CONV-007`](../../../docs/plan/FAIL-20261124-CHG-CONV-007.md)）
 Implements: `PRD-CONV-009`
 Change: CHG-CONV-007
-变更类型：**增量型变更**
+变更类型：**新功能**（主类型；附加类型：无）
+规模判级：变更级
+派单方：Lead；验收签字人：验收（`chg-007-accept`）与用户（只看前端效果）
 
-派发规则：
+本文件把 2026-11-23 的 17 张旧卡（W0 至 W5）重排为 10 张卡（T01 至 T10）。旧卡的 done 结论与行号引用保留在第 7 节，不删除、不改写；新卡按 `templates/task-card.md` 的十八项填写，卡号与检查点路径按本文件的 `TNN`。
 
-1. 每张卡按 owner / scope / AC / 证据四要素派发，scope 之外的文件不写；同一文件同一时间只允许一个 owner 修改。
-2. 实现者不自签：W5 由验收 Agent 独立签字，用户只验收前端效果。
-3. 单卡以 30 分钟为上限；到点未完成，把已完成部分、未完成项与下一步写进 `.tmp/chg-conv-007/<卡号>-checkpoint.md`，再决定续跑或拆卡。
-4. 证据缺失写 `missing`，不写“通过”；断言脚本的输出 JSON、命令与退出码一并落盘。
-5. 依赖未就绪时用夹具或桩数据推进，夹具路径写进证据，不在实现里硬编码测试分支。
-6. 回滚按卡执行；涉及数据库迁移的卡先写回滚脚本再写迁移。
+## 1 派发规则
 
-## 波次总览
+1. 每张卡按 owner、scope、验收标准、证据、禁止项五要素派发，五项齐全才可派；scope 之外的文件不写，同一文件同一时间只允许一张卡修改。
+2. 推理档位由派单方填写，执行方不改。档位取 `EFFORT.md` 主表「新功能」行的阶段值，格式为「档位（阶段）｜升档理由：—」。
+3. 每张卡在派发前拆成步骤，每步预计不超过 20 分钟，写清产出与汇报对象；某步超过 20 分钟仍无进展，执行方停下并报告卡点。
+4. 检查点固定为 `.tmp/chg-007-<卡号>/checkpoint.md`，字段只取 `MX-8-14` 的七项：步骤号、状态（未开始/进行中/完成/停下）、已完成、未完成、证据路径、下一步、更新时间（`YYYY-MM-DD HH:MM` 带时区）；每完成一步与停下时各更新一次。
+5. 前置卡未完成时本卡不得开工；标「并行」的卡可以同时跑，但后端先冻结接口形状（`MX-7-07`），前端按冻结后的形状实现。
+6. 证据只写真实跑过的结果：断言结果落 `.tmp/ac/<AC-ID>.json`，汇总进 [`evidence.md`](evidence.md)；未执行的写 `missing` 或 `blocked` 并写原因码、解除条件与到期日，不写「通过」。
+7. 实现者不自签：卡的评审人为 `chg-007-accept`（T09 本身由用户签），执行人、用例作者与签字人三者不同人。
+8. 执行方不 commit、不 push、不碰 `.git`、不删文件；回滚按第 6 节逐卡执行，破坏性命令一律不跑。
 
-| 波次 | 内容 | 卡数 | 出口 |
+## 2 卡清单总表
+
+| 卡 | 任务 | owner | 所属阶段 | scope | 依赖 | AC | 验收标准 | 证据 | 推理档位 | 状态 | 评审人 | 禁止项 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| T01 | 契约冻结复核 | 设计 | 契约与设计 | `specs/changes/CHG-CONV-007/proposal.md`（§5、§11 追加）；四列 spec、contract 与 `scripts/ac/` 只读 | 无 | 26 条判据可执行性复核 | 26 条逐条有脚本路径或 `人工:动作`；`check-contract.mjs` 0 处差异 | `.tmp/chg-007-T01/contract-review.md`；check-contract 输出 | max（契约与设计）｜升档理由：— | 已完成 | chg-007-accept | 不改五列 spec、contract、scripts 与代码；不改 18 条编号与判据文字；不删文件；不跑 git |
+| T02 | 后端任务消息与卡片数据 | 后端 | 执行 | `backend/internal/modules/tasks/conv.go`、`conv_http.go`、`service.go`、`http.go`；`backend/internal/modules/chat/model.go`、`service.go`、`category.go`（新建） | T01 | -01、-02、-03、-04、-16、-17 | 01 一卡一 `task_id`；02 10 条折叠、12 条显示「还有 2 条」；03 历史 0 目标 1 约束至少 1；04 成功 1 次与 403 1 次；16 字节等于 `size`；17 跨会话 0 条 | `.tmp/chg-007-T02/` 的 go test 日志、消息与下载响应 JSON；`.tmp/ac/AC-CONV-009-0N.json` | high（执行）｜升档理由：— | 已完成 | chg-007-accept | 不改前端；不改既有四类 category；不新增迁移列（确需增列回 T01 改判）；不改五列 spec；不跑 git |
+| T03 | 后端编排、等待与取消级联 | 后端 | 执行 | `backend/internal/modules/tasks/workflow.go`、`concurrency.go`、`service.go`（编排段）；`migrations.go` 只读 | T02（同一 `service.go` 串行） | -05、-06、-13、-14、-15、-18 | 05 八步第 6 步默认展开；06 轨迹 14 行时间戳单调；13 八节点四态齐全；14 触发 1、1、3；15 取消后下游启动 0 次；18 30 分钟不取消、1 分钟提醒 1 条 | `.tmp/chg-007-T03/` 的 go test 日志、取消级联日志、可控时钟说明；`.tmp/ac/*.json` | high（执行）｜升档理由：— | 已完成 | chg-007-accept | 不改执行器 `real_executor.go`；不新增迁移列；不改前端；不跑 git |
+| T04 | 前端任务卡片与汇总卡 | 前端 | 执行 | `frontend/src/components/task-card.tsx`（新建）；`frontend/src/components/library.tsx` 的 `MessageItem`（`:501`）；`frontend/src/types.ts` | T01；并行 T02（T02 的 S1 冻结接口形状后开工） | -01、-02、-07 | 01 一卡一 `task_id`；02 10 条折叠与「还有 2 条」入口 1 个；07 操作入口 0 个、关闭入口 1 个 | `.tmp/chg-007-T04/` 的 vitest 日志与 DOM 快照；`.tmp/ac/*.json` | high（执行）｜升档理由：— | 已完成 | chg-007-accept | 不改 `library.tsx` 的 OverviewContent 与 RightPanel 段（T05 owner）；不改后端；不跑 git |
+| T05 | 前端右栏、详情与任务图 | 前端 | 执行 | `frontend/src/components/library.tsx`（OverviewContent `:1097`、RightPanel `:1164`）；`frontend/src/styles.css`；`task-list.tsx`、`task-detail.tsx`、`task-graph.tsx`、`task-deliverables.tsx`（新建）；`frontend/src/app.tsx` | T04（同一 `library.tsx` 串行） | -05、-06、-08 至 -13 | 08 收起 40px、展开 320px（280 加 40）、三图标；09 角标等于进行中数、10 显示 `9+`；10 折叠态按会话记忆；11 首行距滚动口 0 至 8px；12 列表数 11、2、1、3；13 八节点四态齐全、21 节点按层分行 | `.tmp/chg-007-T05/` 的 vitest 日志、CDP `metrics.json` 与截图 | high（执行）｜升档理由：— | 已完成 | chg-007-accept | 不改消息流卡片（T04）；不改接口；不改 `PRD-CONV-008` 的四态与 ETag；不跑 git |
+| T06 | 断言脚本·接口组与夹具 | 测试 | 测试与证据 | `scripts/ac/AC-CONV-009-01.mjs`、`-02`、`-03`、`-04`、`-14` 至 `-18`（新建 9 个）；`scripts/ac/AC-CHG-CONV-007-02.mjs`、`-03`、`-04`、`-08`（新建 4 个）；`scripts/fixtures/tasks/`（新建） | T01；并行 T02、T03 | -01 至 -04、-14 至 -18；变更级 -02、-03、-04、-08 | 13 条脚本各自可运行并写 `.tmp/ac/<AC-ID>.json`；断言数字与 `spec.md` §3、§5 一致 | `.tmp/ac/` 的 13 个 JSON；`.tmp/chg-007-T06/` 运行日志 | high（测试与证据）｜升档理由：— | 已完成 | chg-007-accept | 不改实现代码；不改 `-05` 至 `-13`（T07 owner）；不改五列 spec；不伪造夹具数据；不跑 git |
+| T07 | 断言脚本·界面组 | 测试 | 测试与证据 | `scripts/ac/AC-CONV-009-05.mjs` 至 `-13.mjs`（已有，修补与校准）；`scripts/ac/AC-CHG-CONV-007-01.mjs`、`-05`、`-06`、`-07`（新建 4 个）；`scripts/fixtures/cdp/`（新建） | T01；并行 T06 | -05 至 -13；变更级 -01、-05、-06、-07 | 9 条已有脚本可跑通并写 JSON；4 条新建可运行；几何采样容差 ±1px | `.tmp/ac/` 的 13 个 JSON；`.tmp/chg-007-T07/shots/` 与 `metrics.json` | high（测试与证据）｜升档理由：— | 已完成 | chg-007-accept | 不改接口组脚本（T06）；不改实现代码；不改设计 spec 的尺寸值；不跑 git |
+| T08 | 集成与端到端三档走查 | 测试 | 测试与证据 | `docs/testing/CHG-CONV-007-E2E-20261125.md`（新建）；`docs/testing/CONV/CHG-CONV-007-20261125/`（新建）；`.tmp/chg-007-T08/`、`.tmp/chg-007-T08d/t08-summary.json`、`.tmp/chg-007-T08d/t08-*.json`、`.tmp/chg-007-T08d/run-manifest.json` | T02 至 T07 | 变更级 -01 至 -08 | 8 条变更级 AC 各有证据行；375、768、1280 三档无横向溢出；下载字节等于 `size` | `.tmp/chg-007-T08d/t08-summary.json`、`.tmp/chg-007-T08d/` 逐条 JSON 与三档截图；`scripts/ac/` 脚本 | high（测试与证据）｜升档理由：— | 已完成 | chg-007-accept | 不改代码、不改 spec；不伪造截图；开关关闭时不得把端到端记通过；不跑 git |
+| T09 | 变更级全量回归与独立验收 | 验收 | 验收与收口 | `specs/changes/CHG-CONV-007/evidence.md`；`docs/testing/ACCEPT-CONV-007-R5-20261126.md`（新建）；`.tmp/chg-007-T09/` | T08 | 26 条复核与五条门禁 | 全量前端与后端回归各 1 次 0 失败；26 条判定与证据行一致；五条门禁输出贴入报告 | 回归日志、五条门禁输出、签字行；[ACCEPT-CONV-007-R5-20261126.md](../../../docs/testing/ACCEPT-CONV-007-R5-20261126.md) | max（验收与收口）｜升档理由：— | 已完成 | 用户 | 不改代码与 spec 正文；不代改 18 条 AC；不自签；不跑 git |
+| T10 | 复盘与收口回写 | 复盘 | 验收与收口 | `docs/plan/RETRO-CHG-CHG-CONV-007.md`（新建）；`specs/changes/CHG-CONV-007/proposal.md` §9、§10 | T09 | 全部 26 条回顾 | 复盘七节齐全；请求数、总输入与前三项占比有数据；§9 补收口行 | 复盘文件、`acp_cache` 与请求扫描数据；[RETRO-CHG-CHG-CONV-007.md](../../../docs/plan/RETRO-CHG-CHG-CONV-007.md) | high（验收与收口）｜升档理由：— | 已完成 | chg-007-accept | 不改判任何 AC；不改代码；不删证据；不跑 git |
+
+## 3 逐卡步骤与交接
+
+每张卡的 scope、禁止项、验收标准与证据见第 2 节总表；本节补执行人、契约项、步骤表、省略项、检查点与回滚。
+
+### T01 契约冻结复核
+
+- 执行人 `chg-007-contract`；REQ `REQ-CONV-009.1` 至 `.7`（编号待产品补登，见 proposal §11 的 D-02）；CT `CT-CONV-434` 至 `CT-CONV-451`；验收签字人 `chg-007-accept`；省略项：无省略。
+- 检查点：`.tmp/chg-007-T01/checkpoint.md`。
+
+| 步骤号 | 内容 | 预计分钟 | 产出 | 汇报对象 |
+|---|---|---|---|---|
+| S1 | 读 `spec.md` §3、§5 与契约表类 6，把 18 条 AC 与 8 条变更级 AC 逐条对表 | 15 | 对表草图（AC、CT、脚本、夹具、证据路径五列） | 产品 |
+| S2 | 核 9 条已有脚本的路径、夹具与输出格式，标出与判据不符的项 | 20 | 脚本体检表 | 产品 |
+| S3 | 为 17 条缺脚本的判据标判据形式、负责人与到期日 | 15 | 判据缺口表 | Lead |
+| S4 | 写复核记录并追加 proposal §5、§11 | 20 | `.tmp/chg-007-T01/contract-review.md` 与 proposal 追加行 | 验收 |
+
+回滚：只新增复核记录与 proposal 追加段，按行撤销即可。
+
+### T02 后端任务消息与卡片数据
+
+- 执行人 `chg-007-be1`；REQ `REQ-CONV-009.1`、`.5`、`.6`；CT `CT-CONV-434` 至 `-451` 中与消息、归属、交付物对应的行；验收签字人 `chg-007-accept`；省略项：无省略。
+- 检查点：`.tmp/chg-007-T02/checkpoint.md`。
+
+| 步骤号 | 内容 | 预计分钟 | 产出 | 汇报对象 |
+|---|---|---|---|---|
+| S1 | 冻结接口形状：消息字段、任务列表与图、详情、取消、交付物响应 | 20 | 接口形状单一页 | 前端 T04、T05；测试 T06 |
+| S2 | 落 `category="task"` 写入与 `task_id` 关联，补单测 | 20 | 代码与 `go test` 输出 | 后端 |
+| S3 | 汇总卡数据与启动上下文裁剪（历史 0、目标 1、约束至少 1） | 20 | 单测与样例 JSON | 后端 |
+| S4 | 交付物分组与下载 `size`、跨会话隔离查询 | 20 | 单测与响应 JSON | 测试 T06 |
+
+回滚：`category="task"` 与 `task_id` 关联是新增值，回滚停用写入并保留数据，不删历史消息。
+
+### T03 后端编排、等待与取消级联
+
+- 执行人 `chg-007-be2`；REQ `REQ-CONV-009.3`、`.4`；CT `CT-CONV-439` 至 `-450` 中与等待、取消、任务图对应的行；验收签字人 `chg-007-accept`；省略项：无省略。
+- 检查点：`.tmp/chg-007-T03/checkpoint.md`。
+
+| 步骤号 | 内容 | 预计分钟 | 产出 | 汇报对象 |
+|---|---|---|---|---|
+| S1 | 依赖关系与三种等待触发（全部完成、任一完成、每个完成） | 20 | 单测 | 后端 |
+| S2 | 取消级联：上游取消后下游 30 秒内启动 0 次 | 20 | 单测与级联日志 | 测试 T06 |
+| S3 | 时限提醒与无自动超时（1 分钟提醒 1 条、30 分钟不取消） | 15 | 可控时钟用例 | 测试 T06 |
+| S4 | 任务图状态投影（四态与失败下游虚线依据） | 20 | 接口样例 | 前端 T05 |
+
+回滚：依赖与取消相关表按迁移版本回退；已写入的依赖关系不迁移到旧结构。
+
+### T04 前端任务卡片与汇总卡
+
+- 执行人 `chg-007-fe1`；REQ `REQ-CONV-009.1`、`.3`；CT `CT-CONV-434`、`-435`、`-440`；验收签字人 `chg-007-accept`；省略项：无省略。
+- 检查点：`.tmp/chg-007-T04/checkpoint.md`。
+
+| 步骤号 | 内容 | 预计分钟 | 产出 | 汇报对象 |
+|---|---|---|---|---|
+| S1 | 卡片组件与类型定义，覆盖单卡与失败态 | 20 | `task-card.tsx` 与单测 | 前端 |
+| S2 | `MessageItem` 渲染分支与 `task_id` 定位 | 20 | `library.tsx` 改动与单测 | 前端 |
+| S3 | 汇总卡折叠、标题计数与「还有 N 条」入口 | 20 | 组件测试与 DOM 快照 | 测试 T07 |
+
+回滚：`task-card.tsx` 删除或 revert，`library.tsx` 只回退 MessageItem 段，消息流回到纯文本渲染。
+
+### T05 前端右栏、详情与任务图
+
+- 执行人 `chg-007-fe2`；REQ `REQ-CONV-009.2`、`.3`、`.4`、`.6`；CT `CT-CONV-436` 至 `-451` 中界面与验收入口对应的行；验收签字人 `chg-007-accept`；省略项：无省略。
+- 检查点：`.tmp/chg-007-T05/checkpoint.md`。
+
+| 步骤号 | 内容 | 预计分钟 | 产出 | 汇报对象 |
+|---|---|---|---|---|
+| S1 | 右栏壳三标签与 40px 竖条（展开 320 等于 280 加 40） | 20 | 结构与样式改动 | 前端 |
+| S2 | 角标与概览四节折叠态按会话记忆 | 20 | 单测 | 测试 T07 |
+| S3 | 任务厚卡、四筛选与两种只读详情 | 20 | `task-list.tsx`、`task-detail.tsx` 与单测 | 测试 T07 |
+| S4 | 任务图八节点四态、超 20 节点按层分行 | 20 | `task-graph.tsx` 与单测 | 测试 T07 |
+| S5 | 交付物行与「还有 N 个」定位滚动 | 20 | `task-deliverables.tsx` 与 CDP 采样 | 测试 T07 |
+
+回滚：五组组件按卡独立回滚，右栏回退到 `PRD-CONV-008` 的只读投影。
+
+### T06 断言脚本·接口组与夹具
+
+- 执行人 `chg-007-qa1`；REQ 全部七条；CT 覆盖 `CT-CONV-434` 至 `-451` 的接口类判据；验收签字人 `chg-007-accept`；省略项：无省略。
+- 检查点：`.tmp/chg-007-T06/checkpoint.md`。
+
+| 步骤号 | 内容 | 预计分钟 | 产出 | 汇报对象 |
+|---|---|---|---|---|
+| S1 | 任务夹具与公共断言库（启动上下文、等待触发、取消级联） | 20 | `scripts/fixtures/tasks/` 与 helper | 测试 |
+| S2 | 写 `AC-CONV-009-01` 至 `-04` 四条脚本 | 20 | 4 个脚本 | 测试 |
+| S3 | 写 `-14` 至 `-16` 三条脚本 | 20 | 3 个脚本 | 测试 |
+| S4 | 写 `-17`、`-18` 与变更级 `-02`、`-03`、`-04`、`-08` 六条脚本 | 20 | 6 个脚本 | 测试 |
+| S5 | 逐条跑通并落 JSON，失败项写原因码 | 20 | 13 个 `.tmp/ac/*.json` | 测试 |
+
+回滚：只新增脚本与夹具，删除新增文件即可；不触碰已有脚本。
+
+### T07 断言脚本·界面组
+
+- 执行人 `chg-007-qa2`；REQ `REQ-CONV-009.2` 至 `.4`；CT 覆盖 `CT-CONV-436` 至 `-451` 的界面与验收入口判据；验收签字人 `chg-007-accept`；省略项：无省略。
+- 检查点：`.tmp/chg-007-T07/checkpoint.md`。
+
+| 步骤号 | 内容 | 预计分钟 | 产出 | 汇报对象 |
+|---|---|---|---|---|
+| S1 | 校准 `-05` 至 `-09` 五条已有脚本并跑通 | 20 | 5 个 JSON | 测试 |
+| S2 | 校准 `-10` 至 `-13` 四条已有脚本并跑通 | 20 | 4 个 JSON | 测试 |
+| S3 | 写变更级 `-01`、`-05`、`-06`、`-07` 四条脚本 | 20 | 4 个脚本 | 测试 |
+| S4 | 三档跑通与截图采样，几何值写入 `metrics.json` | 20 | 截图与 `metrics.json` | 测试 |
+
+回滚：已有脚本的修改按行 revert；新建脚本删除。
+
+### T08 集成与端到端三档走查
+
+- 执行人 `chg-007-e2e`；REQ 全部七条；CT `CT-CONV-434` 至 `-451` 全量；验收签字人 `chg-007-accept`；省略项：无省略。
+- 检查点：`.tmp/chg-007-T08/checkpoint.md`。
+
+| 步骤号 | 内容 | 预计分钟 | 产出 | 汇报对象 |
+|---|---|---|---|---|
+| S1 | 打开 `cfg.Modules["tasks"]`，串创建、编排、取消主链 | 20 | 集成日志 | Lead |
+| S2 | 跑失败重试与取消级联端到端 | 20 | 日志与截图 | Lead |
+| S3 | 375、768、1280 三档走查与测量 | 20 | 三档截图与 `metrics.json` | Lead |
+| S4 | 写 E2E 报告，为 8 条变更级 AC 各落证据行 | 20 | `docs/testing/CHG-CONV-007-E2E-20261125.md` | 验收 |
+
+回滚：只新增报告与截图，revert 即可；开关改回关闭。
+
+### T09 变更级全量回归与独立验收
+
+- 执行人 `chg-007-accept`；REQ 全部七条；CT `CT-CONV-434` 至 `-451`；验收签字人 用户；省略项：无省略。
+- 检查点：`.tmp/chg-007-T09/checkpoint.md`。
+
+| 步骤号 | 内容 | 预计分钟 | 产出 | 汇报对象 |
+|---|---|---|---|---|
+| S1 | 跑全量前端与后端回归各 1 次 | 20 | 回归日志 | Lead |
+| S2 | 跑 `check-gates`、`check-trace`、`check-contract`、`check-evidence` 并贴输出 | 15 | 四条输出 | Lead |
+| S3 | 26 条 AC 判定与证据行对账，更新 `evidence.md` | 20 | 对账后的 evidence.md | Lead |
+| S4 | 写验收报告与签字行 | 15 | `docs/testing/ACCEPT-CONV-007-R5-20261126.md` | 用户 |
+
+回滚：只新增报告与 evidence 更新，按行 revert。
+
+### T10 复盘与收口回写
+
+- 执行人 `chg-007-retro`；REQ 全部七条（回顾）；CT `N/A：复盘卡不核对契约项`；验收签字人 `chg-007-accept`；省略项：无省略。
+- 检查点：`.tmp/chg-007-T10/checkpoint.md`。
+
+| 步骤号 | 内容 | 预计分钟 | 产出 | 汇报对象 |
+|---|---|---|---|---|
+| S1 | 收集请求数、总输入与前三项占比，取 `acp_cache` 与请求级扫描 | 20 | 成本表 | Lead |
+| S2 | 写复盘七节（做对、做错、成本、规则缺口、下一轮、证据、签字） | 20 | `docs/plan/RETRO-CHG-CHG-CONV-007.md` | Lead |
+| S3 | 回写 proposal §9、§10 与收口状态 | 15 | proposal 追加行 | 用户 |
+
+回滚：只新增复盘文件与 proposal 追加段。
+
+## 4 26 条 AC 的判据形式与负责人
+
+18 条产品 AC 全部是脚本判据，`scripts/ac/AC-CONV-009-01.mjs` 至 `AC-CONV-009-18.mjs` 均已建成并执行，没有纯人工判据。8 条变更级 AC 中 4 条为脚本加人工复核（`-01`、`-05`、`-06`、`-07`，复核动作是看三档截图与视觉签字），其余 4 条为脚本判据；8 个脚本同样已建成并执行。
+
+| AC | 判据形式 | 判据位置 | 负责人 | 当前状态 |
+|---|---|---|---|---|
+| AC-CONV-009-01 | 脚本 | `scripts/ac/AC-CONV-009-01.mjs` | 测试 `chg-007-qa1` | pass（25 条断言） |
+| AC-CONV-009-02 | 脚本 | `scripts/ac/AC-CONV-009-02.mjs` | 测试 `chg-007-qa1` | pass（33 条断言） |
+| AC-CONV-009-03 | 脚本 | `scripts/ac/AC-CONV-009-03.mjs` | 测试 `chg-007-qa1` | pass（16 条断言） |
+| AC-CONV-009-04 | 脚本 | `scripts/ac/AC-CONV-009-04.mjs` | 测试 `chg-007-qa1` | pass（12 条断言） |
+| AC-CONV-009-05 | 脚本 | `scripts/ac/AC-CONV-009-05.mjs` | 测试 `chg-007-qa2` | pass（18 条断言） |
+| AC-CONV-009-06 | 脚本 | `scripts/ac/AC-CONV-009-06.mjs` | 测试 `chg-007-qa2` | pass（12 条断言） |
+| AC-CONV-009-07 | 脚本 | `scripts/ac/AC-CONV-009-07.mjs` | 测试 `chg-007-qa2` | pass（33 条断言） |
+| AC-CONV-009-08 | 脚本 | `scripts/ac/AC-CONV-009-08.mjs` | 测试 `chg-007-qa2` | pass（16 条断言） |
+| AC-CONV-009-09 | 脚本 | `scripts/ac/AC-CONV-009-09.mjs` | 测试 `chg-007-qa2` | pass（15 条断言） |
+| AC-CONV-009-10 | 脚本 | `scripts/ac/AC-CONV-009-10.mjs` | 测试 `chg-007-qa2` | pass（13 条断言） |
+| AC-CONV-009-11 | 脚本 | `scripts/ac/AC-CONV-009-11.mjs` | 测试 `chg-007-qa2` | pass（9 条断言） |
+| AC-CONV-009-12 | 脚本 | `scripts/ac/AC-CONV-009-12.mjs` | 测试 `chg-007-qa2` | pass（18 条断言） |
+| AC-CONV-009-13 | 脚本 | `scripts/ac/AC-CONV-009-13.mjs` | 测试 `chg-007-qa2` | pass（UI 16 条断言；集成层 skip） |
+| AC-CONV-009-14 | 脚本 | `scripts/ac/AC-CONV-009-14.mjs` | 测试 `chg-007-qa1` | pass（17 条断言） |
+| AC-CONV-009-15 | 脚本 | `scripts/ac/AC-CONV-009-15.mjs` | 测试 `chg-007-qa1` | pass（34 条断言） |
+| AC-CONV-009-16 | 脚本 | `scripts/ac/AC-CONV-009-16.mjs` | 测试 `chg-007-qa1` | pass（46 条断言） |
+| AC-CONV-009-17 | 脚本 | `scripts/ac/AC-CONV-009-17.mjs` | 测试 `chg-007-qa1` | pass（17 条断言） |
+| AC-CONV-009-18 | 脚本 | `scripts/ac/AC-CONV-009-18.mjs` | 测试 `chg-007-qa1` | pass（17 条断言） |
+| AC-CHG-CONV-007-01 | 脚本加人工复核 | `scripts/ac/AC-CHG-CONV-007-01.mjs` 与三档截图 | 测试 `chg-007-qa2` | pass（14 条断言） |
+| AC-CHG-CONV-007-02 | 脚本 | `scripts/ac/AC-CHG-CONV-007-02.mjs` | 测试 `chg-007-qa1` | pass（14 条断言） |
+| AC-CHG-CONV-007-03 | 脚本 | `scripts/ac/AC-CHG-CONV-007-03.mjs` | 测试 `chg-007-qa1` | pass（52 条断言） |
+| AC-CHG-CONV-007-04 | 脚本 | `scripts/ac/AC-CHG-CONV-007-04.mjs` | 测试 `chg-007-qa1` | pass（15 条断言） |
+| AC-CHG-CONV-007-05 | 脚本加人工复核 | `scripts/ac/AC-CHG-CONV-007-05.mjs` 与三档截图 | 测试 `chg-007-qa2` | pass（31 条断言） |
+| AC-CHG-CONV-007-06 | 脚本加人工复核 | `scripts/ac/AC-CHG-CONV-007-06.mjs` 与任务图截图 | 测试 `chg-007-qa2` | pass（17 条断言） |
+| AC-CHG-CONV-007-07 | 脚本加人工复核 | `scripts/ac/AC-CHG-CONV-007-07.mjs` 与筛选截图 | 测试 `chg-007-qa2` | pass（25 条断言） |
+| AC-CHG-CONV-007-08 | 脚本 | `scripts/ac/AC-CHG-CONV-007-08.mjs` | 测试 `chg-007-qa1` | pass（25 条断言） |
+
+分布：26 条 AC 全部建成脚本并执行，缺脚本 0 条。判定分布为 pass 26 条、partial 0 条、missing 0 条、blocked 0 条、skip 0 条；断言合计 560 条，其中 18 条产品 AC 367 条、8 条变更级 AC 193 条。`AC-CONV-009-13` 的集成层按规则 skip、0 条断言，不计入 pass，UI 层 16 条断言通过。分布口径与 `evidence.md` §1、`specs/test/P1-CONV/test-plan.md` §18.2 一致。
+
+## 5 依赖与并行
+
+- 执行阶段可并行三张卡：T02（后端）、T04（前端）、T06 或 T07（测试），符合同一域并行不超过三张。T02 的 S1 先冻结接口形状，T04 在 S1 之后开工。
+- 串行链：T01 → T02 → T03（同一 `service.go`）；T04 → T05（同一 `library.tsx`）；T06 与 T07 不同文件可并行；T08 汇总 T02 至 T07；T09 → T10。
+- 文件级冲突：`backend/internal/modules/tasks/service.go` 由 T02、T03 顺序修改；`frontend/src/components/library.tsx` 由 T04、T05 顺序修改；`proposal.md` 由 T01、T10 顺序追加；`evidence.md` 只由 T09 修改。
+- 脚本先红后绿：T06、T07 可以在实现卡完成前写脚本并按失败状态落盘，实现完成后复跑转绿，不把红脚本记成 pass。
+
+## 6 回滚
+
+- T01、T08、T09、T10 只新增文档、报告与追加段，按文件或按行 revert。
+- T02：`category="task"` 与 `task_id` 是新增值，回滚停用写入并保留数据，不删历史消息；不新增迁移列，因此没有迁移回滚脚本。
+- T03：依赖与取消相关行为按代码 revert；已写入的依赖关系不迁移到旧结构。
+- T04、T05：五组组件按卡独立回滚，右栏回到 `PRD-CONV-008` 的只读投影，消息流回到纯文本进度。
+- T06、T07：只新增或按行修改脚本，删除新增文件与撤销脚本改动即可。
+
+## 7 旧卡去向（2026-11-23 的 17 张卡，不改写）
+
+| 旧卡 | 原任务 | 原状态 | 去向 |
 |---|---|---|---|
-| W0 | 产品定稿与包骨架 | 2 | 18 条 AC 冻结，四文件与 TC 锚点落盘，门禁 0 失败 |
-| W1 | 设计、前端、后端、测试四列 spec | 5 | 四列判据冻结，实现前不再改 AC 含义 |
-| W2 | 后端实现 | 3 | 任务消息、编排、归属、护栏、交付物接口有单测 |
-| W3 | 前端实现 | 5 | 卡片、右栏、概览、详情、任务图、交付物组件可跑 |
-| W4 | 18 条断言脚本 | 1 | 每条脚本独立运行并写证据 JSON |
-| W5 | 集成与端到端验收 | 1 | 8 条变更级 AC 有证据，全量回归与三档走查完成 |
-
-## W0 · 产品定稿与包骨架（已完成）
-
-| 卡 | 任务 | owner | scope（作用域文件） | AC | 证据 | 状态 |
-|---|---|---|---|---|---|---|
-| W0-01 | 产品 spec 定稿：15 条目标行为、18 条 AC、场景 I、A9、状态与裁决 ⑧ | 产品 | `specs/product/P1-CONV/spec.md` §4.6（`:310-363`）、A9（`:377`）、§6（`:395-397`）、§7（`:406`）；原型 `docs/design/task-prototype-v3-20261123.html` 只读 | `AC-CONV-009-01..18` 的编号、主语与判据 | 产品 spec 行号引用；原型九屏用户确认记录（2026-11-23）；本包 `spec.md` §3 映射表；四项裁决写回 `:323`、`:329`、`:336-341`、`:345`、`:357`、`:359`、`:408`（DEC-26..29） | done |
-| W0-02 | 变更包骨架、TC 锚点与追溯登记 | 产品 | `specs/changes/CHG-CONV-007/{proposal,spec,tasks,evidence}.md`；`specs/test/P1-CONV/test-plan.md` §18 占位 | `AC-CHG-CONV-007-01..08` 的定义；门禁 T4/T5 | `node scripts/check-trace.mjs` 退出码 0；输出贴入 `evidence.md` §2；锚点 `tc-p1-conv-009` 可被 `docs/product/TREE.md:148` 与 `TRACEABILITY.md:75` 解析 | done |
-
-W0-02 于 2026-11-23 完成：`specs/changes/CHG-CONV-007/` 的 proposal、spec、tasks、evidence 四文件与 `tc-p1-conv-009` 锚点已落盘，变更包已立；W0 出口（18 条 AC 冻结、门禁 0 失败）达成，之后进入 W1。
-
-## W1 · 四列 spec
-
-| 卡 | 任务 | owner | scope（作用域文件） | AC | 证据 | 状态 |
-|---|---|---|---|---|---|---|
-| W1-01 | 设计 spec：任务卡片、右栏三标签与 40px 竖条、概览四节、任务厚卡与四筛选、两种详情、任务图弹窗、三档断点 | 设计 | `specs/design/P1-CONV/spec.md` §17（`:755-1039`，本次落盘，新建内容并入既有文件）；`docs/design/task-prototype-v3-20261123.html` 只读 | `AC-CONV-009-01`、`-02`、`-05`、`-06`、`-07`、`-08`、`-09`、`-10`、`-11`、`-12`、`-13` | 设计 spec 落盘于 `specs/design/P1-CONV/spec.md`：§17.1 入口 `:757-763`、§17.2 右栏壳 280+40 `:765-799`、§17.3 概览四节 `:801-831`、§17.4 任务厚卡与等待标签 `:833-871`（标签 `:847`）、§17.5 计划详情 `:873-899`、§17.6 边做边想 `:901-907`、§17.7 交付物 `:909-915`、§17.8 任务图 `:917-937`、§17.9 消息流任务卡 `:939-957`、§17.10 三档断点 `:959-970`、§17.11 状态与降级 `:972-978`、§17.12 45 条 `V-CONV-009-*` `:980-1023`；§16 变更记录 v0.3 `:748`、v0.4 `:747` | done |
-| W1-02 | 前端 spec：组件、props、状态机、接口调用、降级与空态、第五类消息渲染 | 前端 | `specs/frontend/P1-CONV/task-panel.md`（新建）；`frontend/src/types.ts` 只读 | 18 条 AC 的前端判定面；`AC-CHG-CONV-007-05`、`-06`、`-07` | spec 按功能点分节，每节列组件文件、props、事件、接口与失败态；与设计 spec 的尺寸值一致 | 待建 |
-| W1-03 | 后端 spec：路由、表与字段、状态投影、编排与等待语义、取消级联、归属、四条护栏、错误码 | 后端 | `specs/backend/P1-CONV/task-orchestration.md`（新建）；`backend/internal/modules/tasks/` 只读 | `AC-CONV-009-03`、`-04`、`-14`、`-15`、`-17`、`-18`；`AC-CHG-CONV-007-02`、`-03`、`-04`、`-08` | 路由表、表结构、错误码表、开关与迁移回滚各 1 节；接口形状经前端 owner 确认 1 次 | 待建 |
-| W1-04 | 测试 spec：18 条 TC、三组运行方式、夹具、证据路径 | 测试 | `specs/test/P1-CONV/test-plan.md` §18；`specs/test/P1-CONV/fixtures/task/*.json`（新建） | 18 条 AC 全部映射 TC；`AC-CHG-CONV-007-01..08` | test-plan §18 有 18 行 TC 与 AC 对应；夹具清单与生成命令；`node scripts/ac-coverage.mjs` 报告 18 条被覆盖 | 待建 |
-| W1-05 | 设计 spec 对齐核验：§17 与产品四项裁决、18 条 AC 的设计侧落点逐条对照，差异落清单 | 设计 | `specs/design/P1-CONV/spec.md` §17 只读（`:756-1042`）；`specs/product/P1-CONV/spec.md:343-366`、`:350-351`、`:355-358` 只读 | 18 条 AC 各有设计侧落点；DEC-26..31 逐条可对照，差异有行号或已回写 | 核验记录：`specs/design/P1-CONV/spec.md` §17.12（`:981-1027`，45 条 V 判据）、§16 v0.4（`:747`）、§17.9.1（`:942-944`，独立消息类型）、§17.4（`:834-873`，三种等待标签）；DEC-30/31 对齐落点：§17.4.5（`:868`）、`V-CONV-009-19`/`-20`（`:1001-1002`）、`V-CONV-009-21`（`:1003`）、§17.13（`:1040-1042`）；原 4 处差异已回写：§17.8.3 `:936-938`、§17.9.3 `:958`、§17.9.2 `:950`、§17.13 `:1028-1042` | done |
-
-W1-05 的 done 表示核验已做完并落差异清单；核验由变更包维护角色执行，设计列复签记录仍缺。原四处差异已由设计列回写：§17.8.3（`:936-938`）按 DEC-29 改为按依赖层分行，§17.9.3（`:958`）改为单卡最多 10 条，§17.9.2（`:950`）补上等待确认「确认」「取消」与等待资源「恢复」入口，§17.13（`:1028-1042`）未决项 0 条并以已裁记录保留。DEC-30/31 的对齐同日完成，落点见 W1-05 行的证据列。
-
-## W2 · 后端实现
-
-| 卡 | 任务 | owner | scope（作用域文件） | AC | 证据 | 状态 |
-|---|---|---|---|---|---|---|
-| W2-01 | 任务消息类型与卡片数据：`category="task"`、`task_id` 关联、批量汇总所需字段、启动上下文裁剪 | 后端 | `backend/internal/modules/chat/category.go`、`model.go`、`migrations.go`、`service.go`；`backend/internal/modules/tasks/service.go`、`http.go` | `AC-CONV-009-01`、`-02`、`-03` | `go test ./internal/modules/chat/ ./internal/modules/tasks/` 退出码 0；`POST /api/sessions/{id}/messages` 响应含 `task_id` 与 `category=task` 的样例 JSON，写 `.tmp/chg-conv-007/task-message.json` | 待建 |
-| W2-02 | 编排与等待语义、取消级联：依赖关系、三种等待触发、整链取消、下游不启动 | 后端 | `backend/internal/modules/tasks/workflow.go`、`concurrency.go`、`service.go`、`migrations.go` | `AC-CONV-009-14`、`-15`；`AC-CHG-CONV-007-03` | `go test ./internal/modules/tasks/ -run 'Test.*(Depend|Wait|Cancel)'`；取消日志 `.tmp/chg-conv-007/cancel.log` 含 A 取消时间与 B 启动 0 次 | 待建 |
-| W2-03 | 归属隔离、四条护栏与交付物分组下载：会话隔离查询、权限越界 403 与跨会话 404、下载字节一致 | 后端 | `backend/internal/modules/tasks/http.go`、`deliverables.go`、`content_disposition.go`；`backend/internal/modules/chat/permissions.go`、`grants.go` | `AC-CONV-009-04`、`-16`、`-17`；`AC-CHG-CONV-007-04`、`-08` | `go test ./internal/modules/tasks/ ./internal/modules/chat/`；`Invoke-RestMethod` 的 403 与 404 响应 `.tmp/chg-conv-007/forbidden.json`；下载字节比对 `.tmp/chg-conv-007/download.json` | 待建 |
-
-## W3 · 前端实现
-
-| 卡 | 任务 | owner | scope（作用域文件） | AC | 证据 | 状态 |
-|---|---|---|---|---|---|---|
-| W3-01 | 消息流任务卡片与批量汇总卡：第五类消息渲染、`task_id` 定位、汇总展开 | 前端 | `frontend/src/components/task-card.tsx`（新建）、`frontend/src/components/library.tsx` 的 `MessageItem`（`:501`）、`frontend/src/types.ts` | `AC-CONV-009-01`、`-02`；`AC-CHG-CONV-007-01` | `cd frontend; pnpm test -- TaskCard`；组件测试覆盖单卡与 10 条汇总；DOM 快照 `.tmp/chg-conv-007/task-card.html` | 待建 |
-| W3-02 | 右栏三标签、40px 竖条、角标：`RightPanel` 改造，任务与交付物标签页 | 前端 | `frontend/src/components/library.tsx` 的 `OverviewContent`（`:1097`）与 `RightPanel`（`:1164`）、`frontend/src/styles.css` | `AC-CONV-009-08`、`-09`；`AC-CHG-CONV-007-05` | `pnpm test -- RightPanel`；CDP 测宽 `.tmp/chg-conv-007/shots/metrics.json` 含 40/320/280 与 3 图标；角标 9+ 断言 | 待建 |
-| W3-03 | 概览四节与「还有 N 个」定位：折叠态按会话记忆、跨会话默认全开、跳转滚动 | 前端 | `frontend/src/components/library.tsx` 概览段、`frontend/src/app.tsx`（投影加载与 `locateTask`） | `AC-CONV-009-10`、`-11`；`AC-CHG-CONV-007-07` | `pnpm test -- Overview`；CDP 测首行距滚动口顶部 0–8px 的 `metrics.json`；刷新前后折叠态对比 | 待建 |
-| W3-04 | 任务厚卡、四筛选、两种只读详情：状态/模式/刻度/产出/失败原因，计划步骤与边做边想时间线 | 前端 | `frontend/src/components/task-list.tsx`（新建）、`frontend/src/components/task-detail.tsx`（新建）、`frontend/src/components/library.tsx` | `AC-CONV-009-05`、`-06`、`-07`、`-12`；`AC-CHG-CONV-007-06` | `pnpm test -- TaskList TaskDetail`；两种模式各 1 组组件测试；入口计数断言（操作 0、关闭 1） | 待建 |
-| W3-05 | 任务图与交付物分组：覆盖全应用的只读弹窗、四态与虚线、交付物行与下载 | 前端 | `frontend/src/components/task-graph.tsx`（新建）、`frontend/src/components/task-deliverables.tsx`（新建）、`frontend/src/app.tsx` | `AC-CONV-009-13`、`-16`；`AC-CHG-CONV-007-06` | `pnpm test -- TaskGraph Deliverables`；CDP 截图 `.tmp/chg-conv-007/shots/task-graph.png`；下载文件名与字节断言 | 待建 |
-
-## W4 · 断言脚本
-
-| 卡 | 任务 | owner | scope（作用域文件） | AC | 证据 | 状态 |
-|---|---|---|---|---|---|---|
-| W4-01 | 18 条 AC 断言脚本与 8 条变更级脚本：HTTP、单元组件、CDP 三组，统一 JSON 输出 | 测试 | `scripts/ac/AC-CONV-009-01..18.mjs`（新建 18 个）、`scripts/ac/AC-CHG-CONV-007-01..08.mjs`（新建 8 个） | `AC-CONV-009-01..18`；`AC-CHG-CONV-007-01..08` | 每条脚本单独运行 1 次，退出码与 `.tmp/ac/<AC-ID>.json` 齐全；`node scripts/run-ac.mjs --group unit` 与 `--group cdp` 各 1 次汇总输出；`node scripts/ac-coverage.mjs` 覆盖 18/18 | 待建 |
-
-## W5 · 集成与端到端验收
-
-| 卡 | 任务 | owner | scope（作用域文件） | AC | 证据 | 状态 |
-|---|---|---|---|---|---|---|
-| W5-01 | 集成、三档走查、全量回归与签字：打开 `modules.tasks`，串起创建、编排、取消、交付物全链 | 验收 | `docs/testing/CHG-CONV-007-E2E-20261123.md`（新建）；`specs/changes/CHG-CONV-007/evidence.md`；截图目录 `.tmp/chg-conv-007/shots/` | `AC-CHG-CONV-007-01..08` 全部；抽查 `AC-CONV-009-01`、`-13`、`-15`、`-17` | 全量前端 `pnpm test` 与后端 `go test ./...` 各 1 次退出码 0；375/768/1280 三档截图与 `metrics.json`；`node scripts/check-trace.mjs` 0 失败；验收报告签字 1 条 | 待建 |
-
-## 依赖与并行
-
-- W1 四列可并行，W1-05 在 W1-01 落盘后做核验，已随 W1-01 完成；W1-02 依赖 W1-01 的尺寸与组件树，W1-04 依赖 W1-02 与 W1-03 的接口形状；四列在 W1 末统一冻结判据。
-- W2 与 W3 在 W1 冻结后并行；W3 依赖 W2-01 的消息字段与 W2-03 的交付物响应形状，接口未定时先用 W1-03 的契约桩。
-- W4 依赖 W2 与 W3 的可运行入口；CDP 组排队执行，HTTP 与单元组并行上限 4。
-- W5 依赖 W4 全部脚本可运行；`modules.tasks` 开关在 W5 打开，W2/W3 期间用夹具。
-- 同一文件冲突：`library.tsx` 由 W3-01 至 W3-04 顺序修改，不并行；`app.tsx` 由 W3-03 与 W3-05 顺序修改。
-
-## 回滚
-
-- 文档卡按文件 revert；W1 五张卡未签字前可直接删除新建文件，设计 spec 的 §17（`:755-1039`）按行区间整段回退。
-- W2-01 的 `category="task"` 与消息字段是新增值，回滚停用写入并保留数据，不删历史；迁移回滚脚本随卡提交。
-- W2-02 的依赖与取消表按迁移版本回退，已写入的依赖关系不迁移到旧结构。
-- W3 五组组件按卡独立回滚，右栏回退到 `PRD-CONV-008` 的只读投影。
-- W4/W5 只新增脚本与报告，回滚即 revert，不影响运行时。
+| W0-01 | 产品 spec 定稿 | done | 保留，判据来源 |
+| W0-02 | 变更包骨架与 TC 锚点 | done | 保留，本文件与 `evidence.md` 接手 |
+| W1-01 | 设计 spec §17 | done | 保留，`specs/design/P1-CONV/spec.md:756-1042` |
+| W1-02 | 前端 spec | 待建 | 已落盘于 `specs/frontend/P1-CONV/spec.md` §17（`:1044` 起），原卡状态漂移，由 T01 复核 |
+| W1-03 | 后端 spec | 待建 | 已落盘于 `specs/backend/P1-CONV/spec.md` §17（`:760` 起），原卡状态漂移，由 T01 复核 |
+| W1-04 | 测试 spec | 待建 | 已落盘于 `specs/test/P1-CONV/test-plan.md` §18（`:900` 起），原卡状态漂移，由 T01 复核 |
+| W1-05 | 设计对齐核验 | done | 保留 |
+| W2-01 | 任务消息与卡片数据 | 待建 | 由 T02 承接 |
+| W2-02 | 编排与等待、取消级联 | 待建 | 由 T03 承接 |
+| W2-03 | 归属隔离、护栏与交付物 | 待建 | 由 T02 承接（与 W2-01 合并） |
+| W3-01 | 消息流任务卡片与汇总卡 | 待建 | 由 T04 承接 |
+| W3-02 | 右栏三标签与角标 | 待建 | 由 T05 承接 |
+| W3-03 | 概览四节与定位 | 待建 | 由 T05 承接 |
+| W3-04 | 厚卡、四筛选与详情 | 待建 | 由 T05 承接 |
+| W3-05 | 任务图与交付物 | 待建 | 由 T05 承接 |
+| W4-01 | 18 条与 8 条断言脚本 | 待建 | 拆为 T06（接口组）与 T07（界面组） |
+| W5-01 | 集成、走查、回归与签字 | 待建 | 拆为 T08（集成与端到端）、T09（回归与验收）与 T10（复盘） |

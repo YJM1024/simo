@@ -20,9 +20,11 @@ import {
 export { sleep, waitFor, bounds, clickAt, pressKey, READY_INSPECTOR };
 
 export class UiSkip extends Error {}
+/** 失败快速停：首条断言不成立即中止脚本，作为致命错误上报（不是 SKIP）。 */
+export class UiStop extends Error {}
 
 export const DEFAULT_BASE_URL = 'http://127.0.0.1:8787';
-export const OUT_DIR = path.join(ROOT, '.tmp', 'ac-scripts-ui-009');
+export const OUT_DIR = path.join(ROOT, '.tmp', 'ac');
 
 export const COUNTS = { all: 11, running: 2, pending: 5, failed: 1, done: 3 };
 
@@ -62,12 +64,12 @@ export function planDetail() {
   const steps = [1, 2, 3, 4, 5, 6, 7, 8].map((seq) => ({
     id: `s${seq}`,
     seq,
-    title: `第 ${seq} 步：${seq === 6 ? '汇总口径并生成结论' : seq === 7 ? '输出周报草稿' : '整理材料'}`,
+    title: `第 ${seq} 步：${seq === 6 ? '汇总口径并生成结论' : seq === 7 ? '输出周报草稿' : seq === 5 ? '整理材料（已归档）' : '整理材料'}`,
     status: seq <= 5 ? 'done' : seq === 6 ? 'running' : 'pending',
     traceCount: seq === 6 ? 8 : seq <= 5 ? 2 : 0,
     summary: seq <= 5 ? '已完成' : '',
   }));
-  const traces = Array.from({ length: 8 }, (_, i) => trace(i + 1, ['thought', 'action', 'observation'][i % 3], `第 6 步轨迹 ${i + 1}`, tm(i + 1)));
+  const traces = Array.from({ length: 8 }, (_, i) => ({ ...trace(i + 1, ['thought', 'action', 'observation'][i % 3], `第 6 步轨迹 ${i + 1}`, tm(i + 1)), stepId: 's6' }));
   return {
     task: { ...TASK_BY_ID.t1, status: 'running' },
     steps,
@@ -203,20 +205,20 @@ export function buildStub(overrides = {}) {
     { match: '/api/sessions/main/tasks\\?[^#]*status=done', status: 200, body: list('done') },
     { match: '/api/sessions/main/tasks\\?[^#]*status=pending', status: 200, body: list('pending') },
     { match: '/api/sessions/main/tasks(\\?|$)', status: 200, body: { ...list('all'), tasks, total: tasks.length } },
-    { match: '/api/tasks/t1(\\?|$)', status: 200, body: overrides.detail ?? planDetail() },
-    { match: '/api/tasks/t2(\\?|$)', status: 200, body: exploreDetail() },
-    { match: '/api/sessions/main/task-graph', status: 200, body: overrides.graph ?? graphPayload() },
+    { match: '(/api/tasks/t1|/api/sessions/main/tasks/t1)(\\?|$)', status: 200, body: overrides.detail ?? planDetail() },
+    { match: '(/api/tasks/t2|/api/sessions/main/tasks/t2)(\\?|$)', status: 200, body: exploreDetail() },
+    { match: '(/api/sessions/main/tasks/graph|/api/sessions/main/task-graph)', status: 200, body: overrides.graph ?? graphPayload() },
     { match: '/api/sessions/main/deliverables', status: 200, body: overrides.deliverables ?? deliverablesPayload() },
     { match: '/api/sessions/main/spec-projection', status: 200, body: overrides.projection ?? projectionPayload() },
   ];
   // 桩配置只能静态匹配，这里按 taskId 展开通用详情。
   for (const task of tasks) {
     if (task.id === 't1' || task.id === 't2') continue;
-    rules.push({ match: `/api/tasks/${task.id}(\\?|$)`, status: 200, body: detailFor(task.id) });
+    rules.push({ match: `(/api/tasks/${task.id}|/api/sessions/main/tasks/${task.id})(\\?|$)`, status: 200, body: detailFor(task.id) });
   }
   // 任务图节点打开详情也走 N3；节点 id 用 a–h。
-  for (const id of ['a', 'b', 'c', 'e', 'f', 'g', 'h']) {
-    rules.push({ match: `/api/tasks/${id}(\\?|$)`, status: 200, body: detailFor(id) });
+  for (const id of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']) {
+    rules.push({ match: `(/api/tasks/${id}|/api/sessions/main/tasks/${id})(\\?|$)`, status: 200, body: detailFor(id) });
   }
   return { rules };
 }
@@ -281,8 +283,11 @@ function fmt(value) {
  */
 export async function runUiAc(ac, fn) {
   const argv = process.argv.slice(2);
-  let baseUrl = DEFAULT_BASE_URL;
-  let explicitBase = false;
+  let baseUrl = process.env.AC_UI_BASE || DEFAULT_BASE_URL;
+  let explicitBase = Boolean(process.env.AC_UI_BASE);
+  // 批次共享模式：页面服务由 run-ac.mjs 的 harness 起好并探活，脚本不再自己探页面。
+  const shared = process.env.AC_UI_SHARED === '1';
+  const failFast = process.env.AC_FAIL_FAST === '1';
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--base-url') { baseUrl = argv[++i] ?? baseUrl; explicitBase = true; }
     else if (argv[i].startsWith('--base-url=')) { baseUrl = argv[i].slice('--base-url='.length); explicitBase = true; }
@@ -294,6 +299,8 @@ export async function runUiAc(ac, fn) {
     ac, baseUrl, checks, evidence, client: null,
     check(ok, name, expected, actual) {
       checks.push({ ok: !!ok, name, expected, actual });
+      // 失败快速停：首条不成立就停，不跑剩余步骤；通过路径的断言条数不变。
+      if (!ok && failFast) throw new UiStop(name);
       return !!ok;
     },
     async open(stub, options = {}) {
@@ -305,23 +312,29 @@ export async function runUiAc(ac, fn) {
   let fatal = '';
   const started = Date.now();
   try {
-    // 服务页面可用性：未显式给 --base-url 时按既有做法在 8787/8789 里取当前服务。
-    const candidates = explicitBase ? [baseUrl] : [baseUrl, 'http://127.0.0.1:8789'];
-    let reachable = false;
-    const tried = [];
-    for (const candidate of candidates) {
-      try {
-        await fetch(candidate + '/', { signal: AbortSignal.timeout(2500), redirect: 'manual' });
-        baseUrl = candidate;
-        ctx.baseUrl = candidate;
-        reachable = true;
-        break;
-      } catch (err) {
-        tried.push(`${candidate}（${err.message}）`);
+    // 服务页面可用性：共享模式下由 harness 起页面服务并已探活，跳过逐个候选探测；
+    // 单脚本模式未显式给 --base-url 时按既有做法在 8787/8789 里取当前服务。
+    if (shared) {
+      ctx.baseUrl = baseUrl;
+    } else {
+      const candidates = explicitBase ? [baseUrl] : [baseUrl, 'http://127.0.0.1:8789'];
+      let reachable = false;
+      const tried = [];
+      for (const candidate of candidates) {
+        try {
+          await fetch(candidate + '/', { signal: AbortSignal.timeout(2500), redirect: 'manual' });
+          baseUrl = candidate;
+          ctx.baseUrl = candidate;
+          reachable = true;
+          break;
+        } catch (err) {
+          tried.push(`${candidate}（${err.message}）`);
+        }
       }
+      if (!reachable) throw new UiSkip(`没有可用前端页面：${tried.join('、')}`);
     }
-    if (!reachable) throw new UiSkip(`没有可用前端页面：${tried.join('、')}`);
-    ctx.client = await connect(baseUrl);
+    // 共享模式每条脚本一个独立标签页：并行跑时不会互相导航到对方的页面。
+    ctx.client = await connect(baseUrl, { newTarget: process.env.AC_UI_NEW_TARGET === '1' });
     await installStub(ctx.client);
     await fn(ctx);
   } catch (err) {
