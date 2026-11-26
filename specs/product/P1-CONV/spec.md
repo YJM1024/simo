@@ -315,7 +315,7 @@
 - 需求点编号：`REQ-CONV-009.1` 至 `REQ-CONV-009.7`，映射见 `specs/changes/CHG-CONV-007/proposal.md` §4；后续卡片与判据的 REQ 字段引用这七个编号，不再另编。
 
 - 优先级：P1
-- 实现状态：`unimplemented`（覆盖 `gap`；形态由用户确认，证据为原型 `docs/design/task-prototype-v3-20261123.html` 九屏，2026-11-23）
+- 实现状态：`implemented`（覆盖 `covered`；26 条 AC 全 pass、560 条断言，验收报告 `docs/testing/ACCEPT-CONV-007-R5-20261126.md`、复盘 `docs/plan/RETRO-CHG-CHG-CONV-007.md`；形态以原型 `docs/design/task-prototype-v3-20261123.html` 九屏为准，2026-11-26）
 - 六类状态：产品 spec ✅（本节）/ CHANGE ✅（`CHG-CONV-007` 已立，`specs/changes/CHG-CONV-007/`，17 张任务卡）/ 前端开发 spec ⚠️（待变更包补 `frontend.md`）/ 后端开发 spec ⚠️（待补 `backend.md`）/ 组件 ⚠️（右栏三标签、任务卡片、任务图待立 COMP）/ 任务卡 ✅（`tasks.md` 17 张，W0 与设计 spec 卡 done，其余待派发）/ test-plan ⚠️（TC 待补）/ 证据 ❌（仅原型；18 条断言脚本与 test-plan 用例未建）
 - 边界：本 PRD 承担会话内的任务创建、呈现、编排与归属；任务执行器与生命周期状态机仍归 `P2-TASK`（编号不动），交付物存储与下载实现仍归 `P4-FILE`。
 - 目标行为：
@@ -397,10 +397,10 @@
 | `PRD-SYNC-002` | 多标签 active/ancestor/read cursor | `implemented`（覆盖 `covered`） | `App.tabsync.test.tsx:115/148/165/189/211/235/273/297/316/340`、`App.tabsync.channel.test.tsx:98/113`、`App.tabsync.degrade.test.tsx` 覆盖 active/祖先/读游标、同 `at` tiebreak 与降级，`test-plan.md:152-153` 记 pass；peer 为模拟双实例，真双标签时序仍归 §15 M-03 |
 | `PRD-SYNC-003` | 发送模式/设置跨标签同步 | `implemented`（覆盖 `covered`） | 单标签持久化与跨标签/降级均有测试：`Composer.test.tsx:144/178/198/219`，`test-plan.md:155` 记 pass；真实两标签时序见 §15 M-03 |
 | `PRD-SYNC-004` | 未读与已读游标 | `implemented`（覆盖 `covered`） | 会话级持久化读游标已实现（后端表/接口 + 前端接入）；`AC-SYNC-004-01/02/03` 全 pass。 |
-| `PRD-CONV-009` | 会话内任务与编排 | `unimplemented`（覆盖 `gap`） | 形态由用户确认为原型 `docs/design/task-prototype-v3-20261123.html` 九屏（2026-11-23）；18 条 AC 已冻结编号，变更包已立（`specs/changes/CHG-CONV-007/`，含 17 张任务卡），断言脚本与 test-plan 用例待建；任务执行器与交付物存储分别由 P2-TASK、P4-FILE 承接 |
+| `PRD-CONV-009` | 会话内任务与编排 | `implemented`（覆盖 `covered`） | 2026-11-26 交付并签发：26 条 AC 全部 pass、560 条断言，五门禁本包全绿，真机 16/16（验收报告 `docs/testing/ACCEPT-CONV-007-R5-20261126.md`、复盘 `docs/plan/RETRO-CHG-CHG-CONV-007.md`）；形态以原型 `docs/design/task-prototype-v3-20261123.html` 九屏为准；任务执行器与交付物存储分别由 P2-TASK、P4-FILE 承接 |
 
-**未实现项（unimplemented）**：`PRD-CONV-009`（会话内任务与编排，18 条 AC 待建脚本与用例；原 `PRD-SYNC-005` 已移除，编号不复用）。
-**覆盖口径**：**当前状态 12 covered / 0 partial / 1 gap**（13 个 PRD；`specs/test/P1-CONV/test-plan.md`：33 条既有 AC = 33 pass / 0 partial / 0 blocked）；`PRD-CONV-009` 的 18 条 AC 记 `missing`（脚本与用例未建，不计入按用例判定的覆盖）；删除/子会话移动为**显式非目标**，不计缺口；`implemented` 只表示“可运行实现 + 部分证据”。改造前按移除后的 12 个 PRD 计为 0 covered / 12 partial / 0 gap。
+**未实现项（unimplemented）**：无（原 `PRD-SYNC-005` 已移除，编号不复用）。
+**覆盖口径**：**当前状态 13 covered / 0 partial / 0 gap**（13 个 PRD；`specs/test/P1-CONV/test-plan.md`：33 条既有 AC = 33 pass / 0 partial / 0 blocked，`PRD-CONV-009` 26 条 AC = 26 pass / 560 条断言）；删除/子会话移动为**显式非目标**，不计缺口；`implemented` 只表示“可运行实现 + 部分证据”。改造前按移除后的 12 个 PRD 计为 0 covered / 12 partial / 0 gap。
 
 ## 7. 依赖、风险、待确认与边界清单
 
