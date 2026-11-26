@@ -4,7 +4,7 @@
 |---|---|
 | 组件编号 | `COMP-task-detail-layer` |
 | 组件名称 | `TaskDetailLayer`（任务详情只读层） |
-| 状态 | `verified`（2026-11-26；复签未通过的 A3、A6 已按 D1/D2 修复，待复核，缺陷记录见 `docs/testing/COMP-SIGN-4-20261126.md` §4） |
+| 状态 | `accepted`（2026-11-26；签收人 `comp-sign-4`；报告 `docs/testing/COMP-SIGN-4-20261126.md`） |
 | Owner | 实现：前端（CHG-CONV-007 W3）；设计：设计（`specs/design/P1-CONV/spec.md` §17）；验收：独立验收 Agent（不得为实现者） |
 | Used by | `PRD-CONV-009`、`CHG-CONV-007` |
 | 视觉基线 | `specs/design/P1-CONV/spec.md` §17 的 `V-CONV-009-*`；token 取自 `frontend/src/styles/tokens.css` |
@@ -106,10 +106,10 @@
 |---|---|---|---|---|
 | A1 | 层根为 `role="dialog"`、`aria-modal="true"`，`data-task-id` 与打开来源一致。Covers: `AC-CONV-009-03` | `node scripts/ac/AC-CONV-009-03.mjs` | `evidence.md` §1 | pass |
 | A2 | 启动上下文显示目标 1 条、历史消息 0 条。Covers: `AC-CONV-009-03` | 同上 | 同上 | pass |
-| A3 | 正常态重试、取消、编辑、删除、确认、恢复各 0 个、关闭 1 个、表单控件 0 个；错误态恰好 1 个重试按钮，点击只重拉一次详情 GET、非 GET 请求 0 条。Covers: `AC-CONV-009-07` | `node scripts/ac/AC-CONV-009-07.mjs`、`AC-CONV-009-05.mjs` 的错误态分支与 `TaskDetail.test.tsx` | 同上 | verified（已按 D1/D2 修复，待复核） |
+| A3 | 正常态重试、取消、编辑、删除、确认、恢复各 0 个、关闭 1 个、表单控件 0 个；错误态恰好 1 个重试按钮，点击只重拉一次详情 GET、非 GET 请求 0 条。Covers: `AC-CONV-009-07` | `node scripts/ac/AC-CONV-009-07.mjs`、`AC-CONV-009-05.mjs` 的错误态分支与 `TaskDetail.test.tsx` | 同上 | pass |
 | A4 | 8 步示例第 6 步默认展开、第 5 步可点回看、第 7 步无箭头无 `tabindex`。Covers: `AC-CONV-009-05` | `node scripts/ac/AC-CONV-009-05.mjs` | 同上 | pass |
 | A5 | 边做边想详情 14 行、步骤节点 0、分组 0、展开入口 0，时间单调不减。Covers: `AC-CONV-009-06` | `node scripts/ac/AC-CONV-009-06.mjs` | 同上 | pass |
-| A6 | plan 与 explore 共用同一套截断：首屏最多 200 条，「加载更早」每次补 200 条，到 500 条后入口消失并显示「已显示最近 500 条，达到上限」，超过 500 条不再进 DOM，任何一条分支都不绕过。边界 | `node scripts/ac/AC-CONV-009-05.mjs` 的轨迹与上限分支、`TaskDetail.test.tsx` 的两条上限用例 | 同上 | verified（已按 D1/D2 修复，待复核） |
+| A6 | plan 与 explore 共用同一套截断：首屏最多 200 条，「加载更早」每次补 200 条，到 500 条后入口消失并显示「已显示最近 500 条，达到上限」，超过 500 条不再进 DOM，任何一条分支都不绕过。边界 | `node scripts/ac/AC-CONV-009-05.mjs` 的轨迹与上限分支、`TaskDetail.test.tsx` 的两条上限用例 | 同上 | pass |
 | A7 | ≥1024px 左边缘贴侧栏右缘、右边缘贴右栏面板左缘、顶边 90±1px、底边到视口底，误差 ≤1px。Covers: `D-17-01` | `node scripts/ac/AC-CONV-009-08.mjs` | 同上 | pass |
 | A8 | 768 档覆盖抽屉，宽等于抽屉宽，任务图全屏；<760px 不渲染。边界 | `node scripts/ac/AC-CONV-009-08.mjs` 的断点分支 | `.tmp/chg-007-final-run-3/shots/768-02-drawer.png` | pass |
 | A9 | 详情 Tab 焦点陷阱与 Esc 关闭，关闭后焦点回来源。无障碍 | `node scripts/ac/AC-CONV-009-13.mjs` 的焦点分支 | `ACCEPT-CONV-007-R5-20261126.md` §7 | pass |
