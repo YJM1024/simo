@@ -29,7 +29,7 @@
 | §11 | `PRD-SYNC-002` | 多标签 active/ancestor/read | P0 | implemented | **契约完整，零自动化证据** | 无 UI（`useTabSync`） | BroadcastChannel | 仅 CDP 13（部分） |
 | §12 | `PRD-SYNC-003` | 发送模式跨标签同步 | P1 | implemented | 契约完整 | `Composer` | localStorage + BC | 组件 + CDP 13 |
 | §13 | `PRD-SYNC-004` | 未读与已读游标 | P1 | **partial** | **契约与实现不一致** | `Sidebar` / `App` | 仅前端内存态 | 无（`missing`） |
-| §17 | `PRD-CONV-009` | 会话内任务与编排 | P1 | `gap`（18 条 AC 未实现） | 契约完整，待实现 | `RightPanel` / `TaskPanel` / `TaskDetail` / `TaskGraphDialog` / `MessageItem` | N1–N9（见 §17.3） | 组件 + CDP + 单测（待建） |
+| §17 | `PRD-CONV-009` | 会话内任务与编排 | P1 | implemented（覆盖 `covered`；26 条 AC 全部 pass） | 契约完整，已实现（2026-11-26） | `RightPanel` / `TaskPanel` / `TaskDetail` / `TaskGraphDialog` / `MessageItem` | N1–N9（见 §17.3） | 组件 + CDP + 单测（已建） |
 
 排除项：`PRD-SYNC-005`（远程访问与通知中心）已于 2026-11-22 移除，编号不复用，本文件不写前端契约。
 

@@ -1,7 +1,7 @@
 # CHG-CONV-007 · 会话内任务与编排：变更 spec
 
-状态：进行中（2026-11-25 重立；18 条 AC 已冻结；四列 spec 已落盘，契约冻结复核在 T01；异常登记的出口 A/B 待用户裁决）
-阶段：执行（六阶段中的第四阶段；受理与判级、契约与设计已过，契约冻结复核 T01 待签）
+状态：已交付并签发（2026-11-26；26 条 AC 全部 pass、560 条断言；验收报告 `docs/testing/ACCEPT-CONV-007-R5-20261126.md`）
+阶段：收口（六阶段中的第六阶段；实现、测试与独立验收已完成并签字）
 Implements: `PRD-CONV-009`
 Covers: `AC-CONV-009-01`、`AC-CONV-009-02`、`AC-CONV-009-03`、`AC-CONV-009-04`、`AC-CONV-009-05`、`AC-CONV-009-06`、`AC-CONV-009-07`、`AC-CONV-009-08`、`AC-CONV-009-09`、`AC-CONV-009-10`、`AC-CONV-009-11`、`AC-CONV-009-12`、`AC-CONV-009-13`、`AC-CONV-009-14`、`AC-CONV-009-15`、`AC-CONV-009-16`、`AC-CONV-009-17`、`AC-CONV-009-18`
 Covers 摘要：`AC-CONV-009-01` 至 `-18` 共 18 条，加 `AC-CHG-CONV-007-01` 至 `-08` 共 8 条，合计 26 条；判据形式与负责人见 [tasks.md](tasks.md) 第 4 节，证据现状见 [evidence.md](evidence.md)。
@@ -13,12 +13,12 @@ Owner：产品（AC 口径与覆盖映射）/ 设计（交互与尺寸）/ 前�
 > 关联：产品 spec [`../../product/P1-CONV/spec.md`](../../product/P1-CONV/spec.md) §4.6（`:310-363`）、A9（`:377`）；功能树 [`../../../docs/product/TREE.md`](../../../docs/product/TREE.md) `:146-148`；追溯矩阵 [`../../../docs/product/TRACEABILITY.md`](../../../docs/product/TRACEABILITY.md) `:75`；测试计划 [`../../test/P1-CONV/test-plan.md`](../../test/P1-CONV/test-plan.md) §18；原型 [`../../../docs/design/task-prototype-v3-20261123.html`](../../../docs/design/task-prototype-v3-20261123.html)；本包 [`proposal.md`](proposal.md)、[`tasks.md`](tasks.md)、[`evidence.md`](evidence.md)。
 判级：变更级
 创建日期：2026-11-23
-关闭日期：N/A：尚未收口，关闭日期在验收签字后补记
+关闭日期：2026-11-26（验收签发日）
 ## 1. 背景与问题
 
 P1 会话域已经完成建域并签收（12 个 PRD `covered`，33 条 AC `pass`，见 `docs/testing/ACCEPT-CONV-10-20261122.md`）。本包不在这个域上重建任何东西，只在已建成的会话域里补 `PRD-CONV-009` 一项能力，因此变更类型为**增量型变更**。域已存在时读长期 spec、写增量补丁，口径见 `docs/process/PROCESS.md` 第 2 节。
 
-`PRD-CONV-009` 已在产品 spec 定稿：15 条目标行为（`:320-334`），18 条 AC（`:343-363`），场景 I（`:52`），A9（`:377`），状态 `unimplemented` / `gap`（`:395-397`），裁决 ⑧（`:406`）；四项待确认已于 2026-11-23 裁决并写回（`:323`、`:329`、`:336-341`、`:345`、`:357`、`:359`、`:408`）。原型九屏已由用户于 2026-11-23 确认。仓库里已有 B1 parked 的 tasks 模块（`backend/internal/modules/tasks/`，受 `cfg.Modules["tasks"]` 开关控制），提供任务记录、依赖编排、取消与交付物接口；P1 的会话面没有建：消息流没有任务卡片分支，右栏仍是 `PRD-CONV-008` 的只读投影（`frontend/src/components/library.tsx:1097` 的 `OverviewContent`、`:1164` 的 `RightPanel`），没有概览、任务、交付物三标签，没有任务详情与任务图，交付物没有按任务分组的下载入口，18 条 AC 没有断言脚本与 test-plan 用例。
+`PRD-CONV-009` 已在产品 spec 定稿：15 条目标行为（`:320-334`），18 条 AC（`:344-368`），场景 I（`:52`），A9（`:382`），状态 `unimplemented` / `gap`（当时记于 §6，2026-11-26 已升 `implemented` / `covered`），裁决 ⑧（`:406`）；四项待确认已于 2026-11-23 裁决并写回（`:323`、`:329`、`:336-341`、`:345`、`:357`、`:359`、`:408`）。原型九屏已由用户于 2026-11-23 确认。仓库里已有 B1 parked 的 tasks 模块（`backend/internal/modules/tasks/`，受 `cfg.Modules["tasks"]` 开关控制），提供任务记录、依赖编排、取消与交付物接口；P1 的会话面没有建：消息流没有任务卡片分支，右栏仍是 `PRD-CONV-008` 的只读投影（`frontend/src/components/library.tsx:1097` 的 `OverviewContent`、`:1164` 的 `RightPanel`），没有概览、任务、交付物三标签，没有任务详情与任务图，交付物没有按任务分组的下载入口，18 条 AC 当时没有断言脚本与 test-plan 用例；截至 2026-11-26，18 条断言脚本（`scripts/ac/AC-CONV-009-01..18.mjs`）与 test-plan §18 的 `TC-P1-CONV-037..054` 已全部建立并 pass，证据见 [`evidence.md`](evidence.md) 与 [`ACCEPT-CONV-007-R5-20261126.md`](../../../docs/testing/ACCEPT-CONV-007-R5-20261126.md)。
 
 本包与既有工作的边界：
 
@@ -79,7 +79,7 @@ P1 会话域已经完成建域并签收（12 个 PRD `covered`，33 条 AC `pass
 
 ## 5. 变更级验收标准（AC）
 
-编号按 `AC-CHG-CONV-007-NN`。每条只写本包承诺、且可由脚本或明确人工动作判定的内容；证据锚点指向本包要求落盘的位置，W5 前一律记 `missing`。
+编号按 `AC-CHG-CONV-007-NN`。每条只写本包承诺、且可由脚本或明确人工动作判定的内容；证据锚点指向本包要求落盘的位置，截至 2026-11-26 已全部回填，见 [`evidence.md`](evidence.md)。
 
 ### AC-CHG-CONV-007-01 · 端到端主链
 
@@ -189,12 +189,14 @@ P1 会话域已经完成建域并签收（12 个 PRD `covered`，33 条 AC `pass
 | 产品 spec | ✅ | `specs/product/P1-CONV/spec.md` §4.6、A9、§6、§7 ⑧ 已于 2026-11-23 定稿 |
 | 变更 spec | ✅ | 本文件；18 条 `Covers` 与 8 条变更级 AC 已落 |
 | 设计 spec | ✅ | `specs/design/P1-CONV/spec.md` §17（`:756-1042`），45 条 `V-CONV-009-*` 判据（`:983-1026`），§16 变更记录 v0.3（`:748`）；原四处旧值已于 2026-11-23 回写，DEC-30/31 对齐完成，见 §9 与 `evidence.md` §5 |
-| 前端开发 spec | ⚠️ 待建 | W1-02；按功能点分节，列出组件、状态、接口与降级 |
-| 后端开发 spec | ⚠️ 待建 | W1-03；列出路由、表、错误码、编排与护栏 |
-| 组件 spec | ⚠️ 待立 | `COMP-task-card`、`COMP-right-panel-tabs`、`COMP-task-graph` 三份；未签收前该列记 `missing` |
-| 任务卡 | ✅ | [`tasks.md`](tasks.md) 17 张卡，四要素齐全；W0、W1-01、W1-05 已完成 |
-| test-plan | ⚠️ 占位 | §18 锚点 `tc-p1-conv-009` 已建，18 条 TC 明细待测试角色填充 |
-| 证据 | ❌ 待执行 | [`evidence.md`](evidence.md)；W2 起按卡回填 |
+| 前端开发 spec | ⚠️ | 变更包内无 `frontend.md`；前端契约在长期 spec `specs/frontend/P1-CONV/spec.md` §17，已按 2026-11-26 实现复核 |
+| 后端开发 spec | ⚠️ | 变更包内无 `backend.md`；路由、表、错误码与护栏落在实现与 [`evidence.md`](evidence.md) 的接口证据里 |
+| 组件 spec | ⚠️ | `COMP-task-card`、`COMP-right-panel-tabs`、`COMP-task-graph` 三份文件未建、未签收，组件列继续记 `missing` |
+| 任务卡 | ✅ | [`tasks.md`](tasks.md) 17 张旧卡重排为 T01–T10 共 10 张，四要素齐全，全部完成 |
+| test-plan | ✅ | §18 的 `TC-P1-CONV-037..054` 18 条已建并全部 `pass` |
+| 证据 | ✅ | [`evidence.md`](evidence.md) 已回填；26 条 AC 全部 pass、560 条断言，验收报告 [`ACCEPT-CONV-007-R5-20261126.md`](../../../docs/testing/ACCEPT-CONV-007-R5-20261126.md) |
+
+> 单独产物说明：本包不单独建 `frontend.md` 与 `backend.md`，N/A：前端契约并入长期 spec `specs/frontend/P1-CONV/spec.md` §17，后端契约与接口证据落在实现与 `evidence.md`；三份 COMP 仍缺，见上表。
 
 ## 8. 影响、风险与回滚
 
@@ -270,10 +272,10 @@ P1 会话域已经完成建域并签收（12 个 PRD `covered`，33 条 AC `pass
 ## 13. 待确认
 
 1. `evidence.md` §5 记录的剩余行号漂移尚未回写设计 spec，属于引用精度问题，不影响 18 条 AC 的判据；由设计列在下一次回写时统一处理。
-2. W1-02 前端 spec、W1-03 后端 spec、W1-04 测试 spec 仍待建，接口形状冻结前 W2/W3 只能按 §12 的登记与夹具推进。
-3. `COMP-task-card`、`COMP-right-panel-tabs`、`COMP-task-graph` 三份组件 spec 未签收，组件列继续记 `missing`。
-4. `specs/test/P1-CONV/test-plan.md` §18 只有锚点，18 条 TC 明细待测试角色填充；填充前本包 test-plan 记部分覆盖。
-5. 本包 8 条变更级 AC 的证据在本轮全部为 `missing`（W5 前不执行），不以域级签字替代。
+2. 已解除：前端与后端契约分别落在长期 spec `specs/frontend/P1-CONV/spec.md` §17 与实现；变更包 `frontend.md`、`backend.md` 仍未建，已在 §7 记 ⚠️。
+3. 仍未解除：`COMP-task-card`、`COMP-right-panel-tabs`、`COMP-task-graph` 三份组件 spec 未签收，组件列继续记 `missing`。
+4. 已解除：`specs/test/P1-CONV/test-plan.md` §18 的 18 条 TC（`TC-P1-CONV-037..054`）已建并全部 `pass`。
+5. 已解除：8 条变更级 AC 已全部 `pass`（逐条断言数 14/14/52/15/31/17/25/25），证据见 [`evidence.md`](evidence.md)。
 
 ## 五列契约索引
 
@@ -286,10 +288,11 @@ P1 会话域已经完成建域并签收（12 个 PRD `covered`，33 条 AC `pass
 
 - 2026-11-23：建立本包并首次登记状态。
 - 2026-11-23：按门禁要求补齐首部字段、模板节与证据列，状态词按七值口径登记；内容口径不变。
+- 2026-11-26：交付并签发；26 条 AC 全部 pass、560 条断言，8 条变更级 AC 全部 pass。
 
 ## 收口
 
-未收口：当前为设计完成、实现未开工状态，8 条变更级 AC 的证据均为 `missing`；关闭前需完成实现、测试与独立验收（见 §8 风险与 §9 裁决）。
+已收口：2026-11-26 交付并签发。26 条 AC（18 条产品 AC + 8 条变更级 AC）全部 `pass`、560 条断言（产品 367 + 变更 193）；独立验收报告 [`ACCEPT-CONV-007-R5-20261126.md`](../../../docs/testing/ACCEPT-CONV-007-R5-20261126.md)，复盘 [`RETRO-CHG-CHG-CONV-007.md`](../../../docs/plan/RETRO-CHG-CHG-CONV-007.md)。六类产物中变更包 `frontend.md`、`backend.md` 与三份 COMP 仍缺，已在 §7 与 §13 登记，不影响本次签发。
 
 ## 风险与依赖
 依赖：无新增外部依赖；证据来自本包 `test-plan.md` 与 `evidence.md` 引用的既有报告。

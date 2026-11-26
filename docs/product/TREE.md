@@ -77,9 +77,9 @@ mindmap
 | [`P8`](#p8) | 设置与系统 | `SET`/`SYS` | 5 | 12 | 1 | 8 | 3 | [spec](../../specs/product/P8-SET/spec.md) | [test](../../specs/test/P8-SET/test-plan.md) |
 | [`P9`](#p9) | 工具与能力 | `TOOL` | 4 | 7 | 0 | 4 | 3 | [spec](../../specs/product/P9-TOOL/spec.md) | [test](../../specs/test/P9-TOOL/test-plan.md) |
 | [`P10`](#p10) | 指标 | `METRIC` | 3 | 6 | 3 | 2 | 1 | [spec](../../specs/product/P10-METRIC/spec.md) | [test](../../specs/test/P10-METRIC/test-plan.md) |
-| **合计** | — | 12 个技术域码 | **41** | **72** | **20** | **36** | **16** | **10/10** | **10/10** |
+| **合计** | — | 12 个技术域码 | **41** | **72** | **21** | **36** | **15** | **10/10** | **10/10** |
 
-> 覆盖口径（2026-11-22 P1 收口，2026-11-23 补 `PRD-CONV-009`；同日移除 `PRD-SYNC-005`）：全仓 72 个 PRD = **12 covered / 37 partial / 23 gap**；P1 = **12 / 0 / 1**。上表 implemented / partial / unimplemented 三列统计实现状态，与覆盖状态分轴，故 P1 为 12 / 0 / 1；覆盖状态以各 PRD 行的“覆盖”列为准。
+> 覆盖口径（2026-11-22 P1 收口并移除 `PRD-SYNC-005`，2026-11-23 补 `PRD-CONV-009`，2026-11-26 该 PRD 交付并签发）：全仓 72 个 PRD = **13 covered / 37 partial / 22 gap**；P1 = **13 / 0 / 0**。上表 implemented / partial / unimplemented 三列统计实现状态，与覆盖状态分轴，全仓实现状态合计 21 implemented / 36 partial / 15 unimplemented；覆盖状态以各 PRD 行的“覆盖”列为准。
 
 ## 3. L2 / L3 功能点
 
@@ -88,7 +88,7 @@ mindmap
 
 范围：会话树、消息流、发送/流式、输入、时间轴、未读；并含 `SYNC` 的跨域边界。
 
-证据（2026-11-22 收口，同日移除 `PRD-SYNC-005`）：33 条 AC = **33 通过 / 0 部分**（`AC-CONV-006-02` 由 CDP 合成组合态证据转 pass，物理输入法只作环境限制）。P1 覆盖 **12 covered / 0 conditional / 0 not covered / 0 gap**（验收面 12 = `CONV-001..008` + `SYNC-001..004`：`CONV-006` 已闭环（`IME-EVIDENCE-20261122.md`）；`CONV-005` 已闭环，停止按消息定向、双流只停目标（`stop_interrupt_test.go:402`），停止机制由 `stop_upstream_test.go` 按假上游证明（`STOP-UPSTREAM-EVIDENCE-20261122.md`）；`CONV-008` 已闭环，真机 304 已补）。逐项见 [STOP-UPSTREAM-EVIDENCE](../testing/STOP-UPSTREAM-EVIDENCE-20261122.md)、[IME 证据](../testing/IME-EVIDENCE-20261122.md)、[第八轮验收](../testing/ACCEPT-CONV-8-20261122.md)、[test-plan](../../specs/test/P1-CONV/test-plan.md) 与 [CONV-CLOSURE](CONV-CLOSURE.md)。
+证据（2026-11-22 收口，2026-11-26 补 `CONV-009`）：33 条 AC = **33 通过 / 0 部分**（`AC-CONV-006-02` 由 CDP 合成组合态证据转 pass，物理输入法只作环境限制）。P1 覆盖 **13 covered / 0 conditional / 0 not covered / 0 gap**（验收面 13 = `CONV-001..009` + `SYNC-001..004`：`CONV-006` 已闭环（`IME-EVIDENCE-20261122.md`）；`CONV-005` 已闭环，停止按消息定向、双流只停目标（`stop_interrupt_test.go:402`），停止机制由 `stop_upstream_test.go` 按假上游证明（`STOP-UPSTREAM-EVIDENCE-20261122.md`）；`CONV-008` 已闭环，真机 304 已补；`CONV-009` 见下条）。逐项见 [STOP-UPSTREAM-EVIDENCE](../testing/STOP-UPSTREAM-EVIDENCE-20261122.md)、[IME 证据](../testing/IME-EVIDENCE-20261122.md)、[第八轮验收](../testing/ACCEPT-CONV-8-20261122.md)、[test-plan](../../specs/test/P1-CONV/test-plan.md) 与 [CONV-CLOSURE](CONV-CLOSURE.md)。
 
 2026-11-26 完成 `PRD-CONV-009`（会话内任务与编排，新增 L2）：实现状态 `implemented`、覆盖 `covered`，26 条 AC 全部 pass（560 条断言），变更包 `CHG-CONV-007` 已签发，验收报告 [`ACCEPT-CONV-007-R5`](../testing/ACCEPT-CONV-007-R5-20261126.md)、复盘 [`RETRO-CHG-CHG-CONV-007`](../plan/RETRO-CHG-CHG-CONV-007.md)。形态以原型 `docs/design/task-prototype-v3-20261123.html` 九屏为准。该功能组只承担会话内任务的呈现、编排与归属，任务执行器与生命周期仍归 P2-TASK。
 
