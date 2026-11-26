@@ -1,5 +1,7 @@
 # TEST PLAN · CHG-LEGACY-P4-FILE
 
+Covers: AC-P4-01…AC-P4-06（共 6 条，逐条见下表）
+
 ## 1. 范围与策略
 
 - 只验证 P4 文件与交付物 的已存在的实现/展示，不新增产品能力。
@@ -22,14 +24,14 @@ E:\dsh_home\workspaces\agent\toolchain\go\bin\go.exe test ./... -count=1 -json
 
 ## 3. AC → 测试矩阵
 
-| AC | 断言摘要 | 已有测试/证据 | 结果 |
-|---|---|---|---|
-| AC-P4-01 | 会话交付物/文件列表显示名称、类型、状态并可打开。 | TC-P4-003；RightPanel 6/6；E2E 07。 | PASS（展示级） |
-| AC-P4-02 | 交付物真实下载成功且内容非空。 | TC-P4-004；E2E 07。 | PASS（E2E 主路径） |
-| AC-P4-03 | 上传附件有大小/类型/失败反馈，并可被会话引用。 | TC-P4-002；无执行证据。 | MISSING |
-| AC-P4-04 | 预览 PDF/图片/Office 不越界、不执行脚本，失败可恢复。 | TC-P4-004；预览未测。 | MISSING |
-| AC-P4-05 | 工作区输出隔离，跨会话/跨目录不可读取。 | TC-P4-005；无执行证据。 | MISSING |
-| AC-P4-06 | PDF/Office/图片生成格式与失败路径可验证。 | TC-P4-006；无执行证据。 | MISSING |
+| AC | 用例 | 断言摘要 | 已有测试/证据 | 期望 | 结果 | 证据 |
+| --- | --- | --- | --- | --- | --- | --- |
+| AC-P4-01 | 会话交付物/文件列表显示名称、类型、状态并可打开。 | 会话交付物/文件列表显示名称、类型、状态并可打开。 | TC-P4-003；RightPanel 6/6；E2E 07。 | 全部断言通过，无 fail 与 skip | PASS（展示级） | docs/testing/EVIDENCE-20261120.md |
+| AC-P4-02 | 交付物真实下载成功且内容非空。 | 交付物真实下载成功且内容非空。 | TC-P4-004；E2E 07。 | 全部断言通过，无 fail 与 skip | PASS（E2E 主路径） | docs/testing/EVIDENCE-20261120.md |
+| AC-P4-03 | 上传附件有大小/类型/失败反馈，并可被会话引用。 | 上传附件有大小/类型/失败反馈，并可被会话引用。 | TC-P4-002；无执行证据。 | 全部断言通过，无 fail 与 skip | MISSING | missing |
+| AC-P4-04 | 预览 PDF/图片/Office 不越界、不执行脚本，失败可恢复。 | 预览 PDF/图片/Office 不越界、不执行脚本，失败可恢复。 | TC-P4-004；预览未测。 | 全部断言通过，无 fail 与 skip | MISSING | missing |
+| AC-P4-05 | 工作区输出隔离，跨会话/跨目录不可读取。 | 工作区输出隔离，跨会话/跨目录不可读取。 | TC-P4-005；无执行证据。 | 全部断言通过，无 fail 与 skip | MISSING | missing |
+| AC-P4-06 | PDF/Office/图片生成格式与失败路径可验证。 | PDF/Office/图片生成格式与失败路径可验证。 | TC-P4-006；无执行证据。 | 全部断言通过，无 fail 与 skip | MISSING | missing |
 
 ## 4. 域 test-plan 映射
 

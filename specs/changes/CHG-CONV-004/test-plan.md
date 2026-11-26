@@ -9,23 +9,23 @@ Covers: `AC-SYNC-001-01/02`、`AC-SYNC-002-01/02`、`AC-SYNC-003-01/02`
 
 ## 1. 用例 → AC → 证据
 
-| 用例 | AC | 落点 | 层级 | 结果 |
-|---|---|---|---|---|
-| C4-01 WS 事件顺序 | `AC-SYNC-001-01` | `cmd/simo/server_test.go::TestWebSocketEventOrder` | API | pass |
-| C4-02 `since` 补发 | `AC-SYNC-001-01` | `::TestWebSocketSinceContinuation` | API | pass |
-| C4-03 双客户端 fanout | `AC-SYNC-001-01` | `m88::TestM88WebSocketFanoutTwoClients` | API | pass |
-| C4-04 前端 delta 去重 | `AC-SYNC-001-01` | `App.integration.test.tsx::applies WebSocket deltas once and ignores duplicate sequence numbers` | integration | pass |
-| C4-05 前端重连退避 | `AC-SYNC-001-02` | 无 | — | **missing** |
-| C4-06 重连不丢不重 | `AC-SYNC-001-02` | 无 | — | **missing** |
-| C4-07 停止帧后端 | `AC-SYNC-001-02` | 无 | — | **missing** |
-| C4-08 多标签 active 同步 | `AC-SYNC-002-01` | 无 | E2E 双 target | **missing** |
-| C4-09 多标签祖先链合并 | `AC-SYNC-002-01` | 无 | E2E 双 target | **missing** |
-| C4-10 多标签未读清零 | `AC-SYNC-002-01` | 无 | E2E 双 target | **missing** |
-| C4-11 同 at tiebreak / 回声抑制 | `AC-SYNC-002-02` | 无 | unit（tabsync） | **missing** |
-| C4-12 chain key 去重 / 空 chain | `AC-SYNC-002-02` | 无 | unit | **missing** |
-| C4-13 sendMode 持久化/快捷键 | `AC-SYNC-003-01` | `Composer.test.tsx::toggles send mode, persists it and changes keyboard behavior` | component | pass |
-| C4-14 跨标签 sendMode | `AC-SYNC-003-01` | 无 | unit/E2E | **missing** |
-| C4-15 storage 事件回退 | `AC-SYNC-003-02` | 无 | unit | **missing** |
+| 用例 | AC | 落点 | 层级 | 期望 | 结果 | 证据 |
+| --- | --- | --- | --- | --- | --- | --- |
+| C4-01 WS 事件顺序 | `AC-SYNC-001-01` | `cmd/simo/server_test.go::TestWebSocketEventOrder` | API | 全部断言通过，无 fail 与 skip | pass | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| C4-02 `since` 补发 | `AC-SYNC-001-01` | `::TestWebSocketSinceContinuation` | API | 全部断言通过，无 fail 与 skip | pass | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| C4-03 双客户端 fanout | `AC-SYNC-001-01` | `m88::TestM88WebSocketFanoutTwoClients` | API | 全部断言通过，无 fail 与 skip | pass | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| C4-04 前端 delta 去重 | `AC-SYNC-001-01` | `App.integration.test.tsx::applies WebSocket deltas once and ignores duplicate sequence numbers` | integration | 全部断言通过，无 fail 与 skip | pass | frontend/review/TEST-REPORT.md |
+| C4-05 前端重连退避 | `AC-SYNC-001-02` | 无 | — | 全部断言通过，无 fail 与 skip | **missing** | missing |
+| C4-06 重连不丢不重 | `AC-SYNC-001-02` | 无 | — | 全部断言通过，无 fail 与 skip | **missing** | missing |
+| C4-07 停止帧后端 | `AC-SYNC-001-02` | 无 | — | 全部断言通过，无 fail 与 skip | **missing** | missing |
+| C4-08 多标签 active 同步 | `AC-SYNC-002-01` | 无 | E2E 双 target | 全部断言通过，无 fail 与 skip | **missing** | missing |
+| C4-09 多标签祖先链合并 | `AC-SYNC-002-01` | 无 | E2E 双 target | 全部断言通过，无 fail 与 skip | **missing** | missing |
+| C4-10 多标签未读清零 | `AC-SYNC-002-01` | 无 | E2E 双 target | 全部断言通过，无 fail 与 skip | **missing** | missing |
+| C4-11 同 at tiebreak / 回声抑制 | `AC-SYNC-002-02` | 无 | unit（tabsync） | 全部断言通过，无 fail 与 skip | **missing** | missing |
+| C4-12 chain key 去重 / 空 chain | `AC-SYNC-002-02` | 无 | unit | 全部断言通过，无 fail 与 skip | **missing** | missing |
+| C4-13 sendMode 持久化/快捷键 | `AC-SYNC-003-01` | `Composer.test.tsx::toggles send mode, persists it and changes keyboard behavior` | component | 全部断言通过，无 fail 与 skip | pass | frontend/review/TEST-REPORT.md |
+| C4-14 跨标签 sendMode | `AC-SYNC-003-01` | 无 | unit/E2E | 全部断言通过，无 fail 与 skip | **missing** | missing |
+| C4-15 storage 事件回退 | `AC-SYNC-003-02` | 无 | unit | 全部断言通过，无 fail 与 skip | **missing** | missing |
 
 ## 2. 数据与 mock
 

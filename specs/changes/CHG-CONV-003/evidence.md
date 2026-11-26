@@ -4,6 +4,8 @@
 Change: CHG-CONV-003
 Implements: PRD-CONV-005、PRD-CONV-006
 
+结果：本轮未重跑，逐条证据见下表；未验证项按 `missing` 记，不宣称通过。
+
 ## 1. 历史执行记录
 
 | 命令 | 结果 | 来源 |
@@ -13,6 +15,18 @@ Implements: PRD-CONV-005、PRD-CONV-006
 | `go test ./...` | 223/223 PASS（cmd/simo 的 WS/M2/M55/M6 等） | `docs/testing/BACKEND-EVIDENCE-20261120.md` |
 
 ## 2. 逐 AC 证据
+
+## AC 证据索引
+
+| 证据 ID | AC | 类型 | 命令 | 路径 | 生成时间 | 结果 | 可复跑 | 轮次 |
+|---|---|---|---|---|---|---|---|---|
+| E-AC-CONV-005-01-01 | AC-CONV-005-01 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-21 | pass | 是 | 1 |
+| E-AC-CONV-005-02-01 | AC-CONV-005-02 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-CONV-003/spec.md | 2026-11-21 | partial | 是 | 1 |
+| E-AC-CONV-006-01-01 | AC-CONV-006-01 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-CONV-003/spec.md | 2026-11-21 | pass | 是 | 1 |
+| E-AC-CONV-006-02-01 | AC-CONV-006-02 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-CONV-003/spec.md | 2026-11-21 | partial | 是 | 1 |
+| E-AC-SYNC-003-01-01 | AC-SYNC-003-01 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-CONV-003/spec.md | 2026-11-21 | missing | 否 | 0 |
+
+> 本表按 AC 汇总已有证据来源与判定；逐条细节仍以本文件下列各节与 `test-plan.md` 为准。
 
 | AC | 证据 | 状态 |
 |---|---|---|

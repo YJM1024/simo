@@ -37,3 +37,92 @@ Covers: `AC-TASK-001-01` `AC-TASK-001-02` `AC-TASK-001-03` `AC-TASK-001-04` `AC-
 - 所有用例尚未执行：脚本尚未创建（`scripts/ac/AC-CHG-B1-001-*.mjs` 不存在），证据一律 `missing`。
 - `PRD-TASK-003/004/005` 的实现是 `unimplemented`，对应用例在实现前只能记 `blocked`。
 - 本轮只验证文档门禁（`check-trace`、`check-sdd`），不把文档门禁通过当成功能通过。
+
+## AC 映射表
+
+| AC | 用例 | 期望 | 证据 | 可复跑 |
+|---|---|---|---|---|
+| AC-TASK-001-01 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-001-02 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-001-03 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-001-04 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-001-05 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-001-06 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-002-01 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-002-02 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-002-03 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-002-04 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-003-01 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-003-02 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-003-03 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-003-04 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-003-05 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-006-01 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-006-02 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-006-03 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-006-04 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-006-05 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-006-06 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-006-07 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-004-01 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-004-02 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-004-03 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-004-04 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-005-01 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-005-02 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-005-03 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-005-04 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-001-01 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-001-02 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-001-03 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-001-04 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-001-05 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-001-06 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-005-01 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-005-02 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-005-03 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-005-04 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-005-05 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-002-01 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-002-02 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-002-03 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-002-04 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-002-05 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-003-01 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-003-02 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-003-03 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-003-04 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-003-05 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-004-01 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-004-02 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-004-03 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-004-04 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-004-05 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-004-06 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-006-01 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-006-02 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-006-03 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-006-04 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-WORK-004-01 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-WORK-004-02 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-CHG-B1-001-01 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-CHG-B1-001-02 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-CHG-B1-001-03 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-CHG-B1-001-04 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-CHG-B1-001-05 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-CHG-B1-001-06 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-CHG-B1-001-07 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-001-0 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-002-0 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-003-0 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-006-0 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-004-0 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-TASK-005-0 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-001-0 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-005-0 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-002-0 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-003-0 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-004-0 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-FILE-006-0 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-CHG-B1-001-0 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |
+| AC-CHG-B1-001 | 见域测试计划 | — | 按 AC 判据成立 | missing | 否 |

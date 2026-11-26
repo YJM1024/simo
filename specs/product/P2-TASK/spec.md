@@ -46,12 +46,16 @@
 - 当前剩余缺口：前端无独立任务执行组视图；AC 已改写为可判定，域级证据仍 missing。
 - 目标行为：会话页能进入该会话的任务执行组，看到任务列表与逐任务详情（状态、进度、尝试次数），状态机械可读、空态与加载失败都有出口，跨会话任务不可见。
 - AC：
-  - `AC-TASK-001-01` **主路径：会话内任务组可见**；前置：会话 S 有 3 条任务（done、running、queued 各 1）；动作：打开会话页右栏任务组，不展开；观察：默认展示 3 行，每行显示标题与状态；展开后最多展示 50 行；判据：`GET /api/sessions/S/spec-projection?taskLimit=3` 返回的 `tasks` 条数与 DOM 中按任务标题文本定位的行数相等（`getByText(title)`），逐行标题与接口 `title` 一致；断言：`scripts/ac/AC-TASK-001-01.mjs` case `主路径`；证据：脚本 JSON + 走查截图；判定：自动+人工。
-  - `AC-TASK-001-02` **主路径：任务详情字段完整**；前置：存在任务 T（id 已知）；动作：在任务组点击 T；观察：详情面板显示 `GET /api/tasks/T` 返回的 `task.title`、`status` 文案、`progress` 数值与 `attempt` 次数；判据：接口 200 且 `ok=true`、`task` 含 `id/title/status/progress/attempt` 五字段，详情面板文本逐字段匹配；缺任一字段即 fail；断言：`scripts/ac/AC-TASK-001-02.mjs` case `主路径`；证据：脚本 JSON + 截图；判定：自动+人工。
-  - `AC-TASK-001-03` **状态机取值封闭**；前置：构造 8 条任务，状态分别取 `pending/blocked/queued/running/done/failed/cancelled/interrupted`；动作：打开任务组；观察：8 条任务各显示一种状态文案，且两两不同；判据：接口 `status` 只落在上述 8 值集合内（越界值即 fail），DOM 状态文案去重后数量为 8；断言：`scripts/ac/AC-TASK-001-03.mjs` case `主路径`；证据：脚本 JSON + 截图；判定：自动+人工。
+  - `AC-TASK-001-01` **主路径：会话内任务组可见**；前置：会话 S 有 3 条任务（done、running、queued 各 1）；动作：打开会话页右栏任务组，不展开；观察：默认展示 3 行，每行显示标题与状态；展开后最多展示 50 行；
+    判据：`GET /api/sessions/S/spec-projection?taskLimit=3` 返回的 `tasks` 条数与 DOM 中按任务标题文本定位的行数相等（`getByText(title)`），逐行标题与接口 `title` 一致；断言：`scripts/ac/AC-TASK-001-01.mjs` case `主路径`；证据：脚本 JSON + 走查截图；判定：自动+人工。
+  - `AC-TASK-001-02` **主路径：任务详情字段完整**；前置：存在任务 T（id 已知）；动作：在任务组点击 T；观察：详情面板显示 `GET /api/tasks/T` 返回的 `task.title`、`status` 文案、`progress` 数值与 `attempt` 次数；判据：接口 200 且 `ok=true`、`task` 含 `id/title/status/progress/attempt` 五字段，详情面板文本逐字段匹配；
+    缺任一字段即 fail；断言：`scripts/ac/AC-TASK-001-02.mjs` case `主路径`；证据：脚本 JSON + 截图；判定：自动+人工。
+  - `AC-TASK-001-03` **状态机取值封闭**；前置：构造 8 条任务，状态分别取 `pending/blocked/queued/running/done/failed/cancelled/interrupted`；动作：打开任务组；观察：8 条任务各显示一种状态文案，且两两不同；判据：接口 `status` 只落在上述 8 值集合内（越界值即 fail），DOM 状态文案去重后数量为 8；
+    断言：`scripts/ac/AC-TASK-001-03.mjs` case `主路径`；证据：脚本 JSON + 截图；判定：自动+人工。
   - `AC-TASK-001-04` **空态**；前置：会话 S0 无任何任务；动作：打开任务组；观察：显示空态文案，不显示 `0` 条任务之类的假计数；判据：`GET /api/sessions/S0/spec-projection?taskLimit=3` 返回 `tasks: []`，DOM 出现空态节点且任务行数为 0；断言：`scripts/ac/AC-TASK-001-04.mjs` case `主路径`；证据：脚本 JSON + 截图；判定：自动+人工。
   - `AC-TASK-001-05` **加载失败可重试**；前置：把投影接口置为 500（或断网）；动作：打开任务组，点击错误态上的「重试」；观察：先出现错误态，点击后重新发起 1 次请求；判据：错误态出现时 DOM 无任务行，点击重试后同一接口请求计数由 1 变 2（容许 ±0）；断言：`scripts/ac/AC-TASK-001-05.mjs` case `负路径-接口 500`；证据：脚本 JSON + 网络日志；判定：自动。
-  - `AC-TASK-001-06` **负路径：不存在或跨会话任务不可读**；前置：任务 T2 属于会话 S2，当前会话为 S1；动作：`GET /api/tasks/T2` 与前端直接打开 T2 详情；观察：后端返回 404 且错误文案为「任务不存在」，前端显示同文案且不渲染 T2 标题；判据：HTTP 404 + `error.message="任务不存在"`，DOM 不含 T2 标题；断言：`scripts/ac/AC-TASK-001-06.mjs` case `负路径-跨会话`；证据：脚本 JSON + 截图；判定：自动+人工。现状差异 D-04：`GET /api/tasks/{id}` 当前不校验 sessionId 归属，跨会话可读，本 AC 实现前记 **待实现**。
+  - `AC-TASK-001-06` **负路径：不存在或跨会话任务不可读**；前置：任务 T2 属于会话 S2，当前会话为 S1；动作：`GET /api/tasks/T2` 与前端直接打开 T2 详情；观察：后端返回 404 且错误文案为「任务不存在」，前端显示同文案且不渲染 T2 标题；判据：HTTP 404 + `error.message="任务不存在"`，DOM 不含 T2 标题；
+    断言：`scripts/ac/AC-TASK-001-06.mjs` case `负路径-跨会话`；证据：脚本 JSON + 截图；判定：自动+人工。现状差异 D-04：`GET /api/tasks/{id}` 当前不校验 sessionId 归属，跨会话可读，本 AC 实现前记 **待实现**。
 - 现状差异：见 §8 D-04（跨会话读任务当前只按 id 查，不校验会话归属；`tasks/http.go` 的 `GET /api/tasks/{id}` 无 sessionId 约束），标记**待实现**。
 
 #### PRD-TASK-002 · 任务概览与进度
@@ -64,9 +68,11 @@
 - 当前剩余缺口：进度口径与刷新时限未落判据；AC 已改写为可判定，域级证据仍 missing。
 - 目标行为：任务进度是 0–100 的整数，概览计数与按状态查询结果一致，进度变化在有时限的窗口内反映到界面，首屏未返回时不显示假 0。
 - AC：
-  - `AC-TASK-002-01` **进度取值与终态一致**；前置：会话 S 有 done、running、queued 任务各 1；动作：分别读取 `GET /api/tasks?sessionId=S&status=<status>`；观察：`done` 任务 `progress=100`，`queued` 任务 `progress=0`，任一任务 `progress` 为 0–100 的整数；判据：HTTP 200 + 字段断言，越界或非整数即 fail；断言：`scripts/ac/AC-TASK-002-01.mjs` case `主路径`；证据：脚本 JSON；判定：自动。
-  - `AC-TASK-002-02` **概览计数与状态查询一致**；前置：会话 S 有 2 条 running、1 条 queued、3 条 done；动作：打开会话概览；观察：概览显示 running=2、queued=1、done=3；判据：概览三个计数分别等于 `GET /api/tasks?sessionId=S&status=<X>` 的 `tasks.length`；断言：`scripts/ac/AC-TASK-002-02.mjs` case `主路径`；证据：脚本 JSON + 截图；判定：自动+人工。
-  - `AC-TASK-002-03` **进度刷新有时限**；前置：running 任务 T 的 `progress` 由 10 变为 40（以接口返回该新值为起点）；动作：不刷新页面，连续采样界面进度文本；观察：5 秒内界面进度变为 40；判据：起点后 5 秒内 DOM 进度文本与接口最新值相等，超过 5 秒即 fail；断言：`scripts/ac/AC-TASK-002-03.mjs` case `主路径`；证据：脚本 JSON（含起止时间戳）；判定：自动。
+  - `AC-TASK-002-01` **进度取值与终态一致**；前置：会话 S 有 done、running、queued 任务各 1；动作：分别读取 `GET /api/tasks?sessionId=S&status=<status>`；观察：`done` 任务 `progress=100`，`queued` 任务 `progress=0`，任一任务 `progress` 为 0–100 的整数；
+    判据：HTTP 200 + 字段断言，越界或非整数即 fail；断言：`scripts/ac/AC-TASK-002-01.mjs` case `主路径`；证据：脚本 JSON；判定：自动。
+  - `AC-TASK-002-02` **概览计数与状态查询一致**；前置：会话 S 有 2 条 running、1 条 queued、3 条 done；动作：打开会话概览；观察：概览显示 running=2、queued=1、done=3；判据：概览三个计数分别等于 `GET /api/tasks?sessionId=S&status=<X>` 的 `tasks.length`；
+    断言：`scripts/ac/AC-TASK-002-02.mjs` case `主路径`；证据：脚本 JSON + 截图；判定：自动+人工。
+  - `AC-TASK-002-03` **进度刷新有时限**；前置：running 任务 T 的 `progress` 由 10% 变为 40%（以接口返回该新值为起点）；动作：不刷新页面，连续采样界面进度文本；观察：5 秒内界面进度变为 40%；判据：起点后 5 秒内 DOM 进度文本与接口最新值相等，超过 5 秒即 fail；断言：`scripts/ac/AC-TASK-002-03.mjs` case `主路径`；证据：脚本 JSON（含起止时间戳）；判定：自动。
   - `AC-TASK-002-04` **加载中不显示假进度**；前置：把 `GET /api/tasks` 延迟 2 秒返回；动作：打开概览；观察：延迟期间显示加载态，不出现 `0%` 或任意进度条数值；判据：加载期间 DOM 无匹配 `/\d+%/` 的节点且存在加载态节点，接口返回后加载态消失；断言：`scripts/ac/AC-TASK-002-04.mjs` case `负路径-接口延迟`；证据：脚本 JSON + 截图；判定：自动+人工。
 - 现状差异：见 §8 D-02（进度刷新链路未验证；当前投影接口按 ETag 缓存，`progress` 变化是否触发前端重取未确认），标记**待实现/待核**。
 
@@ -84,11 +90,16 @@
 
 - 目标行为：发起长任务后接口在有时限内返回、会话不被阻塞；任务开始时与结束时各向会话消息流写 1 条消息，消息按 taskId 可追溯；进程重启后中断任务可见且不重复写开始消息。
 - AC：
-  - `AC-TASK-003-01` **异步发起不阻塞会话**；前置：会话 S 可正常发送消息；动作：在会话内让 agent 发起长任务 T（任务由 `chat/loop.go:562` 的 `taskSvc.Create` 创建，无独立 `POST /api/tasks` 路由），随后立刻发送一条普通消息；观察：创建后任务状态为 `queued` 或 `running`，随后发送消息返回 200；判据：`GET /api/tasks?sessionId=S` 中出现 T 且 `status ∈ {queued,running}`，第 2 条消息 HTTP 200，两步在同一会话内完成；断言：`scripts/ac/AC-TASK-003-01.mjs` case `主路径`；证据：脚本 JSON（含两次响应）；判定：自动。
-  - `AC-TASK-003-02` **开始消息落库**；前置：任务 T 由 `queued` 进入 `running`；动作：等待进入 running 后读取 `GET /api/sessions/S/messages`；观察：出现 1 条 `role="agent"`、`taskId=T`、`category="progress"` 的消息，正文含 T 的标题；判据：接口返回该条消息，且 `GET /api/tasks/T` 的 `reportMessageId` 等于该消息 `id`；历史 `messages` 数据不迁移，不补写开始消息（2026-11-22 已裁决）；断言：`scripts/ac/AC-TASK-003-02.mjs` case `主路径`；证据：脚本 JSON；判定：自动。现状差异 D-01：任何任务类型当前都不写开始消息（`real_executor.go` 只在终态调 `reportWorkflowTaskText`），本 AC 实现前记 **待实现**。
-  - `AC-TASK-003-03` **结束消息落库且不重复**；前置：任务 T 执行成功进入 `done`；动作：查询该 taskId 的消息；观察：存在终态消息，含结论文本与至少 1 个产物名；判据：`task_id=T` 的终态消息 ≥ 1 条且 `reportMessageId` 指向其中最后一条，终态后 30 秒内该 taskId 消息数不再增加；断言：`scripts/ac/AC-TASK-003-03.mjs` case `主路径`；证据：脚本 JSON（含 30 秒前后两次计数）；判定：自动。
-  - `AC-TASK-003-04` **重启不重复写开始消息**；前置：任务 T 处于 `running` 且开始消息已写 1 条；动作：重启服务；观察：T 变为 `interrupted`，开始消息仍为 1 条；判据：重启后 `task_id=T` 且 `category="progress"` 的消息行数仍为 1，`GET /api/tasks/T` 的 `status="interrupted"`；断言：`scripts/ac/AC-TASK-003-04.mjs` case `负路径-重启恢复`；证据：脚本 JSON + 重启前后两次查询结果；判定：自动。现状差异 D-01：开始消息未实现，本 AC 与 003-02 同批实现。
-  - `AC-TASK-003-05` **单任务与工作流消息同构**；前置：一条 workflow 任务与一条非 workflow 单任务各跑完；动作：对比两条任务的消息字段；观察：两者都有终态消息，字段集合相同，仅 `workflowId` 有无不同；判据：两组消息的字段名集合相等（差集为空），每条都带 `taskId` 与 `category`；断言：`scripts/ac/AC-TASK-003-05.mjs` case `主路径`；证据：脚本 JSON；判定：自动。
+  - `AC-TASK-003-01` **异步发起不阻塞会话**；前置：会话 S 可正常发送消息；动作：在会话内让 agent 发起长任务 T（任务由 `chat/loop.go:562` 的 `taskSvc.Create` 创建，无独立 `POST /api/tasks` 路由），随后立刻发送一条普通消息；观察：创建后任务状态为 `queued` 或 `running`，随后发送消息返回 200；
+    判据：`GET /api/tasks?sessionId=S` 中出现 T 且 `status ∈ {queued,running}`，第 2 条消息 HTTP 200，两步在同一会话内完成；断言：`scripts/ac/AC-TASK-003-01.mjs` case `主路径`；证据：脚本 JSON（含两次响应）；判定：自动。
+  - `AC-TASK-003-02` **开始消息落库**；前置：任务 T 由 `queued` 进入 `running`；动作：等待进入 running 后读取 `GET /api/sessions/S/messages`；观察：出现 1 条 `role="agent"`、`taskId=T`、`category="progress"` 的消息，正文含 T 的标题；
+    判据：接口返回该条消息，且 `GET /api/tasks/T` 的 `reportMessageId` 等于该消息 `id`；历史 `messages` 数据不迁移，不补写开始消息（2026-11-22 已裁决）；断言：`scripts/ac/AC-TASK-003-02.mjs` case `主路径`；证据：脚本 JSON；判定：自动。现状差异 D-01：任何任务类型当前都不写开始消息（`real_executor.go` 只在终态调 `reportWorkflowTaskText`），本 AC 实现前记 **待实现**。
+  - `AC-TASK-003-03` **结束消息落库且不重复**；前置：任务 T 执行成功进入 `done`；动作：查询该 taskId 的消息；观察：存在终态消息，含结论文本与至少 1 个产物名；判据：`task_id=T` 的终态消息 ≥ 1 条且 `reportMessageId` 指向其中最后一条，终态后 30 秒内该 taskId 消息数不再增加；断言：`scripts/ac/AC-TASK-003-03.mjs` case `主路径`；
+    证据：脚本 JSON（含 30 秒前后两次计数）；判定：自动。
+  - `AC-TASK-003-04` **重启不重复写开始消息**；前置：任务 T 处于 `running` 且开始消息已写 1 条；动作：重启服务；观察：T 变为 `interrupted`，开始消息仍为 1 条；判据：重启后 `task_id=T` 且 `category="progress"` 的消息行数仍为 1，`GET /api/tasks/T` 的 `status="interrupted"`；
+    断言：`scripts/ac/AC-TASK-003-04.mjs` case `负路径-重启恢复`；证据：脚本 JSON + 重启前后两次查询结果；判定：自动。现状差异 D-01：开始消息未实现，本 AC 与 003-02 同批实现。
+  - `AC-TASK-003-05` **单任务与工作流消息同构**；前置：一条 workflow 任务与一条非 workflow 单任务各跑完；动作：对比两条任务的消息字段；观察：两者都有终态消息，字段集合相同，仅 `workflowId` 有无不同；判据：两组消息的字段名集合相等（差集为空），每条都带 `taskId` 与 `category`；断言：`scripts/ac/AC-TASK-003-05.mjs` case `主路径`；证据：脚本 JSON；
+    判定：自动。
 - 现状差异：见 §8 D-01（开始消息尚未实现：`backend/internal/modules/tasks/real_executor.go:62-122` 只在终态调 `reportWorkflowTaskText`，`workflow.go:447-450` 对 `task.WorkflowID==""` 直接 return；结束消息仅 workflow 任务有，经 `chat/workflow_reports.go:14-70` 写成 `messages` 行并带 `task_id`。产品要求单任务同样有开始与结束消息，**待实现**）。
 
 #### PRD-TASK-006 · 取消·重试·预算·恢复
@@ -101,13 +112,17 @@
 - 当前剩余缺口：前端取消/重试入口未做；预算未接真实用量；域级证据 missing。
 - 目标行为：运行中任务可取消且在有时限内到达 `cancelled`，重复取消无副作用；失败或已取消任务可重试且 attempt 递增、历史产物保留；预算触顶转 `blocked` 并说明原因；重启后任务是 `queued` 或 `interrupted`，不出现 `running` 悬挂。
 - AC：
-  - `AC-TASK-006-01` **取消运行中任务**；前置：任务 T 处于 `running` 且有活跃执行器；动作：`POST /api/tasks/T/cancel`；观察：返回 2xx，`task.status="cancelled"`；判据：起点（cancel 请求发出）后 5 秒内 `GET /api/tasks/T` 返回 `status=cancelled`，且 DB 中该任务 `phases/steps` 无 `running` 行；断言：`scripts/ac/AC-TASK-006-01.mjs` case `主路径`；证据：脚本 JSON（含耗时与 DB 查询）；判定：自动。
+  - `AC-TASK-006-01` **取消运行中任务**；前置：任务 T 处于 `running` 且有活跃执行器；动作：`POST /api/tasks/T/cancel`；观察：返回 2xx，`task.status="cancelled"`；判据：起点（cancel 请求发出）后 5 秒内 `GET /api/tasks/T` 返回 `status=cancelled`，且 DB 中该任务 `phases/steps` 无 `running` 行；
+    断言：`scripts/ac/AC-TASK-006-01.mjs` case `主路径`；证据：脚本 JSON（含耗时与 DB 查询）；判定：自动。
   - `AC-TASK-006-02` **取消幂等**；前置：任务 T 已 `done`（或 `cancelled`）；动作：再次 `POST /api/tasks/T/cancel`；观察：返回 200 且状态不变；判据：HTTP 200，`task.status` 仍为原终态，两次读取的 `updatedAt` 相同；断言：`scripts/ac/AC-TASK-006-02.mjs` case `负路径-终态再取消`；证据：脚本 JSON；判定：自动。
   - `AC-TASK-006-03` **取消后不再产生新写入**；前置：任务 T 取消成功，记录当前消息数与产物数；动作：等待 30 秒；观察：该 taskId 无新增消息与产物；判据：`messages` 与 `artifacts` 中 `task_id=T` 行数增量均为 0；断言：`scripts/ac/AC-TASK-006-03.mjs` case `负路径-取消后静默`；证据：脚本 JSON（前后两次计数）；判定：自动。
-  - `AC-TASK-006-04` **重试递增 attempt 并复位进度**；前置：任务 T 处于 `failed` 或 `cancelled`，`attempt=1`；动作：`POST /api/tasks/T/retry`；观察：返回 2xx，`status="queued"`、`attempt=2`、`progress=0`、`summary` 为空、`id` 不变；判据：HTTP 200 + 上述字段逐项断言；断言：`scripts/ac/AC-TASK-006-04.mjs` case `主路径`；证据：脚本 JSON；判定：自动。
+  - `AC-TASK-006-04` **重试递增 attempt 并复位进度**；前置：任务 T 处于 `failed` 或 `cancelled`，`attempt=1`；动作：`POST /api/tasks/T/retry`；观察：返回 2xx，`status="queued"`、`attempt=2`、`progress=0`、`summary` 为空、`id` 不变；判据：HTTP 200 + 上述字段逐项断言；
+    断言：`scripts/ac/AC-TASK-006-04.mjs` case `主路径`；证据：脚本 JSON；判定：自动。
   - `AC-TASK-006-05` **重试保留历史产物**；前置：任务 T 已有 2 个产物（`artifacts` 中 `task_id=T` 计数为 2）；动作：重试 T；观察：重试后产物仍为 2 条且 id 不变；判据：重试前后 `artifacts` 行数相等、id 集合相等；断言：`scripts/ac/AC-TASK-006-05.mjs` case `主路径`；证据：脚本 JSON；判定：自动。
-  - `AC-TASK-006-06` **预算触顶转 blocked**；前置：任务 T 的 token 用量达到预算上限；动作：让执行器继续消耗 1 步；观察：任务转 `blocked`，`outcome="budget_exceeded"`，界面显示预算用尽文案；判据：DB `tasks.status='blocked'` 且 `outcome` 字段匹配，DOM 出现预算文案；断言：`scripts/ac/AC-TASK-006-06.mjs` case `负路径-预算触顶`；证据：脚本 JSON + 截图；判定：自动+人工。
-  - `AC-TASK-006-07` **重启后恢复口径**；前置：库中有 1 条 `queued`、1 条 `running` 任务；动作：重启服务；观察：`queued` 重新排队执行，`running` 变 `interrupted`；判据：重启后无任务停留在 `running`，两条任务状态分别为 `queued`（或已推进到 `done`）与 `interrupted`；断言：`scripts/ac/AC-TASK-006-07.mjs` case `负路径-重启恢复`；证据：脚本 JSON + 重启日志；判定：自动。
+  - `AC-TASK-006-06` **预算触顶转 blocked**；前置：任务 T 的 token 用量达到预算上限；动作：让执行器继续消耗 1 步；观察：任务转 `blocked`，`outcome="budget_exceeded"`，界面显示预算用尽文案；判据：DB `tasks.status='blocked'` 且 `outcome` 字段匹配，DOM 出现预算文案；
+    断言：`scripts/ac/AC-TASK-006-06.mjs` case `负路径-预算触顶`；证据：脚本 JSON + 截图；判定：自动+人工。
+  - `AC-TASK-006-07` **重启后恢复口径**；前置：库中有 1 条 `queued`、1 条 `running` 任务；动作：重启服务；观察：`queued` 重新排队执行，`running` 变 `interrupted`；判据：重启后无任务停留在 `running`，两条任务状态分别为 `queued`（或已推进到 `done`）与 `interrupted`；
+    断言：`scripts/ac/AC-TASK-006-07.mjs` case `负路径-重启恢复`；证据：脚本 JSON + 重启日志；判定：自动。
 - 现状差异：见 §8 D-03（`GET /api/tasks/{id}/runtime` 的 budget 目前硬编码 `taskTokenBudget:200000、used:0`，`chat/runtime.go:305`；预算触顶判据需真实用量，标记**待实现**）。
 
 ### 4.3 L2 · 复杂度与归属
@@ -125,9 +140,11 @@
 - 目标行为：每个任务落一个 C0–C4 复杂度等级；C3/C4 任务在用户确认前不进入 `running`；用户拒绝时不执行；确认超时后仍停在等待态，不自动放行；分级与确认都有记录可查。
 - AC：
   - `AC-TASK-004-01` **分级取值封闭**；前置：创建 5 条任务，覆盖 C0–C4；动作：读取任务详情；观察：每条任务带一个复杂度等级；判据：`task.complexity` 落在 `{C0,C1,C2,C3,C4}`（越界值即 fail），5 条任务等级去重后为 5；断言：`scripts/ac/AC-TASK-004-01.mjs` case `主路径`；证据：脚本 JSON；判定：自动。
-  - `AC-TASK-004-02` **高复杂度不确认不执行**；前置：C3 任务 T3 已创建、未确认；动作：等待 60 秒；观察：T3 不进入 `running`；判据：60 秒内 `GET /api/tasks/T3` 的 `status` 始终为 `blocked` 或 `pending`，`attempt=0`，DB 无该任务步骤的 `running` 行；不设自动执行超时，30 分钟未确认由前端提示、12 小时未确认在概览标「待确认超时」，两处只标记不执行（时间可用假时钟推进断言）；断言：`scripts/ac/AC-TASK-004-02.mjs` case `负路径-未确认`；证据：脚本 JSON（含采样时间点）；判定：自动。
+  - `AC-TASK-004-02` **高复杂度不确认不执行**；前置：C3 任务 T3 已创建、未确认；动作：等待 60 秒；观察：T3 不进入 `running`；判据：60 秒内 `GET /api/tasks/T3` 的 `status` 始终为 `blocked` 或 `pending`，`attempt=0`，DB 无该任务步骤的 `running` 行；
+    不设自动执行超时，30 分钟未确认由前端提示、12 小时未确认在概览标「待确认超时」，两处只标记不执行（时间可用假时钟推进断言）；断言：`scripts/ac/AC-TASK-004-02.mjs` case `负路径-未确认`；证据：脚本 JSON（含采样时间点）；判定：自动。
   - `AC-TASK-004-03` **拒绝即不执行**；前置：C4 任务 T4 处于等待确认；动作：提交拒绝；观察：T4 变 `cancelled` 且不产生 execution 记录；判据：`status="cancelled"`，`attempt=0`，`artifacts` 中 `task_id=T4` 计数为 0；断言：`scripts/ac/AC-TASK-004-03.mjs` case `负路径-用户拒绝`；证据：脚本 JSON；判定：自动。
-  - `AC-TASK-004-04` **确认动作可追溯**；前置：C4 任务完成一次确认；动作：查询事件日志；观察：存在 1 条分级事件与 1 条确认事件；判据：`eventlog` 中 `task_id=T4` 且类型为 `complexity_classified`、`task_confirmed` 的行各 1（类型名已裁决，见 §8 Q-02，不再使用"待裁决"表述）；断言：`scripts/ac/AC-TASK-004-04.mjs` case `主路径`；证据：脚本 JSON；判定：自动。
+  - `AC-TASK-004-04` **确认动作可追溯**；前置：C4 任务完成一次确认；动作：查询事件日志；观察：存在 1 条分级事件与 1 条确认事件；判据：`eventlog` 中 `task_id=T4` 且类型为 `complexity_classified`、`task_confirmed` 的行各 1（类型名已裁决，见 §8 Q-02，不再使用"待裁决"表述）；
+    断言：`scripts/ac/AC-TASK-004-04.mjs` case `主路径`；证据：脚本 JSON；判定：自动。
 
 #### PRD-TASK-005 · 子会话与任务归属
 <a id="prd-task-005"></a>
@@ -142,7 +159,8 @@
 - 目标行为：在子会话里创建的任务归属子会话，`sessionId` 指向子会话；父会话的任务组不混入子会话任务；跨会话读取默认拒绝；父会话归档不影响子会话任务行。
 - AC：
   - `AC-TASK-005-01` **子会话任务归属正确**；前置：父会话 P 已派生会话 C；动作：在 C 内创建一个任务 T；观察：`GET /api/tasks/T` 返回 `task.sessionId=C`；判据：字段相等断言；断言：`scripts/ac/AC-TASK-005-01.mjs` case `主路径`；证据：脚本 JSON；判定：自动。
-  - `AC-TASK-005-02` **父会话任务组不混入子任务**；前置：P 有 1 条自有任务，C 有 1 条任务；动作：读取 `GET /api/tasks?sessionId=P` 与 `GET /api/sessions/P/spec-projection`；观察：两处都只返回 P 的 1 条任务；判据：两处 `tasks` 条数均为 1，且不含 T 的 id；父层概览另显示「含 1 个子会话」入口，点击可进入 C 并看到 T，子会话任务不计入父层任何计数（2026-11-22 已裁决）；断言：`scripts/ac/AC-TASK-005-02.mjs` case `主路径`；证据：脚本 JSON；判定：自动。
+  - `AC-TASK-005-02` **父会话任务组不混入子任务**；前置：P 有 1 条自有任务，C 有 1 条任务；动作：读取 `GET /api/tasks?sessionId=P` 与 `GET /api/sessions/P/spec-projection`；观察：两处都只返回 P 的 1 条任务；判据：两处 `tasks` 条数均为 1，且不含 T 的 id；
+    父层概览另显示「含 1 个子会话」入口，点击可进入 C 并看到 T，子会话任务不计入父层任何计数（2026-11-22 已裁决）；断言：`scripts/ac/AC-TASK-005-02.mjs` case `主路径`；证据：脚本 JSON；判定：自动。
   - `AC-TASK-005-03` **负路径：跨会话默认拒绝**；前置：T 属于 C，当前以 P 的身份访问；动作：`GET /api/sessions/P/files` 与 `GET /api/tasks?sessionId=P`；观察：不返回 T 的任何字段；判据：两处响应正文不含 T 的 id 与标题（字符串搜索为空）；断言：`scripts/ac/AC-TASK-005-03.mjs` case `负路径-跨会话`；证据：脚本 JSON；判定：自动。
   - `AC-TASK-005-04` **归档父会话不影响子会话任务**；前置：C 有任务 T，P 归档/删除；动作：归档 P 后读取 T；观察：T 仍可读，`sessionId` 仍为 C；判据：`GET /api/tasks/T` 返回 200 且 `status` 不变；断言：`scripts/ac/AC-TASK-005-04.mjs` case `边界-父会话归档`；证据：脚本 JSON；判定：自动。
 

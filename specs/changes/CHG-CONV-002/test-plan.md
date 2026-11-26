@@ -9,25 +9,25 @@ Covers: `AC-CONV-004-01/02`、`AC-CONV-007-01/02`
 
 ## 1. 用例 → AC → 证据
 
-| 用例 | AC | 落点 | 层级 | 结果 |
-|---|---|---|---|---|
-| C2-01 用户/司墨消息渲染 | `AC-CONV-004-01` | `MessageItem.test.tsx::user message without category tag`、`::agent message with category tag` | component | pass |
-| C2-02 分类标签 8 类映射 | `AC-CONV-004-01` | `MessageItem.test.tsx` 表驱动分类用例 | component | pass |
-| C2-03 复制与降级 | `AC-CONV-004-01` | `::copies message text`、`::execCommand fallbacks（失败/成功）` | component | pass |
-| C2-04 代码块/长文 | `AC-CONV-004-02` | `::fenced code/inline code/long text` | component | pass |
-| C2-05 流式/失败态 | `AC-CONV-004-02` | `::streaming caret and failed badge` | component | pass |
-| C2-06 卡片提交/失败/只读 | `AC-CONV-004-02` | `::submits card values`、`::keeps text on failed card + retry`、`::disables card controls when read-only or archived`、`::resets card inputs with cancel` | component | pass |
-| C2-07 卡片后端契约 | `AC-CONV-004-01` | `m41_test.go::TestM41CardsSendGetPatchAndActions` 等 | API | pass |
-| C2-08 消息纯度 | `AC-CONV-004-01` | `m78::TestM78InternalCard…`、`m79::TestM79Legacy…`、`m50::TestM50MessageEditingDisabled` | API | pass（后端侧） |
-| C2-09 消息分页 | `AC-CONV-004-01` | `m11::TestM11MessagePagination` | API | pass |
-| C2-10 祖先链加载/去重 | `AC-CONV-007-01` | `App.integration.test.tsx::loads ancestor messages and de-duplicates ids`；`m81::TestM81AllSessionMessages` | integration + API | pass |
-| C2-11 413 重试 | `AC-CONV-007-02` | `::maps 413 and succeeds when retried` | integration（mock） | pass（仅 mock） |
-| C2-12 403 空祖先 | `AC-CONV-007-02` | `::maps 403 and treats an empty ancestor as visited` | integration（mock） | pass（仅 mock） |
-| C2-13 切会话清链 | `AC-CONV-007-02` | `::clears the ancestor chain when switching sessions` | integration | pass |
-| C2-14 时间轴键盘/跳转 | `AC-CONV-007-01` | `TimelineGroups.test.tsx` 8 用例 | component | pass |
-| C2-15 时间轴目标尺寸 | `AC-CONV-007-02` | 无 | — | **missing** |
-| C2-16 真实后端 413/403 | `AC-CONV-007-02` | 无（仅 mock） | E2E | **missing** |
-| C2-17 E2E 祖先链场景 | `AC-CONV-007-01` | CDP 04a–04d | E2E | pass |
+| 用例 | AC | 落点 | 层级 | 期望 | 结果 | 证据 |
+| --- | --- | --- | --- | --- | --- | --- |
+| C2-01 用户/司墨消息渲染 | `AC-CONV-004-01` | `MessageItem.test.tsx::user message without category tag`、`::agent message with category tag` | component | 全部断言通过，无 fail 与 skip | pass | frontend/review/TEST-REPORT.md |
+| C2-02 分类标签 8 类映射 | `AC-CONV-004-01` | `MessageItem.test.tsx` 表驱动分类用例 | component | 全部断言通过，无 fail 与 skip | pass | frontend/review/TEST-REPORT.md |
+| C2-03 复制与降级 | `AC-CONV-004-01` | `::copies message text`、`::execCommand fallbacks（失败/成功）` | component | 全部断言通过，无 fail 与 skip | pass | missing |
+| C2-04 代码块/长文 | `AC-CONV-004-02` | `::fenced code/inline code/long text` | component | 全部断言通过，无 fail 与 skip | pass | missing |
+| C2-05 流式/失败态 | `AC-CONV-004-02` | `::streaming caret and failed badge` | component | 全部断言通过，无 fail 与 skip | pass | missing |
+| C2-06 卡片提交/失败/只读 | `AC-CONV-004-02` | `::submits card values`、`::keeps text on failed card + retry`、`::disables card controls when read-only or archived`、`::resets card inputs with cancel` | component | 全部断言通过，无 fail 与 skip | pass | missing |
+| C2-07 卡片后端契约 | `AC-CONV-004-01` | `m41_test.go::TestM41CardsSendGetPatchAndActions` 等 | API | 全部断言通过，无 fail 与 skip | pass | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| C2-08 消息纯度 | `AC-CONV-004-01` | `m78::TestM78InternalCard…`、`m79::TestM79Legacy…`、`m50::TestM50MessageEditingDisabled` | API | 全部断言通过，无 fail 与 skip | pass（后端侧） | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| C2-09 消息分页 | `AC-CONV-004-01` | `m11::TestM11MessagePagination` | API | 全部断言通过，无 fail 与 skip | pass | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| C2-10 祖先链加载/去重 | `AC-CONV-007-01` | `App.integration.test.tsx::loads ancestor messages and de-duplicates ids`；`m81::TestM81AllSessionMessages` | integration + API | 全部断言通过，无 fail 与 skip | pass | frontend/review/TEST-REPORT.md |
+| C2-11 413 重试 | `AC-CONV-007-02` | `::maps 413 and succeeds when retried` | integration（mock） | 全部断言通过，无 fail 与 skip | pass（仅 mock） | missing |
+| C2-12 403 空祖先 | `AC-CONV-007-02` | `::maps 403 and treats an empty ancestor as visited` | integration（mock） | 全部断言通过，无 fail 与 skip | pass（仅 mock） | missing |
+| C2-13 切会话清链 | `AC-CONV-007-02` | `::clears the ancestor chain when switching sessions` | integration | 全部断言通过，无 fail 与 skip | pass | missing |
+| C2-14 时间轴键盘/跳转 | `AC-CONV-007-01` | `TimelineGroups.test.tsx` 8 用例 | component | 全部断言通过，无 fail 与 skip | pass | frontend/review/TEST-REPORT.md |
+| C2-15 时间轴目标尺寸 | `AC-CONV-007-02` | 无 | — | 全部断言通过，无 fail 与 skip | **missing** | missing |
+| C2-16 真实后端 413/403 | `AC-CONV-007-02` | 无（仅 mock） | E2E | 全部断言通过，无 fail 与 skip | **missing** | missing |
+| C2-17 E2E 祖先链场景 | `AC-CONV-007-01` | CDP 04a–04d | E2E | 全部断言通过，无 fail 与 skip | pass | missing |
 
 ## 2. 数据与 mock
 

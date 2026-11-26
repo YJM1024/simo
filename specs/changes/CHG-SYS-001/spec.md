@@ -1,9 +1,11 @@
 # CHG-SYS-001 · 规格门禁硬化（Gate Hardening）
 
-状态：**draft**（2026-11-21；Q1–Q5 已由 Lead 裁决并回填，待最终评审转 `ready`）
+状态：草稿（2026-11-21；Q1–Q5 已由 Lead 裁决并回填，待最终评审转 `ready`）
 Implements: N/A：本变更为工程治理，不改变任何产品行为，也无对应产品 PRD（见 §9 Q1 裁决）
 Domains: `SYS`
 Change: CHG-SYS-001
+变更类型：纯文档（补首部登记与缺失节，不改脚本、规则语义与既有裁决）
+Covers: `AC-SYS-001-01`、`AC-SYS-001-02`、`AC-SYS-001-03`、`AC-SYS-001-04`、`AC-SYS-001-05`、`AC-SYS-001-06`
 Owner：产品（本文件与 AC 口径）/ 后端（`scripts/check-sdd.mjs`、`scripts/check-trace.mjs`）/ 测试（自测用例、真实基线、证据）/ 验收（独立签字）
 
 design.md：N/A：本变更为仓库级检查脚本与规格文档治理，无界面、视觉、交互或架构方案产出；方案取舍见 `proposal.md` §4，门禁规则与判定见本文件 §5。
@@ -12,7 +14,9 @@ backend.md：N/A：本变更不改 API、数据模型、存储、权限、任务
 组件 spec：N/A：本变更不新增、不修改任何组件的公共契约、变体、状态或视觉规则。
 
 > 以上 `N/A：` 行以对应文件当前不存在为前提。`design.md` 按 Q3 裁决为按需，缺失不报错，本行仅作说明，不是 AC-01 强制项。若后续由设计/前端/后端角色在本包补建对应文件，应删除本行，并把 `N/A：理由` 移入该文件；不得两边都留。
-
+判级：变更级
+创建日期：2026-11-21
+关闭日期：N/A：尚未收口，Q1–Q5 裁决已回填，待最终评审
 ## 1. 背景与问题
 
 ### 1.1 已核实的现状
@@ -150,6 +154,19 @@ backend.md：N/A：本变更不改 API、数据模型、存储、权限、任务
 
 **R3 豁免与已知限制：豁免章节内的假证据不抓。** 该限制已同步写入 `scripts/check-sdd.mjs` 头注释与本节，验收时按人工抽查补足。
 
+### 5.3 判据映射（门禁登记）
+
+本包 6 条变更级 AC 的判据以人工核验脚本行为为准：运行命令后核对退出码、失败行格式与 `--json` 字段，人工签字前不记 pass。
+
+| AC | 判据 | 结果 |
+|---|---|---|
+| `AC-SYS-001-01` | 人工：验收 Agent 运行 `node scripts/check-sdd.mjs --self-test`，核对四件套、`N/A：<理由>` 正反样例与失败行定位 | missing（未执行） |
+| `AC-SYS-001-02` | 人工：验收 Agent 用 `--self-test` 样例核对 `AC → Covers:` 覆盖与缺失报错 | missing（未执行） |
+| `AC-SYS-001-03` | 人工：验收 Agent 核对证据条目含命令/URL/路径线索，只写“通过”的样例报错 | missing（未执行） |
+| `AC-SYS-001-04` | 人工：验收 Agent 运行 `node scripts/check-trace.mjs --self-test`，核对 covered 六类列、partial/gap 缺口与 `Implements: N/A：<≥8 字>` 标注 `governance` | missing（未执行） |
+| `AC-SYS-001-05` | 人工：验收 Agent 捕获 stdout/stderr 与 `$LASTEXITCODE`，核对 `路径:行 R# 说明`、退出码 0/1/2 与 JSON 五字段 | missing（未执行） |
+| `AC-SYS-001-06` | 人工：验收 Agent 连续两次运行 `--self-test`，核对退出码 0 与临时目录清理输出 | missing（未执行） |
+
 ## 6. 变更包粒度约定
 
 - 一个 `CHG` 按**需求提出视角**聚合：一次用户需求可以覆盖多个功能点、多个产品场景，甚至多个分类；**不按单个功能点拆包**。
@@ -175,6 +192,8 @@ backend.md：N/A：本变更不改 API、数据模型、存储、权限、任务
 
 ## 8. 影响、风险与回滚
 
+依赖：无新增外部依赖；门禁脚本零依赖 Node 运行。
+
 ### 8.1 影响面
 
 - 必需改动：`scripts/check-sdd.mjs`、`scripts/check-trace.mjs`。
@@ -183,6 +202,8 @@ backend.md：N/A：本变更不改 API、数据模型、存储、权限、任务
 - 零改动：`frontend/`、`backend/`、数据库、接口、权限、任何产品运行时行为。
 
 ### 8.2 风险与缓解
+
+- 依赖：无外部前置；前置变更 CHG-MOXX16 的规则冻结与本包 06 号 CI 任务尚未就绪，依赖项在 `docs/product/SPEC-GAP.md` 登记。
 
 | 风险 | 触发条件 | 缓解 |
 |---|---|---|
@@ -228,3 +249,58 @@ backend.md：N/A：本变更不改 API、数据模型、存储、权限、任务
 - **同一文件同一时刻只能有一个 owner**；并行任务必须在 scope 里写清文件边界，交接时先冻结接口再换人。
 - 证据由 owner 产出、测试复核、验收签字；实现者不得给自己的视觉/功能签字。
 - 共享文件（如 `TRACEABILITY.md`、`tasks.md`）只允许一个 owner 写入；其他人以 issue/批注提出修改，不直接落盘。
+
+## 11. 需求
+
+1. 变更包的六类产物成为硬门禁：四件套必须存在，不适用的前端/后端写 `N/A：<非空理由>`，`design.md` 按需。
+2. 变更级 AC 必须在本包 `test-plan.md` 的 `Covers:` 中出现，正文提及不算覆盖。
+3. `evidence.md` 每条证据带命令、URL 或路径线索，只写结论的条目判失败。
+4. `TRACEABILITY.md` 按覆盖列校验：`covered` 行六类齐全，`partial`/`gap` 行缺口非占位符。
+5. 失败输出定位到 `文件:行`，退出码 0/1/2，成功输出 `PASS (checks: N)`；两个脚本提供 `--self-test`。
+6. 治理包可写 `Implements: N/A：<≥8 字理由>` 通过并标 `governance`，不按前缀开白。
+7. 产品行为、运行时代码、数据与权限零变化。
+
+## 12. 接口与数据
+
+| 接口或数据 | 形状 | 说明 |
+|---|---|---|
+| `node scripts/check-sdd.mjs --root <dir> [--json] [--self-test]` | 失败行 `<路径>:<行> R# <说明>`；成功末行 `PASS (checks: N)`；退出码 0/1/2 | `--json` 的 `failures[]` 含 `rule`/`severity`/`path`/`line`/`hint` |
+| `node scripts/check-trace.mjs --root <dir> [--json] [--self-test]` | 同上；治理包的 `Implements: N/A：<≥8 字>` 标注 `governance` | 读取 `docs/product/TRACEABILITY.md` 与 change 包首部 |
+| 变更包首部字段 | `状态`、`Implements`、`Covers`、`Change`、`Owner` 等 `键：值` 行 | 本文件只登记约定，不改解析实现 |
+| 自测临时目录 | `os.tmpdir()/sdd-selftest-<pid>-<timestamp>` | 不在仓库内创建；结束打印清理行，不就地删除用户文件 |
+
+## 13. 待确认
+
+1. Q1–Q5 已由 Lead 裁决并回填 §9；本文件状态仍为 `draft`，最终评审转 `ready` 的时间点待 Lead 确认。
+2. `test-plan.md` 与 `evidence.md` 是否存在：§7 记录为缺失，由测试/验收角色补齐；补齐前本包不满足 `AC-SYS-001-01`。
+3. 06 号 CI 接入任务依赖基线转绿，是否本批启动待 Lead 定优先级。
+4. 6 条变更级 AC 的判据映射已登记在 §5.3，执行结果本轮全部为 `missing`；补跑后再更新。
+
+## 14. 链接与关联
+
+- 提案与取舍：`proposal.md` 与 `docs/process/PROCESS.md` 第 2 节。
+- 规则原文：`docs/framework/GATES.md` 的 MX-G-08 至 MX-G-12；脚本实现 `scripts/check-sdd.mjs`、`scripts/check-trace.mjs`。
+- 追溯与缺口：`docs/product/TRACEABILITY.md`、`docs/product/SPEC-GAP.md`、`docs/product/ID-SPEC.md`。
+- 裁决记录：本文件 §9 的 Q1–Q5；基线证据由 `evidence.md` 承接。
+
+## 五列契约索引
+
+| 契约 | 定义 | 实现 | 测试 | 证据 |
+|---|---|---|---|---|
+| 行为契约 | `spec.md` 的验收与错误边界 | 见 `backend.md` / `frontend.md` | `test-plan.md` 映射表 | `evidence.md` AC 证据表 |
+| 交付边界 | `proposal.md` 的范围与非目标 | — | — | `spec.md` 非目标节 |
+
+## 状态流转记录
+
+- 2026-11-21：建立本包并首次登记状态。
+- 2026-11-21：按门禁要求补齐首部字段、模板节与证据列，状态词按七值口径登记；内容口径不变。
+
+## 收口
+
+未收口：当前状态为七值口径中的一项，剩余工作与缺口见本文件
+「待确认」节与 `test-plan.md` 的未覆盖清单；关闭前需补齐证据并由验收 Agent 独立签字。
+
+## 风险与依赖
+
+依赖：无新增外部依赖；证据来自本包 `test-plan.md` 与 `evidence.md` 引用的既有报告。
+- 风险：历史证据为引用而非本轮重跑，未验证项按 `missing` 记，不据此宣称通过。

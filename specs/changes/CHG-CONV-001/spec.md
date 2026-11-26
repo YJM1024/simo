@@ -1,7 +1,10 @@
 # CHG-CONV-001 · 会话管理收口
 
-状态：**partial**（2026-11-21；实现已存在，六类产物与全 AC 证据未齐）
+状态：进行中（2026-11-21；实现已存在，六类产物与全 AC 证据未齐）
 Implements: PRD-CONV-001、PRD-CONV-002、PRD-CONV-003
+Covers: `AC-CONV-001-01`、`AC-CONV-001-02`、`AC-CONV-002-01`、`AC-CONV-002-02`、`AC-CONV-003-01`、`AC-CONV-003-02`
+Change: CHG-CONV-001
+变更类型：纯文档（只补契约、任务卡与证据登记，不改实现与产品 AC 文本）
 Domains: `CONV`
 Owner：产品（AC 口径）/ 前端（`frontend/src/app.tsx`、`frontend/src/components/library.tsx`）/ 后端（`backend/internal/modules/sessions`）
 design.md：N/A：本轮只把既有实现写成契约，不引入新方案。
@@ -9,7 +12,9 @@ design.md：N/A：本轮只把既有实现写成契约，不引入新方案。
 > 关联：产品 spec [`../../product/P1-CONV/spec.md#prd-conv-001`](../../product/P1-CONV/spec.md#prd-conv-001)；
 > 域测试计划 [`../../test/P1-CONV/test-plan.md#tc-p1-001`](../../test/P1-CONV/test-plan.md#tc-p1-001)；
 > 历史包 [`../CHG-LEGACY-P1-CONV/spec.md`](../CHG-LEGACY-P1-CONV/spec.md)（只读，不重命名）。
-
+判级：变更级
+创建日期：2026-11-21
+关闭日期：N/A：尚未收口，关闭日期在验收签字后补记
 ## 1. 目标
 
 让"会话树/主会话、会话生命周期、会话搜索与未读"三条 P1 PRD 各具备：产品 AC → 前后端契约 → 任务卡 → 用例 → 可复现证据的完整链，并**如实标注**仍缺的断言。目标是**可验收的现状描述**，不是宣称功能已完成。
@@ -65,6 +70,15 @@ design.md：N/A：本轮只把既有实现写成契约，不引入新方案。
 | `AC-CONV-003-01` 主路径 | Sidebar 用例 5/6（搜索、无匹配、服务端 ids、搜索中）；后端 `TestUI1SessionSearchAndPin` | 部分 | 前端走的是消息搜索而非会话标题搜索，语义未对齐 |
 | `AC-CONV-003-02` 异常/边界 | 搜索 catch → 空集合（`app.tsx:360`） | 部分 | 未读计数/已读游标无任何测试；跨标签未测 |
 
+### 4.1 判据映射
+
+- `AC-CONV-001-01` → `scripts/ac/AC-CONV-001-01.mjs`，脚本存在，本轮未运行，结果记 `evidence.md`。
+- `AC-CONV-001-02` → `scripts/ac/AC-CONV-001-02.mjs`，脚本存在，本轮未运行，结果记 `evidence.md`。
+- `AC-CONV-002-01` → `scripts/ac/AC-CONV-002-01.mjs`，脚本存在，本轮未运行，结果记 `evidence.md`。
+- `AC-CONV-002-02` → `scripts/ac/AC-CONV-002-02.mjs`，脚本存在，本轮未运行；失败反馈的前端断言同时记 `missing`。
+- `AC-CONV-003-01` → `scripts/ac/AC-CONV-003-01.mjs`，脚本存在，本轮未运行，结果记 `evidence.md`。
+- `AC-CONV-003-02` → `scripts/ac/AC-CONV-003-02.mjs`，脚本存在，本轮未运行；未读/游标仍无实现，结论不升级。
+
 ## 5. 需求（R）
 
 - **R1**（CONV-001）会话列表与树必须可切换、可重命名；主会话的不可归档约束必须在产品 AC 中显式，并有断言。
@@ -90,3 +104,44 @@ design.md：N/A：本轮只把既有实现写成契约，不引入新方案。
 ## 8. 回滚
 
 仅文档新增：删除本目录即可回滚；产品 spec/TREE/TRACEABILITY 的引用为追加链接，移除后回到 2026-11-20 基线。
+
+## 9. 状态与错误边界
+
+- 列表/树加载失败时 Sidebar 显示 error 态并可重试；空列表显示 empty 态，统计失败不得用 0 冒充（`AC-CONV-001-02`）。
+- 主会话（`main`）不可归档；当前只有后端对运行中任务的门禁测试，主会话专项断言记 `missing`，不写成已通过。
+- 创建/重命名/归档失败（409 或网络错误）必须可见且不产生重复会话；前端断言归 `TASK-CHG-CONV-001-03`。
+- 未读是前端内存态（`app.tsx:96`），刷新即失；不得当作跨会话持久未读验收（`AC-CONV-003-02`）。
+
+## 10. 接口与数据
+
+- `GET /api/sessions`（列表）、`GET /api/sessions/tree`、`GET /api/sessions?q=&pinned=`（标题搜索与置顶过滤，前端未接线）。
+- `POST /api/sessions`、`PATCH /api/sessions/{id}`、`POST /api/sessions/{id}/archive|unarchive`、`DELETE /api/sessions/{id}`（后端存在，前端无入口）、`GET/PUT /api/sessions/{id}/owner`。
+- 未读/已读游标没有后端表与接口；`tabsync` 的 `read_cursor_changed` 只在标签间广播内存值，落库方案转 `CHG-CONV-005`。
+
+## 11. 待确认
+
+- "会话搜索"取标题搜索还是消息搜索，产品未裁决；现状代码两者并存，前端接的是消息搜索。
+- 主会话不可归档是否升级为产品 AC，需产品定稿；当前只在实现层约束。
+- 未读口径（徽标粒度、已读时机、跨标签合并）转 `CHG-CONV-005`，未定前不实现。
+
+## 五列契约索引
+
+| 契约 | 定义 | 实现 | 测试 | 证据 |
+|---|---|---|---|---|
+| 行为契约 | `spec.md` 的验收与错误边界 | 见 `backend.md` / `frontend.md` | `test-plan.md` 映射表 | `evidence.md` AC 证据表 |
+| 交付边界 | `proposal.md` 的范围与非目标 | — | — | `spec.md` 非目标节 |
+
+## 状态流转记录
+
+- 2026-11-21：建立本包并首次登记状态。
+- 2026-11-21：按门禁要求补齐首部字段、模板节与证据列，状态词按七值口径登记；内容口径不变。
+
+## 收口
+
+未收口：当前状态为七值口径中的一项，剩余工作与缺口见本文件
+「待确认」节与 `test-plan.md` 的未覆盖清单；关闭前需补齐证据并由验收 Agent 独立签字。
+
+## 风险与依赖
+
+依赖：无新增外部依赖；证据来自本包 `test-plan.md` 与 `evidence.md` 引用的既有报告。
+- 风险：历史证据为引用而非本轮重跑，未验证项按 `missing` 记，不据此宣称通过。

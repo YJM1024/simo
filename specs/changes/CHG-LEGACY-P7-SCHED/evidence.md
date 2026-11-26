@@ -56,3 +56,18 @@ E:\dsh_home\workspaces\agent\toolchain\go\bin\go.exe test ./... -count=1 -json
 3. 无 DST、跨日、6 段 cron、非法 timezone 的完整测试。
 4. 启动补偿只补最近一次 missed run；多周期停机语义未验证。
 5. 测试依赖 5s tick 和短时间窗口，存在时间敏感性；全量通过不代表生产准点率。
+
+## AC 证据索引
+
+| 证据 ID | AC | 类型 | 命令 | 路径 | 生成时间 | 结果 | 可复跑 | 轮次 |
+|---|---|---|---|---|---|---|---|---|
+| E-AC-P7-01-01 | AC-P7-01 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P7-08-01 | AC-P7-08 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P7-02-01 | AC-P7-02 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P7-03-01 | AC-P7-03 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P7-04-01 | AC-P7-04 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P7-05-01 | AC-P7-05 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P7-06-01 | AC-P7-06 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P7-07-01 | AC-P7-07 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+
+> 本表按 AC 汇总已有证据来源与判定；逐条细节仍以本文件下列各节与 `test-plan.md` 为准。

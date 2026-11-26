@@ -9,20 +9,20 @@ Covers: `AC-CONV-001-01/02`、`AC-CONV-002-01/02`、`AC-CONV-003-01/02`
 
 ## 1. 用例 → AC → 证据
 
-| 用例 | AC | 测试落点（文件::用例） | 层级 | 结果 | 证据 |
-|---|---|---|---|---|---|
-| C1-01 会话列表渲染与选中 | `AC-CONV-001-01` | `frontend/src/components/Sidebar.test.tsx::renders sessions…`、`::selects with click and Enter` | component | pass | `frontend/review/TEST-REPORT.md` |
-| C1-02 会话树持久化 | `AC-CONV-001-01` | `backend/cmd/simo/m4_test.go::TestM4SessionTreeAndRenamePersistAcrossRestart`、`sessions/service_test.go::TestTreeCreateRenameAndDescendants` | API/integration | pass | `docs/testing/BACKEND-EVIDENCE-20261120.md` |
-| C1-03 多层树与环保护 | `AC-CONV-001-01` | `m14_test.go::TestM14SessionPathMultiLevel`、`::TestM14SessionPathCycleGuard` | API | pass | 同上 |
-| C1-04 空/加载/错误/重试 | `AC-CONV-001-02` | `Sidebar.test.tsx::shows empty, loading and error/retry states`、`::shows stats failure without inventing a zero` | component | pass | TEST-REPORT |
-| C1-05 重命名 Enter/Escape | `AC-CONV-002-01` | `Sidebar.test.tsx::renames a session by double click and Enter, with Escape cancel` | component | pass | TEST-REPORT |
-| C1-06 归档/恢复 | `AC-CONV-002-01` | `Sidebar.test.tsx::shows and hides archived sessions and can archive/restore`；`m6_test.go::TestM6ArchiveReadonlyAndUnarchive` | component + API | pass | TEST-REPORT + 后端报告 |
-| C1-07 草稿会话 | `AC-CONV-002-01` | `m70_test.go::TestM70DraftNotPersistedThenMaterialized`、`::TestM70RestartCleansEmptySessions` | API | pass | 后端报告 |
-| C1-08 生命周期失败反馈 | `AC-CONV-002-02` | 无（rename/toggleArchive 未 catch） | — | **missing** | 缺陷见 `frontend.md` §4 |
-| C1-09 搜索过滤/无匹配/搜索中 | `AC-CONV-003-01` | `Sidebar.test.tsx::searches, filters by query and shows no-match state`、`::uses server search ids and shows searching state` | component | pass | TEST-REPORT |
-| C1-10 会话标题搜索（后端） | `AC-CONV-003-01` | `ui1_test.go::TestUI1SessionSearchAndPin` | API | pass | 后端报告 |
-| C1-11 消息搜索口径 | `AC-CONV-003-01` | 无直接测试 | API | **missing** | 需补（TASK-02） |
-| C1-12 未读计数/已读游标 | `AC-CONV-003-02` | 无测试；实现仅内存态 | — | **missing** | 交 `CHG-CONV-005` |
+| 用例 | AC | 测试落点（文件::用例） | 层级 | 期望 | 结果 | 证据 |
+| --- | --- | --- | --- | --- | --- | --- |
+| C1-01 会话列表渲染与选中 | `AC-CONV-001-01` | `frontend/src/components/Sidebar.test.tsx::renders sessions…`、`::selects with click and Enter` | component | 全部断言通过，无 fail 与 skip | pass | `frontend/review/TEST-REPORT.md` |
+| C1-02 会话树持久化 | `AC-CONV-001-01` | `backend/cmd/simo/m4_test.go::TestM4SessionTreeAndRenamePersistAcrossRestart`、`sessions/service_test.go::TestTreeCreateRenameAndDescendants` | API/integration | 全部断言通过，无 fail 与 skip | pass | `docs/testing/BACKEND-EVIDENCE-20261120.md` |
+| C1-03 多层树与环保护 | `AC-CONV-001-01` | `m14_test.go::TestM14SessionPathMultiLevel`、`::TestM14SessionPathCycleGuard` | API | 全部断言通过，无 fail 与 skip | pass | 同上 |
+| C1-04 空/加载/错误/重试 | `AC-CONV-001-02` | `Sidebar.test.tsx::shows empty, loading and error/retry states`、`::shows stats failure without inventing a zero` | component | 全部断言通过，无 fail 与 skip | pass | TEST-REPORT |
+| C1-05 重命名 Enter/Escape | `AC-CONV-002-01` | `Sidebar.test.tsx::renames a session by double click and Enter, with Escape cancel` | component | 全部断言通过，无 fail 与 skip | pass | TEST-REPORT |
+| C1-06 归档/恢复 | `AC-CONV-002-01` | `Sidebar.test.tsx::shows and hides archived sessions and can archive/restore`；`m6_test.go::TestM6ArchiveReadonlyAndUnarchive` | component + API | 全部断言通过，无 fail 与 skip | pass | TEST-REPORT + 后端报告 |
+| C1-07 草稿会话 | `AC-CONV-002-01` | `m70_test.go::TestM70DraftNotPersistedThenMaterialized`、`::TestM70RestartCleansEmptySessions` | API | 全部断言通过，无 fail 与 skip | pass | 后端报告 |
+| C1-08 生命周期失败反馈 | `AC-CONV-002-02` | 无（rename/toggleArchive 未 catch） | — | 全部断言通过，无 fail 与 skip | **missing** | 缺陷见 `frontend.md` §4 |
+| C1-09 搜索过滤/无匹配/搜索中 | `AC-CONV-003-01` | `Sidebar.test.tsx::searches, filters by query and shows no-match state`、`::uses server search ids and shows searching state` | component | 全部断言通过，无 fail 与 skip | pass | TEST-REPORT |
+| C1-10 会话标题搜索（后端） | `AC-CONV-003-01` | `ui1_test.go::TestUI1SessionSearchAndPin` | API | 全部断言通过，无 fail 与 skip | pass | 后端报告 |
+| C1-11 消息搜索口径 | `AC-CONV-003-01` | 无直接测试 | API | 全部断言通过，无 fail 与 skip | **missing** | 需补（TASK-02） |
+| C1-12 未读计数/已读游标 | `AC-CONV-003-02` | 无测试；实现仅内存态 | — | 全部断言通过，无 fail 与 skip | **missing** | 交 `CHG-CONV-005` |
 
 ## 2. 数据与 mock
 

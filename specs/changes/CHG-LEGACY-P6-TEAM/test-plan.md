@@ -1,5 +1,7 @@
 # TEST PLAN · CHG-LEGACY-P6-TEAM
 
+Covers: AC-P6-01…AC-P6-07（共 7 条，逐条见下表）
+
 ## 1. 范围与策略
 
 - 验证 P6 已有后端团队能力：只读视图、内部消息隔离、模板/角色、触发器、WS 事件。
@@ -22,15 +24,15 @@ E:\dsh_home\workspaces\agent\toolchain\go\bin\go.exe test ./... -count=1 -json
 
 ## 3. AC → 测试矩阵
 
-| AC | 测试 | 层级 | 预期 | 实际 |
-|---|---|---|---|---|
-| AC-P6-01 团队视图/无团队 | `TestM23TeamV0View`、`TestM24TeamV1InternalRouting` | 集成 | 200，members 正常；无团队不 500 | PASS |
-| AC-P6-02 子会话/owner | `TestM24TeamV1InternalRouting`、`TestM25TeamV2TemplateAndTrigger` | 集成 | 成员 session、owner 设置 | PASS |
-| AC-P6-03 内部消息隔离 | `TestM24TeamV1InternalRouting` | 集成 | 主窗口不含内部文本 | PASS（单路径） |
-| AC-P6-04 模板/角色 | `TestM25TeamV2TemplateAndTrigger` | 集成 | 模板角色创建成员 | PASS |
-| AC-P6-05 触发器幂等 | `TestM25TeamV2TemplateAndTrigger` | 集成 | 第二次 fire 不重复交付 | PASS |
-| AC-P6-06 WS 事件 | `TestM31TeamEventsBroadcastOnWS`、`TestTeamInternalEventTypesRegistered` | 集成+单测 | 事件注册/广播 | PASS |
-| AC-P6-07 TEAM-004/006 | 无 | — | 不可判定 | MISSING/unimplemented |
+| AC | 用例 | 测试 | 层级 | 实际 | 期望 | 证据 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| AC-P6-01 团队视图/无团队 | `TestM23TeamV0View`、`TestM24TeamV1InternalRouting` | `TestM23TeamV0View`、`TestM24TeamV1InternalRouting` | 集成 | PASS | 200，members 正常；无团队不 500 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P6-02 子会话/owner | `TestM24TeamV1InternalRouting`、`TestM25TeamV2TemplateAndTrigger` | `TestM24TeamV1InternalRouting`、`TestM25TeamV2TemplateAndTrigger` | 集成 | PASS | 成员 session、owner 设置 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P6-03 内部消息隔离 | `TestM24TeamV1InternalRouting` | `TestM24TeamV1InternalRouting` | 集成 | PASS（单路径） | 主窗口不含内部文本 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P6-04 模板/角色 | `TestM25TeamV2TemplateAndTrigger` | `TestM25TeamV2TemplateAndTrigger` | 集成 | PASS | 模板角色创建成员 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P6-05 触发器幂等 | `TestM25TeamV2TemplateAndTrigger` | `TestM25TeamV2TemplateAndTrigger` | 集成 | PASS | 第二次 fire 不重复交付 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P6-06 WS 事件 | `TestM31TeamEventsBroadcastOnWS`、`TestTeamInternalEventTypesRegistered` | `TestM31TeamEventsBroadcastOnWS`、`TestTeamInternalEventTypesRegistered` | 集成+单测 | PASS | 事件注册/广播 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P6-07 TEAM-004/006 | 无 | 无 | — | MISSING/unimplemented | 不可判定 | missing |
 
 ## 4. 关键边界用例已有/缺失
 

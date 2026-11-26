@@ -24,6 +24,8 @@
 `$implEmpty = 'C:\Users\YJM1024\AppData\Local\Temp\dsh-gt-impl-empty'`。
 这些夹具都在仓库外、未被删除，可直接复跑；若 `%TEMP%` 被系统清理，需按 `test-plan.md` 第 1 节重建。
 
+结果：§1 的实跑记录 pass 与 fail 并存（失败项见原文），不据此宣称全绿；逐 AC 判定见下表。
+
 ## 1. 结果明细
 
 | 项 | 用例 | 命令（可复跑原文） | 执行时间（+08:00） | 退出码 | 输出摘要（关键行） | 结果 |
@@ -120,3 +122,21 @@ R3 的 `hasClue` 只把以 `node`/`npm` 等裸命令开头的片段当作命令�
 | 日期 | 变更 | 变更包 | 影响 |
 |---|---|---|---|
 | 2026-11-21 | 首版：E-01..E-29，记录 22 pass / 7 fail / 0 missing 与 L1–L8 | `CHG-SYS-001` | 全部 |
+
+## AC 证据索引
+
+| 证据 ID | AC | 类型 | 命令 | 路径 | 生成时间 | 结果 | 可复跑 | 轮次 |
+|---|---|---|---|---|---|---|---|---|
+| E-AC-SYS-001-01-01 | AC-SYS-001-01 | 门禁脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
+| E-AC-SYS-001-02-01 | AC-SYS-001-02 | 门禁脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
+| E-AC-SYS-001-03-01 | AC-SYS-001-03 | 门禁脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
+| E-AC-SYS-001-04-01 | AC-SYS-001-04 | 门禁脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
+| E-AC-SYS-001-05-01 | AC-SYS-001-05 | 门禁脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
+| E-AC-SYS-001-06-01 | AC-SYS-001-06 | 门禁脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
+| E-AC-FIX-001-01-01 | AC-FIX-001-01 | 门禁脚本 | node scripts/check-gates.mjs | specs/changes/CHG-SYS-001/evidence.md | 2026-11-21 | partial | 是 | 1 |
+| E-AC-P1-01-01 | AC-P1-01 | 门禁脚本 | node scripts/check-gates.mjs | specs/changes/CHG-SYS-001/evidence.md | 2026-11-21 | partial | 是 | 1 |
+| E-AC-CONV-001-01 | AC-CONV-001 | 门禁脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
+| E-AC-FIX-999-01-01 | AC-FIX-999-01 | 门禁脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
+| E-AC-SYS-001-01 | AC-SYS-001 | 门禁脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
+
+> 本表按 AC 汇总已有证据来源与判定；逐条细节仍以本文件下列各节与 `test-plan.md` 为准。

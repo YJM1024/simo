@@ -65,3 +65,18 @@ E:\dsh_home\workspaces\agent\toolchain\go\bin\go.exe test ./... -count=1 -json
 4. 无备份/恢复/回滚演练，无审计查询/保留/导出。
 5. 无安装器/升级/便携包、端口冲突、目录权限不足测试。
 6. 全量通过仅代表既有测试通过，不代表 P8 全部 AC 完成。
+
+## AC 证据索引
+
+| 证据 ID | AC | 类型 | 命令 | 路径 | 生成时间 | 结果 | 可复跑 | 轮次 |
+|---|---|---|---|---|---|---|---|---|
+| E-AC-P8-01-01 | AC-P8-01 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P8-08-01 | AC-P8-08 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P8-02-01 | AC-P8-02 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P8-03-01 | AC-P8-03 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P8-04-01 | AC-P8-04 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P8-05-01 | AC-P8-05 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P8-06-01 | AC-P8-06 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P8-07-01 | AC-P8-07 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+
+> 本表按 AC 汇总已有证据来源与判定；逐条细节仍以本文件下列各节与 `test-plan.md` 为准。

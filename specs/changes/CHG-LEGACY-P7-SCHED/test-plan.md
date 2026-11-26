@@ -1,5 +1,7 @@
 # TEST PLAN · CHG-LEGACY-P7-SCHED
 
+Covers: AC-P7-01…AC-P7-08（共 8 条，逐条见下表）
+
 ## 1. 范围与策略
 
 - 验证 P7 后端：CRUD、next-run、once/interval/daily 触发、暂停、run-now、重启补偿、审批暂停。
@@ -23,16 +25,16 @@ E:\dsh_home\workspaces\agent\toolchain\go\bin\go.exe test ./... -count=1 -json
 
 ## 3. AC → 测试矩阵
 
-| AC | 测试 | 层级 | 预期 | 实际 |
-|---|---|---|---|---|
-| AC-P7-01 once 按时触发 | `TestM13OnceScheduleFires` | 集成 | 201 创建，runCount=1，done | PASS |
-| AC-P7-02 非法 cron/timezone/next-run | `TestM13InvalidCronAndNextRun` | 集成 | 非法 400；daily nextRunAt>now；interval 201 | PASS |
-| AC-P7-03 run-now | `TestM13PauseAndRunNow` | 集成 | 200 且 runCount 增加 | PASS |
-| AC-P7-04 暂停 | `TestM13PauseAndRunNow` | 集成 | enabled=false，nextRunAt=0 | PASS |
-| AC-P7-05 重启补偿 | `TestM13RestartAndMissedCompensation` | 集成 | 重启后 runCount≥1 | PASS |
-| AC-P7-06 审批暂停 | `TestM13ApprovalPausesSchedule` | 集成 | failed/disabled/消息含审批暂停 | PASS |
-| AC-P7-07 通知/重试 | 无 | — | 无法判定 | MISSING（未实现） |
-| AC-P7-08 UI | 无 | — | 无法判定 | N/A |
+| AC | 用例 | 测试 | 层级 | 实际 | 期望 | 证据 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| AC-P7-01 once 按时触发 | `TestM13OnceScheduleFires` | `TestM13OnceScheduleFires` | 集成 | PASS | 201 创建，runCount=1，done | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P7-02 非法 cron/timezone/next-run | `TestM13InvalidCronAndNextRun` | `TestM13InvalidCronAndNextRun` | 集成 | PASS | 非法 400；daily nextRunAt>now；interval 201 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P7-03 run-now | `TestM13PauseAndRunNow` | `TestM13PauseAndRunNow` | 集成 | PASS | 200 且 runCount 增加 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P7-04 暂停 | `TestM13PauseAndRunNow` | `TestM13PauseAndRunNow` | 集成 | PASS | enabled=false，nextRunAt=0 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P7-05 重启补偿 | `TestM13RestartAndMissedCompensation` | `TestM13RestartAndMissedCompensation` | 集成 | PASS | 重启后 runCount≥1 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P7-06 审批暂停 | `TestM13ApprovalPausesSchedule` | `TestM13ApprovalPausesSchedule` | 集成 | PASS | failed/disabled/消息含审批暂停 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P7-07 通知/重试 | 无 | 无 | — | MISSING（未实现） | 无法判定 | missing |
+| AC-P7-08 UI | 无 | 无 | — | N/A | 无法判定 | docs/testing/BACKEND-EVIDENCE-20261120.md |
 
 ## 4. 缺失用例
 

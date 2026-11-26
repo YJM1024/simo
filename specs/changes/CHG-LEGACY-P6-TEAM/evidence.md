@@ -55,3 +55,17 @@ E:\dsh_home\workspaces\agent\toolchain\go\bin\go.exe test ./... -count=1 -json
 3. 没有多成员并发、成员退出、owner 转移、触发器失败重试/超时/通知测试。
 4. 没有团队看板/会话创建端到端路径。
 5. 全量通过仅说明既有测试通过，不等于 P6 产品 AC 完成。
+
+## AC 证据索引
+
+| 证据 ID | AC | 类型 | 命令 | 路径 | 生成时间 | 结果 | 可复跑 | 轮次 |
+|---|---|---|---|---|---|---|---|---|
+| E-AC-P6-01-01 | AC-P6-01 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P6-07-01 | AC-P6-07 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P6-02-01 | AC-P6-02 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P6-03-01 | AC-P6-03 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P6-04-01 | AC-P6-04 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P6-05-01 | AC-P6-05 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P6-06-01 | AC-P6-06 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+
+> 本表按 AC 汇总已有证据来源与判定；逐条细节仍以本文件下列各节与 `test-plan.md` 为准。

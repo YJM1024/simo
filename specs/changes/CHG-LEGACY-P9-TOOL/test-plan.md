@@ -1,5 +1,7 @@
 # TEST PLAN · CHG-LEGACY-P9-TOOL
 
+Covers: AC-P9-01…AC-P9-07（共 7 条，逐条见下表）
+
 ## 1. 范围与策略
 
 - 验证 P9 后端：工具注册/执行、权限/审批/沙箱、写入确认、pwsh/python、文档/图片生成、web mock/SSRF、action registry。
@@ -23,15 +25,15 @@ E:\dsh_home\workspaces\agent\toolchain\go\bin\go.exe test ./... -count=1 -json
 
 ## 3. AC → 测试矩阵
 
-| AC | 测试 | 层级 | 预期 | 实际 |
-|---|---|---|---|---|
-| AC-P9-01 工具/action 注册 | `TestM20ActionRegistryAndExecute`、`TestM20NativeActionTools`、`TestM20ToolNamesValidForProvider` | 集成 | action ≥50、名称合法、native 工具 | PASS |
-| AC-P9-02 审批/沙箱 | `TestM9PermissionsDefaultAndFullConfirmation`、`TestM9EscalationWritesOutsideAndNeverRejects`；`TestDefaultPolicy`、`TestCanUseToolOnlyWhenNotAutoApproved`、`TestHookDenyAndAskRule` | 集成+单测 | 默认/full 确认、提权、never 拒绝 | PASS |
-| AC-P9-03 写入审批 | `TestM5MockWriteDeletePermissionFlow`、`TestM5WriteAskApprovalExecutes` | 集成 | 批准前不存在、批准后写入；delete deny | PASS |
-| AC-P9-04 命令/输出限制 | `TestM9PwshApprovalAndExitCode`、`TestM9PwshEnvTimeoutAndSpill`；`TestM17RunPythonEchoAndFile`、`TestM17RunPythonPathAndOutside`、`TestM17RunPythonTimeoutSpillEnv`、`TestM17RunPythonMissing` | 集成 | exit code、超时、截断、env 剥离、路径拒绝 | PASS |
-| AC-P9-05 生成/web | `TestM12PDFGenerationApprovalAndPreview`、`TestM12DocxAndXlsxHelpers`、`TestM12WebSearchAndFetchMock`、`TestM12WebFetchSSRFDenied` | 集成 | 审批、预览、mock、SSRF 拒绝 | PASS |
-| AC-P9-06 MCP/Skills/目录/白名单 | 无 | — | 不可判定 | MISSING/unimplemented |
-| AC-P9-07 工具管理 UI | 无 | — | 不可判定 | N/A |
+| AC | 用例 | 测试 | 层级 | 实际 | 期望 | 证据 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| AC-P9-01 工具/action 注册 | `TestM20ActionRegistryAndExecute`、`TestM20NativeActionTools`、`TestM20ToolNamesValidForProvider` | `TestM20ActionRegistryAndExecute`、`TestM20NativeActionTools`、`TestM20ToolNamesValidForProvider` | 集成 | PASS | action ≥50、名称合法、native 工具 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P9-02 审批/沙箱 | `TestM9PermissionsDefaultAndFullConfirmation`、`TestM9EscalationWritesOutsideAndNeverRejects`；`TestDefaultPolicy`、`TestCanUseToolOnlyWhenNotAutoApproved`、`TestHookDenyAndAskRule` | `TestM9PermissionsDefaultAndFullConfirmation`、`TestM9EscalationWritesOutsideAndNeverRejects`；`TestDefaultPolicy`、`TestCanUseToolOnlyWhenNotAutoApproved`、`TestHookDenyAndAskRule` | 集成+单测 | PASS | 默认/full 确认、提权、never 拒绝 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P9-03 写入审批 | `TestM5MockWriteDeletePermissionFlow`、`TestM5WriteAskApprovalExecutes` | `TestM5MockWriteDeletePermissionFlow`、`TestM5WriteAskApprovalExecutes` | 集成 | PASS | 批准前不存在、批准后写入；delete deny | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P9-04 命令/输出限制 | `TestM9PwshApprovalAndExitCode`、`TestM9PwshEnvTimeoutAndSpill`；`TestM17RunPythonEchoAndFile`、`TestM17RunPythonPathAndOutside`、`TestM17RunPythonTimeoutSpillEnv`、`TestM17RunPythonMissing` | `TestM9PwshApprovalAndExitCode`、`TestM9PwshEnvTimeoutAndSpill`；`TestM17RunPythonEchoAndFile`、`TestM17RunPythonPathAndOutside`、`TestM17RunPythonTimeoutSpillEnv`、`TestM17RunPythonMissing` | 集成 | PASS | exit code、超时、截断、env 剥离、路径拒绝 | missing |
+| AC-P9-05 生成/web | `TestM12PDFGenerationApprovalAndPreview`、`TestM12DocxAndXlsxHelpers`、`TestM12WebSearchAndFetchMock`、`TestM12WebFetchSSRFDenied` | `TestM12PDFGenerationApprovalAndPreview`、`TestM12DocxAndXlsxHelpers`、`TestM12WebSearchAndFetchMock`、`TestM12WebFetchSSRFDenied` | 集成 | PASS | 审批、预览、mock、SSRF 拒绝 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P9-06 MCP/Skills/目录/白名单 | 无 | 无 | — | MISSING/unimplemented | 不可判定 | missing |
+| AC-P9-07 工具管理 UI | 无 | 无 | — | N/A | 不可判定 | missing |
 
 ## 4. 关键边界已有/缺失
 

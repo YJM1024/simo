@@ -5,6 +5,8 @@
 - 结论：**PASS WITH NOTES**（已有测试通过；P10 指标 的产品能力仍为 partial/未实现混合，未升级 covered）
 - 变更性质：docs-only；未改代码、未改数据、未启动 8787
 
+结果：引用 2026-11-20 执行记录；未覆盖项按 `missing` 记，不宣称通过。
+
 ## 1. 已有执行命令
 
 ```powershell
@@ -62,3 +64,14 @@ E:\dsh_home\workspaces\agent\toolchain\go\bin\go.exe test ./... -count=1 -json
 - 未做逐路由 HTTP 错误/权限契约矩阵。
 - 未做视觉验收、截图 diff、真实生产数据回归。
 - 本包未重新执行任何测试，只引用已有报告；报告移动时需重新核对。
+
+## AC 证据索引
+
+| 证据 ID | AC | 类型 | 命令 | 路径 | 生成时间 | 结果 | 可复跑 | 轮次 |
+|---|---|---|---|---|---|---|---|---|
+| E-AC-P10-01-01 | AC-P10-01 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P10-04-01 | AC-P10-04 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P10-02-01 | AC-P10-02 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+| E-AC-P10-03-01 | AC-P10-03 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-20 | missing | 否 | 0 |
+
+> 本表按 AC 汇总已有证据来源与判定；逐条细节仍以本文件下列各节与 `test-plan.md` 为准。

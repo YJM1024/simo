@@ -1,5 +1,7 @@
 # TEST PLAN · CHG-LEGACY-P3-WORK
 
+Covers: AC-P3-01…AC-P3-04（共 4 条，逐条见下表）
+
 ## 1. 范围与策略
 
 - 只验证 P3 工作台与视图 的已存在的实现/展示，不新增产品能力。
@@ -22,12 +24,12 @@ E:\dsh_home\workspaces\agent\toolchain\go\bin\go.exe test ./... -count=1 -json
 
 ## 3. AC → 测试矩阵
 
-| AC | 断言摘要 | 已有测试/证据 | 结果 |
-|---|---|---|---|
-| AC-P3-01 | 对话/工作台双页可切换，375 宽无横向溢出且时间轴/侧栏按断点隐藏。 | TC-P3-001；LibraryUtilities 2/2；E2E 01a/01b。 | PASS（组件/E2E） |
-| AC-P3-02 | 用量/统计卡/趋势按真实 API 展示，空/错误不显示假 0。 | TC-P3-002/003；App.integration 7/7；Metrics 9/9；部分。 | PARTIAL |
-| AC-P3-03 | 工作台交付物空/加载/错误三态与真实下载可用。 | TC-P3-004；RightPanel 6/6；E2E 07 下载；三态不全。 | PARTIAL |
-| AC-P3-04 | 自定义视图 13 类块可创建、排序、版本化、渲染。 | TC-P3-005；未实现。 | MISSING |
+| AC | 用例 | 断言摘要 | 已有测试/证据 | 期望 | 结果 | 证据 |
+| --- | --- | --- | --- | --- | --- | --- |
+| AC-P3-01 | 对话/工作台双页可切换，375 宽无横向溢出且时间轴/侧栏按断点隐藏。 | 对话/工作台双页可切换，375 宽无横向溢出且时间轴/侧栏按断点隐藏。 | TC-P3-001；LibraryUtilities 2/2；E2E 01a/01b。 | 全部断言通过，无 fail 与 skip | PASS（组件/E2E） | docs/testing/EVIDENCE-20261120.md |
+| AC-P3-02 | 用量/统计卡/趋势按真实 API 展示，空/错误不显示假 0。 | 用量/统计卡/趋势按真实 API 展示，空/错误不显示假 0。 | TC-P3-002/003；App.integration 7/7；Metrics 9/9；部分。 | 全部断言通过，无 fail 与 skip | PARTIAL | docs/testing/EVIDENCE-20261120.md |
+| AC-P3-03 | 工作台交付物空/加载/错误三态与真实下载可用。 | 工作台交付物空/加载/错误三态与真实下载可用。 | TC-P3-004；RightPanel 6/6；E2E 07 下载；三态不全。 | 全部断言通过，无 fail 与 skip | PARTIAL | docs/testing/EVIDENCE-20261120.md |
+| AC-P3-04 | 自定义视图 13 类块可创建、排序、版本化、渲染。 | 自定义视图 13 类块可创建、排序、版本化、渲染。 | TC-P3-005；未实现。 | 全部断言通过，无 fail 与 skip | MISSING | missing |
 
 ## 4. 域 test-plan 映射
 

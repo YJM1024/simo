@@ -1,5 +1,7 @@
 # TEST PLAN · CHG-LEGACY-P10-METRIC
 
+Covers: AC-P10-01…AC-P10-04（共 4 条，逐条见下表）
+
 ## 1. 范围与策略
 
 - 只验证 P10 指标 的已存在的实现/展示，不新增产品能力。
@@ -22,12 +24,12 @@ E:\dsh_home\workspaces\agent\toolchain\go\bin\go.exe test ./... -count=1 -json
 
 ## 3. AC → 测试矩阵
 
-| AC | 断言摘要 | 已有测试/证据 | 结果 |
-|---|---|---|---|
-| AC-P10-01 | 性能/质量/延迟卡片显示真实指标，不展示假 0。 | TC-P10-001/002/003；MetricsDashboard 9/9 部分。 | PARTIAL |
-| AC-P10-02 | 7/30 天窗口切换，空/加载/错误/partialToday 有可见状态。 | TC-P10-004/005；MetricsDashboard 9/9；E2E 01a。 | PASS（组件级） |
-| AC-P10-03 | 明细表可键盘聚焦、口径可读、空态不误导。 | TC-P10-005；MetricsDashboard 9/9。 | PASS（组件级） |
-| AC-P10-04 | 导出、对比、告警可配置并验证。 | TC-P10-006；未实现。 | MISSING |
+| AC | 用例 | 断言摘要 | 已有测试/证据 | 期望 | 结果 | 证据 |
+| --- | --- | --- | --- | --- | --- | --- |
+| AC-P10-01 | 性能/质量/延迟卡片显示真实指标，不展示假 0。 | 性能/质量/延迟卡片显示真实指标，不展示假 0。 | TC-P10-001/002/003；MetricsDashboard 9/9 部分。 | 全部断言通过，无 fail 与 skip | PARTIAL | docs/testing/EVIDENCE-20261120.md |
+| AC-P10-02 | 7/30 天窗口切换，空/加载/错误/partialToday 有可见状态。 | 7/30 天窗口切换，空/加载/错误/partialToday 有可见状态。 | TC-P10-004/005；MetricsDashboard 9/9；E2E 01a。 | 全部断言通过，无 fail 与 skip | PASS（组件级） | docs/testing/EVIDENCE-20261120.md |
+| AC-P10-03 | 明细表可键盘聚焦、口径可读、空态不误导。 | 明细表可键盘聚焦、口径可读、空态不误导。 | TC-P10-005；MetricsDashboard 9/9。 | 全部断言通过，无 fail 与 skip | PASS（组件级） | docs/testing/EVIDENCE-20261120.md |
+| AC-P10-04 | 导出、对比、告警可配置并验证。 | 导出、对比、告警可配置并验证。 | TC-P10-006；未实现。 | 全部断言通过，无 fail 与 skip | MISSING | missing |
 
 ## 4. 域 test-plan 映射
 

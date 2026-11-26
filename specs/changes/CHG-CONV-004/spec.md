@@ -1,7 +1,10 @@
 # CHG-CONV-004 · 多标签与同步收口
 
-状态：**partial**（2026-11-21；实现存在，多标签/重连路径零测试）
+状态：进行中（2026-11-21；实现存在，多标签/重连路径零测试）
 Implements: PRD-SYNC-001、PRD-SYNC-002、PRD-SYNC-003
+Covers: `AC-SYNC-001-01`、`AC-SYNC-001-02`、`AC-SYNC-002-01`、`AC-SYNC-002-02`、`AC-SYNC-003-01`、`AC-SYNC-003-02`
+Change: CHG-CONV-004
+变更类型：纯文档（只补契约、任务卡与证据登记，不改实现与产品 AC 文本）
 Domains: `SYNC`
 Owner：产品（AC 口径）/ 前端（`tabsync.ts`、`app.tsx`、Composer）/ 后端（WS）
 design.md：N/A：无新方案。
@@ -9,7 +12,9 @@ design.md：N/A：无新方案。
 > 关联：产品 spec [`../../product/P1-CONV/spec.md#prd-sync-001`](../../product/P1-CONV/spec.md#prd-sync-001)；
 > 域计划 [`../../test/P1-CONV/test-plan.md#tc-p1-008`](../../test/P1-CONV/test-plan.md#tc-p1-008)；
 > 组件 [`../../COMP-composer-send-mode/spec.md`](../../COMP-composer-send-mode/spec.md)。
-
+判级：变更级
+创建日期：2026-11-21
+关闭日期：N/A：尚未收口，关闭日期在验收签字后补记
 ## 1. 目标
 
 把"WS 连接与重连""多标签三通道同步""发送模式跨标签"写成可验收契约，并**如实记录**：三者的自动化证据分别是"后端强/前端弱""仅代码无测试""仅持久化有测试"。目标是把 SYNC 域从"含糊 implemented"变成"明确 partial + 可执行任务"。
@@ -71,6 +76,15 @@ design.md：N/A：无新方案。
 | `AC-SYNC-003-01` | Composer 用例 8（持久化/快捷键） | 部分 | 跨标签未测 |
 | `AC-SYNC-003-02` | storage 事件监听代码 | **missing** | 无测试 |
 
+### 4.1 判据映射
+
+- `AC-SYNC-001-01` → `scripts/ac/AC-SYNC-001-01.mjs`，脚本存在，本轮未运行，结果记 `evidence.md`。
+- `AC-SYNC-001-02` → `scripts/ac/AC-SYNC-001-02.mjs`，脚本存在，本轮未运行；前端 close→open 断言仍记 `missing`。
+- `AC-SYNC-002-01` → `scripts/ac/AC-SYNC-002-01.mjs`，脚本存在，本轮未运行，结果记 `evidence.md`。
+- `AC-SYNC-002-02` → `scripts/ac/AC-SYNC-002-02.mjs`，脚本存在，本轮未运行；乱序、同 `at`、chain 空三项无断言。
+- `AC-SYNC-003-01` → `scripts/ac/AC-SYNC-003-01.mjs`，脚本存在，本轮未运行；跨标签未测。
+- `AC-SYNC-003-02` → `scripts/ac/AC-SYNC-003-02.mjs`，脚本存在，本轮未运行；storage 事件无测试。
+
 ## 5. 需求（R）
 
 - **R1** 重连必须可观察（状态可见），重连后消息不重复、不丢失；`since` 截断必须有兜底（全量刷新）。
@@ -95,3 +109,44 @@ design.md：N/A：无新方案。
 ## 8. 回滚
 
 纯文档；删除目录并撤销链接即回滚。
+
+## 9. 状态与错误边界
+
+- 连接 `close` 一律进入 `reconnecting`；退避 800ms 起 ×1.8、上限 5000ms，`open` 成功重置。
+- `since` 截断或溢出时前端必须全量刷新，不能停在缺口状态；当前无断言，记 `missing`。
+- 多标签同 `at` 冲突按 `tabId` 字典序 tiebreak；本标签消息不得回声，由 `remoteActiveRef` 抑制。
+- 无 BroadcastChannel 时跨标签同步降级为单标签可用，不报错。
+
+## 10. 接口与数据
+
+- WS `/api/ws?sessionId=`；帧 `subscribe {sessionId, since}`，后端按 `seq` 补发。
+- `tabsync.ts` 协议：`active_session_changed`、`ancestor_chain_changed`、`read_cursor_changed`，字段 `tabId`/`opId`/`at`/`sessionId`/`chain`。
+- 发送模式通道：`BroadcastChannel("simo.composer.sendMode.v1")` 与 `window.storage` 双通道，localStorage 为持久层。
+
+## 11. 待确认
+
+- 重连期间发送是排队还是丢弃，产品未给口径；`since` 截断的兜底策略同样待定。
+- 多标签活动会话冲突的 tiebreak 已按代码实现记录，是否升级为产品 AC 待确认。
+- 真实双标签 E2E 需 CDP 双 target，当前环境未启用 Playwright。
+
+## 五列契约索引
+
+| 契约 | 定义 | 实现 | 测试 | 证据 |
+|---|---|---|---|---|
+| 行为契约 | `spec.md` 的验收与错误边界 | 见 `backend.md` / `frontend.md` | `test-plan.md` 映射表 | `evidence.md` AC 证据表 |
+| 交付边界 | `proposal.md` 的范围与非目标 | — | — | `spec.md` 非目标节 |
+
+## 状态流转记录
+
+- 2026-11-21：建立本包并首次登记状态。
+- 2026-11-21：按门禁要求补齐首部字段、模板节与证据列，状态词按七值口径登记；内容口径不变。
+
+## 收口
+
+未收口：当前状态为七值口径中的一项，剩余工作与缺口见本文件
+「待确认」节与 `test-plan.md` 的未覆盖清单；关闭前需补齐证据并由验收 Agent 独立签字。
+
+## 风险与依赖
+
+依赖：无新增外部依赖；证据来自本包 `test-plan.md` 与 `evidence.md` 引用的既有报告。
+- 风险：历史证据为引用而非本轮重跑，未验证项按 `missing` 记，不据此宣称通过。

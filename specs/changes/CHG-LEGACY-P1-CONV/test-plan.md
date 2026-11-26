@@ -1,5 +1,7 @@
 # TEST PLAN · CHG-LEGACY-P1-CONV
 
+Covers: AC-P1-01…AC-P1-07（共 7 条，逐条见下表）
+
 ## 1. 范围与策略
 
 - 只验证 P1 会话与消息 的已存在的实现/展示，不新增产品能力。
@@ -22,15 +24,15 @@ E:\dsh_home\workspaces\agent\toolchain\go\bin\go.exe test ./... -count=1 -json
 
 ## 3. AC → 测试矩阵
 
-| AC | 断言摘要 | 已有测试/证据 | 结果 |
-|---|---|---|---|
-| AC-P1-01 | 会话树能展示 folder/session/active 关系，选中、重命名、归档/恢复主路径可用。 | TC-P1-001/002；Sidebar.test.tsx 9/9；E2E 01a。 | PASS（组件/展示级） |
-| AC-P1-02 | 搜索有结果、无匹配、搜索中、归档过滤与错误/空态有明确 UI。 | TC-P1-003；Sidebar.test.tsx 9/9（部分）。 | PARTIAL |
-| AC-P1-03 | 消息按 user/agent 渲染，流式 caret、失败标记、复制与分类标签可见。 | TC-P1-004；MessageItem.test.tsx 18/18；E2E 01a。 | PASS（组件级） |
-| AC-P1-04 | Enter 发送、Shift+Enter 换行、IME 组合期不误发、发送失败恢复文本。 | TC-P1-006/007；Composer.test.tsx 10/10；E2E 02/03。 | PASS（组件级） |
-| AC-P1-05 | 祖先消息按级加载，413/403/空上级各自有停止/继续提示且不插入错误数据。 | TC-P1-005；App.integration 7/7；E2E 04a–04d。 | PASS（前端集成级） |
-| AC-P1-06 | WS 增量能驱动流式内容，断线后可订阅补偿。 | TC-P1-008；App.integration 7/7；E2E 02。 | PASS（主路径） |
-| AC-P1-07 | 多标签 active/ancestor/read cursor 与远程访问/通知中心达到产品 AC。 | TC-P1-009/011/012；无执行证据。 | MISSING |
+| AC | 用例 | 断言摘要 | 已有测试/证据 | 期望 | 结果 | 证据 |
+| --- | --- | --- | --- | --- | --- | --- |
+| AC-P1-01 | 会话树能展示 folder/session/active 关系，选中、重命名、归档/恢复主路径可用。 | 会话树能展示 folder/session/active 关系，选中、重命名、归档/恢复主路径可用。 | TC-P1-001/002；Sidebar.test.tsx 9/9；E2E 01a。 | 全部断言通过，无 fail 与 skip | PASS（组件/展示级） | docs/testing/EVIDENCE-20261120.md |
+| AC-P1-02 | 搜索有结果、无匹配、搜索中、归档过滤与错误/空态有明确 UI。 | 搜索有结果、无匹配、搜索中、归档过滤与错误/空态有明确 UI。 | TC-P1-003；Sidebar.test.tsx 9/9（部分）。 | 全部断言通过，无 fail 与 skip | PARTIAL | docs/testing/EVIDENCE-20261120.md |
+| AC-P1-03 | 消息按 user/agent 渲染，流式 caret、失败标记、复制与分类标签可见。 | 消息按 user/agent 渲染，流式 caret、失败标记、复制与分类标签可见。 | TC-P1-004；MessageItem.test.tsx 18/18；E2E 01a。 | 全部断言通过，无 fail 与 skip | PASS（组件级） | docs/testing/EVIDENCE-20261120.md |
+| AC-P1-04 | Enter 发送、Shift+Enter 换行、IME 组合期不误发、发送失败恢复文本。 | Enter 发送、Shift+Enter 换行、IME 组合期不误发、发送失败恢复文本。 | TC-P1-006/007；Composer.test.tsx 10/10；E2E 02/03。 | 全部断言通过，无 fail 与 skip | PASS（组件级） | docs/testing/EVIDENCE-20261120.md |
+| AC-P1-05 | 祖先消息按级加载，413/403/空上级各自有停止/继续提示且不插入错误数据。 | 祖先消息按级加载，413/403/空上级各自有停止/继续提示且不插入错误数据。 | TC-P1-005；App.integration 7/7；E2E 04a–04d。 | 全部断言通过，无 fail 与 skip | PASS（前端集成级） | docs/testing/EVIDENCE-20261120.md |
+| AC-P1-06 | WS 增量能驱动流式内容，断线后可订阅补偿。 | WS 增量能驱动流式内容，断线后可订阅补偿。 | TC-P1-008；App.integration 7/7；E2E 02。 | 全部断言通过，无 fail 与 skip | PASS（主路径） | docs/testing/EVIDENCE-20261120.md |
+| AC-P1-07 | 多标签 active/ancestor/read cursor 与远程访问/通知中心达到产品 AC。 | 多标签 active/ancestor/read cursor 与远程访问/通知中心达到产品 AC。 | TC-P1-009/011/012；无执行证据。 | 全部断言通过，无 fail 与 skip | MISSING | missing |
 
 ## 4. 域 test-plan 映射
 

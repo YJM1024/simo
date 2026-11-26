@@ -4,6 +4,8 @@
 Change: CHG-CONV-005
 Implements: PRD-SYNC-004、PRD-SYNC-005
 
+结果：本轮未重跑，逐条证据见下表；未验证项按 `missing` 记，不宣称通过。
+
 ## 1. 证据矩阵
 
 | 项 | 状态 | 依据 |
@@ -40,3 +42,13 @@ SYNC-005：完全未实现 → `gap`（P1 唯一 gap）。
 ## 2026-11-21 第 2 次证据回写（指针）
 
 本文件是变更包建立时的证据快照。同日测试侧回传结果（前端 115/115、后端 246 个顶层测试、E2E 19/19×2）后的最新用例与覆盖状态，以 [P1 test-plan](../../test/P1-CONV/test-plan.md) 与 [CONV-CLOSURE](../../../docs/product/CONV-CLOSURE.md) 为准；本包结论不因新增测试自动升级。
+
+## AC 证据索引
+
+| 证据 ID | AC | 类型 | 命令 | 路径 | 生成时间 | 结果 | 可复跑 | 轮次 |
+|---|---|---|---|---|---|---|---|---|
+| E-AC-SYNC-004-01-01 | AC-SYNC-004-01 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-CONV-005/spec.md | 2026-11-21 | missing | 否 | 0 |
+| E-AC-SYNC-004-02-01 | AC-SYNC-004-02 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-CONV-005/spec.md | 2026-11-21 | missing | 否 | 0 |
+| E-AC-SYNC-005-01-01 | AC-SYNC-005-01 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-CONV-005/spec.md | 2026-11-21 | missing | 否 | 0 |
+
+> 本表按 AC 汇总已有证据来源与判定；逐条细节仍以本文件下列各节与 `test-plan.md` 为准。

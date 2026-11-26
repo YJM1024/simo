@@ -1,5 +1,7 @@
 # TEST PLAN · CHG-LEGACY-P5-MEM
 
+Covers: AC-P5-01…AC-P5-07（共 7 条，逐条见下表）
+
 ## 1. 范围与策略
 
 - 只验证已存在的 P5 后端行为，不新增产品能力。
@@ -22,15 +24,15 @@ E:\dsh_home\workspaces\agent\toolchain\go\bin\go.exe test ./... -count=1 -json
 
 ## 3. AC → 测试矩阵
 
-| AC | 测试 | 层级 | 预期 | 实际 |
-|---|---|---|---|---|
-| AC-P5-01 条目可见/空数组 | `TestM3RememberVisibilityAndFTS`、`TestM21MemoryV3Pipeline` | 集成 | 写入后可查；空库 `[]` | PASS |
-| AC-P5-02 中文/短词搜索 | `TestSearchChineseTrigramAndShortLike` | 单测 | 命中不静默失败 | PASS |
-| AC-P5-03 scope 隔离 | `TestScopeIsolationAndTaskDoneCandidate` | 单测 | 跨 scope 不污染 | PASS |
-| AC-P5-04 冲突/争议/撤回 | `TestM3ConflictVisibleAndItemsShape`、`TestMemoryV3FactConflictAndCanonical`、`TestPreferenceUpdatesActiveAndOnlyContradictionDisputes`、`TestSubmitMergeConflictRetract` | 集成+单测 | 冲突可见、可合并/撤回 | PASS |
-| AC-P5-05 R1/R2/向量 | `TestM22RecallR1`、`TestM27RecallR2DefaultOn`、`TestM27RecallR2SwitchAndVectorDegrade`、`TestM27RecallR2TwoHopAndAgentic`、`TestM32LocalVectorRecallAndFusion`、`TestM32VectorDefaultOff`、`TestM31RecallEntityBindingNoSelfLock` | 集成 | 开关、融合、降级、默认关闭 | PASS |
-| AC-P5-06 巩固幂等 | `TestM30ConsolidationCandidatesMergeAndIdempotency`、`TestM30ConsolidationDefaultEnabled`、`TestTaskDoneEventWritesProgress` | 集成+单测 | 重复不重复写回 | PASS |
-| AC-P5-07 UI AC-02 | 无 UI | — | 不可判定 | MISSING（N/A 后端） |
+| AC | 用例 | 测试 | 层级 | 实际 | 期望 | 证据 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| AC-P5-01 条目可见/空数组 | `TestM3RememberVisibilityAndFTS`、`TestM21MemoryV3Pipeline` | `TestM3RememberVisibilityAndFTS`、`TestM21MemoryV3Pipeline` | 集成 | PASS | 写入后可查；空库 `[]` | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P5-02 中文/短词搜索 | `TestSearchChineseTrigramAndShortLike` | `TestSearchChineseTrigramAndShortLike` | 单测 | PASS | 命中不静默失败 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P5-03 scope 隔离 | `TestScopeIsolationAndTaskDoneCandidate` | `TestScopeIsolationAndTaskDoneCandidate` | 单测 | PASS | 跨 scope 不污染 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P5-04 冲突/争议/撤回 | `TestM3ConflictVisibleAndItemsShape`、`TestMemoryV3FactConflictAndCanonical`、`TestPreferenceUpdatesActiveAndOnlyContradictionDisputes`、`TestSubmitMergeConflictRetract` | `TestM3ConflictVisibleAndItemsShape`、`TestMemoryV3FactConflictAndCanonical`、`TestPreferenceUpdatesActiveAndOnlyContradictionDisputes`、`TestSubmitMergeConflictRetract` | 集成+单测 | PASS | 冲突可见、可合并/撤回 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P5-05 R1/R2/向量 | `TestM22RecallR1`、`TestM27RecallR2DefaultOn`、`TestM27RecallR2SwitchAndVectorDegrade`、`TestM27RecallR2TwoHopAndAgentic`、`TestM32LocalVectorRecallAndFusion`、`TestM32VectorDefaultOff`、`TestM31RecallEntityBindingNoSelfLock` | `TestM22RecallR1`、`TestM27RecallR2DefaultOn`、`TestM27RecallR2SwitchAndVectorDegrade`、`TestM27RecallR2TwoHopAndAgentic`、`TestM32LocalVectorRecallAndFusion`、`TestM32VectorDefaultOff`、`TestM31RecallEntityBindingNoSelfLock` | 集成 | PASS | 开关、融合、降级、默认关闭 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P5-06 巩固幂等 | `TestM30ConsolidationCandidatesMergeAndIdempotency`、`TestM30ConsolidationDefaultEnabled`、`TestTaskDoneEventWritesProgress` | `TestM30ConsolidationCandidatesMergeAndIdempotency`、`TestM30ConsolidationDefaultEnabled`、`TestTaskDoneEventWritesProgress` | 集成+单测 | PASS | 重复不重复写回 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P5-07 UI AC-02 | 无 UI | 无 UI | — | MISSING（N/A 后端） | 不可判定 | missing |
 
 ## 4. 回归范围
 

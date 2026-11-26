@@ -4,15 +4,15 @@
 
 ## 任务卡总览
 
-| 任务 | 目标 | 可写范围 | 验收标准 | 证据 | 依赖 |
-|---|---|---|---|---|---|
-| `B1-T1` 任务执行组前端契约 | 会话内任务执行组：列出、状态、进度、取消、重试 | `specs/dev/P2-TASK/frontend.md`、`frontend/src/**` | `AC-TASK-001-01`–`06`、`AC-TASK-002-01`–`04`、`AC-TASK-006-01`–`04` | 组件测试 + 8787 截图 | 本包 §4 `AC-CHG-B1-001-01` |
-| `B1-T2` 任务异步消息与状态机 | 单任务开始/结束消息、重启恢复、状态封闭 | `specs/dev/P2-TASK/backend.md`、`backend/internal/modules/tasks/**`、`backend/internal/modules/chat/task_executor.go` | `AC-TASK-003-01`–`05`、`AC-TASK-006-06`、`AC-CHG-B1-001-06` | 脚本 JSON + 日志行 | `B1-T1` 的接口形状 |
-| `B1-T3` 预算与取消/重试语义 | 预算接真实用量、retry 守卫、取消幂等 | `backend/internal/modules/tasks/service.go`、`backend/internal/modules/chat/runtime.go` | `AC-TASK-006-02`–`05` | 脚本 JSON | `B1-T2` |
-| `B1-T4` 文件页与列表 | 文件页入口、会话内列表、分页与排序 | `specs/dev/P4-FILE/frontend.md`、`frontend/src/**` | `AC-FILE-001-01`–`06` | 组件测试 + 截图 | `AC-CHG-B1-001-01` |
-| `B1-T5` 预览与下载 | 分类型预览、下载文件名安全 | `frontend/src/**`、`backend/internal/modules/tasks/http.go` | `AC-FILE-004-01`–`06`、`AC-FILE-003-03` | 脚本 JSON + 截图 | `B1-T4` |
-| `B1-T6` 越界拒绝 | 四条负用例全部拒绝 | `backend/internal/modules/tasks/**`、`backend/internal/modules/chat/files.go` | `AC-FILE-005-01`–`05`、`AC-CHG-B1-001-04` | 脚本 JSON | `B1-T4` |
-| `B1-T7` 工作台三态走查 | loading/empty/error 三态截图 | `frontend/src/app.tsx`、`docs/evidence/**` | `AC-CHG-B1-001-05` | 3 张 8787 截图 | `B1-T4` |
+| 卡 | 任务 | owner | scope | 依赖 | 推理档位 | AC | 证据 | 状态 | 评审人 | 禁止项 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `B1-T1` | 任务执行组前端契约：会话内任务执行组列出、状态、进度、取消、重试 | 待指派（开工时 Lead 定） | `specs/dev/P2-TASK/frontend.md`、`frontend/src/**` | 无 | high | `AC-TASK-001-01`–`06`、`AC-TASK-002-01`–`04`、`AC-TASK-006-01`–`04` | 组件测试 + 8787 截图 | todo | 验收 Agent | 不改 `backend/`；不改产品 AC 文本；不跑 git；不删文件 |
+| `B1-T2` | 任务异步消息与状态机：单任务开始/结束消息、重启恢复、状态封闭 | 待指派（开工时 Lead 定） | `specs/dev/P2-TASK/backend.md`、`backend/internal/modules/tasks/**`、`backend/internal/modules/chat/task_executor.go` | `B1-T1` 的接口形状 | high | `AC-TASK-003-01`–`05`、`AC-TASK-006-06`、`AC-CHG-B1-001-06` | 脚本 JSON + 日志行 | todo | 验收 Agent | 不改 `frontend/`；不改 `scripts/`；不跑 git；不删文件 |
+| `B1-T3` | 预算与取消/重试语义：预算接真实用量、retry 守卫、取消幂等 | 待指派（开工时 Lead 定） | `backend/internal/modules/tasks/service.go`、`backend/internal/modules/chat/runtime.go` | `B1-T2` | high | `AC-TASK-006-02`–`05` | 脚本 JSON | todo | 验收 Agent | 不改产品 spec；不改表结构；不跑 git；不删文件 |
+| `B1-T4` | 文件页与列表：文件页入口、会话内列表、分页与排序 | 待指派（开工时 Lead 定） | `specs/dev/P4-FILE/frontend.md`、`frontend/src/**` | `AC-CHG-B1-001-01` 的主链路证据 | high | `AC-FILE-001-01`–`06` | 组件测试 + 截图 | todo | 验收 Agent | 不做工作台内独立文件页；不改 `backend/`；不删文件 |
+| `B1-T5` | 预览与下载：分类型预览、下载文件名安全 | 待指派（开工时 Lead 定） | `frontend/src/**`、`backend/internal/modules/tasks/http.go` | `B1-T4` | high | `AC-FILE-004-01`–`06`、`AC-FILE-003-03` | 脚本 JSON + 截图 | todo | 验收 Agent | 不做内嵌 PDF 查看器；不改 `scripts/`；不删文件 |
+| `B1-T6` | 越界拒绝：四条负用例全部拒绝 | 待指派（开工时 Lead 定） | `backend/internal/modules/tasks/**`、`backend/internal/modules/chat/files.go` | `B1-T4` | high | `AC-FILE-005-01`–`05`、`AC-CHG-B1-001-04` | 脚本 JSON | todo | 验收 Agent | 不改产品 AC 判据；不放宽拒绝码；不删文件 |
+| `B1-T7` | 工作台三态走查：loading/empty/error 三态截图 | 待指派（开工时 Lead 定） | `frontend/src/app.tsx`、`docs/evidence/**` | `B1-T4` | low | `AC-CHG-B1-001-05` | 3 张 8787 截图 | todo | 验收 Agent | 不改 AC 文本；不伪造截图；不跑 git |
 
 ## 派单约束
 

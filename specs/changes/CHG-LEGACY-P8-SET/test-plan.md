@@ -1,5 +1,7 @@
 # TEST PLAN · CHG-LEGACY-P8-SET
 
+Covers: AC-P8-01…AC-P8-08（共 8 条，逐条见下表）
+
 ## 1. 范围与策略
 
 - 验证 P8 后端：配置优先级/默认/校验、权限 fail-closed、权限 API、健康/错误、SQLite 锁/版本、旧数据迁移、workspace 迁移工具。
@@ -23,16 +25,16 @@ E:\dsh_home\workspaces\agent\toolchain\go\bin\go.exe test ./... -count=1 -json
 
 ## 3. AC → 测试矩阵
 
-| AC | 测试 | 层级 | 预期 | 实际 |
-|---|---|---|---|---|
-| AC-P8-01 配置优先级/默认/校验 | `TestParseFromSimoHome`、`TestRealIsDefaultAndMissingKeyFailsClearly`、`TestExplicitMockStillWorks`、`TestConfigFileEnvFlagPrecedence`、`TestInvalidModelRejected`、`TestLLMEnvForcesMockAndDebug`、`TestRealModeRequiresAPIKey`、`TestInvalidAddrRejectedWithClearMessage`、`TestSimoHomeMustBeWritableDirectory` | 单测 | 优先级、real 缺 key 失败、mock 可用、非法地址/目录失败 | PASS |
-| AC-P8-02 权限 API 默认/确认 | `TestM9PermissionsDefaultAndFullConfirmation` | 集成 | 默认 workspace-write/auto；full 需 confirm | PASS |
-| AC-P8-03 fail-closed | `TestDefaultPolicy`、`TestCanUseToolOnlyWhenNotAutoApproved`、`TestHookDenyAndAskRule` | 单测 | deny/ask/默认拒绝 | PASS |
-| AC-P8-04 健康/错误 | `TestHealthReadinessPayload`、`TestHealthNotReadyReturns503`、`TestUnifiedErrorEnvelopeHasCode`、`TestM7HealthReadiness`、`TestM7UniformErrorEnvelope`、`TestHealthAndSessions`、`TestAPINotFoundIsJSON` | 单测+集成 | 200/503、code | PASS |
-| AC-P8-05 旧数据迁移 | `TestMigrateLegacyDBKeepsOldAndCopiesWAL`、`TestMigrateLegacyDBDoesNotOverwriteNewDB`、`TestMigrateLegacyHomeCopiesWithoutDeleting` | 单测 | 复制 WAL、不覆盖、不删旧 | PASS |
-| AC-P8-06 SQLite 锁/版本 | `TestStaleLockReclaimed`、`TestFutureSchemaVersionRejected`、`TestSingleWriterLockAndRestart` | 单测 | stale lock、future schema、单写重启 | PASS |
-| AC-P8-07 SET-003/005/006/备份/安装 | 无 | — | 不可判定 | MISSING/unimplemented |
-| AC-P8-08 设置 UI | 无 | — | 不可判定 | N/A |
+| AC | 用例 | 测试 | 层级 | 实际 | 期望 | 证据 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| AC-P8-01 配置优先级/默认/校验 | `TestParseFromSimoHome`、`TestRealIsDefaultAndMissingKeyFailsClearly`、`TestExplicitMockStillWorks`、`TestConfigFileEnvFlagPrecedence`、`TestInvalidModelRejected`、`TestLLMEnvForcesMockAndDebug`、`TestRealModeRequiresAPIKey`、`TestInvalidAddrRejectedWithClearMessage`、`TestSimoHomeMustBeWritableDirectory` | `TestParseFromSimoHome`、`TestRealIsDefaultAndMissingKeyFailsClearly`、`TestExplicitMockStillWorks`、`TestConfigFileEnvFlagPrecedence`、`TestInvalidModelRejected`、`TestLLMEnvForcesMockAndDebug`、`TestRealModeRequiresAPIKey`、`TestInvalidAddrRejectedWithClearMessage`、`TestSimoHomeMustBeWritableDirectory` | 单测 | PASS | 优先级、real 缺 key 失败、mock 可用、非法地址/目录失败 | missing |
+| AC-P8-02 权限 API 默认/确认 | `TestM9PermissionsDefaultAndFullConfirmation` | `TestM9PermissionsDefaultAndFullConfirmation` | 集成 | PASS | 默认 workspace-write/auto；full 需 confirm | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P8-03 fail-closed | `TestDefaultPolicy`、`TestCanUseToolOnlyWhenNotAutoApproved`、`TestHookDenyAndAskRule` | `TestDefaultPolicy`、`TestCanUseToolOnlyWhenNotAutoApproved`、`TestHookDenyAndAskRule` | 单测 | PASS | deny/ask/默认拒绝 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P8-04 健康/错误 | `TestHealthReadinessPayload`、`TestHealthNotReadyReturns503`、`TestUnifiedErrorEnvelopeHasCode`、`TestM7HealthReadiness`、`TestM7UniformErrorEnvelope`、`TestHealthAndSessions`、`TestAPINotFoundIsJSON` | `TestHealthReadinessPayload`、`TestHealthNotReadyReturns503`、`TestUnifiedErrorEnvelopeHasCode`、`TestM7HealthReadiness`、`TestM7UniformErrorEnvelope`、`TestHealthAndSessions`、`TestAPINotFoundIsJSON` | 单测+集成 | PASS | 200/503、code | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P8-05 旧数据迁移 | `TestMigrateLegacyDBKeepsOldAndCopiesWAL`、`TestMigrateLegacyDBDoesNotOverwriteNewDB`、`TestMigrateLegacyHomeCopiesWithoutDeleting` | `TestMigrateLegacyDBKeepsOldAndCopiesWAL`、`TestMigrateLegacyDBDoesNotOverwriteNewDB`、`TestMigrateLegacyHomeCopiesWithoutDeleting` | 单测 | PASS | 复制 WAL、不覆盖、不删旧 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P8-06 SQLite 锁/版本 | `TestStaleLockReclaimed`、`TestFutureSchemaVersionRejected`、`TestSingleWriterLockAndRestart` | `TestStaleLockReclaimed`、`TestFutureSchemaVersionRejected`、`TestSingleWriterLockAndRestart` | 单测 | PASS | stale lock、future schema、单写重启 | docs/testing/BACKEND-EVIDENCE-20261120.md |
+| AC-P8-07 SET-003/005/006/备份/安装 | 无 | 无 | — | MISSING/unimplemented | 不可判定 | missing |
+| AC-P8-08 设置 UI | 无 | 无 | — | N/A | 不可判定 | missing |
 
 ## 4. 关键边界已有/缺失
 

@@ -1,12 +1,17 @@
 # SPEC · CHG-LEGACY-P5-MEM
 
+Covers: AC-P5-01、AC-P5-02、AC-P5-03、AC-P5-04、AC-P5-05、AC-P5-06、AC-P5-07（本包 §3 的两段式历史 AC 编号，早于三段式命名规范）
+
 Implements: PRD-MEM-001, PRD-MEM-002, PRD-MEM-003, PRD-MEM-004, PRD-MEM-005, PRD-MEM-006
 
-- 状态：historical / partial（归档，不代表产品完成）
+- 状态：已关闭（2026-11-20 归档，historical / partial 为历史迁移值，不代表产品完成）
 - Owner：backend
 - 日期：2026-11-20
 - 产品依据：`specs/product/P5-MEM/spec.md`
-
+Change：CHG-LEGACY-P5-MEM
+变更类型：纯文档（历史归档补登，不改实现与产品 AC）
+判级：变更级
+关闭日期：N/A：历史归档包无独立关闭动作，归档日为 2026-11-20
 ## 1. 目标
 
 为 P5 的每一个 PRD 建立可复核的后端事实基线：已有接口、数据、测试、错误边界与明确缺口。本包不改变行为，不把未实现能力写成已完成。
@@ -61,3 +66,28 @@ Implements: PRD-MEM-001, PRD-MEM-002, PRD-MEM-003, PRD-MEM-004, PRD-MEM-005, PRD
 - [test-plan.md](test-plan.md)
 - [evidence.md](evidence.md)
 - 全量证据：[`docs/testing/BACKEND-EVIDENCE-20261120.md`](../../../docs/testing/BACKEND-EVIDENCE-20261120.md)
+
+## 非目标
+
+本包是历史归档，只登记既有事实：不新增能力、不改实现与数据、不把未验证项写成已完成；未覆盖的断言保持 `missing`，后续承接见对应的 `CHG-CONV-*` 收口包。
+
+## 五列契约索引
+
+| 契约 | 定义 | 实现 | 测试 | 证据 |
+|---|---|---|---|---|
+| 行为契约 | `spec.md` 的验收与错误边界 | 见 `backend.md` / `frontend.md` | `test-plan.md` 映射表 | `evidence.md` AC 证据表 |
+| 交付边界 | `proposal.md` 的范围与非目标 | — | — | `spec.md` 非目标节 |
+
+## 状态流转记录
+
+- 2026-11-20：建立本包并首次登记状态。
+- 2026-11-20：按门禁要求补齐首部字段、模板节与证据列，状态词按七值口径登记；内容口径不变。
+
+## 收口
+
+已归档：本包是历史归档包，不再接受变更；产品能力仍按域 spec 的 `covered/partial/gap` 统计，归档不表示完成。
+
+## 风险与依赖
+
+依赖：无新增外部依赖；证据来自本包 `test-plan.md` 与 `evidence.md` 引用的既有报告。
+- 风险：历史证据为引用而非本轮重跑，未验证项按 `missing` 记，不据此宣称通过。
