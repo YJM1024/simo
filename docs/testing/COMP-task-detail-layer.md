@@ -4,7 +4,7 @@
 |---|---|
 | 组件编号 | `COMP-task-detail-layer` |
 | 组件名称 | `TaskDetailLayer`（任务详情只读层） |
-| 状态 | `verified`（2026-11-26；随 26 条 AC 复核，独立组件签收未执行，不写 `accepted`） |
+| 状态 | `verified`（2026-11-26；复签未通过，A3、A6 缺陷见 `docs/testing/COMP-SIGN-4-20261126.md` §4） |
 | Owner | 实现：前端（CHG-CONV-007 W3）；设计：设计（`specs/design/P1-CONV/spec.md` §17）；验收：独立验收 Agent（不得为实现者） |
 | Used by | `PRD-CONV-009`、`CHG-CONV-007` |
 | 视觉基线 | `specs/design/P1-CONV/spec.md` §17 的 `V-CONV-009-*`；token 取自 `frontend/src/styles/tokens.css` |

@@ -4,7 +4,7 @@
 |---|---|
 | 组件编号 | `COMP-task-message-card` |
 | 组件名称 | `TaskMessageCard` / `TaskSummaryCard`（任务卡消息卡与汇总卡） |
-| 状态 | `verified`（2026-11-26；随 26 条 AC 复核，独立组件签收未执行，不写 `accepted`） |
+| 状态 | `accepted`（2026-11-26；签收人 `comp-sign-4`；报告 `docs/testing/COMP-SIGN-4-20261126.md`） |
 | Owner | 实现：前端（CHG-CONV-007 W3）；设计：设计（`specs/design/P1-CONV/spec.md` §17）；验收：独立验收 Agent（不得为实现者） |
 | Used by | `PRD-CONV-009`、`CHG-CONV-007` |
 | 视觉基线 | `specs/design/P1-CONV/spec.md` §17 的 `V-CONV-009-*`；颜色与尺寸 token 取自 `frontend/src/styles/tokens.css`（DESIGN.md v2 唯一来源） |
