@@ -47,8 +47,13 @@ describe('TaskDetailLayer', () => {
     rerender(<TaskDetailLayer open detail={null} loading={false} error="详情失败" onRetry={onRetry} onClose={vi.fn()} />)
     expect(screen.getByText('任务详情加载失败')).toBeInTheDocument()
     expect(screen.getByText('详情失败')).toBeInTheDocument()
+    // 错误态恰好一个重试入口；正常态没有重试入口（COMP-task-detail-layer A3）。
+    expect(screen.getAllByRole('button', { name: '重试' })).toHaveLength(1)
+    expect(document.querySelectorAll('section.task-detail form, section.task-detail input, section.task-detail textarea')).toHaveLength(0)
     await user.click(screen.getByRole('button', { name: '重试' }))
     expect(onRetry).toHaveBeenCalledTimes(1)
+    rerender(<TaskDetailLayer open detail={detail()} loading={false} onClose={vi.fn()} />)
+    expect(screen.queryByRole('button', { name: '重试' })).not.toBeInTheDocument()
     rerender(<TaskDetailLayer open detail={null} loading={false} onClose={vi.fn()} />)
     expect(screen.getByText('暂无任务详情')).toBeInTheDocument()
   })
@@ -100,8 +105,7 @@ describe('TaskDetailLayer', () => {
     expect(document.querySelector('.task-step-head')).toHaveTextContent('待办步骤')
   })
 
-  it('renders the explore timeline as a flat trace list and pages older traces', async () => {
-    const user = userEvent.setup()
+  it('renders the explore timeline as a flat trace list', () => {
     const traces = [trace({ id: 't-1', text: '探索轨迹一' }), trace({ id: 't-2', seq: 2, text: '探索轨迹二' })]
     render(<TaskDetailLayer open detail={detail({ task: task({ mode: 'explore' }), traces, tracesHasMore: true })} loading={false} onClose={vi.fn()} />)
     const dialog = screen.getByRole('dialog', { name: '任务详情' })
@@ -109,8 +113,43 @@ describe('TaskDetailLayer', () => {
     expect(dialog.querySelector('.task-detail-tip')).toBeInTheDocument()
     expect(dialog.querySelectorAll('.task-trace')).toHaveLength(2)
     expect(dialog.querySelectorAll('.task-step')).toHaveLength(0)
+  })
+
+  it('caps the explore timeline at 200 rows, pages +200 up to 500 and then hides the entry', async () => {
+    const user = userEvent.setup()
+    const traces = Array.from({ length: 520 }, (_, i) => trace({ id: `ex-${i + 1}`, seq: i + 1, stepId: undefined, at: 1_760_000_000_000 + i, text: `探索轨迹 ${i + 1}` }))
+    render(<TaskDetailLayer open detail={detail({ task: task({ mode: 'explore' }), traces, tracesHasMore: true })} loading={false} onClose={vi.fn()} />)
+    const dialog = screen.getByRole('dialog', { name: '任务详情' })
+    const rows = (): number => dialog.querySelectorAll('.task-trace').length
+    expect(rows()).toBe(200)
     await user.click(screen.getByRole('button', { name: '加载更早轨迹' }))
-    expect(screen.getByText('仅显示最近 400 条')).toBeInTheDocument()
+    expect(rows()).toBe(400)
+    await user.click(screen.getByRole('button', { name: '加载更早轨迹' }))
+    expect(rows()).toBe(500)
+    expect(screen.queryByRole('button', { name: '加载更早轨迹' })).not.toBeInTheDocument()
+    expect(screen.getByText('已显示最近 500 条，达到上限')).toBeInTheDocument()
+    expect(rows()).toBe(500)
+  })
+
+  it('applies the same 200/500 cap to plan steps and never exceeds 500 rows', async () => {
+    const user = userEvent.setup()
+    const traces = Array.from({ length: 520 }, (_, i) => trace({ id: `pl-${i + 1}`, seq: i + 1, stepId: 's-1', at: 1_760_000_000_000 + i, text: `步骤轨迹 ${i + 1}` }))
+    render(<TaskDetailLayer open detail={detail({
+      steps: [step({ traceCount: 520, status: 'running' })],
+      currentStepId: 's-1',
+      traces,
+      tracesHasMore: true,
+    })} loading={false} onClose={vi.fn()} />)
+    const dialog = screen.getByRole('dialog', { name: '任务详情' })
+    const rows = (): number => dialog.querySelectorAll('.task-step .task-trace').length
+    expect(rows()).toBe(200)
+    await user.click(screen.getByRole('button', { name: '加载更早轨迹' }))
+    expect(rows()).toBe(400)
+    await user.click(screen.getByRole('button', { name: '加载更早轨迹' }))
+    expect(rows()).toBe(500)
+    expect(screen.queryByRole('button', { name: '加载更早轨迹' })).not.toBeInTheDocument()
+    expect(screen.getByText('已显示最近 500 条，达到上限')).toBeInTheDocument()
+    expect(rows()).toBe(500)
   })
 
   it('shows the failure reason or the waiting reason, never both at once', async () => {

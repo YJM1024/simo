@@ -9,6 +9,9 @@ const WAITING_LABEL: Record<string, string> = { dependency: '等待前置', depe
 const MODE_LABEL: Record<string, string> = { plan: '计划', explore: '边做边想' }
 const TRACE_LABEL: Record<string, string> = { think: '思考', action: '动作', observe: '观察', tool: '工具', text: '文本' }
 const FILTER_LABEL: Record<TaskFilter, string> = { all: '全部', running: '进行中', failed: '失败', done: '已完成' }
+// 轨迹分页：首屏 200 条，每次补 200 条，上限 500 条（前端 §17.7.3，plan 与 explore 同一套）。
+const TRACE_PAGE_SIZE = 200
+const TRACE_CAP = 500
 
 export type TaskFilter = 'all' | 'running' | 'failed' | 'done'
 export const TASK_FILTERS: TaskFilter[] = ['all', 'running', 'failed', 'done']
@@ -553,6 +556,16 @@ export function TaskDetailLayer({ open, detail: loadedDetail, fallbackTask = nul
   }, [open, detail, jumpStepId])
 
   const detailTraces = detail?.traces ?? []
+  // 两种详情共用同一个可见窗口：按时间与序号升序排好后，只渲染最后 visibleCount 条。
+  const orderedTraces = useMemo(
+    () => [...detailTraces].sort((a, b) => a.at - b.at || a.seq - b.seq),
+    [detailTraces],
+  )
+  const visibleCount = Math.min(traceLimit, TRACE_CAP, orderedTraces.length)
+  const visibleTraces = orderedTraces.slice(orderedTraces.length - visibleCount)
+  const visibleTraceSet = useMemo(() => new Set(visibleTraces), [orderedTraces, visibleCount])
+  const tracesRemain = orderedTraces.length > visibleCount || Boolean(detail?.tracesHasMore)
+  const tracesAtCap = tracesRemain && visibleCount >= TRACE_CAP
   const tracesByStep = useMemo(() => {
     const map = new Map<string, TraceItem[]>()
     for (const trace of detailTraces) {
@@ -572,6 +585,15 @@ export function TaskDetailLayer({ open, detail: loadedDetail, fallbackTask = nul
   const context = detail?.context
   const deliverables = detail?.deliverables ?? []
   const totalTraces = detailTraces.length
+  const tracePager = (
+    <>
+      {tracesRemain && !tracesAtCap && (
+        <button type="button" className="btn sm task-traces-more" aria-label="加载更早轨迹" onClick={() => setTraceLimit((limit) => Math.min(TRACE_CAP, limit + TRACE_PAGE_SIZE))}>加载更早</button>
+      )}
+      {tracesAtCap && <p className="insp-placeholder task-traces-cap" role="status">已显示最近 {TRACE_CAP} 条，达到上限</p>}
+      {visibleCount > TRACE_PAGE_SIZE && !tracesAtCap && <p className="insp-placeholder">仅显示最近 {visibleCount} 条</p>}
+    </>
+  )
 
   return (
     <section
@@ -620,11 +642,8 @@ export function TaskDetailLayer({ open, detail: loadedDetail, fallbackTask = nul
                 <span className="task-detail-label">循环轨迹</span>
                 <span className="task-detail-label-count">{totalTraces} 条 · 正序</span>
               </div>
-              {detailTraces.length === 0 ? <p className="insp-placeholder">暂无轨迹</p> : <TimelineTraces traces={detailTraces} />}
-              {detail.tracesHasMore && (
-                <button type="button" className="btn sm task-traces-more" aria-label="加载更早轨迹" onClick={() => setTraceLimit((limit) => limit + 200)}>加载更早</button>
-              )}
-              {traceLimit > 200 && <p className="insp-placeholder">仅显示最近 {Math.min(500, traceLimit)} 条</p>}
+              {detailTraces.length === 0 ? <p className="insp-placeholder">暂无轨迹</p> : <TimelineTraces traces={visibleTraces} />}
+              {tracePager}
             </>
           ) : (
             <>
@@ -639,7 +658,7 @@ export function TaskDetailLayer({ open, detail: loadedDetail, fallbackTask = nul
                       step={step}
                       traces={tracesByStep.get(step.id) ?? []}
                       expanded={expanded === step.id}
-                      traceLimit={traceLimit}
+                      visibleTraceSet={visibleTraceSet}
                       expandedTraces={expandedTraces}
                       onToggle={() => setExpanded((current) => (current === step.id ? null : step.id))}
                       onExpandTrace={(id) => setExpandedTraces((current) => { const next = new Set(current); if (next.has(id)) next.delete(id); else next.add(id); return next })}
@@ -647,10 +666,7 @@ export function TaskDetailLayer({ open, detail: loadedDetail, fallbackTask = nul
                   ))}
                 </ol>
               )}
-              {detail.tracesHasMore && (
-                <button type="button" className="btn sm task-traces-more" aria-label="加载更早轨迹" onClick={() => setTraceLimit((limit) => limit + 200)}>加载更早</button>
-              )}
-              {traceLimit > 200 && <p className="insp-placeholder">仅显示最近 {Math.min(500, traceLimit)} 条</p>}
+              {tracePager}
             </>
           )}
           <div className="task-detail-section"><span className="task-detail-label">启动上下文</span></div>
@@ -679,11 +695,11 @@ export function TaskDetailLayer({ open, detail: loadedDetail, fallbackTask = nul
   )
 }
 
-function StepItem({ step, traces, expanded, traceLimit, expandedTraces, onToggle, onExpandTrace }: {
+function StepItem({ step, traces, expanded, visibleTraceSet, expandedTraces, onToggle, onExpandTrace }: {
   step: TaskStep
   traces: TraceItem[]
   expanded: boolean
-  traceLimit: number
+  visibleTraceSet: Set<TraceItem>
   expandedTraces: Set<string>
   onToggle: () => void
   onExpandTrace: (id: string) => void
@@ -701,7 +717,8 @@ function StepItem({ step, traces, expanded, traceLimit, expandedTraces, onToggle
       {step.status !== 'pending' && <span className="task-step-arrow" aria-hidden="true">{expanded ? '▾' : '▸'}</span>}
     </>
   )
-  const visibleTraces = traces.slice(-Math.min(traceLimit, 500))
+  // 只渲染落在全局可见窗口内的轨迹；被窗口裁掉的条目不进 DOM。
+  const visibleTraces = traces.filter((trace) => visibleTraceSet.has(trace))
   return (
     <li className="task-step" data-step-id={step.id} data-status={step.status}>
       {interactive ? (
@@ -730,7 +747,7 @@ function StepItem({ step, traces, expanded, traceLimit, expandedTraces, onToggle
           })}
         </ul>
       )}
-      {expanded && traces.length > visibleTraces.length && <p className="task-traces-hint">仅显示最近 {visibleTraces.length} 条</p>}
+      {expanded && traces.length > visibleTraces.length && <p className="task-traces-hint">本步仅显示最近 {visibleTraces.length} 条</p>}
     </li>
   )
 }

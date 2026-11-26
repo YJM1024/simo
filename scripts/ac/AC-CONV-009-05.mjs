@@ -81,4 +81,108 @@ runUiAc('AC-CONV-009-05', async (ctx) => {
   ctx.check(survey.s7?.tabindex === null, '第 7 步无 tabindex', 'null', survey.s7?.tabindex ?? '元素不存在');
   ctx.check(survey.s7?.role !== 'button', '第 7 步无 role=button', 'null/非 button', survey.s7?.role ?? 'null');
   ctx.check((survey.s7?.height ?? 0) >= 30, '第 7 步行高 ≥30', '≥30px', survey.s7?.height ?? '元素不存在');
+
+  // ---- D2：轨迹截断上限（plan/explore 同一套）与错误态重试（新增，既有断言不动）----
+  const closeTaskDetail = async () => {
+    const exists = await client.evaluate(`document.querySelector('section.task-detail') !== null`);
+    if (exists) await clickSel(client, 'section.task-detail .task-detail-close');
+    await sleep(200);
+  };
+  await closeTaskDetail();
+  const probeInstalled = await client.evaluate(`(async () => {
+    const orig = window.fetch.bind(window);
+    window.__acOrigFetch = orig;
+    window.__acLog = [];
+    window.__acFail = false;
+    window.__acBig = null;
+    window.fetch = async (input, init) => {
+      const url = typeof input === 'string' ? input : (input && input.url) || '';
+      const method = (init && init.method) || (input && input.method) || 'GET';
+      window.__acLog.push({ method, url });
+      if (window.__acFail && url.includes('/tasks/t1')) {
+        return new Response(JSON.stringify({ error: { code: 'internal', message: '详情失败' } }), { status: 500, headers: { 'content-type': 'application/json' } });
+      }
+      if (window.__acBig) {
+        const pick = url.includes('/tasks/t2') ? 'explore' : url.includes('/tasks/t1') ? 'plan' : null;
+        if (pick) return new Response(JSON.stringify(window.__acBig[pick]), { status: 200, headers: { 'content-type': 'application/json' } });
+      }
+      return orig(input, init);
+    };
+    const plan = await (await orig('/api/sessions/main/tasks/t1?traceLimit=200')).json();
+    const explore = await (await orig('/api/sessions/main/tasks/t2?traceLimit=200')).json();
+    const pad = (base, taskId) => {
+      const stepId = taskId === 't1' ? base.steps[5].id : undefined;
+      const traces = Array.from({ length: 520 }, (_, i) => ({
+        id: 'big-' + taskId + '-' + (i + 1),
+        stepId: taskId === 't1' ? stepId : undefined,
+        traceSeq: i + 1,
+        seq: i + 1,
+        category: i % 2 ? 'action' : 'observation',
+        text: '轨迹 ' + (i + 1),
+        at: 1760000000000 + i * 1000,
+      }));
+      return { ...base, traces, tracesHasMore: true };
+    };
+    window.__acBig = { plan: pad(plan, 't1'), explore: pad(explore, 't2') };
+    return true;
+  })()`);
+  ctx.check(probeInstalled === true, '安装轨迹上限与重试探针', 'true', String(probeInstalled));
+
+  await clickSel(client, '.task-card[data-task-id="t1"]');
+  await waitFor(client, `document.querySelectorAll('section.task-detail li.task-step .task-trace').length === 200`, { timeout: 10000, label: 'plan 首屏 200 条' });
+  const plan200 = await client.evaluate(`document.querySelectorAll('section.task-detail li.task-step .task-trace').length`);
+  ctx.check(plan200 === 200, 'plan 轨迹首屏 200 条', '200', plan200);
+  await clickSel(client, 'section.task-detail .task-traces-more');
+  await sleep(250);
+  const plan400 = await client.evaluate(`document.querySelectorAll('section.task-detail li.task-step .task-trace').length`);
+  ctx.check(plan400 === 400, 'plan 点一次加载更早后 400 条', '400', plan400);
+  await clickSel(client, 'section.task-detail .task-traces-more');
+  await sleep(250);
+  const planCap = await client.evaluate(`(() => {
+    const rows = document.querySelectorAll('section.task-detail li.task-step .task-trace').length;
+    return { rows, more: document.querySelectorAll('section.task-detail .task-traces-more').length, hint: (document.querySelector('section.task-detail .task-traces-cap') || {}).textContent || '' };
+  })()`);
+  ctx.check(planCap.rows === 500, 'plan 到上限 500 条', '500', planCap.rows);
+  ctx.check(planCap.more === 0, 'plan 到上限后加载更早入口消失', '0', planCap.more);
+  ctx.check(planCap.hint.includes('达到上限'), 'plan 到上限显示已到上限文案', '含「达到上限」', planCap.hint || '空');
+
+  await closeTaskDetail();
+  await clickSel(client, '.task-card[data-task-id="t2"]');
+  await waitFor(client, `document.querySelectorAll('section.task-detail .task-trace').length === 200`, { timeout: 10000, label: 'explore 首屏 200 条' });
+  const ex200 = await client.evaluate(`document.querySelectorAll('section.task-detail .task-trace').length`);
+  ctx.check(ex200 === 200, 'explore 轨迹首屏 200 条', '200', ex200);
+  await clickSel(client, 'section.task-detail .task-traces-more');
+  await sleep(250);
+  const ex400 = await client.evaluate(`document.querySelectorAll('section.task-detail .task-trace').length`);
+  ctx.check(ex400 === 400, 'explore 点一次加载更早后 400 条', '400', ex400);
+  await clickSel(client, 'section.task-detail .task-traces-more');
+  await sleep(250);
+  const exCap = await client.evaluate(`(() => {
+    const rows = document.querySelectorAll('section.task-detail .task-trace').length;
+    return { rows, more: document.querySelectorAll('section.task-detail .task-traces-more').length, steps: document.querySelectorAll('section.task-detail li.task-step').length };
+  })()`);
+  ctx.check(exCap.rows === 500, 'explore 到上限 500 条', '500', exCap.rows);
+  ctx.check(exCap.more === 0, 'explore 到上限后加载更早入口消失', '0', exCap.more);
+  ctx.check(exCap.steps === 0, 'explore 仍无步骤节点', '0', exCap.steps);
+
+  await closeTaskDetail();
+  await client.evaluate(`(() => { window.__acFail = true; window.__acBig = null; window.__acLog = []; return true })()`);
+  await clickSel(client, '.task-card[data-task-id="t1"]');
+  await waitFor(client, `document.querySelector('section.task-detail .task-list-error') !== null`, { timeout: 10000, label: '详情错误态' });
+  const errorState = await client.evaluate(`(() => {
+    const rows = [...document.querySelectorAll('section.task-detail .task-list-error button')];
+    return { retry: rows.filter((b) => (b.textContent || '').trim() === '重试').length, all: rows.length, text: (document.querySelector('section.task-detail .task-list-error') || {}).textContent || '' };
+  })()`);
+  ctx.check(errorState.retry === 1, '错误态恰好 1 个重试按钮', '1', errorState.retry);
+  ctx.check(errorState.text.includes('任务详情加载失败'), '错误态显示加载失败文案', '含「任务详情加载失败」', errorState.text || '空');
+  await client.evaluate(`(() => { window.__acLog = []; return true })()`);
+  await clickSel(client, 'section.task-detail .task-list-error button');
+  await sleep(400);
+  const retryLog = await client.evaluate(`window.__acLog || []`);
+  const retryGets = retryLog.filter((entry) => (entry.url || '').includes('/tasks/t1'));
+  const retryWrites = retryLog.filter((entry) => (entry.method || 'GET').toUpperCase() !== 'GET');
+  ctx.check(retryGets.length === 1 && retryGets[0].method === 'GET', '点重试只重拉一次详情 GET', '1 条 GET', retryGets.map((e) => e.method + ' ' + e.url).join(' | ') || '无请求');
+  ctx.check(retryWrites.length === 0, '重试不产生写请求', '0 条非 GET', retryWrites.map((e) => e.method + ' ' + e.url).join(' | ') || '无');
+  await client.evaluate(`(() => { window.__acFail = false; return true })()`);
+  await closeTaskDetail();
 });
