@@ -277,6 +277,20 @@ P1 会话域已经完成建域并签收（12 个 PRD `covered`，33 条 AC `pass
 4. 已解除：`specs/test/P1-CONV/test-plan.md` §18 的 18 条 TC（`TC-P1-CONV-037..054`）已建并全部 `pass`。
 5. 已解除：8 条变更级 AC 已全部 `pass`（逐条断言数 14/14/52/15/31/17/25/25），证据见 [`evidence.md`](evidence.md)。
 
+## 14. 功能点覆盖
+
+覆盖范围：`PRD-CONV-009`、`PRD-TASK-001`、`PRD-TASK-002`、`PRD-TASK-006`、`PRD-TASK-003`、`PRD-TASK-004`、`PRD-TASK-005`
+
+| 功能点ID | 状态 | 覆盖它的 AC | 备注 |
+|---|---|---|---|
+| `PRD-CONV-009` | in | `AC-CONV-009-01`、`AC-CONV-009-02`、`AC-CONV-009-03`、`AC-CONV-009-04`、`AC-CONV-009-05`、`AC-CONV-009-06`、`AC-CONV-009-07`、`AC-CONV-009-08`、`AC-CONV-009-09`、`AC-CONV-009-10`、`AC-CONV-009-11`、`AC-CONV-009-12`、`AC-CONV-009-13`、`AC-CONV-009-14`、`AC-CONV-009-15`、`AC-CONV-009-16`、`AC-CONV-009-17`、`AC-CONV-009-18` | 本次交付主体；18 条产品 AC 全部 pass，另 8 条变更级 AC（`AC-CHG-CONV-007-01` 至 `-08`）全部 pass，证据见 `evidence.md` 与 `docs/testing/ACCEPT-CONV-007-R5-20261126.md`；前端入口在消息流任务卡片与右栏任务标签。 |
+| `PRD-TASK-001` | partial | `AC-TASK-001-01`、`AC-TASK-001-02`、`AC-TASK-001-03`、`AC-TASK-001-04`、`AC-TASK-001-05`、`AC-TASK-001-06` | 缺前端入口：任务执行组与任务详情面板未接入会话页，后端 `tasks` 模块已有列表、详情、取消、重试四条路由（`TREE-FULL.md` §2.2），前端只在右栏以任务条目出现；补齐前端入口并跑完覆盖它的 AC 后改 in，跨域部分由 P2 任务域的 `CHG-B1-001` 承载。 |
+| `PRD-TASK-002` | partial | `AC-TASK-002-01`、`AC-TASK-002-02`、`AC-TASK-002-03`、`AC-TASK-002-04` | 缺前端入口：任务概览与进度展示没有页面级入口，`PRD-CONV-009` 只交付了右栏任务投影，概览计数与刷新没有界面可断言；补齐概览入口并跑完四条 AC 后改 in。 |
+| `PRD-TASK-006` | partial | `AC-TASK-006-01`、`AC-TASK-006-02`、`AC-TASK-006-03`、`AC-TASK-006-04`、`AC-TASK-006-05`、`AC-TASK-006-06`、`AC-TASK-006-07` | 缺前端入口：取消、重试、预算提示与恢复口径只有接口与右栏只读状态，没有可操作的界面入口，`PRD-CONV-009` 的取消链路经接口层验证、未做界面操作；补齐前端入口并跑完七条 AC 后改 in。 |
+| `PRD-TASK-003` | out | — | 跨域：长任务异步与开始/结束消息归 P2 任务域，由 `CHG-B1-001` 承载，该变更已 parked；本次只做会话内任务卡片与右栏投影，不做开始/结束消息落库，决定见 §6。 |
+| `PRD-TASK-004` | out | — | 跨域：复杂度分级与确认门禁归 P2 任务域，排 B3 且与 P6 团队域同批（`TREE-FULL.md` §2.2）；后端 `modules/` 下查不到 `C0`、`C1`、`complexity` 实现，本次不做。 |
+| `PRD-TASK-005` | out | — | 跨域：子会话与任务归属归 P2 任务域；P6 团队域的成员定义直接建立在 `PRD-TASK-005` 上，两者必须同批（`TREE-FULL.md` §2.2），本次不做。 |
+
 ## 五列契约索引
 
 | 契约 | 定义 | 实现 | 测试 | 证据 |
