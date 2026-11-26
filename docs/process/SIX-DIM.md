@@ -1,3 +1,5 @@
+> 本文件已停止使用，执行以 [墨线框架](../framework/MOXIAN.md) 为准；历史内容保留供追溯。
+
 # 流程设计标准（SIX-DIM）
 
 > 状态：`active`，2026-11-24。适用范围：本工作区全部流程文件的编写与修订，含 `PROCESS.md`、`RUNBOOK.md`、`SPEC-STANDARD.md`、`ROLES.md`、`FRAMEWORK.md` 与 `templates/` 下的模板。

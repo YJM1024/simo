@@ -4,10 +4,14 @@ data/
 .tmp/
 .tmp-*
 .trash/
+.secrets/
 *.log
 logs/
 uploads/
 artifacts/
+
+# ---- independent framework checkout: own git repo, never commit from this repo ----
+moxian-framework/
 
 # ---- build outputs (rebuild with deploy/package.ps1) ----
 *.exe

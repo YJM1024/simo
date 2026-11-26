@@ -9,7 +9,7 @@
 | 门禁 | 级别 | 说明 |
 |---|---|---|
 | `check:sdd` | **Blocking** | spec/AC/映射门禁 |
-| 组件级 parity（本清单） | **Blocking** | 1600/375 图 + `component-parity.md` + 验收 Agent 签字 |
+| 组件级 parity（本清单） | **Blocking** | 1600/375 图 + `component-parity.md` + 验收签字 |
 | `check:visual` 整页像素对比 | **Nightly / Warning** | **不阻断发布**；消息时间/数据动态导致 fresh capture 不稳定，不能当假门禁 |
 
 > `check:visual` warning 不能替代 parity；parity 必须按当前待发布 build 重新生成并签字。
@@ -32,7 +32,7 @@
 | 全页图 | expected/current 1600/375 | |
 | 单组件并排 | 11 组件 compare 图 | |
 | build-id | 报告与发布包一致 | |
-| 签字 | 验收 Agent | |
+| 签字 | 验收 | |
 
 ## 3. 逐组件清单（11）
 
@@ -66,14 +66,14 @@
 - 时间轴 gutter/44 rail/隐藏规则错误；
 - 分类标签颜色/文案错误；
 - 用历史截图冒充当前 build；
-- 未签或签字人非验收 Agent。
+- 未签或签字人非验收。
 
 ## 5. 流程
 
 1. 冻结待发布 build；
 2. 用冻结原型 + 当前 build 生成 1600/375 全页与 11 组件并排图；
 3. 填写 `component-parity.md`（基线/build/视口/逐组件/豁免/结论）；
-4. 验收 Agent 复核图 + DOM/测量；必要时要求重拍；
+4. 验收复核图 + DOM/测量；必要时要求重拍；
 5. 签字通过 → 才可进入 Release Checklist §3；
 6. 未通过 → 修复后重新生成，不复用旧图。
 

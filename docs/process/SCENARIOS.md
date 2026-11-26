@@ -1,3 +1,5 @@
+> 本文件已停止使用，执行以 [墨线框架](../framework/MOXIAN.md) 为准；历史内容保留供追溯。
+
 # 场景流程 · SCENARIOS
 
 状态：v0（草案；只定义流程，不写代码）
@@ -247,7 +249,7 @@
 | Release Ready | Blocking | 范围/版本/说明/已知问题齐全 |
 | **`check:sdd`** | **Blocking** | spec/AC/映射通过 |
 | Verify | Blocking | 全量门禁通过，无 blocking 缺陷 |
-| **Component Parity** | **Blocking** | **1600/375 parity 图 + 报告齐全；对照冻结原型逐组件对齐；无错位/风格漂移；像素微差已记录；验收 Agent 签字** |
+| **Component Parity** | **Blocking** | **1600/375 parity 图 + 报告齐全；对照冻结原型逐组件对齐；无错位/风格漂移；像素微差已记录；验收签字** |
 | Package | Blocking | 包可复现、hash 记录、无密钥 |
 | Smoke | Blocking | 目标环境启动/健康/关键路径通过 |
 | Rollback Ready | Blocking | 旧版/备份可回退 |
@@ -263,7 +265,7 @@ Release owner/Lead、模块 owner、测试/验收、运维（部署/监控）。
 - 目标环境真实路径走通；健康检查/关键 API/UI 通过；
 - 包 hash/版本/说明一致；无密钥/敏感文件；
 - 回滚演练或回滚命令可用；
-- **组件 parity**：`component-parity-1600.png`/`375.png` 与 `component-parity.md` 齐全；冻结原型 vs 当前 build 逐组件对齐；允许像素微差（记录原因/范围），不允许组件错位/风格漂移；**验收 Agent 签字**；未签不得上线；
+- **组件 parity**：`component-parity-1600.png`/`375.png` 与 `component-parity.md` 齐全；冻结原型 vs 当前 build 逐组件对齐；允许像素微差（记录原因/范围），不允许组件错位/风格漂移；**验收签字**；未签不得上线；
 - **`check:visual`**：整页像素对比只作为 nightly/warning 记录，**不作为发布阻断**；动态时间/数据导致 fresh capture 不稳定，不能当假门禁，也不能替代 parity。
 
 ### 升级 / 降级

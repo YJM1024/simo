@@ -48,4 +48,4 @@
 
 ## 7. 链接
 
-- spec/evidence；`docs/process/SCENARIOS.md` 测试门禁。
+- spec/evidence；`docs/framework/GATES.md` 测试门禁。

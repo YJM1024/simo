@@ -46,4 +46,4 @@
 
 ## 7. 链接
 
-- spec/test-plan；验收 Agent 签字记录。
+- spec/test-plan；验收签字记录。

@@ -45,4 +45,4 @@
 ## 7. 链接
 
 - proposal/design/tasks/test-plan/evidence
-- 角色/场景：`docs/process/ROLES.md`、`docs/process/SCENARIOS.md`
+- 角色/任务类型：`docs/framework/ROLES.md`、`docs/framework/TASK-MATRIX.md`

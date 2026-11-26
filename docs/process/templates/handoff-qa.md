@@ -35,9 +35,9 @@
 - AC 映射/证据：
 - 未跑项/谁批：
 - 回滚命令/包：
-- 签字：测试 ___ / 验收 Agent ___ / Lead ___
+- 签字：测试 ___ / 验收 ___ / Lead ___
 
 ## 链接
 
 - `test-plan.md` / `evidence.md`
-- `docs/process/ROLES.md` 交接
+- `docs/framework/ROLES.md` 交接

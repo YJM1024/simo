@@ -40,7 +40,7 @@
 
 ## 7. 决策请求
 
-- 需要谁批准（产品/Lead/验收 Agent）：
+- 需要谁批准（产品/Lead/验收）：
 - 条件/待确认：
 - 结论：继续 / 修改 / 暂缓 / 拒绝
 
@@ -49,5 +49,5 @@
 - spec：`spec.md`
 - design：`design.md`
 - tasks：`tasks.md`
-- 场景：`docs/process/SCENARIOS.md`
-- 角色：`docs/process/ROLES.md`
+- 任务类型：`docs/framework/TASK-MATRIX.md`
+- 角色：`docs/framework/ROLES.md`

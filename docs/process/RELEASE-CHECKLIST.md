@@ -4,14 +4,14 @@
 适用：8787/容器/便携包发布；每次发布复制本清单填写，不口头放行。
 关联：[`SCENARIOS.md`](SCENARIOS.md) 发布场景、[`ROLES.md`](ROLES.md) 测试/发布交接、[`COMPONENT-PARITY-GATE.md`](COMPONENT-PARITY-GATE.md)、生产切换执行：[`PRODUCTION-CUTOVER.md`](PRODUCTION-CUTOVER.md)。
 
-> **硬规则**：无 spec 不发布；无组件 parity 签字不发布；实现者不得自签；用户只验收前端效果，后端/迁移/流程由验收 Agent 签字。
+> **硬规则**：无 spec 不发布；无组件 parity 签字不发布；实现者不得自签；用户只验收前端效果，后端/迁移/流程由验收签字。
 
 ## 0.1 门禁级别（Lead 裁决）
 
 | 门禁 | 级别 | 说明 |
 |---|---|---|
 | `check:sdd` | **Blocking** | spec/AC/映射不通过不得发布 |
-| 组件级 parity | **Blocking** | 1600/375 图 + 报告 + 验收 Agent 签字；见 [`COMPONENT-PARITY-GATE.md`](COMPONENT-PARITY-GATE.md) |
+| 组件级 parity | **Blocking** | 1600/375 图 + 报告 + 验收签字；见 [`COMPONENT-PARITY-GATE.md`](COMPONENT-PARITY-GATE.md) |
 | `check:visual` 整页像素对比 | **Nightly / Warning** | **不阻断发布**；消息时间/数据动态导致 fresh capture 不稳定，不能当假门禁；结果进趋势/人工复核 |
 | tsc/build/tests/evals | Blocking | 现有质量门禁 |
 | smoke/rollback | Blocking | 发布前必须通过 |
@@ -24,7 +24,7 @@
 |---|---|
 | 版本/tag | |
 | 发布 owner | |
-| 测试/验收 Agent | |
+| 测试/验收 | |
 | 构建 buildId/commit | |
 | 窗口/时区 | |
 | 目标环境 | |
@@ -59,7 +59,7 @@
 - [ ] 基线=冻结原型；当前 build=待发布 build（build-id 一致）；
 - [ ] 11 组件逐项：topbar/sidebar/context/chat-tabs/timeline/message-user/message-agent/card-block/composer/right-rail/statusbar；
 - [ ] 允许像素微差已记录；无组件错位/风格漂移/新增颜色；
-- [ ] 验收 Agent 签字；**未签=No-Go**。
+- [ ] 验收签字；**未签=No-Go**。
 
 > 历史签字不自动继承：build 变了就要重新生成 parity 图并重新签字。
 
@@ -85,7 +85,7 @@
 | 角色 | 签字 | 日期 |
 |---|---|---|
 | 测试 owner | | |
-| 验收 Agent（后端/迁移/流程/parity） | | |
+| 验收（后端/迁移/流程/parity） | | |
 | Lead | | |
 | 用户（仅前端效果） | | |
 

@@ -9,12 +9,19 @@
  *
  * 七条规则：
  *   R1 禁用词：定义行命中第 2.2 节词表任一，error。
- *   R2 数字无比较符：数字前后既无比较符也无单位，warning。
- *   R3 无脚本且未写人工：行内既无 scripts/ac/ 也无 人工: 或 N/A：，error。
+ *   R2 数字无比较符：数字前后既无比较符也无单位，warning。HTTP 状态码
+ *      （100–599 且上下文有 HTTP/返回/接口等标记）、纯计数（行数/条数/计数
+ *      /数量/各/去重后）、N+、M×N、章节号 §N、二进制单位与容差属无量纲或
+ *      标识符写法，不计入；耗时、进度等量值仍按缺单位报。
+ *   R3 无脚本且未写人工：定义行（含续行）内既无 scripts/ac/ 也无 人工: 或
+ *      N/A：，error。
  *   R4 非法状态词：状态声明或判定词落在四值之外，error。
  *   R5 主语缺失：编号后的陈述以该、这个、上述、相关等指代词开头，warning。
+ *      简写编号 AC-NNN-NN 若同文件更早行或同域产品 spec 已定义对应完整编号
+ *      （AC-<域>-NNN-NN），视为引用而非缺编号，不报。
  *   R6 超长：单行超过 240 字符，或定义跨超过 2 行，warning。
- *   R7 重复 AC ID：同一编号在本文或跨文件出现多次，error。
+ *   R7 重复 AC ID：同一编号在本文或跨文件出现多次，error；判据映射节内
+ *      不带判定/脚本声明的行，或形如 `- \`AC-…\` → 脚本` 的引用行，不算定义。
  *
  * 用法：
  *   node scripts/check-spec-language.mjs
@@ -26,7 +33,9 @@
  * --json 只输出 failures 与 warnings 两个数组，元素含 rule、severity、path、
  * line、hint。退出码 0 表示没有 error，1 表示有 error，2 表示参数或目录错误。
  * --self-test 在 .tmp/ac-tooling/fixtures/language 下生成固定样本，断言七条
- * 规则各命中一次、干净样本零命中，不读写真实仓库内容。
+ * 规则各命中一次、干净样本零命中、判据映射行不计入重复、带声明的真实重复
+ * 仍报 R7，以及 R2 误报族不报、R2 真缺单位仍报、R5 简写有定义放过与无定义
+ * 仍报，共 17 条断言，不读写真实仓库内容。
  */
 
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
@@ -78,13 +87,31 @@ const STATUS_DECLARATION = /(?:状态|判定|结果|status)\s*[:：=]\s*`?([A-Za
 
 const VAGUE_SUBJECT = /^(?:该|这个|上述|相关|上面|此)/
 const SCRIPT_OR_MANUAL = /scripts\/ac\/[^\s`）)]*\.mjs|人工\s*[:：]|N\/A\s*[:：]/
+// 判据映射行只引用既有 AC，不是定义：映射节内或以「→ 脚本」开头的行，
+// 且不带「判定=」「脚本=」声明时不计入 R7；真定义都带声明，仍会被计数。
+const MAPPING_HEADING = /判据映射|AC\s*映射|映射/
+const MAPPING_ARROW_ROW = /^\s*-\s+`AC-[^`]+`\s*(?:→|->|=>)/
+const DECLARED_JUDGEMENT = /判定\s*[:：=]/
+const DECLARED_SCRIPT = /脚本\s*[:：=]/
 
 const COMPARATOR_BEFORE =
   /(?:>=|<=|>|<|=|≥|≤|±|不少于|不超过|大于|小于|等于|至少|至多|最多|最少|高于|低于|超过|不足|达到|约)\s*$/
+const COMPARATOR_AFTER = /^\s*\+(?!\d)/
 const UNIT_AFTER =
-  /^\s*(?:%|ms|毫秒|秒|分钟|小时|天|px|pt|dp|em|rem|vh|vw|次|条|个|处|行|字|字节|点|帧|人|项|倍|档|位|层|组|页|元|轮|步|张|根|列|名|GB|MB|KB|kb|mb|gb|s(?![\w])|B(?![A-Za-z]))/
+  /^\s*(?:%|ms|毫秒|秒|分钟|小时|天|px|pt|dp|em|rem|vh|vw|次|条|个|处|行|字|字节|点|帧|人|项|倍|档|位|层|组|页|元|轮|步|张|根|列|名|类|种|值|结果|GB|MB|KB|MiB|GiB|KiB|TiB|kb|mb|gb|s(?![\w])|B(?![A-Za-z]))/
 const RANGE_AFTER = /^[-–—~×]/
+const RANGE_BEFORE = /[-–—~×]\s*$/
+const TOLERANCE_BEFORE = /容差\s*[:：]?\s*$/
+const HTTP_STATUS = /^\d{3}$/
+const HTTP_MARKERS =
+  /(?:HTTP|http|状态码|返回|响应|接口|端点|请求|发送|搜索|卡片|补取|置为|失败|错误|拒绝|命中|code|status|`?(?:GET|POST|PUT|PATCH|DELETE)\b)/
+const TIME_MARKERS = /(?:耗时|时间|延迟|超时|时长|间隔|容量|大小|长度|宽度|高度|比例|进度|内存|磁盘|等待|字号|字体)/
+const COUNT_BEFORE =
+  /(?:行数|条数|计数|数量|个数|总数|卡片数|增量|差值|差|各|或|由|去重后)(?:\s*(?:为|是|=|：|:|均|都|仍|各|已))*\s*$/
+const COUNT_CHANGE_BEFORE = /(?:由|从)\s*\d+(?:\.\d+)?\s*(?:变|到|至|变成|变为)\s*$/
+const COUNT_NOUN = /(?:计数|行数|条数|数量|个数|次数|增量)/
 const IDENTIFIER_CHAR = /[A-Za-z0-9_.:/\-]/
+const AC_SHORT_GLOBAL = /AC-\d{3}-\d{2}/g
 
 const RULES = {
   R1: 'error',
@@ -105,6 +132,8 @@ function extractIds(text) {
 function stripIdentifiers(text) {
   return text
     .replace(AC_ID_GLOBAL, ' ')
+    .replace(AC_SHORT_GLOBAL, ' ')
+    .replace(/§\s*\d+(?:\.\d+)*/g, ' ')
     .replace(/[A-Za-z0-9_./\\-]+\.(?:mjs|tsx?|jsx?|go|css|json|md|png|log|exe|ps1)\S*/g, ' ')
     .replace(/https?:\/\/\S+/g, ' ')
 }
@@ -112,24 +141,48 @@ function stripIdentifiers(text) {
 /**
  * R2 的判定口径是「数字前后既没有比较符也没有单位」。
  * 编号、路径、日期、时间、端口这类标识符里的数字不参与判定，用相邻字符排除。
+ * HTTP 状态码、纯计数、章节号、N+、M×N 与容差是无量纲写法，按上下文放过；
+ * 耗时、进度、尺寸等真量值即使同一行出现「返回」也不放过，由时间词反向阻断。
  */
 function numbersWithoutComparator(text) {
-  const value = stripIdentifiers(text)
+  const value = stripIdentifiers(text).replace(/`/g, ' ')
   const hits = []
   const pattern = /\d+(?:\.\d+)?/g
   let match = pattern.exec(value)
   while (match !== null) {
     const start = match.index
     const end = start + match[0].length
-    const before = value.slice(Math.max(0, start - 8), start)
-    const after = value.slice(end, end + 8)
+    const before = value.slice(Math.max(0, start - 16), start)
+    const after = value.slice(end, end + 10)
     const prev = start > 0 ? value[start - 1] : ''
     const next = end < value.length ? value[end] : ''
+    const nearby = value.slice(Math.max(0, start - 12), Math.min(value.length, end + 6))
+    const timeQuantity = TIME_MARKERS.test(nearby)
+    const statusCode =
+      !timeQuantity &&
+      HTTP_STATUS.test(match[0]) &&
+      Number(match[0]) >= 100 &&
+      Number(match[0]) <= 599 &&
+      HTTP_MARKERS.test(value)
+    const count =
+      !timeQuantity &&
+      (COUNT_BEFORE.test(before) ||
+        (COUNT_NOUN.test(value) &&
+          (COUNT_CHANGE_BEFORE.test(before) || /^\s*(?:变|到|至)/.test(after))))
+    const exempt =
+      COMPARATOR_BEFORE.test(before) ||
+      COMPARATOR_AFTER.test(after) ||
+      UNIT_AFTER.test(after) ||
+      RANGE_AFTER.test(after) ||
+      RANGE_BEFORE.test(before) ||
+      TOLERANCE_BEFORE.test(before) ||
+      statusCode ||
+      count
     if (IDENTIFIER_CHAR.test(prev) || (next && IDENTIFIER_CHAR.test(next) && !UNIT_AFTER.test(after))) {
       match = pattern.exec(value)
       continue
     }
-    if (COMPARATOR_BEFORE.test(before) || UNIT_AFTER.test(after) || RANGE_AFTER.test(after)) {
+    if (exempt) {
       match = pattern.exec(value)
       continue
     }
@@ -200,6 +253,20 @@ function lintRoot(root) {
   const warnings = []
   const occurrences = new Map()
   const specsDir = join(root, 'specs')
+  const productIdCache = new Map()
+  const productIdsFor = (domain) => {
+    if (!domain) return []
+    if (productIdCache.has(domain)) return productIdCache.get(domain)
+    let ids = []
+    try {
+      const productSpec = join(specsDir, 'product', domain, 'spec.md')
+      ids = readFileSync(productSpec, 'utf8').match(AC_ID_GLOBAL) ?? []
+    } catch {
+      ids = []
+    }
+    productIdCache.set(domain, ids)
+    return ids
+  }
 
   for (const absolute of findSpecFiles(specsDir)) {
     const display = relative(root, absolute).split('\\').join('/')
@@ -211,18 +278,37 @@ function lintRoot(root) {
       continue
     }
     const lines = content.split(/\r?\n/)
+    let heading = ''
+    const domainMatch = /^specs\/(?:product|backend|frontend|changes)\/([^/]+)\//.exec(display)
+    const productIds = productIdsFor(domainMatch ? domainMatch[1] : '')
+    const fileFullIds = new Set()
 
     for (let index = 0; index < lines.length; index += 1) {
       const line = lines[index]
+      const headingMatch = /^#{1,6}\s+(.*)$/.exec(line)
+      if (headingMatch) heading = headingMatch[1]
       if (!AC_DEFINITION.test(line)) continue
+      const declared = DECLARED_JUDGEMENT.test(line) || DECLARED_SCRIPT.test(line)
+      if (!declared && (MAPPING_HEADING.test(heading) || MAPPING_ARROW_ROW.test(line))) continue
       const ids = extractIds(line)
+      const shortIds = line.match(AC_SHORT_GLOBAL) ?? []
+      for (const id of ids) fileFullIds.add(id)
+      const resolvedShorthand =
+        shortIds.length > 0 &&
+        shortIds.every((shortId) => {
+          const tail = `-${shortId.replace(/^AC-/, '')}`
+          return (
+            [...fileFullIds].some((fullId) => fullId.endsWith(tail)) ||
+            productIds.some((fullId) => fullId.endsWith(tail))
+          )
+        })
       const lineNo = index + 1
       const entry = collectEntryLines(lines, index)
       const ruleHits = new Set()
 
       if (BANNED_WORDS.some((word) => line.includes(word))) ruleHits.add('R1')
       if (numbersWithoutComparator(line).length > 0) ruleHits.add('R2')
-      if (!SCRIPT_OR_MANUAL.test(line)) ruleHits.add('R3')
+      if (!SCRIPT_OR_MANUAL.test(entry.join(' '))) ruleHits.add('R3')
 
       STATUS_DECLARATION.lastIndex = 0
       let declaration = STATUS_DECLARATION.exec(line)
@@ -232,10 +318,13 @@ function lintRoot(root) {
       }
       if (ILLEGAL_STATUS_WORDS.some((word) => line.includes(word))) ruleHits.add('R4')
 
-      if (ids.length === 0) {
+      if (ids.length === 0 && shortIds.length === 0) {
+        ruleHits.add('R5')
+      } else if (ids.length === 0 && !resolvedShorthand) {
         ruleHits.add('R5')
       } else {
-        const afterId = line.slice(line.indexOf(ids[0]) + ids[0].length)
+        const anchorId = ids[0] ?? shortIds[0]
+        const afterId = line.slice(line.indexOf(anchorId) + anchorId.length)
         const statement = afterId.replace(/^[\s`*_：:，,、。；;—–-]+/, '')
         if (VAGUE_SUBJECT.test(statement)) ruleHits.add('R5')
       }
@@ -307,9 +396,35 @@ function writeSelfTestFixtures() {
   const badSpec = join(FIXTURE_DIR, 'bad', 'specs', 'product', 'PX-TEST', 'spec.md')
   const dupSpec = join(FIXTURE_DIR, 'bad', 'specs', 'product', 'PX-DUP', 'spec.md')
   const cleanSpec = join(FIXTURE_DIR, 'clean', 'specs', 'product', 'PX-CLEAN', 'spec.md')
+  const mapProductSpec = join(FIXTURE_DIR, 'map', 'specs', 'product', 'PX-MAP', 'spec.md')
+  const mapChangeSpec = join(FIXTURE_DIR, 'map', 'specs', 'changes', 'PX-MAP', 'spec.md')
+  const dup2Spec = join(FIXTURE_DIR, 'dup', 'specs', 'product', 'PX-DUP2', 'spec.md')
+  const r2CleanSpec = join(FIXTURE_DIR, 'r2-clean', 'specs', 'product', 'PX-R2C', 'spec.md')
+  const r2TrueSpec = join(FIXTURE_DIR, 'r2-true', 'specs', 'product', 'PX-R2T', 'spec.md')
+  const r5SameSpec = join(FIXTURE_DIR, 'r5-same', 'specs', 'backend', 'PX-R5S', 'spec.md')
+  const r5ProductSpec = join(FIXTURE_DIR, 'r5-product', 'specs', 'product', 'PX-R5P', 'spec.md')
+  const r5BackendSpec = join(FIXTURE_DIR, 'r5-product', 'specs', 'backend', 'PX-R5P', 'spec.md')
+  const r5NoneSpec = join(FIXTURE_DIR, 'r5-none', 'specs', 'backend', 'PX-R5N', 'spec.md')
+  const r5VagueProductSpec = join(FIXTURE_DIR, 'r5-vague', 'specs', 'product', 'PX-R5V', 'spec.md')
+  const r5VagueBackendSpec = join(FIXTURE_DIR, 'r5-vague', 'specs', 'backend', 'PX-R5V', 'spec.md')
   mkdirSync(dirname(badSpec), { recursive: true })
   mkdirSync(dirname(dupSpec), { recursive: true })
   mkdirSync(dirname(cleanSpec), { recursive: true })
+  mkdirSync(dirname(mapProductSpec), { recursive: true })
+  mkdirSync(dirname(mapChangeSpec), { recursive: true })
+  mkdirSync(dirname(dup2Spec), { recursive: true })
+  for (const spec of [
+    r2CleanSpec,
+    r2TrueSpec,
+    r5SameSpec,
+    r5ProductSpec,
+    r5BackendSpec,
+    r5NoneSpec,
+    r5VagueProductSpec,
+    r5VagueBackendSpec,
+  ]) {
+    mkdirSync(dirname(spec), { recursive: true })
+  }
 
   const longText = '边界场景覆盖稳定选择器与固定取值。'.repeat(20)
   writeFileSync(
@@ -350,6 +465,125 @@ function writeSelfTestFixtures() {
     ].join('\n'),
     'utf8',
   )
+  writeFileSync(
+    mapProductSpec,
+    [
+      '# 自检样本：判据映射的定义',
+      '',
+      '- `AC-TST-002-01` 映射样本定义，判定=`自动`；脚本=scripts/ac/AC-TST-002-01.mjs。',
+      '',
+    ].join('\n'),
+    'utf8',
+  )
+  writeFileSync(
+    mapChangeSpec,
+    [
+      '# 自检样本：判据映射表',
+      '',
+      '### 4.1 判据映射',
+      '',
+      '- `AC-TST-002-01` → `scripts/ac/AC-TST-002-01.mjs`，脚本存在，本轮未运行，结果记 `evidence.md`。',
+      '',
+    ].join('\n'),
+    'utf8',
+  )
+  writeFileSync(
+    dup2Spec,
+    [
+      '# 自检样本：真实重复定义',
+      '',
+      '- `AC-TST-002-02` 重复一定义，判定=`自动`；脚本=scripts/ac/AC-TST-002-02.mjs。',
+      '- `AC-TST-002-02` 重复二定义，判定=`自动`；脚本=scripts/ac/AC-TST-002-02.mjs。',
+      '',
+    ].join('\n'),
+    'utf8',
+  )
+  writeFileSync(
+    r2CleanSpec,
+    [
+      '# 自检样本：R2 误报族不报',
+      '',
+      '- `AC-R2C-001-01` 接口返回 404。判定=`自动`；脚本=scripts/ac/AC-R2C-001-01.mjs。',
+      '- `AC-R2C-001-02` 角标文本 = `9+`。判定=`自动`；脚本=scripts/ac/AC-R2C-001-02.mjs。',
+      '- `AC-R2C-001-03` 键盘 4×2 映射。判定=`自动`；脚本=scripts/ac/AC-R2C-001-03.mjs。',
+      '- `AC-R2C-001-04` 会话行各 1 条，任务行数为 0。判定=`自动`；脚本=scripts/ac/AC-R2C-001-04.mjs。',
+      '- `AC-R2C-001-05` 单文件上限 20 MiB。判定=`自动`；脚本=scripts/ac/AC-R2C-001-05.mjs。',
+      '- `AC-R2C-001-06` 自定义视图 13 类块。判定=`自动`；脚本=scripts/ac/AC-R2C-001-06.mjs。',
+      '',
+    ].join('\n'),
+    'utf8',
+  )
+  writeFileSync(
+    r2TrueSpec,
+    [
+      '# 自检样本：R2 真缺单位仍报',
+      '',
+      '- `AC-R2T-001-01` 首屏耗时 500 后返回结果。判定=`自动`；脚本=scripts/ac/AC-R2T-001-01.mjs。',
+      '',
+    ].join('\n'),
+    'utf8',
+  )
+  writeFileSync(
+    r5SameSpec,
+    [
+      '# 自检样本：同文件缩写定义',
+      '',
+      '- `AC-PX-R5S-001-01` 完整编号定义行。判定=`自动`；脚本=scripts/ac/AC-PX-R5S-001-01.mjs。',
+      '- `AC-001-01` “同文件简写”：引用前一条完整编号。判定=`人工`；脚本=N/A：无脚本。',
+      '',
+    ].join('\n'),
+    'utf8',
+  )
+  writeFileSync(
+    r5ProductSpec,
+    [
+      '# 自检样本：产品侧完整编号',
+      '',
+      '- `AC-PX-R5P-004-01` 产品侧完整定义行。判定=`自动`；脚本=scripts/ac/AC-PX-R5P-004-01.mjs。',
+      '',
+    ].join('\n'),
+    'utf8',
+  )
+  writeFileSync(
+    r5BackendSpec,
+    [
+      '# 自检样本：同域产品缩写',
+      '',
+      '- `AC-004-01` “跨列简写”：引用产品侧定义。判定=`人工`；脚本=N/A：无脚本。',
+      '',
+    ].join('\n'),
+    'utf8',
+  )
+  writeFileSync(
+    r5NoneSpec,
+    [
+      '# 自检样本：缩写无定义',
+      '',
+      '- `AC-006-07` “孤立简写”：从未定义。判定=`人工`；脚本=N/A：无脚本。',
+      '',
+    ].join('\n'),
+    'utf8',
+  )
+  writeFileSync(
+    r5VagueProductSpec,
+    [
+      '# 自检样本：缩写有定义但主语指代',
+      '',
+      '- `AC-PX-R5V-007-01` 产品侧完整定义。判定=`自动`；脚本=scripts/ac/AC-PX-R5V-007-01.mjs。',
+      '',
+    ].join('\n'),
+    'utf8',
+  )
+  writeFileSync(
+    r5VagueBackendSpec,
+    [
+      '# 自检样本：缩写已定义仍检查主语',
+      '',
+      '- `AC-007-01` 该接口返回 200。判定=`人工`；脚本=N/A：无脚本。',
+      '',
+    ].join('\n'),
+    'utf8',
+  )
 }
 
 function runSelfTest() {
@@ -360,23 +594,63 @@ function runSelfTest() {
   const byRule = new Map()
   for (const item of badAll) byRule.set(item.rule, (byRule.get(item.rule) ?? 0) + 1)
 
-  let ok = true
+  const assertions = []
+  const assert = (name, ok, detail = '') => assertions.push({ name, ok: Boolean(ok), detail })
   for (const rule of Object.keys(RULES)) {
     const hits = byRule.get(rule) ?? 0
-    const passed = hits === 1
-    if (!passed) ok = false
-    console.log(`${passed ? 'PASS' : 'FAIL'} ${rule} 命中 ${hits} 次，期望 1 次`)
+    assert(`${rule} 命中次数`, hits === 1, `期望 1 实际 ${hits}`)
   }
   const cleanCount = clean.failures.length + clean.warnings.length
-  console.log(`${cleanCount === 0 ? 'PASS' : 'FAIL'} 干净样本命中 ${cleanCount} 次，期望 0 次`)
-  if (cleanCount !== 0) ok = false
+  assert('干净样本命中次数', cleanCount === 0, `期望 0 实际 ${cleanCount}`)
+
+  const map = lintRoot(join(FIXTURE_DIR, 'map'))
+  const mapR7 = [...map.failures, ...map.warnings].filter((item) => item.rule === 'R7').length
+  assert('映射行不计入重复编号', mapR7 === 0, `期望 0 实际 ${mapR7}`)
+  const dup2 = lintRoot(join(FIXTURE_DIR, 'dup'))
+  const dup2R7 = [...dup2.failures, ...dup2.warnings].filter((item) => item.rule === 'R7').length
+  assert('真实重复定义仍报 R7', dup2R7 === 1, `期望 1 实际 ${dup2R7}`)
+
+  const r2Clean = lintRoot(join(FIXTURE_DIR, 'r2-clean'))
+  const r2CleanAll = [...r2Clean.failures, ...r2Clean.warnings]
+  assert(
+    'R2 误报族不报',
+    r2CleanAll.filter((item) => item.rule === 'R2').length === 0,
+    `期望 0 实际 ${r2CleanAll.filter((item) => item.rule === 'R2').length}`,
+  )
+  assert('R2 误报样本整体零命中', r2CleanAll.length === 0, `期望 0 实际 ${r2CleanAll.length}`)
+  const r2True = lintRoot(join(FIXTURE_DIR, 'r2-true'))
+  const r2TrueHits = [...r2True.failures, ...r2True.warnings].filter((item) => item.rule === 'R2')
+  assert('R2 真缺单位仍报', r2TrueHits.length === 1, `期望 1 实际 ${r2TrueHits.length}`)
+
+  const r5Same = lintRoot(join(FIXTURE_DIR, 'r5-same'))
+  const r5SameHits = [...r5Same.failures, ...r5Same.warnings].filter((item) => item.rule === 'R5').length
+  assert('缩写同文件已定义放过', r5SameHits === 0, `期望 0 实际 ${r5SameHits}`)
+  const r5Product = lintRoot(join(FIXTURE_DIR, 'r5-product'))
+  const r5ProductHits = [...r5Product.failures, ...r5Product.warnings].filter((item) => item.rule === 'R5').length
+  assert('缩写同域产品已定义放过', r5ProductHits === 0, `期望 0 实际 ${r5ProductHits}`)
+  const r5None = lintRoot(join(FIXTURE_DIR, 'r5-none'))
+  const r5NoneHits = [...r5None.failures, ...r5None.warnings].filter((item) => item.rule === 'R5').length
+  assert('缩写无定义仍报', r5NoneHits === 1, `期望 1 实际 ${r5NoneHits}`)
+  const r5Vague = lintRoot(join(FIXTURE_DIR, 'r5-vague'))
+  const r5VagueHits = [...r5Vague.failures, ...r5Vague.warnings].filter((item) => item.rule === 'R5').length
+  assert('缩写有定义但主语指代仍报', r5VagueHits === 1, `期望 1 实际 ${r5VagueHits}`)
+
+  // 未归类命中是覆盖性守卫，不计入断言数；命中时直接判失败并在末行注明。
   const extra = badAll.length - Object.keys(RULES).length
-  if (extra !== 0) {
-    ok = false
-    console.log(`FAIL 未归类命中 ${extra} 次，期望 0 次`)
+  const failed = assertions.filter((entry) => !entry.ok)
+  for (const entry of assertions) {
+    console.log(`${entry.ok ? 'PASS' : 'FAIL'} ${entry.name}（${entry.detail}）`)
   }
-  console.log(ok ? 'SELF-TEST PASS' : 'SELF-TEST FAILED')
-  return ok ? 0 : 1
+  if (extra !== 0) {
+    console.log(`FAIL 未归类命中（期望 0 实际 ${extra}）`)
+  }
+  if (failed.length > 0 || extra !== 0) {
+    const suffix = extra !== 0 ? `, ${extra} unclassified hits` : ''
+    console.log(`SELF-TEST FAILED (${failed.length}/${assertions.length} assertions failed${suffix})`)
+    return 1
+  }
+  console.log(`SELF-TEST PASS (${assertions.length} assertions)`)
+  return 0
 }
 
 function parseArgs(argv) {

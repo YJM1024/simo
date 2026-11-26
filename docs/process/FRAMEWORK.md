@@ -1,3 +1,5 @@
+> 本文件已停止使用，执行以 [墨线框架](../framework/MOXIAN.md) 为准；历史内容保留供追溯。
+
 # 司墨开发框架 v0（草案，待确认）
 
 > 依据：`docs/process/research/` 六份调研报告 + `AGENTS.md` 六维基线 + 已冻结的 DESIGN.md / 静态原型。
@@ -7,7 +9,7 @@
 
 ```
 L1 流程层：Spec-Driven Development（Simo SDD）
-L2 专业层：产品 / 前端 / 后端 / 测试 / 验收 各自流程
+L2 专业层：产品 / 前端 / 后端 / 测试 / 验收各自流程
 L3 资产层：specs、templates、skills、组件库/画廊、evals
 ```
 

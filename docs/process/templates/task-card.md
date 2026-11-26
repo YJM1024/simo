@@ -56,4 +56,4 @@
 ## 8. 链接
 
 - spec/design/test-plan
-- 角色：`docs/process/ROLES.md`
+- 角色：`docs/framework/ROLES.md`
