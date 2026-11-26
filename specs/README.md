@@ -20,7 +20,7 @@
 
 | 域 | 名称 | 技术域码 | 产品 spec | 测试计划 | PRD 数 | 覆盖状态 |
 |---|---|---|---|---|---:|---|
-| P1 | 会话与消息 | CONV/SYNC | [spec](product/P1-CONV/spec.md) | [test-plan](test/P1-CONV/test-plan.md) | 12 | 12 covered / 0 partial / 0 gap |
+| P1 | 会话与消息 | CONV/SYNC | [spec](product/P1-CONV/spec.md) | [test-plan](test/P1-CONV/test-plan.md) | 13 | 13 covered / 0 partial / 0 gap |
 | P2 | 任务与执行 | TASK | [spec](product/P2-TASK/spec.md) | [test-plan](test/P2-TASK/test-plan.md) | 6 | 0 covered / 0 partial / 6 gap |
 | P3 | 工作台与视图 | WORK | [spec](product/P3-WORK/spec.md) | [test-plan](test/P3-WORK/test-plan.md) | 5 | 0 covered / 4 partial / 1 gap |
 | P4 | 文件与交付物 | FILE | [spec](product/P4-FILE/spec.md) | [test-plan](test/P4-FILE/test-plan.md) | 6 | 0 covered / 2 partial / 4 gap |
@@ -31,7 +31,7 @@
 | P9 | 工具与能力 | TOOL | [spec](product/P9-TOOL/spec.md) | [test-plan](test/P9-TOOL/test-plan.md) | 7 | 0 covered / 4 partial / 3 gap |
 | P10 | 指标 | METRIC | [spec](product/P10-METRIC/spec.md) | [test-plan](test/P10-METRIC/test-plan.md) | 6 | 0 covered / 5 partial / 1 gap |
 
-> 覆盖状态来自 [`../docs/product/TRACEABILITY.md`](../docs/product/TRACEABILITY.md)；10 份域 test-plan 与 [E2E 计划](test/e2e/README.md) 已回写 69 单测/11 E2E/223 后端测试的部分证据，但没有任何 PRD 达到 covered，因此不因“用例跑过一部分”升级。
+> 覆盖状态来自 [`../docs/product/TRACEABILITY.md`](../docs/product/TRACEABILITY.md)；10 份域 test-plan 与 [E2E 计划](test/e2e/README.md) 已回写 69 单测/11 E2E/223 后端测试的部分证据。P1 的 13 条已按六类产物与完整 AC 证据达到 covered，其余域没有任何 PRD 达到 covered，不因“用例跑过一部分”升级。
 
 ## 3. 历史 FE（已归类为 change legacy，不删除；勿新增 FE-xxx）
 
@@ -101,5 +101,5 @@
 | 新建轻量变更包 | 每个 5 文件（proposal/spec/tasks/test-plan/evidence） |
 | **长期稳态** | **约 45–60 个文件**（不含归档） |
 
-> 71 个 PRD 不各建文件；产品域 spec 内以章节维护。完成变更移入归档，不留在活跃索引。
+> 72 个 PRD 不各建文件；产品域 spec 内以章节维护。完成变更移入归档，不留在活跃索引。
 

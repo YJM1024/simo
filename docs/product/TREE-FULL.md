@@ -1,10 +1,10 @@
 # TREE-FULL · 全产品功能树与批次方案
 
-本文把 `docs/product/TREE.md` 的 71 个 PRD、`docs/product/TRACEABILITY.md` 的覆盖判定、`docs/product/SPEC-GAP.md` 的缺口记录，与 2026-11-22 对 `backend/`、`frontend/` 的代码实测并到一张表里，给出依赖顺序与四批交付方案。
+本文把 `docs/product/TREE.md` 的 72 个 PRD、`docs/product/TRACEABILITY.md` 的覆盖判定、`docs/product/SPEC-GAP.md` 的缺口记录，与 2026-11-22 对 `backend/`、`frontend/` 的代码实测并到一张表里，给出依赖顺序与四批交付方案。
 
 口径说明三条。状态词只有 `covered` / `partial` / `gap` / `未建` 四个，`covered` 必须同时具备产品 AC、变更包、开发 spec、测试证据，缺一项即 `partial`（依据 `docs/product/TRACEABILITY.md:11-13`）。`未建` 只表示产品 spec 标 `unimplemented` 且代码侧查不到实现，与 `gap`（有实现但无 AC 或无证据）分开计数。代码实况一律用路由与文件名作证，凡本文件未列出证据的"存在"都不成立。
 
-数量基线：71 个 PRD = 12 covered / 37 partial / 22 gap；按实现轴是 20 implemented / 36 partial / 15 unimplemented（`docs/product/TREE.md` 第 2 节合计行）。`gap` 的 22 条里 15 条属于 `未建`、7 条属于有实现无证据，两个数相加等于 22。第 2 节逐域明细的逐条状态相加与这套域级计数一致，唯一按推断分配的是 P4 的四条（见 2.4 说明）。
+数量基线：72 个 PRD = 13 covered / 37 partial / 22 gap；按实现轴是 21 implemented / 36 partial / 15 unimplemented（`docs/product/TREE.md` 第 2 节合计行）。`gap` 的 22 条里 15 条属于 `未建`、7 条属于有实现无证据，两个数相加等于 22。第 2 节逐域明细的逐条状态相加与这套域级计数一致，唯一按推断分配的是 P4 的四条（见 2.4 说明）。
 
 ## 1. 总览
 
@@ -12,7 +12,7 @@
 
 | 域 | 名称 | PRD | covered | partial | gap | 代码实况 | 离可用还差什么 |
 |---|---|---|---|---|---|---|---|
-| P1 | 会话与消息 | 12 | 12 | 0 | 0 | 有模块：`sessions`（24 文件）+ `chat`（53 文件） | 已收口，停止机制与 IME 均有可复现证据 |
+| P1 | 会话与消息 | 13 | 13 | 0 | 0 | 有模块：`sessions`（24 文件）+ `chat`（53 文件） | 已收口，停止机制与 IME 均有可复现证据 |
 | P2 | 任务与执行 | 6 | 0 | 0 | 6 | 有模块：`modules/tasks`（12 文件）+ `chat/task_executor.go`、`task_intent.go` | 没有任务执行组的前端契约，任务只在右栏以条目出现 |
 | P3 | 工作台与视图 | 5 | 0 | 4 | 1 | 散落：`/api/stats`、`/api/usage`、`/api/views`；前端 `WorkbenchChart`、`MetricsDashboard` | 5 条 PRD 里 3 条 implemented 但 0 条 covered，缺 AC 与证据 |
 | P4 | 文件与交付物 | 6 | 0 | 2 | 4 | 散落：`chat/files.go`、`attachments.go`、`filegen.go`、`tasks/deliverables.go` | 前端没有文件页，`FILE-004` 预览下载未验证 |
@@ -22,7 +22,7 @@
 | P8 | 设置与系统 | 12 | 0 | 9 | 3 | 散落：`/api/permissions`、`/api/approvals`、`/api/runtime/status`；无 `/api/settings` | 没有设置中心，模型 Provider 与权限只能改配置或调 API |
 | P9 | 工具与能力 | 7 | 0 | 4 | 3 | 散落：`chat/tools.go`、`chat/actions.go`、`/api/actions` 三条路由 | 没有能力视图；MCP 与 Skills 在代码里零命中 |
 | P10 | 指标 | 6 | 0 | 5 | 1 | 散落：`chat/metrics.go`、`metrics_turn.go`、`/api/metrics/dashboard`；前端 `MetricsDashboard` | 3 条 implemented 但 0 covered，口径说明与 7/30 天证据缺失 |
-| 合计 | 10 域 | 71 | 12 | 37 | 22 | 4 个模块覆盖 P1/P2/P5，另 7 个域的路由散落在 `chat` 模块内 | 除 P1 外没有一域达到可用状态 |
+| 合计 | 10 域 | 72 | 13 | 37 | 22 | 4 个模块覆盖 P1/P2/P5，另 7 个域的路由散落在 `chat` 模块内 | 除 P1 外没有一域达到可用状态 |
 
 把"有没有页面"和"有没有接口"分开看，结论不同。后端 10 个域都能找到路由作证，查不到实现的只有三条 PRD：`TOOL-003` Skills、`TOOL-004` MCP、`TOOL-007` 能力目录（对 `backend/` 全量搜索 `mcp|skills` 零命中；原 `PRD-SYNC-005` 已移除）。前端只有两个视图：`frontend/src/app.tsx:29` 的类型定义写死 `type Page = 'chat' | 'workbench'`，`frontend/src/pages/` 是空目录，`frontend/src/components/library.tsx` 的导出清单里没有设置、文件、记忆、团队、调度、视图任何一个页面级组件。所以 P2、P4、P5、P6、P7、P8、P9 的可用性瓶颈都不在后端接口，而在"没有入口"。
 
@@ -30,7 +30,7 @@
 
 每个域一张表，列固定为：功能点、L2 分类、一句话、现状、依赖、优先级、建议批次。L2 分类取 `docs/product/TREE.md` 第 3 节的小节标题，不改名；优先级沿用 TREE 的既有标注，不改写；批次是本文件新增的判断，两者冲突时在表下一句话说明理由。
 
-### 2.1 P1 会话与消息（12 个 PRD）
+### 2.1 P1 会话与消息（13 个 PRD）
 
 | 功能点 | L2 分类 | 一句话 | 现状 | 依赖 | 优先级 | 批次 |
 |---|---|---|---|---|---|---|
@@ -46,6 +46,7 @@
 | PRD-SYNC-002 | 多标签与同步 | 多标签 active、ancestor、读游标 | covered | SYNC-001 | P0 | 已完成 |
 | PRD-SYNC-003 | 多标签与同步 | 发送模式与设置跨标签同步 | covered | SYNC-002 | P1 | 已完成 |
 | PRD-SYNC-004 | 多标签与同步 | 未读与已读游标持久化 | covered | SYNC-002 | P1 | 已完成 |
+| PRD-CONV-009 | 会话内任务与编排 | 会话内任务呈现、编排与归属 | covered | CONV-004、CONV-008 | P1 | 已完成 |
 
 `CONV-006` 原排进 B1 只为补 `AC-CONV-006-02` 的中文输入法证据；2026-11-22 已用 CDP 合成组合态完成验证（`docs/testing/IME-EVIDENCE-20261122.md`），该条转 pass，物理输入法未覆盖只作环境限制。
 
@@ -292,13 +293,13 @@
 
 REQ-029（功能树收敛）由本文件交付，状态仍为 `queued`，待用户验收后由验收方转 `done`；REQ-030 仍按 `docs/plan/BACKLOG.md:84` 的原口径，等全产品验收通过后再开。
 
-四批覆盖的功能点合计 59 条，加 `PRD-CONV-006` 一条补证共 60 条；余下 11 条是 11 条已 covered 的 P1 功能点，60 加 11 等于 71，与本文件开头的 PRD 总数一致。
+四批覆盖的功能点合计 59 条，加 `PRD-CONV-006` 一条补证共 60 条；余下 12 条是 12 条已 covered 的 P1 功能点，60 加 12 等于 72，与本文件开头的 PRD 总数一致。
 
 ## 7. 本文件与既有文档的差异
 
 三处不一致需要后续统一，本文件按证据取值，不改旧文件。
 
-`docs/plan/BACKLOG.md:83` 写"与 71 个 PRD 对齐"，`docs/product/TREE.md` 的实际计数是 71 个（逐域相加 12+6+5+6+6+6+5+12+7+6）。以 TREE 的逐条行数为准。
+`docs/plan/BACKLOG.md:83` 写"与 71 个 PRD 对齐"，`docs/product/TREE.md` 的实际计数是 72 个（逐域相加 13+6+5+6+6+6+5+12+7+6），两者相差 1。以 TREE 的逐条行数为准。
 
 `docs/product/SPEC-GAP.md:223-232` 的"优先补课 P0"排序把 TASK 排在 FILE 之前、把权限排第四，那是 2026-11-20 的口径。本文件把权限线提前到第二批，理由是权限决定后续用例能否判定，与旧排序不冲突但更紧。
 

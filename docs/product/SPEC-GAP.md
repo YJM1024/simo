@@ -1,7 +1,7 @@
 # 司墨规格缺口审计（SPEC-GAP）
 
 > 状态：**active**（2026-11-22 P1 收口后）
-> 审计对象：[`TREE.md`](TREE.md) 的 71 个 L3 功能点（含 2026-11-22 新增 `PRD-CONV-008`；同日移除 `PRD-SYNC-005`）、现有 specs、docs/tasks 状态与前端/后端代码面。
+> 审计对象：[`TREE.md`](TREE.md) 的 72 个 L3 功能点（含 2026-11-22 新增 `PRD-CONV-008`、2026-11-23 补 `PRD-CONV-009`；2026-11-22 移除 `PRD-SYNC-005`）、现有 specs、docs/tasks 状态与前端/后端代码面。
 > 原则：**不把“代码里有接口”当成“产品已覆盖”**；不把“曾经口头验收”当成“有测试证据”。
 
 ## 0. 当前状态（2026-11-22 整线复核后）
@@ -12,10 +12,10 @@
 - 域测试计划：**10/10**，路径 `specs/test/<P*-*>/test-plan.md`；2026-11-20 已回写 69 个前端单测、11 个 CDP E2E 与 223 个后端测试的**部分执行证据**，覆盖 P1–P10；未覆盖用例仍标 `missing`。
 - 域级变更包：**10/10**（`CHG-LEGACY-P1-CONV`…`CHG-LEGACY-P10-METRIC`，P1–P10 各 1 包，每包 7 件套）；P1–P4/P10 为 2026-11-20 补齐的 legacy 归档包，只登记真实实现/证据/缺口，不升级 covered。
 - E2E 测试计划：**1/1**（[`../../specs/test/e2e/README.md`](../../specs/test/e2e/README.md)）；CDP runner 11/11 PASS、连续 5 次，Playwright Test/CI 仍未接通。
-- 覆盖：**covered 12、partial 37、gap 22**（共 71；2026-11-22 收口并移除 `PRD-SYNC-005`，P1 为 12 covered / 0 not covered / 0 gap，33 条 AC 全 pass）。测试计划文件存在或局部用例跑过，不足以升级覆盖；必须六类产物 + 完整 AC 证据。
+- 覆盖：**covered 13、partial 37、gap 22**（共 72；2026-11-22 收口并移除 `PRD-SYNC-005`，2026-11-26 补交付 `PRD-CONV-009`，P1 为 13 covered / 0 not covered / 0 gap，33 条既有 AC 全 pass、`PRD-CONV-009` 的 26 条 AC 全 pass）。测试计划文件存在或局部用例跑过，不足以升级覆盖；必须六类产物 + 完整 AC 证据。
 - 未实现项（`unimplemented`）：15 个（含 `PRD-TOOL-003`，按后端无实现/测试口径）；逐项见各域 spec 的“当前实现状态”与 TREE。
 - 历史 FE/COMP：10 个 FE + 5 个 COMP，已映射为 `CHG-LEGACY-*` / `COMP-LEGACY-*`，不重命名、不删除。
-- 文件规模：10 产品 spec + 10 域测试计划 + 1 E2E 计划 + 5 COMP + 10 历史 FE + 模板；不按 71 个功能点各建文件。
+- 文件规模：10 产品 spec + 10 域测试计划 + 1 E2E 计划 + 5 COMP + 10 历史 FE + 模板；不按 72 个功能点各建文件。
 
 > 结论：底座已从“0 产品 spec”推进到“10 域骨架 + 10 个 legacy 域包 + 部分执行证据”；但**没有人可以据此宣称功能已覆盖/测试已全部通过**。下一步是补齐六类产物与完整 AC 证据、把 `unimplemented` 开实现型变更包，而不是继续扩写规则或把 legacy 归档包当完成。
 
@@ -38,7 +38,7 @@
 
 ### 0.2 CONV 域收口（2026-11-22）
 
-收口复核（[`../testing/STOP-EVIDENCE-2-20261122.md`](../testing/STOP-EVIDENCE-2-20261122.md)、[`../testing/STOP-UPSTREAM-EVIDENCE-20261122.md`](../testing/STOP-UPSTREAM-EVIDENCE-20261122.md)、[`../testing/IME-EVIDENCE-20261122.md`](../testing/IME-EVIDENCE-20261122.md)、[`../testing/ACCEPT-CONV-10-20261122.md`](../testing/ACCEPT-CONV-10-20261122.md)、[`../testing/ACCEPT-CONV-8-20261122.md`](../testing/ACCEPT-CONV-8-20261122.md)）：12 个验收面 PRD = **12 covered / 0 not covered / 0 gap**（2026-11-22 收口后移除 `PRD-SYNC-005`）；33 条 AC = **33 通过 / 0 部分**。已关闭项：时间轴命中（`AC-CONV-007-02`，`ACCEPT-CONV-6` 真机 8787 + CDP 9223 判 pass）、行内计数（`AC-CONV-001-05`）、未读持久化（`AC-SYNC-004-01/02/03`）、置顶（`AC-CONV-001-04`，含归档守卫与重启保持）、草稿 404（草稿不落列表，按归档路径返回 404 为预期）、空态降级（`AC-CONV-008-03`，树空/右栏无投影按空态渲染）、表格渲染（`AC-CONV-004-01` 补 GFM 表格对齐/转义/`role=region` 单测后 pass；5 个 COMP 全部 accepted（复签见 `COMP-SIGN-20261121.md:129` 起））、停止（`AC-CONV-005-01/02` 判 pass：按 `messageId` 定向，`stop_interrupt_test.go:32`/`:402`；机制由 `stop_upstream_test.go` 假上游证明，停止后 10ms context 取消、之后 delta 0、`idle` 在 `retracted` 之后）、发送幂等（`idempotency.go` + `p1_conv_chat_idempotency_test.go` 7 条 pass）、右栏投影（`AC-CONV-008-04` 真机 200→304，ETag `spec-c5a2d772dd1d5d88`、304 空体；375 四态截图已补，见 `ACCEPT-CONV-8`）。`PRD-CONV-006` 已由 CDP `Input.imeSetComposition` 五点验证闭环（`AC-CONV-006-02` 转 pass），物理输入法未覆盖只作环境限制。仍存在的非阻塞项：`AC-CONV-008-05` 的组件级负路径 G18 缺断言；真实厂商 403、跨标签双 WS、断网 e2e 不进 AC 判据。
+收口复核（[`../testing/STOP-EVIDENCE-2-20261122.md`](../testing/STOP-EVIDENCE-2-20261122.md)、[`../testing/STOP-UPSTREAM-EVIDENCE-20261122.md`](../testing/STOP-UPSTREAM-EVIDENCE-20261122.md)、[`../testing/IME-EVIDENCE-20261122.md`](../testing/IME-EVIDENCE-20261122.md)、[`../testing/ACCEPT-CONV-10-20261122.md`](../testing/ACCEPT-CONV-10-20261122.md)、[`../testing/ACCEPT-CONV-8-20261122.md`](../testing/ACCEPT-CONV-8-20261122.md)）：13 个验收面 PRD = **13 covered / 0 not covered / 0 gap**（2026-11-22 收口后移除 `PRD-SYNC-005`，2026-11-26 补交付 `PRD-CONV-009`）；33 条既有 AC = **33 通过 / 0 部分**，`PRD-CONV-009` 的 26 条 AC 全部 pass。已关闭项：时间轴命中（`AC-CONV-007-02`，`ACCEPT-CONV-6` 真机 8787 + CDP 9223 判 pass）、行内计数（`AC-CONV-001-05`）、未读持久化（`AC-SYNC-004-01/02/03`）、置顶（`AC-CONV-001-04`，含归档守卫与重启保持）、草稿 404（草稿不落列表，按归档路径返回 404 为预期）、空态降级（`AC-CONV-008-03`，树空/右栏无投影按空态渲染）、表格渲染（`AC-CONV-004-01` 补 GFM 表格对齐/转义/`role=region` 单测后 pass；5 个 COMP 全部 accepted（复签见 `COMP-SIGN-20261121.md:129` 起））、停止（`AC-CONV-005-01/02` 判 pass：按 `messageId` 定向，`stop_interrupt_test.go:32`/`:402`；机制由 `stop_upstream_test.go` 假上游证明，停止后 10ms context 取消、之后 delta 0、`idle` 在 `retracted` 之后）、发送幂等（`idempotency.go` + `p1_conv_chat_idempotency_test.go` 7 条 pass）、右栏投影（`AC-CONV-008-04` 真机 200→304，ETag `spec-c5a2d772dd1d5d88`、304 空体；375 四态截图已补，见 `ACCEPT-CONV-8`）。`PRD-CONV-006` 已由 CDP `Input.imeSetComposition` 五点验证闭环（`AC-CONV-006-02` 转 pass），物理输入法未覆盖只作环境限制。仍存在的非阻塞项：`AC-CONV-008-05` 的组件级负路径 G18 缺断言；真实厂商 403、跨标签双 WS、断网 e2e 不进 AC 判据。
 
 ### 0.3 条目关闭记录（2026-11-22，P1 收口后）
 
@@ -46,7 +46,7 @@
 - `CONV-006`（TREE 行 [`PRD-CONV-006`](TREE.md)）：关闭。`AC-CONV-006-02` 由 [`IME-EVIDENCE-20261122.md`](../testing/IME-EVIDENCE-20261122.md) 的 CDP 合成组合态五点验证转 pass；物理输入法未覆盖，记录在 `specs/test/P1-CONV/test-plan.md` §15 M-05。
 - `SYNC-001`（WS 连接与重连）：关闭。产品 AC 与测试已在 P1-CONV 域内闭环（`specs/product/P1-CONV/spec.md`、`specs/test/P1-CONV/test-plan.md` TC-P1-CONV-020/021），不再另建 `specs/product/SYNC/`。
 - `SYNC-003`（发送模式/设置跨标签同步）：关闭。证据 `Composer.test.tsx:144/178/198/219` 与 E2E 13，归 P1-CONV 域。
-- `SYNC-005`（远程访问与通知中心）：**已移除**（2026-11-22 用户裁决），编号不复用，不计入 71 个 PRD；后续若做需先立鉴权 PRD。此记录保留。
+- `SYNC-005`（远程访问与通知中心）：**已移除**（2026-11-22 用户裁决），编号不复用，不计入 72 个 PRD；后续若做需先立鉴权 PRD。此记录保留。
 
 ## 1. 结论先行（历史快照，落地前）
 
