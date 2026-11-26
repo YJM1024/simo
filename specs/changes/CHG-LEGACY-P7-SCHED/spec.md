@@ -91,3 +91,15 @@ Change：CHG-LEGACY-P7-SCHED
 
 依赖：无新增外部依赖；证据来自本包 `test-plan.md` 与 `evidence.md` 引用的既有报告。
 - 风险：历史证据为引用而非本轮重跑，未验证项按 `missing` 记，不据此宣称通过。
+
+## 8. 功能点覆盖
+
+覆盖范围：`PRD-SCHED-001`、`PRD-SCHED-002`、`PRD-SCHED-003`、`PRD-SCHED-004`、`PRD-SCHED-005`
+
+| 功能点ID | 状态 | 覆盖它的 AC | 备注 |
+|---|---|---|---|
+| `PRD-SCHED-001` | partial | `AC-SCHED-001-01` | cron 调度与任务记录已有，时区与补跑 AC 未验收 |
+| `PRD-SCHED-002` | partial | `AC-SCHED-002-01` | 计划任务列表与启停已有，并发与冲突 AC 未验收 |
+| `PRD-SCHED-003` | partial | `AC-SCHED-003-01` | 运行时状态与最近运行已有，失败与重试展示未验收 |
+| `PRD-SCHED-004` | partial | `AC-SCHED-004-01` | 运行历史接口与面板已有，留存与分页 AC 未验收 |
+| `PRD-SCHED-005` | out | — | 未实现：触发失败只落 failed 与内部重试，没有用户通知、手动重试 API 与 UI |

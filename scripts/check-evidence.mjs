@@ -38,6 +38,10 @@
  *   - 判定结果取 pass、partial、missing、blocked 四值（MOXIAN.md 表 9-2 与 MX-3-12）；
  *   - 证据类型只接受六类：断言脚本、单元测试日志、接口响应、集成日志、端到端截图、
  *     人工记录；脚本输出、命令日志、截图、数据库快照按非法类型处理；
+ *   - 模板定稿前的旧证据表只有九列；这类表按九列判定，模板新增的判定人、未验证原因码、
+ *     关联任务卡、构建版本、失效标记与备注六列在表中不存在时不记缺失，存在的列仍按
+ *     十五列口径校验（空值照记 error）。新表仍按十五列判定（见 GATES.md MX-G-40）；
+ *   - 旧变更包的 AC 是 AC-P1-01 这类两段式编号，解析时与现行三段式一并接受；
  *   - 未验证原因码只接受表 3-4 的 R-SCRIPT、R-ENV、R-BUILD、R-EXT、R-MANUAL、R-SPEC、
  *     R-DRILL 七值，其他前缀或词按非法原因码处理。
  *
@@ -132,7 +136,12 @@ const CORE_FIELDS = [
 ]
 const PLACEHOLDER_PATH = /^(不适用|n\/a|无|—|–|-|\/|待补|待定)$/i
 const URL_PATH = /^https?:\/\//i
-const AC_ID = /AC-(?:[A-Z0-9]+-){2,}\d+/g
+// 判定人允许写法：docs/framework/GATES.md:249（MX-G-40，error）规定写「自动」或
+// 「人工:<动作>」，缺失或写成其他形式按 error 记；角色名取自 ROLES.md 的名册。
+const JUDGE_PATTERN = /^(自动|人工\s*[:：])/
+// 三段式是现行写法；旧变更包（CHG-LEGACY-*、CHG-CONV-001..006）的 AC 是 AC-P1-01
+// 这类两段式编号，证据行按原编号登记，解析时一并接受，不把「编号形态旧」记成缺字段。
+const AC_ID = /AC-(?:[A-Z0-9]+-){1,}\d+/g
 
 class UsageError extends Error {}
 
@@ -283,11 +292,16 @@ function parseEvidenceFile(root, absPath) {
     const value = (field) => (header[field] === -1 ? '' : stripCell(cells[header[field]] ?? ''))
     const values = {}
     for (const field of Object.keys(HEADER_ALIASES)) values[field] = value(field)
+    // 模板定稿前的九列表缺判定人、构建版本、失效标记三列；三列都缺才按旧表判定，
+    // 只缺一两列的表按十五列口径校验，避免用半张旧表跳过必填字段。
+    const absent = new Set(Object.keys(HEADER_ALIASES).filter((field) => header[field] === -1))
     rows.push({
       file,
       line: index + 1,
       values,
       acs: extractAcs(values.ac),
+      absent,
+      legacy: ['judge', 'build', 'invalid'].every((field) => absent.has(field)),
     })
   }
   return { file, rows, error: null }
@@ -605,15 +619,21 @@ function isPlaceholderPath(value) {
 function checkPath(root, value, result) {
   const raw = String(value ?? '').trim()
   if (isPlaceholderPath(raw)) {
+    // docs/framework/GATES.md:248（MX-G-39，error）：路径字段非空时按存在性检查，
+    // 占位值无法打开，pass 证据必须给可打开的路径，因此记 error 而不是 warn。
     if (result === 'pass') {
-      return { status: 'WARN', detail: `pass 证据的路径是占位值 ${raw}，必须给可打开的路径` }
+      return { status: 'FAIL', detail: `pass 证据的路径是占位值 ${raw}，必须给可打开的路径` }
     }
     return { status: 'PASS', detail: '占位值，不要求路径存在' }
   }
   if (URL_PATH.test(raw)) {
-    return { status: 'WARN', detail: `URL 证据无法离线核验（${raw}），需本地快照或截图` }
+    // docs/framework/GATES.md:248（MX-G-39，error）：URL 要求同目录有本地快照或截图，
+    // 检查器无法离线核验 URL 本身，因此要求把快照落盘并改指向本地文件，否则记 error。
+    return { status: 'FAIL', detail: `URL 证据无法离线核验（${raw}），需在同目录提供本地快照或截图并改指向该文件` }
   }
-  const abs = isAbsolute(raw) ? raw : join(root, ...normalizePath(raw).split('/'))
+  // 路径列允许带节锚点（如 `.../evidence.md §1`），锚点不是路径的一部分。
+  const target = raw.replace(/\s*§\s*\d+(?:\.\d+)*\s*$/, '')
+  const abs = isAbsolute(target) ? target : join(root, ...normalizePath(target).split('/'))
   if (!existsSync(abs)) return { status: 'FAIL', detail: `路径不存在：${raw}` }
   let stats
   try {
@@ -662,9 +682,11 @@ function checkReason(result, reason) {
     return { status: 'PASS', detail: codes[0] }
   }
   if (result === 'pass') {
-    if (!raw) return { status: 'WARN', detail: '结果 pass 但原因码列为空，应写不适用' }
-    if (codes.length > 0) return { status: 'WARN', detail: `pass 的原因码列应为不适用，实际 ${codes.join('、')}` }
-    if (illegal.length > 0) return { status: 'WARN', detail: `非法原因码 ${illegal.join('、')}` }
+    // docs/framework/GATES.md:251（MX-G-42，error）：pass 的原因码列必须写「不适用」，
+    // 空、带原因码或非法原因码都按 error 记。
+    if (!raw) return { status: 'FAIL', detail: '结果 pass 但原因码列为空，应写不适用' }
+    if (codes.length > 0) return { status: 'FAIL', detail: `pass 的原因码列应为不适用，实际 ${codes.join('、')}` }
+    if (illegal.length > 0) return { status: 'FAIL', detail: `非法原因码 ${illegal.join('、')}` }
     return { status: 'PASS', detail: '不适用' }
   }
   return { status: 'PASS', detail: '判定值非法，原因码交由判定值检查处理' }
@@ -875,6 +897,7 @@ function analyze(options) {
     const values = row.values
     const missingFields = []
     for (const [field, label] of CORE_FIELDS) {
+      if (row.legacy && row.absent.has(field)) continue
       if (field === 'ac') {
         if (row.acs.length === 0) missingFields.push(label)
         continue
@@ -903,7 +926,7 @@ function analyze(options) {
       else checkedPaths += 1
     }
 
-    if (resultOk) {
+    if (resultOk && !(row.legacy && row.absent.has('reason'))) {
       const reasonCheck = checkReason(values.result, values.reason)
       if (reasonCheck.status === 'FAIL') problems.reason.push({ row, detail: reasonCheck.detail })
       else if (reasonCheck.status === 'WARN') problems.reason.push({ row, detail: reasonCheck.detail, severity: 'WARN' })
@@ -919,7 +942,8 @@ function analyze(options) {
 
     if (values.rerun) {
       if (!['是', '否'].includes(values.rerun)) {
-        problems.rerun.push({ row, detail: `可复跑必须是“是”或“否”，实际 ${values.rerun}`, severity: 'WARN' })
+        // docs/framework/GATES.md:249（MX-G-40，error）：可复跑必须写「是」或「否」。
+        problems.rerun.push({ row, detail: `可复跑必须是“是”或“否”，实际 ${values.rerun}` })
       } else if (values.rerun === '否' && values.result === 'pass') {
         problems.rerun.push({ row, detail: '可复跑写“否”却判 pass，按违规处理' })
       }
@@ -934,16 +958,21 @@ function analyze(options) {
     }
 
     if (!values.judge) {
-      problems.judge.push({ row, detail: '缺少判定人，证据按未判定处理' })
-    } else if (!/^(自动|人工\s*[:：])/.test(values.judge)) {
-      problems.judge.push({ row, detail: `判定人应写“自动”或“人工:<角色>”，实际 ${values.judge}`, severity: 'WARN' })
+      // 旧表没有判定人列，列不存在时不记缺失（不降级成 warning，也不记 error）。
+      if (!(row.legacy && row.absent.has('judge'))) {
+        problems.judge.push({ row, detail: '缺少判定人，证据按未判定处理' })
+      }
+    } else if (!JUDGE_PATTERN.test(values.judge)) {
+      // docs/framework/GATES.md:249（MX-G-40，error）：判定人写「自动」或「人工:<动作>」，
+      // 缺失或写成其他形式按 error 记；此处不得降为 warning。
+      problems.judge.push({ row, detail: `判定人应写“自动”或“人工:<动作>”，实际 ${values.judge}` })
     }
 
-    if (!values.card) {
+    if (!values.card && !(row.legacy && row.absent.has('card'))) {
       problems.card.push({ row, detail: '缺少关联任务卡，不计入收口范围' })
     }
 
-    if (resultOk) {
+    if (resultOk && !(row.legacy && row.absent.has('note') && row.absent.has('reason'))) {
       const releaseCheck = checkRelease(values.result, values)
       if (releaseCheck && releaseCheck.status === 'FAIL') problems.release.push({ row, detail: releaseCheck.detail })
     }
@@ -1460,6 +1489,81 @@ function runSelfTest() {
       '失败样例 MX-G-51 覆盖时序、命令、版本、哈希与产物',
       bindingChecks.join(',') === '产物文件,产物版本,校验命令,生成器哈希,生成器时序',
       bindingChecks.join('、'),
+    )
+
+    const legacyHeader = [
+      '| 证据 ID | AC | 类型 | 命令 | 路径 | 生成时间 | 结果 | 可复跑 | 轮次 |',
+      '|---|---|---|---|---|---|---|---|---|',
+    ]
+    const legacyRow = (type) =>
+      `| EV-LEGACY-01 | AC-P1-01 | ${type} | \`node scripts/ac/AC-FX-001-01.mjs\` | \`docs/testing/fx/pass.png\` | \`2026-11-24T11:00+08:00\` | pass | 是 | R1 |`
+    const legacyRoot = join(base, 'legacy')
+    writeFixture(legacyRoot, 'docs/testing/fx/pass.png', 'PNG 自检占位')
+    writeFixture(
+      legacyRoot,
+      'docs/testing/EVIDENCE-LEGACY.md',
+      ['# 旧格式证据索引', '', ...legacyHeader, legacyRow('断言脚本'), ''].join('\n'),
+    )
+    const legacyOptions = {
+      ...baseOptions,
+      root: legacyRoot,
+      testPlans: [],
+      indexes: [join(legacyRoot, 'docs/testing/EVIDENCE-LEGACY.md')],
+    }
+    const legacy = analyze(legacyOptions)
+    const legacyFail = legacy.items.filter((entry) => entry.status === 'FAIL')
+    assert(
+      '旧格式表按旧字段集校验，不因缺新增六列报错',
+      legacyFail.length === 0,
+      legacyFail.map((entry) => `${entry.rule}|${entry.check}`).join('; '),
+    )
+    const legacyBadRoot = join(base, 'legacy-bad')
+    writeFixture(legacyBadRoot, 'docs/testing/fx/pass.png', 'PNG 自检占位')
+    writeFixture(
+      legacyBadRoot,
+      'docs/testing/EVIDENCE-LEGACY.md',
+      ['# 旧格式证据索引', '', ...legacyHeader, legacyRow(''), ''].join('\n'),
+    )
+    const legacyBad = analyze({
+      ...legacyOptions,
+      root: legacyBadRoot,
+      indexes: [join(legacyBadRoot, 'docs/testing/EVIDENCE-LEGACY.md')],
+    })
+    const legacyBadCore = legacyBad.items.filter(
+      (entry) => entry.status === 'FAIL' && entry.rule === 'MX-G-40' && entry.check === '核心字段',
+    )
+    assert('旧格式表已有列的空单元格仍判失败', legacyBadCore.length === 1, `实际 ${legacyBadCore.length}`)
+    const anchor = checkPath(legacyRoot, 'docs/testing/fx/pass.png §1', 'partial')
+    assert('路径节锚点不参与存在性判定', anchor.status === 'PASS', anchor.detail)
+
+    const judgeRoot = join(base, 'judge')
+    writeFixture(judgeRoot, 'docs/testing/fx/pass.png', 'PNG 自检占位')
+    writeFixture(judgeRoot, 'docs/testing/fx/partial.log', '2 passed, 1 skipped')
+    writeFixture(judgeRoot, 'docs/testing/fx/blocked.log', 'blocked: CDP 9223 unreachable')
+    writeFixture(
+      judgeRoot,
+      'docs/testing/EVIDENCE-JUDGE.md',
+      PASS_EVIDENCE.replace('| 自动 | pass |', '| p2-final-verify | pass |'),
+    )
+    const judgeRun = analyze({
+      ...baseOptions,
+      root: judgeRoot,
+      testPlans: [],
+      indexes: [join(judgeRoot, 'docs/testing/EVIDENCE-JUDGE.md')],
+    })
+    const judgeProblems = judgeRun.items.filter(
+      (entry) => entry.rule === 'MX-G-40' && entry.check === '判定人' && entry.status !== 'PASS',
+    )
+    // 依据 docs/framework/GATES.md:249（MX-G-40，error）：判定人非法必须记 error。
+    assert(
+      '判定人非法记 error',
+      judgeProblems.length === 1 && judgeProblems[0].severity === 'error' && judgeProblems[0].ac === 'AC-FX-001-01',
+      judgeProblems.map((entry) => `${entry.ac}:${entry.status}:${entry.severity}`).join('; ') || '无问题项',
+    )
+    assert(
+      '判定人合法（自动、人工:测试）不记问题',
+      !judgeProblems.some((entry) => ['AC-FX-001-02', 'AC-FX-001-03', 'AC-FX-001-04'].includes(entry.ac)),
+      judgeProblems.map((entry) => entry.ac).join('、') || '无问题项',
     )
 
     const signatureOf = (result) =>

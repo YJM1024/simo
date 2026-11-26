@@ -91,3 +91,15 @@ Change：CHG-LEGACY-P3-WORK
 
 依赖：无新增外部依赖；证据来自本包 `test-plan.md` 与 `evidence.md` 引用的既有报告。
 - 风险：历史证据为引用而非本轮重跑，未验证项按 `missing` 记，不据此宣称通过。
+
+## 8. 功能点覆盖
+
+覆盖范围：`PRD-WORK-001`、`PRD-WORK-002`、`PRD-WORK-003`、`PRD-WORK-004`、`PRD-WORK-005`
+
+| 功能点ID | 状态 | 覆盖它的 AC | 备注 |
+|---|---|---|---|
+| `PRD-WORK-001` | in | `AC-WORK-001-01`、`AC-WORK-001-02` | 双页导航与工作台入口 |
+| `PRD-WORK-002` | in | `AC-WORK-002-01`、`AC-WORK-002-02` | 用量与统计卡 |
+| `PRD-WORK-003` | in | `AC-WORK-003-01`、`AC-WORK-003-02` | 每日趋势与最近活动 |
+| `PRD-WORK-004` | partial | `AC-WORK-004-01` | 交付物与下载可见，空、加载、错误三态与预览未全测 |
+| `PRD-WORK-005` | out | — | 未实现：后端 views 有 list、get、versions、render-state，前端没有自定义视图构建器 |

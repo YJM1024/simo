@@ -932,3 +932,92 @@ func TestConvHTTPErrorEnvelopes(t *testing.T) {
 		})
 	}
 }
+
+// TestLegacyGetRequiresSession 验证旧详情路由 GET /api/tasks/{id} 的会话边界：
+// 缺 sessionId 返回 400 task_session_required，跨会话返回 404 task_not_found，同会话返回 200。
+func TestLegacyGetRequiresSession(t *testing.T) {
+	env := newConvHTTPEnv(t)
+	created := env.create(t, "sess-owner", []map[string]any{
+		{"key": "t1", "title": "补会话校验", "mode": "plan"},
+	})
+	tasks := arrValue(t, created["tasks"], "tasks")
+	taskID, _ := objValue(t, tasks[0], "task")["id"].(string)
+	if taskID == "" {
+		t.Fatalf("创建任务后应返回任务 id: %v", created)
+	}
+
+	status, body := env.json(t, http.MethodGet, "/api/tasks/"+taskID, nil)
+	if status != http.StatusBadRequest {
+		t.Fatalf("缺 sessionId 应返回 400，got %d body=%v", status, body)
+	}
+	if body["code"] != "task_session_required" {
+		t.Fatalf("缺 sessionId 错误码应为 task_session_required: %v", body)
+	}
+
+	status, body = env.json(t, http.MethodGet, "/api/tasks/"+taskID+"?sessionId=sess-other", nil)
+	if status != http.StatusNotFound {
+		t.Fatalf("跨会话应返回 404，got %d body=%v", status, body)
+	}
+	if body["code"] != "task_not_found" || body["error"] != "任务不存在" {
+		t.Fatalf("跨会话应返回 task_not_found/任务不存在: %v", body)
+	}
+
+	status, body = env.json(t, http.MethodGet, "/api/tasks/"+taskID+"?sessionId=sess-owner", nil)
+	if status != http.StatusOK {
+		t.Fatalf("同会话应返回 200，got %d body=%v", status, body)
+	}
+	task := objValue(t, body["task"], "task")
+	if task["id"] != taskID {
+		t.Fatalf("同会话返回的任务 id 不一致: %v", task["id"])
+	}
+}
+
+// TestTaskProgressEvent 验证进度变化只发一条 task.progress，字段与去重规则符合约定。
+func TestTaskProgressEvent(t *testing.T) {
+	env := newConvHTTPEnv(t)
+	created := env.create(t, "sess-progress", []map[string]any{
+		{"key": "t1", "title": "进度事件", "mode": "plan"},
+	})
+	taskID, _ := objValue(t, arrValue(t, created["tasks"], "tasks")[0], "task")["id"].(string)
+	before, err := env.logger.LatestID(env.ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	task, err := env.mod.getTask(env.ctx, taskID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	task.Progress = 40
+	task.UpdatedAt = time.Now().UnixMilli()
+	env.mod.saveAndEmit(env.ctx, task, "", "")
+	// 同一进度重复保存不应再发一条 task.progress。
+	env.mod.saveAndEmit(env.ctx, task, "", "")
+
+	events, err := env.logger.Replay(env.ctx, before)
+	if err != nil {
+		t.Fatal(err)
+	}
+	progressEvents := 0
+	for _, ev := range events {
+		if ev.Type != eventlog.TypeTaskProgress {
+			continue
+		}
+		progressEvents++
+		var payload map[string]any
+		if err := json.Unmarshal(ev.Payload, &payload); err != nil {
+			t.Fatalf("task.progress 载荷不是 JSON: %v", err)
+		}
+		if payload["id"] != taskID || payload["taskId"] != taskID {
+			t.Fatalf("task.progress 的 id/taskId 应等于任务 id: %v", payload)
+		}
+		if payload["progress"] != float64(40) {
+			t.Fatalf("task.progress.progress 应为 40: %v", payload)
+		}
+		if _, ok := payload["updatedAtMs"].(float64); !ok {
+			t.Fatalf("task.progress 应带 updatedAtMs: %v", payload)
+		}
+	}
+	if progressEvents != 1 {
+		t.Fatalf("同一进度应只发 1 条 task.progress，got %d", progressEvents)
+	}
+}

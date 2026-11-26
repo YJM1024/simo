@@ -369,3 +369,118 @@ describe('MessageItem task messages', () => {
   })
 })
 
+describe('MessageItem progress messages', () => {
+  const progressTask: TaskView = {
+    id: 't-9', sessionId: 'main', title: '写季度总结', mode: 'plan',
+    status: 'running', displayStatus: 'running', createdAt: 1_700_000_000_000, updatedAt: 1_700_000_000_000,
+  }
+
+  it('renders a progress row with the task title link, not a task card', async () => {
+    const user = userEvent.setup()
+    const onOpenTask = vi.fn()
+    render(
+      <MessageItem
+        message={message({ category: 'progress', taskId: 't-9', text: '任务开始：写季度总结' })}
+        onCardAction={vi.fn()}
+        taskInfo={{ task: progressTask, onOpenTask }}
+      />,
+    )
+    expect(document.querySelector('.msg-progress')).not.toBeNull()
+    expect(document.querySelector('.msg-task-card')).toBeNull()
+    expect(document.querySelector('.msg-task-summary')).toBeNull()
+    expect(screen.getByText('进度汇报')).toBeInTheDocument()
+    expect(screen.getByText('任务开始：写季度总结')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '任务：写季度总结' }))
+    expect(onOpenTask).toHaveBeenCalledWith(progressTask)
+  })
+
+  it('keeps the fallback link when the task is not loaded yet', async () => {
+    const user = userEvent.setup()
+    const onOpen = vi.fn()
+    render(
+      <MessageItem
+        message={message({ category: 'progress', taskId: 't-9', text: '任务结束：写季度总结' })}
+        onCardAction={vi.fn()}
+        taskInfo={{ onOpen }}
+      />,
+    )
+    await user.click(screen.getByRole('button', { name: '查看任务' }))
+    expect(onOpen).toHaveBeenCalledTimes(1)
+  })
+
+  it('renders progress without taskId as a plain message', () => {
+    render(<MessageItem message={message({ category: 'progress', text: '普通进度' })} onCardAction={vi.fn()} />)
+    expect(document.querySelector('.msg-progress')).toBeNull()
+    expect(screen.queryByRole('button', { name: '查看任务' })).not.toBeInTheDocument()
+  })
+})
+
+describe('MessageItem task plan messages', () => {
+  const pendingPlan = {
+    id: 'plan-1', sessionId: 'main', complexity: 'C3', status: 'pending',
+    planMessageId: 'm-1', childSessionIds: [], taskIds: [], planSteps: ['梳理现状', '设计接口', '实现'],
+    requestText: '重构导出流程', taskCount: 1, childSessionCount: 1, attempt: 0, createdAt: Date.now(),
+  }
+
+  it('renders complexity, planned steps, counts and exactly two decision entries', async () => {
+    const user = userEvent.setup()
+    const onConfirmPlan = vi.fn()
+    const onRejectPlan = vi.fn()
+    render(
+      <MessageItem
+        message={message({ category: 'confirmation', text: '任务方案 · C3', taskPlan: pendingPlan })}
+        onCardAction={vi.fn()}
+        taskInfo={{ onConfirmPlan, onRejectPlan }}
+      />,
+    )
+    const card = document.querySelector('.msg-plan-card') as HTMLElement
+    expect(card).not.toBeNull()
+    expect(card.dataset.complexity).toBe('C3')
+    expect(screen.getByText('任务方案 · 子会话任务')).toBeInTheDocument()
+    expect(screen.getByText('计划 3 步，将创建 1 个任务、1 个子会话。')).toBeInTheDocument()
+    expect(document.querySelectorAll('.msg-plan-steps li')).toHaveLength(3)
+    await user.click(screen.getByRole('button', { name: '确认执行' }))
+    expect(onConfirmPlan).toHaveBeenCalledTimes(1)
+    await user.click(screen.getByRole('button', { name: '拒绝' }))
+    expect(onRejectPlan).toHaveBeenCalledTimes(1)
+  })
+
+  it('renders confirmed and rejected plans as read-only terminal states', () => {
+    const { rerender } = render(
+      <MessageItem
+        message={message({ category: 'confirmation', text: '任务方案 · C2', taskPlan: { ...pendingPlan, complexity: 'C2', status: 'confirmed', taskCount: 1, childSessionCount: 0 } })}
+        onCardAction={vi.fn()}
+        taskInfo={{ onConfirmPlan: vi.fn(), onRejectPlan: vi.fn() }}
+      />,
+    )
+    expect(screen.getByText('已确认')).toBeInTheDocument()
+    expect(screen.getByText('已确认，任务与子会话已创建。')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '确认执行' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '拒绝' })).not.toBeInTheDocument()
+
+    rerender(
+      <MessageItem
+        message={message({ category: 'confirmation', text: '任务方案 · C4', taskPlan: { ...pendingPlan, complexity: 'C4', status: 'rejected', rejectedReason: '不需要了' } })}
+        onCardAction={vi.fn()}
+        taskInfo={{ onConfirmPlan: vi.fn(), onRejectPlan: vi.fn() }}
+      />,
+    )
+    expect(screen.getByText('已拒绝')).toBeInTheDocument()
+    expect(screen.getByText('已拒绝，未创建任何任务或子会话（不需要了）。')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '确认执行' })).not.toBeInTheDocument()
+  })
+
+  it('shows the 30-minute waiting hint and keeps entries available', () => {
+    render(
+      <MessageItem
+        message={message({ category: 'confirmation', text: '任务方案 · C3', taskPlan: { ...pendingPlan, createdAt: Date.now() - 31 * 60_000 } })}
+        onCardAction={vi.fn()}
+        taskInfo={{ onConfirmPlan: vi.fn(), onRejectPlan: vi.fn() }}
+      />,
+    )
+    expect(screen.getByRole('status')).toHaveTextContent('已等待 31 分钟未确认')
+    expect(screen.getByRole('button', { name: '确认执行' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '拒绝' })).toBeInTheDocument()
+  })
+})
+

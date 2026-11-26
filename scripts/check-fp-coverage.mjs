@@ -7,9 +7,13 @@
  * 与变更包 spec 里的“功能点覆盖”表，核对四件事：
  *   1. 覆盖表声明的范围（`覆盖范围：` 行）内，每个功能点都有一行；
  *   2. 状态 in 的功能点至少写一个 AC，且该 AC 在 specs/product 或本包 spec 里登记；
- *   3. 状态 out 写不做理由，状态 partial 写剩余缺口（partial 本身按未完成计 error）；
+ *   3. 状态 out 写不做理由，状态 partial 写剩余缺口；partial 本身按未完成计：
+ *      包首部状态为终态（已关闭、已完成、已验收、已归档、已签发）时记 warning 并写明
+ *      “历史欠账”，未关闭的非草稿包记 error，避免历史包永久红灯、当前包带缺口放行；
  *   4. 表里出现的 AC 编号都能在 specs/product 或本包 spec 里查到，行不重复，
- *      功能点必须在树里，Implements 与 TREE.md CHANGE 列指向本包的功能点必须入表。
+ *      功能点必须在树里，Implements 与 TREE.md CHANGE 列指向本包的功能点必须入表；
+ *   5. 无功能点的包可写“覆盖范围：无功能点（<理由>）”，理由写在括号里即放过并记
+ *      1 条 notice；没有理由仍记 error。
  *
  * 覆盖表的格式由 docs/framework/templates/fp-coverage.md 定义：
  *
@@ -21,19 +25,23 @@
  *   |---|---|---|---|
  *   | `PRD-AAA-001` | in | `AC-AAA-001-01` | 前端入口：… |
  *
+ * 默认扫描覆盖 specs/changes/ 下每个变更包：含“功能点覆盖”节的按表核对；缺节的
+ * 按包首部状态行（spec.md 优先，proposal.md 兜底）判定，终态包与非 draft 记 error，
+ * draft 且未开工记 warning，避免新包一建立就阻断、终态包靠状态逃掉必填。
+ *
  * 用法：
  *   node scripts/check-fp-coverage.mjs
- *       扫描 specs/changes/<CHG-ID>/spec.md，只检查含“功能点覆盖”节的包。
+ *       扫描 specs/changes/<CHG-ID>/spec.md，含节包核对表，缺节包按状态记 error 或 warning。
  *   node scripts/check-fp-coverage.mjs --change CHG-CONV-007
- *       只检查一个变更包；缺少覆盖节记 error。
+ *       只检查一个变更包；缺少覆盖节同样按状态判定（非 draft 记 error、draft 记 warning）。
  *   node scripts/check-fp-coverage.mjs --json
  *       输出 { gate, checks, warnings, errors, records }。
  *   node scripts/check-fp-coverage.mjs --self-test
- *       在 .tmp/fp-coverage-tooling 下生成夹具并断言，共 26 条。
+ *       在 .tmp/fp-coverage-tooling 下生成夹具并断言，共 45 条。
  *
- * 每条问题输出一行：`[FP-COVER] <path>:<line> MX-G-71 <error|warning> <事实>；<修复动作>`。
- * 末行输出 `PASS (gate: fp-coverage, checks: <n>, warnings: <m>)` 或
- * `FAILED: <e> error(s), <w> warning(s)`。退出码 0 通过、1 有 error、2 参数或环境错误。
+ * 每条问题输出一行：`[FP-COVER] <path>:<line> MX-G-71 <error|warning|notice> <事实>；<修复动作>`。
+ * 末行输出 `PASS (gate: fp-coverage, checks: <n>, warnings: <m>) notices: <k>` 或
+ * `FAILED: <e> error(s), <w> warning(s), <k> notice(s)`。退出码 0 通过、1 有 error、2 参数或环境错误。
  */
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
@@ -50,6 +58,13 @@ const POINT_ID = new RegExp(`^${POINT_SOURCE}$`)
 const STATUS_VALUES = new Set(['in', 'partial', 'out'])
 const TREE_FILES = ['docs/product/TREE.md', 'docs/product/TREE-FULL.md']
 const TEMPLATE = 'docs/framework/templates/fp-coverage.md'
+// 包首部状态为这些值时按“未开工”处理，缺覆盖表只记 warning；其余（含状态行缺失）按 error。
+const DRAFT_STATUSES = new Set(['draft', '草稿', 'proposed', '新建', 'new'])
+// 包首部状态为这些终态词时，`partial` 与 `Implements` 点标 out 的欠账降为 warning；
+// 终态包缺覆盖节仍记 error（必填不因状态豁免）。按整值精确匹配，`已交付并签发`
+// 这类未关闭的中间态不算终态，避免把仍在收口的包当成历史包放行。
+const TERMINAL_STATUSES = new Set(['已关闭', '已完成', '已验收', '已归档', '已签发'])
+const STATUS_SCAN_LINES = 60
 
 function readLines(path) {
   return readFileSync(path, 'utf8').split(/\r?\n/)
@@ -162,9 +177,20 @@ function sectionEnd(lines, start) {
 function findScope(lines, start, end) {
   for (let i = start + 1; i < end; i += 1) {
     const match = lines[i].match(/^\s*(?:\*\*)?覆盖范围(?:\*\*)?\s*[：:]\s*(.+?)\s*$/)
-    if (match) return { line: i + 1, ids: matchPoints(match[1]) }
+    if (match) return { line: i + 1, ids: matchPoints(match[1]), text: match[1] }
   }
   return null
+}
+
+/**
+ * “无功能点（<理由>）”形态：只认括号里写了真实理由的声明。
+ * 返回 { declared, reason }；`无功能点` 后面没有括号或括号为空时 reason 为空串。
+ */
+function parseNoPointScope(text) {
+  const match = (text ?? '').match(/^\s*无功能点\s*(?:[（(]\s*(.*?)\s*[）)])?\s*$/)
+  if (!match) return null
+  const reason = (match[1] ?? '').replace(/[*_`]/g, '').trim()
+  return { declared: true, reason: reason.length >= 4 ? reason : '' }
 }
 
 function findTable(lines, start, end) {
@@ -182,6 +208,79 @@ function makeRecord(path, line, message, hint) {
   return { path, line, severity: 'error', message, hint }
 }
 
+function makeWarning(path, line, message, hint) {
+  return { path, line, severity: 'warning', message, hint }
+}
+
+function makeNotice(path, line, message, hint) {
+  return { path, line, severity: 'notice', message, hint }
+}
+
+/** 状态值归一化：去反引号、粗体，截掉括号说明与残余表格分隔符。 */
+function normalizeStatusValue(raw) {
+  return raw
+    .replace(/`/g, '')
+    .replace(/\*\*/g, '')
+    .split(/[（(|]/)[0]
+    .replace(/[。；;，,、\s]+$/, '')
+    .trim()
+}
+
+function isDraftStatus(value) {
+  return DRAFT_STATUSES.has(value.replace(/\s+/g, '').toLowerCase())
+}
+
+/** 终态判定按归一化后的整值精确匹配，`已交付并签发` 之类未关闭状态不算终态。 */
+function isTerminalStatus(value) {
+  return TERMINAL_STATUSES.has(value.replace(/\s+/g, ''))
+}
+
+/**
+ * 读一个文件首部的状态行，限定在首个 `##` 标题前或前 60 行内。
+ * 支持 `状态：x`、`- 状态：x`、`**状态**：x` 与表格行 `| 状态 | x |`。
+ */
+function readStatusLine(path) {
+  if (!existsSync(path)) return null
+  const lines = readLines(path)
+  const limit = Math.min(lines.length, STATUS_SCAN_LINES)
+  for (let i = 0; i < limit; i += 1) {
+    const line = lines[i]
+    if (/^##\s/.test(line)) break
+    const table = line.match(/^\s*\|\s*(?:\*\*)?状态(?:\*\*)?\s*\|(.+)\|\s*$/)
+    const keyValue = line.match(/^\s*(?:[-*]\s*)?(?:\*\*)?状态(?:\*\*)?\s*[：:]\s*(.+?)\s*$/)
+    const raw = table ? table[1] : keyValue ? keyValue[1] : null
+    if (raw === null) continue
+    const value = normalizeStatusValue(raw)
+    if (!value) continue
+    return { value, line: i + 1 }
+  }
+  return null
+}
+
+/** spec.md 的状态优先，没有再读 proposal.md；都没有时按非 draft 处理。 */
+function readPackageStatus(root, changeId) {
+  for (const rel of [`specs/changes/${changeId}/spec.md`, `specs/changes/${changeId}/proposal.md`]) {
+    const hit = readStatusLine(join(root, rel))
+    if (hit) return { ...hit, path: rel, draft: isDraftStatus(hit.value), terminal: isTerminalStatus(hit.value) }
+  }
+  return { value: '', line: 1, path: `specs/changes/${changeId}/spec.md`, draft: false, terminal: false, missing: true }
+}
+
+/** 缺“功能点覆盖”节：终态包与普通非 draft 包都记 error，仅 draft 包记 warning。 */
+function missingSectionRecord(root, changeId, specPath) {
+  const status = readPackageStatus(root, changeId)
+  const line = status.path === specPath ? status.line : 1
+  const hint = `在 ${specPath} 追加“## 功能点覆盖”节，写明覆盖范围与四列表，模板见 ${TEMPLATE}`
+  if (status.draft) {
+    return makeWarning(specPath, line, `缺少“功能点覆盖”节：${changeId}（状态：${status.value}，未开工记 warning）`, hint)
+  }
+  if (status.terminal) {
+    return makeRecord(specPath, line, `缺少“功能点覆盖”节：${changeId}（状态：${status.value}，终态包同样必填）`, hint)
+  }
+  const state = status.missing ? '未读到状态行，按非 draft 处理' : `状态：${status.value}`
+  return makeRecord(specPath, line, `缺少“功能点覆盖”节：${changeId}（${state}）`, hint)
+}
+
 /** 检查一个变更包的覆盖节。返回 records、行数与包数。 */
 function checkPackage(root, changeId) {
   const records = []
@@ -189,29 +288,51 @@ function checkPackage(root, changeId) {
   const abs = join(root, path)
   if (!existsSync(abs)) {
     records.push(makeRecord(path, 1, `变更包缺少 spec.md：${changeId}`, '补齐变更包后再跑门禁'))
-    return { records, rows: 0, packages: 1 }
+    return { records, rows: 0, packages: 1, points: [] }
   }
   const lines = readLines(abs)
   const start = findCoverageHeading(lines)
   if (start < 0) {
-    records.push(makeRecord(path, 1, `缺少“功能点覆盖”节：${changeId}`, `按 ${TEMPLATE} 追加一节，写明覆盖范围与四列表`))
-    return { records, rows: 0, packages: 1 }
+    records.push(missingSectionRecord(root, changeId, path))
+    return { records, rows: 0, packages: 1, points: [] }
   }
 
   const end = sectionEnd(lines, start)
   const sectionLine = start + 1
+  // 严重度按包首部状态分级：终态包的历史欠账记 warning，未关闭的非草稿包仍记 error。
+  const pkgStatus = readPackageStatus(root, changeId)
+  const terminal = pkgStatus.terminal
+  const debtPrefix = terminal ? '历史欠账：' : ''
+  const debtSuffix = terminal ? `（${pkgStatus.value}，已关闭包，记提示）` : ''
 
   const scope = findScope(lines, start, end)
+  const noPoint = scope && scope.ids.length === 0 ? parseNoPointScope(scope.text) : null
   if (!scope) {
     records.push(makeRecord(path, sectionLine, `“功能点覆盖”节缺少“覆盖范围”行：${changeId}`, '加一行“覆盖范围：”，列出本次声明受影响的功能点 ID'))
+  } else if (noPoint?.reason) {
+    records.push(makeNotice(path, scope.line, `覆盖范围声明无功能点：${noPoint.reason}`, '无功能点的包保持该声明即可；若实际改动了功能点，改为列出树里的功能点 ID'))
+  } else if (noPoint) {
+    records.push(makeRecord(path, scope.line, '“覆盖范围”写无功能点但括号里没有理由', '写成“覆盖范围：无功能点（<理由>）”，理由写在括号里，例如流程与框架变更'))
   } else if (scope.ids.length === 0) {
     records.push(makeRecord(path, scope.line, '“覆盖范围”行没有列出功能点 ID', '写至少一个树里的功能点 ID'))
   }
 
   const table = findTable(lines, start, end)
   if (!table) {
+    if (noPoint?.reason) {
+      // 无功能点的包只写覆盖范围行即可，不强制一张空表；但仍要核对首部与树没有反悔声明。
+      const tree = parseTree(root)
+      const headerText = lines.slice(0, start).join('\n')
+      const implementsLine = headerText.match(/^Implements\s*[：:]\s*(.+)$/m)
+      const linked = implementsLine ? matchPoints(implementsLine[1]) : []
+      for (const [id, info] of tree) if (info.change.split(/[,、，\s]+/).includes(changeId)) linked.push(id)
+      if (linked.length) {
+        records.push(makeRecord(path, scope.line, `“覆盖范围”声明无功能点，但本包声明或树里关联了功能点：${[...new Set(linked)].join('、')}`, '二者只能取一个：要么列出这些功能点，要么去掉 Implements 与 TREE 的 CHANGE 关联'))
+      }
+      return { records, rows: 0, packages: 1, points: [] }
+    }
     records.push(makeRecord(path, sectionLine, '“功能点覆盖”节缺少四列表', '按模板补表头：功能点ID、状态、覆盖它的 AC、备注'))
-    return { records, rows: 0, packages: 1 }
+    return { records, rows: 0, packages: 1, points: [] }
   }
 
   const header = table.header.map((cell) => plain(cell))
@@ -221,7 +342,7 @@ function checkPackage(root, changeId) {
   const noteCol = header.findIndex((cell) => /^备注$/i.test(cell))
   if (idCol < 0 || statusCol < 0 || acCol < 0 || noteCol < 0) {
     records.push(makeRecord(path, table.line, '覆盖表缺列，四列必须是功能点ID、状态、覆盖它的 AC、备注', '按模板改表头'))
-    return { records, rows: 0, packages: 1 }
+    return { records, rows: 0, packages: 1, points: [] }
   }
   if (!/^\s*\|[\s:|-]+\|\s*$/.test(lines[table.line] ?? '')) {
     records.push(makeRecord(path, table.line + 1, '表头后缺少分隔行', '在表头下行补 |---|---|---|---|'))
@@ -255,7 +376,7 @@ function checkPackage(root, changeId) {
       records.push(makeRecord(path, i + 1, `重复的功能点行：${id}`, '删去重复行，一个功能点只留一行'))
       continue
     }
-    seen.set(id, { line: i + 1, status })
+    seen.set(id, { line: i + 1, status, note: plain(note) })
 
     if (!tree.has(id)) {
       records.push(makeRecord(path, i + 1, `功能点不在树里：${id}`, '改用 TREE.md 或 TREE-FULL.md 里存在的功能点 ID，或先补树'))
@@ -282,10 +403,16 @@ function checkPackage(root, changeId) {
     if (status === 'partial') {
       if (!hasReason(note)) {
         records.push(makeRecord(path, i + 1, `状态 partial 但没写剩余缺口：${id}`, '在备注写清还缺什么，例如缺前端入口、缺哪个页面'))
+      } else if (terminal) {
+        records.push(makeWarning(path, i + 1, `${debtPrefix}状态 partial，功能点未完成：${id}（${plain(note)}）${debtSuffix}`, '历史包保留欠账记录；补齐缺口时改 in 并补 AC，确认不做则改 out 并写理由'))
       } else {
         records.push(makeRecord(path, i + 1, `状态 partial，功能点未完成：${id}（${plain(note)}）`, '补齐缺口后改 in；确认不做则改为 out 并写理由'))
       }
     }
+  }
+
+  if (noPoint?.reason && rows > 0) {
+    records.push(makeRecord(path, scope.line, `“覆盖范围”声明无功能点，但覆盖表列了 ${rows} 行`, '二者只能取一个：无功能点的包留空表或只写覆盖范围行；列了行就把功能点写进覆盖范围'))
   }
 
   const headerText = lines.slice(0, start).join('\n')
@@ -307,8 +434,12 @@ function checkPackage(root, changeId) {
     }
   }
   for (const id of implementsIds) {
-    if (seen.get(id)?.status === 'out') {
-      records.push(makeRecord(path, seen.get(id).line, `Implements 的功能点不得标 out：${id}`, '把该行改为 in 或 partial，或在 spec 首部去掉这个 Implements'))
+    const row = seen.get(id)
+    if (row?.status !== 'out') continue
+    if (terminal && hasReason(row.note)) {
+      records.push(makeWarning(path, row.line, `${debtPrefix}Implements 的功能点标 out：${id}${debtSuffix}`, '历史包保留该记录；要把该点纳入时改 in 或 partial，或去掉首部 Implements 声明'))
+    } else {
+      records.push(makeRecord(path, row.line, `Implements 的功能点不得标 out：${id}`, '把该行改为 in 或 partial，或在 spec 首部去掉这个 Implements'))
     }
   }
 
@@ -333,7 +464,6 @@ function checkAll(root) {
   for (const id of ids) {
     const spec = join(base, id, 'spec.md')
     if (!existsSync(spec)) continue
-    if (findCoverageHeading(readLines(spec)) < 0) continue
     const result = checkPackage(root, id)
     records.push(...result.records)
     rows += result.rows
@@ -346,9 +476,13 @@ function checkAll(root) {
 function render(records, stats) {
   const errors = records.filter((record) => record.severity === 'error').length
   const warnings = records.filter((record) => record.severity === 'warning').length
+  const notices = records.filter((record) => record.severity === 'notice').length
   const lines = records.map((record) => `[FP-COVER] ${record.path}:${record.line} MX-G-71 ${record.severity} ${record.message}；${record.hint}`)
-  lines.push(errors ? `FAILED: ${errors} error(s), ${warnings} warning(s)` : `PASS (gate: fp-coverage, checks: ${stats.rows}, warnings: ${warnings})`)
-  return { text: lines.join('\n'), errors, warnings }
+  const tail = `${errors} error(s), ${warnings} warning(s), ${notices} notice(s)`
+  // PASS 行保留 `warnings: <m>)` 结尾，`check-gates.mjs` 的子门禁计数正则按此解析；
+  // notice 数放在括号后，不破坏既有汇总。
+  lines.push(errors ? `FAILED: ${tail}` : `PASS (gate: fp-coverage, checks: ${stats.rows}, warnings: ${warnings}) notices: ${notices}`)
+  return { text: lines.join('\n'), errors, warnings, notices }
 }
 
 function parseArgs(argv) {
@@ -393,7 +527,7 @@ function treeFixture(change = 'CHG-GATE-001') {
 }
 
 function coverageFixture(rows, scope = ['PRD-AAA-001', 'PRD-AAA-002'], extra = {}) {
-  const scopeText = scope.map((id) => `\`${id}\``).join('、')
+  const scopeText = extra.scopeText ?? scope.map((id) => `\`${id}\``).join('、')
   const table = [
     '| 功能点ID | 状态 | 覆盖它的 AC | 备注 |',
     '|---|---|---|---|',
@@ -402,6 +536,7 @@ function coverageFixture(rows, scope = ['PRD-AAA-001', 'PRD-AAA-002'], extra = {
   return [
     '# CHG-GATE-001 夹具',
     '',
+    ...(extra.status ? [`- 状态：${extra.status}`, ''] : []),
     `Implements: \`${extra.implements ?? 'PRD-AAA-001'}\``,
     '',
     '## 14. 功能点覆盖',
@@ -436,6 +571,14 @@ function buildCase(name, { change = coverageFixture(BASE_PASS_ROWS), product = p
 
 function errorsOf(result) {
   return result.records.filter((record) => record.severity === 'error')
+}
+
+function warningsOf(result) {
+  return result.records.filter((record) => record.severity === 'warning')
+}
+
+function noticesOf(result) {
+  return result.records.filter((record) => record.severity === 'notice')
 }
 
 function runSelfTest() {
@@ -570,11 +713,39 @@ function runSelfTest() {
   const noScopeDir = buildCase('fail-no-scope', { change: coverageFixture(BASE_PASS_ROWS, [], { omitScope: true }) })
   check('缺覆盖范围行', count(checkPackage(noScopeDir, 'CHG-GATE-001'), /缺少“覆盖范围”行/), 1)
 
-  const noSectionDir = buildCase('fail-no-section', {
-    change: ['# CHG-GATE-001 夹具', '', 'Implements: `PRD-AAA-001`', '', '## 1. 背景', '', '正文。'].join('\n'),
+  // 缺覆盖节不再被默认扫描跳过：非 draft 记 error，draft 记 warning，状态行缺失按非 draft 处理。
+  const missingSectionBody = (header = []) =>
+    ['# CHG-GATE-001 夹具', '', ...header, '', 'Implements: `PRD-AAA-001`', '', '## 1. 背景', '', '正文。'].join('\n')
+
+  const noSectionDir = buildCase('fail-no-section', { change: missingSectionBody(['- 状态：进行中（2026-11-21）']) })
+  const noSection = checkPackage(noSectionDir, 'CHG-GATE-001')
+  check('非 draft 缺覆盖节时单包检查记 error', count(noSection, /缺少“功能点覆盖”节/), 1)
+  check('非 draft 缺覆盖节时默认扫描记 error', errorsOf(checkAll(noSectionDir)).length, 1)
+  checkTrue(
+    '缺节提示写到 spec.md 并指向模板',
+    (noSection.records[0]?.hint ?? '').includes('specs/changes/CHG-GATE-001/spec.md') && (noSection.records[0]?.hint ?? '').includes(TEMPLATE),
+    noSection.records[0]?.hint ?? '（无提示）',
+  )
+
+  const statuslessDir = buildCase('fail-no-section-no-status', { change: missingSectionBody() })
+  check('未读到状态行时按非 draft 记 error', errorsOf(checkAll(statuslessDir)).length, 1)
+
+  const draftDir = buildCase('warn-no-section-draft', { change: missingSectionBody(['- 状态：`草稿`（实现未开始）']) })
+  const draftAll = checkAll(draftDir)
+  check('draft 包缺覆盖节时默认扫描不记 error', errorsOf(draftAll).length, 0)
+  check('draft 包缺覆盖节时默认扫描记 warning', warningsOf(draftAll).length, 1)
+  check('draft 包缺覆盖节时单包检查记 warning', warningsOf(checkPackage(draftDir, 'CHG-GATE-001')).length, 1)
+
+  const proposalDraftDir = buildCase('warn-no-section-proposal-draft', { change: missingSectionBody() })
+  writeFixture(proposalDraftDir, {
+    'specs/changes/CHG-GATE-001/proposal.md': ['# CHG-GATE-001 提案', '', '- 状态：`proposed`（实现未开始）', ''].join('\n'),
   })
-  check('缺覆盖节时单包检查记 error', count(checkPackage(noSectionDir, 'CHG-GATE-001'), /缺少“功能点覆盖”节/), 1)
-  check('缺覆盖节时默认扫描不记 error', errorsOf(checkAll(noSectionDir)).length, 0)
+  check('spec 无状态行时按 proposal 的 draft 记 warning', warningsOf(checkAll(proposalDraftDir)).length, 1)
+
+  const tableDraftDir = buildCase('warn-no-section-table-draft', { change: missingSectionBody(['| 状态 | `草稿`（实现未开始） |']) })
+  check('表格状态行也认 draft', warningsOf(checkAll(tableDraftDir)).length, 1)
+
+  check('有覆盖节但状态非法时默认扫描仍记 error', count(checkAll(badStatusDir), /状态非法/), 1)
 
   const implementsOutDir = buildCase('fail-implements-out', {
     change: coverageFixture(
@@ -623,6 +794,62 @@ function runSelfTest() {
   })
   check('表头后缺分隔行', count(checkPackage(noSeparatorDir, 'CHG-GATE-001'), /表头后缺少分隔行/), 1)
 
+  // 严重度分级从第 35 条起：终态包的历史欠账记 warning，未关闭包同样内容仍记 error。
+  const partialRows = [
+    '| `PRD-AAA-001` | in | `AC-AAA-001-01` | 前端入口：右栏任务组 |',
+    '| `PRD-AAA-002` | partial | `AC-AAA-002-01` | 缺前端入口：任务概览与进度尚未接入 |',
+  ]
+  const closedPartialDir = buildCase('warn-closed-partial', {
+    change: coverageFixture(partialRows, undefined, { status: '已关闭（2026-11-20 归档）' }),
+  })
+  const closedPartial = checkPackage(closedPartialDir, 'CHG-GATE-001')
+  check('终态包 partial 不记 error', errorsOf(closedPartial).length, 0)
+  check('终态包 partial 记 1 条 warning', warningsOf(closedPartial).length, 1)
+  checkTrue('终态包 partial 文案写明历史欠账', warningsOf(closedPartial).some((record) => /历史欠账/.test(record.message)))
+
+  const openPartialDir = buildCase('fail-open-partial', {
+    change: coverageFixture(partialRows, undefined, { status: '进行中（2026-11-21）' }),
+  })
+  check('未关闭包同样 partial 仍记 error', count(checkPackage(openPartialDir, 'CHG-GATE-001'), /功能点未完成/), 1)
+
+  const closedImplementsOutDir = buildCase('warn-closed-implements-out', {
+    change: coverageFixture(
+      [
+        '| `PRD-AAA-001` | out | — | 跨域：本次不做 |',
+        '| `PRD-AAA-002` | out | — | 跨域：归 P6 团队域，本次不做 |',
+      ],
+      ['PRD-AAA-001', 'PRD-AAA-002'],
+      { implements: 'PRD-AAA-001', status: '已关闭（2026-11-20 归档）' },
+    ),
+  })
+  const closedImplementsOut = checkPackage(closedImplementsOutDir, 'CHG-GATE-001')
+  check('终态包 Implements 点标 out 记 warning', warningsOf(closedImplementsOut).length, 1)
+  check('终态包 Implements 点标 out 不记 error', errorsOf(closedImplementsOut).length, 0)
+
+  const closedNoSectionDir = buildCase('fail-closed-no-section', {
+    change: missingSectionBody(['- 状态：已关闭（2026-11-20 归档）']),
+  })
+  const closedNoSection = checkAll(closedNoSectionDir)
+  check('终态包缺覆盖节仍记 error', errorsOf(closedNoSection).length, 1)
+  check('终态包缺覆盖节不因状态降为 warning', warningsOf(closedNoSection).length, 0)
+
+  // 无功能点的声明形态：括号里有理由放过并记 1 条 notice，没有理由记 error。
+  const noPointTree = treeFixture('—')
+  const noPointRows = []
+  const noPointReasonDir = buildCase('pass-no-point-reason', {
+    change: coverageFixture(noPointRows, [], { scopeText: '无功能点（流程与框架变更）', implements: 'N/A' }),
+    tree: noPointTree,
+  })
+  const noPointReason = checkPackage(noPointReasonDir, 'CHG-GATE-001')
+  check('无功能点带理由不记 error', errorsOf(noPointReason).length, 0)
+  check('无功能点带理由记 1 条 notice', noticesOf(noPointReason).length, 1)
+
+  const noPointNoReasonDir = buildCase('fail-no-point-no-reason', {
+    change: coverageFixture(noPointRows, [], { scopeText: '无功能点', implements: 'N/A' }),
+    tree: noPointTree,
+  })
+  check('无功能点没写理由记 error', count(checkPackage(noPointNoReasonDir, 'CHG-GATE-001'), /括号里没有理由/), 1)
+
   check('合法样例退出码', errorsOf(pass).length ? 1 : 0, 0)
   check('partial 样例退出码', errorsOf(partial).length ? 1 : 0, 1)
   checkTrue(
@@ -655,7 +882,7 @@ if (!existsSync(join(root, 'specs'))) {
 const result = options.change ? checkPackage(root, options.change) : checkAll(root)
 const output = render(result.records, result)
 if (options.json) {
-  console.log(JSON.stringify({ gate: 'fp-coverage', checks: result.rows, warnings: output.warnings, errors: output.errors, points: result.points ?? [], records: result.records }, null, 2))
+  console.log(JSON.stringify({ gate: 'fp-coverage', checks: result.rows, warnings: output.warnings, notices: output.notices, errors: output.errors, points: result.points ?? [], records: result.records }, null, 2))
 } else {
   console.log(output.text)
 }

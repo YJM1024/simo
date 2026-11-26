@@ -1,4 +1,4 @@
-import type { SessionSpecProjection, Artifact, Message, PermissionState, Session, SessionOverview, StatsBucket, StatsTotals, Task, Usage } from './types'
+import type { SessionSpecProjection, Artifact, Message, PermissionState, Session, SessionOverview, StatsBucket, StatsTotals, Task, TaskPlan, Usage } from './types'
 
 export class ApiError extends Error {
   status: number
@@ -260,7 +260,7 @@ export function connectEvents(sessionId: string, handlers: {
           return
         }
         // §17.5.3：任务事件按任务 id 透传，payload 原样交给上层做增量与去重。
-        if (data && typeof data.id === 'string' && (frame.type === 'task.created' || frame.type === 'task.updated' || frame.type === 'task.step' || frame.type === 'task.trace' || frame.type === 'task.report' || frame.type === 'task.reminder')) {
+        if (data && typeof data.id === 'string' && (frame.type === 'task.created' || frame.type === 'task.updated' || frame.type === 'task.progress' || frame.type === 'task.step' || frame.type === 'task.trace' || frame.type === 'task.report' || frame.type === 'task.reminder')) {
           handlers.onEvent?.({ type: frame.type, id: data.id, eventId, data: data as unknown as Record<string, unknown> })
           return
         }
@@ -308,6 +308,23 @@ export function connectEvents(sessionId: string, handlers: {
  */
 export function searchMessages(q: string): Promise<{ messages?: Array<{ sessionId: string }> }> {
   return request(`/api/messages/search?q=${encodeURIComponent(q)}`)
+}
+
+export interface ChildSessionSummary {
+  id: string
+  title: string
+  createdAt: number
+  archived: number
+  /** 该子会话自己的任务数（tasks.session_id 精确匹配，不递归孙会话）。 */
+  taskCount: number
+}
+
+/**
+ * 直接子会话列表（PRD-TASK-005）：只回一层，顺序与投影里的 childSessionIds 一致。
+ * 右栏「含 N 个子会话」的 N 取自投影，展开用这里的标题与任务数。
+ */
+export function getSessionChildren(id: string): Promise<{ children?: ChildSessionSummary[]; count?: number }> {
+  return request(`/api/sessions/${encodeURIComponent(id)}/children`)
 }
 
 export function archiveSession(id: string): Promise<unknown> {
@@ -469,8 +486,44 @@ export async function decideTaskConfirmation(sessionId: string, taskId: string, 
   return afterSessionMutation(pending)
 }
 
-/** 等待资源或额度：恢复任务（N7）。 */
-export async function resumeTask(sessionId: string, taskId: string, reason: string): Promise<unknown> {
-  const pending = readTaskBody<unknown>(await send(`/api/sessions/${encodeURIComponent(sessionId)}/tasks/${encodeURIComponent(taskId)}/resume`, { method: 'POST', body: JSON.stringify({ reason }) }))
+/** 等待资源或额度：恢复任务（N7）。响应带 resumedStepId，表示从哪一步继续。 */
+export interface ResumeTaskPayload {
+  ok?: boolean
+  task?: unknown
+  resumedStepId?: string
+}
+
+export async function resumeTask(sessionId: string, taskId: string, reason: string): Promise<ResumeTaskPayload> {
+  const pending = readTaskBody<ResumeTaskPayload>(await send(`/api/sessions/${encodeURIComponent(sessionId)}/tasks/${encodeURIComponent(taskId)}/resume`, { method: 'POST', body: JSON.stringify({ reason }) }))
+  return afterSessionMutation(pending)
+}
+
+// ---- PRD-TASK-004 任务方案（复杂度分级与确认门禁） ----
+
+export interface TaskPlanPayload {
+  ok?: boolean
+  complexity?: string
+  requiresConfirmation?: boolean
+  planId?: string
+  planMessageId?: string
+  taskCount?: number
+  childSessionCount?: number
+  plan?: TaskPlan
+  tasks?: Task[]
+  childSessionIds?: string[]
+}
+
+// 方案卡只由对话回合在服务端原子创建（DEC-39：确认前不建任务/子会话/产物），
+// 前端不再提供单独的创建入口，避免同一段对话被二次建方案；这里只保留确认与拒绝。
+
+/** 确认方案：服务端在同一事务内派生任务与子会话；重复确认幂等。 */
+export async function confirmTaskPlan(sessionId: string, planId: string): Promise<TaskPlanPayload> {
+  const pending = readTaskBody<TaskPlanPayload>(await send(`/api/sessions/${encodeURIComponent(sessionId)}/task-plans/${encodeURIComponent(planId)}/confirm`, { method: 'POST' }))
+  return afterSessionMutation(pending)
+}
+
+/** 拒绝方案：只改状态、不派生；已拒绝重复拒绝幂等，已确认再拒绝返回 409。 */
+export async function rejectTaskPlan(sessionId: string, planId: string, reason: string): Promise<TaskPlanPayload> {
+  const pending = readTaskBody<TaskPlanPayload>(await send(`/api/sessions/${encodeURIComponent(sessionId)}/task-plans/${encodeURIComponent(planId)}/reject`, { method: 'POST', body: JSON.stringify({ reason }) }))
   return afterSessionMutation(pending)
 }

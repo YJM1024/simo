@@ -222,6 +222,7 @@ v0.4（2026-11-25，CHG-CONV-007 T01）补 46 条，编号 CT-CONV-501 至 CT-CO
 | CT-CONV-137 | `task_context_too_large` | 413 | 目标、输入或约束合计超过上限 | 无 | 不适用 | 要求删减后重试 |
 | CT-CONV-138 | `permission_denied` | 403 | 路径越出工作区、工具不在白名单、未授权网络或子进程 | `path` 或 `tool` | 不泄露 | 展示为工具调用失败，不重试 |
 | CT-CONV-139 | `task_executor_unavailable` | 503 | 任务模块已启用但执行器未装配 | 无 | 不适用 | 禁用发起入口并提示稍后重试 |
+| CT-CONV-140 | `task_session_required` | 400 | 旧路由 `GET /api/tasks/{id}` 缺少 `sessionId` 查询参数 | 无 | 不适用 | 补 `sessionId`，或改用 `/api/sessions/{sid}/tasks/{taskId}` |
 
 错误信封固定为 `{"ok":false,"error":"...","code":"..."}`；除 `task_state_conflict` 与 `permission_denied` 外不追加字段，`archive_blocked` 的 `blockers[]` 沿用既有归档门禁。
 

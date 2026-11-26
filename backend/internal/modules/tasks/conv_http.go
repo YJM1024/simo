@@ -22,6 +22,7 @@ func (m *Module) registerConvHTTP(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/sessions/{id}/tasks/{taskId}/confirmation", m.handleConvConfirmation)
 	mux.HandleFunc("POST /api/sessions/{id}/tasks/{taskId}/resume", m.handleConvResume)
 	mux.HandleFunc("GET /api/sessions/{id}/deliverables", m.handleConvDeliverables)
+	m.registerPlanHTTP(mux)
 }
 
 func (m *Module) readJSON(r *http.Request, target any) error {

@@ -95,3 +95,16 @@ Change：CHG-LEGACY-P2-TASK
 
 依赖：无新增外部依赖；证据来自本包 `test-plan.md` 与 `evidence.md` 引用的既有报告。
 - 风险：历史证据为引用而非本轮重跑，未验证项按 `missing` 记，不据此宣称通过。
+
+## 8. 功能点覆盖
+
+覆盖范围：`PRD-TASK-001`、`PRD-TASK-002`、`PRD-TASK-003`、`PRD-TASK-006`、`PRD-TASK-004`、`PRD-TASK-005`
+
+| 功能点ID | 状态 | 覆盖它的 AC | 备注 |
+|---|---|---|---|
+| `PRD-TASK-001` | partial | `AC-TASK-001-01` | 后端 tasks 列表、详情、状态与右栏概览已有，执行组与任务详情面未完成 |
+| `PRD-TASK-002` | partial | `AC-TASK-002-01` | 右栏有进度展示，进度口径与后端聚合未形成可判定 AC |
+| `PRD-TASK-003` | out | — | 未实现：只有执行器与异步运行基础，开始/结束消息解耦与恢复未做 |
+| `PRD-TASK-006` | partial | `AC-TASK-006-01` | 后端 cancel、retry、runtime 路由存在，预算、并发与恢复未验收 |
+| `PRD-TASK-004` | out | — | 未实现：C0–C4 规则只在 docs/task-complexity.md，代码与测试未做 |
+| `PRD-TASK-005` | out | — | 未实现：childSessionIds 与任务归属规则已定，代码与测试未做 |

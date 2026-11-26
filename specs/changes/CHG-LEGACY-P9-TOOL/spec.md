@@ -92,3 +92,17 @@ Change：CHG-LEGACY-P9-TOOL
 
 依赖：无新增外部依赖；证据来自本包 `test-plan.md` 与 `evidence.md` 引用的既有报告。
 - 风险：历史证据为引用而非本轮重跑，未验证项按 `missing` 记，不据此宣称通过。
+
+## 8. 功能点覆盖
+
+覆盖范围：`PRD-TOOL-001`、`PRD-TOOL-002`、`PRD-TOOL-003`、`PRD-TOOL-004`、`PRD-TOOL-005`、`PRD-TOOL-006`、`PRD-TOOL-007`
+
+| 功能点ID | 状态 | 覆盖它的 AC | 备注 |
+|---|---|---|---|
+| `PRD-TOOL-001` | partial | `AC-TOOL-001-01` | 工具注册与列表已有，权限与启用开关 AC 未全过 |
+| `PRD-TOOL-002` | partial | `AC-TOOL-002-01` | 工具调用与结果渲染已有，超时、取消与错误 AC 未验收 |
+| `PRD-TOOL-003` | out | — | 未实现：没有工具市场、安装与版本管理 |
+| `PRD-TOOL-004` | out | — | 未实现：没有自定义工具定义与调试入口 |
+| `PRD-TOOL-005` | partial | `AC-TOOL-005-01` | 内置工具与模型绑定已有，参数校验与失败提示 AC 未验收 |
+| `PRD-TOOL-006` | partial | `AC-TOOL-006-01` | 工具审计与日志表存在，查询与导出 AC 未验收 |
+| `PRD-TOOL-007` | out | — | 未实现：没有工具评测与对比 |

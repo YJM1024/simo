@@ -58,6 +58,36 @@ describe('TaskDetailLayer', () => {
     expect(screen.getByText('暂无任务详情')).toBeInTheDocument()
   })
 
+  it('offers exactly one resume entry while waiting for budget and reports the resumed step', async () => {
+    const user = userEvent.setup()
+    const onResume = vi.fn()
+    const paused = detail({
+      task: task({ status: 'running', waitingReason: 'resource' }),
+      steps: [
+        step(),
+        step({ id: 's-2', seq: 2, title: '撰写正文', status: 'running', traceCount: 0 }),
+        step({ id: 's-3', seq: 3, title: '校对', status: 'pending', traceCount: 0 }),
+      ],
+      currentStepId: 's-2',
+    })
+    const { rerender } = render(<TaskDetailLayer open detail={paused} loading={false} onClose={vi.fn()} onResume={onResume} />)
+    const box = document.querySelector('[data-task-resume="resource"]') as HTMLElement
+    expect(box).toBeTruthy()
+    expect(within(box).getByText(/第 2 步「撰写正文」/)).toBeInTheDocument()
+    const entries = screen.getAllByRole('button', { name: '恢复任务' })
+    expect(entries).toHaveLength(1)
+    await user.click(entries[0])
+    expect(onResume).toHaveBeenCalledTimes(1)
+
+    rerender(<TaskDetailLayer open detail={paused} loading={false} onClose={vi.fn()} onResume={onResume} resumeBusy resumeNotice="已从第 2 步「撰写正文」继续" />)
+    expect(screen.getByRole('status')).toHaveTextContent('已从第 2 步「撰写正文」继续')
+    expect(screen.getByRole('button', { name: '恢复中…' })).toBeDisabled()
+
+    // 非资源等待的任务不出现恢复入口。
+    rerender(<TaskDetailLayer open detail={detail()} loading={false} onClose={vi.fn()} onResume={onResume} />)
+    expect(document.querySelector('[data-task-resume="resource"]')).toBeNull()
+  })
+
   it('renders the header, computed metadata, context, budget and deliverable files', () => {
     render(<TaskDetailLayer open detail={detail()} loading={false} onClose={vi.fn()} onOpenFile={vi.fn()} />)
     const dialog = screen.getByRole('dialog', { name: '任务详情' })
@@ -69,7 +99,8 @@ describe('TaskDetailLayer', () => {
     expect(within(head).getByText('只读')).toBeInTheDocument()
     expect(within(dialog.querySelector('.task-detail-title-row') as HTMLElement).getByText('整理周报')).toBeInTheDocument()
     expect(within(dialog.querySelector('.task-detail-title-row') as HTMLElement).getByText('进行中')).toBeInTheDocument()
-    expect(screen.getByText('2 步 · 已完成 1 · 产出 1 个')).toBeInTheDocument()
+    // 详情 meta 在 001-02 起追加「· 尝试 n 次」「· 进度 x%」，这里用子串正则匹配前半段。
+    expect(screen.getByText(/2 步 · 已完成 1 · 产出 1 个/)).toBeInTheDocument()
     expect(screen.getByText('输出周报')).toBeInTheDocument()
     expect(screen.getByText('中文')).toBeInTheDocument()
     expect(screen.getByText('素材.md')).toBeInTheDocument()

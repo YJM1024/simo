@@ -14,7 +14,7 @@ import (
 	"simo/internal/platform/workspace"
 )
 
-// TestMigrationAndMockExecutorProgress 校验 tasks 迁移到 v9，且 mock 执行器仍能推进任务。
+// TestMigrationAndMockExecutorProgress 校验 tasks 迁移到 v11，且 mock 执行器仍能推进任务。
 func TestMigrationAndMockExecutorProgress(t *testing.T) {
 	home := t.TempDir()
 	db, err := sqlite.Open(filepath.Join(home, "simo.db"))
@@ -41,9 +41,10 @@ func TestMigrationAndMockExecutorProgress(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if version != 9 {
-		t.Fatalf("tasks 迁移版本应为 9，got %d", version)
+	if version != 11 {
+		t.Fatalf("tasks 迁移版本应为 11，got %d", version)
 	}
+	createMessagesTable(t, db)
 	// v8 的 14 列必须都在。
 	rows, err := db.Query(ctx, `SELECT name FROM pragma_table_info('tasks')`)
 	if err != nil {
@@ -61,7 +62,7 @@ func TestMigrationAndMockExecutorProgress(t *testing.T) {
 	_ = rows.Close()
 	for _, name := range []string{"mode", "batch_id", "goal", "inputs_json", "constraints_json",
 		"context_json", "waiting_reason", "waiting_since", "started_at", "finished_at",
-		"fail_reason", "deadline_at", "deadline_reminded_at", "trigger_count"} {
+		"fail_reason", "deadline_at", "deadline_reminded_at", "trigger_count", "end_message_id"} {
 		if !columns[name] {
 			t.Fatalf("tasks 缺列 %s", name)
 		}

@@ -520,6 +520,73 @@ export interface MessageTaskInfo {
   onConfirm?: () => void
   onCancel?: () => void
   onResume?: () => void
+  /** 方案卡（PRD-TASK-004）：确认或拒绝任务方案。 */
+  onConfirmPlan?: () => void
+  onRejectPlan?: () => void
+}
+
+const PLAN_COMPLEXITY_LABEL: Record<string, string> = {
+  C0: '即时', C1: '轻任务', C2: '任务执行', C3: '子会话任务', C4: '协作任务',
+}
+const PLAN_STATUS_LABEL: Record<string, string> = {
+  pending: '待确认', confirmed: '已确认', rejected: '已拒绝',
+}
+
+/**
+ * 父会话消息流里的任务方案卡：等级、计划步骤数、将创建的任务与子会话数，
+ * 待确认时提供确认与拒绝各一个入口；确认/拒绝后卡变只读终态（PRD-TASK-004、F5）。
+ */
+function TaskPlanCard({ message, readOnly, busy, error, onConfirm, onReject }: {
+  message: Message
+  readOnly: boolean
+  busy?: boolean
+  error?: string
+  onConfirm?: () => void
+  onReject?: () => void
+}): React.ReactNode {
+  const plan = message.taskPlan
+  if (!plan) return null
+  const [now, setNow] = useState(() => Date.now())
+  const pending = plan.status === 'pending'
+  useEffect(() => {
+    if (!pending) return
+    const timer = window.setInterval(() => setNow(Date.now()), 30_000)
+    return () => window.clearInterval(timer)
+  }, [pending])
+  const waitingMinutes = pending && plan.createdAt > 0 ? Math.floor((now - plan.createdAt) / 60_000) : 0
+  const overdue = waitingMinutes >= 30
+  const expired = waitingMinutes >= 12 * 60
+  const complexity = plan.complexity || 'C0'
+  const label = PLAN_COMPLEXITY_LABEL[complexity] ?? complexity
+  return (
+    <article className="msg-plan-card" data-status={plan.status} data-complexity={complexity} data-plan-id={plan.id}>
+      <div className="msg-plan-head">
+        <span className={`msg-plan-level plan-level-${complexity}`}>{complexity}</span>
+        <b className="msg-plan-title">任务方案 · {label}</b>
+        <span className={`msg-plan-status is-${plan.status}`}>{PLAN_STATUS_LABEL[plan.status] ?? plan.status}</span>
+      </div>
+      <p className="msg-plan-summary">
+        计划 {plan.planSteps.length} 步，将创建 {plan.taskCount} 个任务、{plan.childSessionCount} 个子会话。
+      </p>
+      {plan.planSteps.length > 0 && (
+        <ol className="msg-plan-steps">
+          {plan.planSteps.map((step, index) => <li key={`${index}-${step}`}>{step}</li>)}
+        </ol>
+      )}
+      {plan.requestText && plan.requestText !== message.text && <p className="msg-plan-request">{plan.requestText}</p>}
+      {pending && overdue && !expired && <p className="msg-plan-hint" role="status">已等待 {waitingMinutes} 分钟未确认，确认后才会创建任务。</p>}
+      {pending && expired && <p className="msg-plan-hint is-expired" role="status">待确认超时（超过 12 小时），方案不会自动执行。</p>}
+      {plan.status === 'confirmed' && <p className="msg-plan-result">已确认，任务与子会话已创建。</p>}
+      {plan.status === 'rejected' && <p className="msg-plan-result">已拒绝，未创建任何任务或子会话{plan.rejectedReason ? `（${plan.rejectedReason}）` : ''}。</p>}
+      {error && <p className="msg-task-error" role="alert">{error}</p>}
+      {pending && !readOnly && (
+        <div className="msg-plan-actions">
+          <button type="button" className="btn sm primary" disabled={busy} onClick={onConfirm}>{busy ? '处理中…' : '确认执行'}</button>
+          <button type="button" className="btn sm" disabled={busy} onClick={onReject}>拒绝</button>
+        </div>
+      )}
+    </article>
+  )
 }
 
 export function MessageItem({ message, onCardAction, readOnly = false, onRetry, taskInfo }: { message: Message; onCardAction: (card: Card, action: string, payload: Record<string, unknown>) => Promise<void>; readOnly?: boolean; onRetry?: (message: Message) => void; taskInfo?: MessageTaskInfo }): React.ReactNode {
@@ -558,8 +625,22 @@ export function MessageItem({ message, onCardAction, readOnly = false, onRetry, 
   const rawCategory = message.category === 'delivery' ? 'progress' : message.category
   const categoryKey = isUser ? '' : (rawCategory && CATEGORY_LABEL[rawCategory] ? rawCategory : 'consultation')
   const category = categoryKey ? CATEGORY_LABEL[categoryKey] : ''
+  // PRD-TASK-003：带 taskId 的进度消息渲染成普通消息加任务链接，任务卡仍只属于 category=task。
+  const progressTask = !isUser && message.category === 'progress' && Boolean(message.taskId)
   // 任务卡分支必须早于类别回退。批量消息同时带首个任务的 taskId 与 batchId、taskCount，
   // 判定顺序必须是「batchId + taskCount>1」先于 taskId，否则汇总卡分支永远走不到（AC-CONV-009-02、§17.5）。
+  if (!isUser && message.category === 'confirmation' && message.taskPlan) {
+    return (
+      <TaskPlanCard
+        message={message}
+        readOnly={readOnly}
+        busy={taskInfo?.busy}
+        error={taskInfo?.error}
+        onConfirm={taskInfo?.onConfirmPlan}
+        onReject={taskInfo?.onRejectPlan}
+      />
+    )
+  }
   if (!isUser && message.category === 'task') {
     const batchSummary = Boolean(message.batchId) && (message.taskCount ?? 0) > 1
     if (batchSummary || (!message.taskId && message.batchId)) {
@@ -594,7 +675,7 @@ export function MessageItem({ message, onCardAction, readOnly = false, onRetry, 
     }
   }
   return (
-    <article className={`msg ${isUser ? 'from-user' : 'from-agent'}`} data-message-id={message.id} data-task-id={message.taskId} data-session-id={message.sessionId}>
+    <article className={`msg ${isUser ? 'from-user' : 'from-agent'}${progressTask ? ' msg-progress' : ''}`} data-message-id={message.id} data-task-id={message.taskId} data-session-id={message.sessionId}>
       <span className="msg-avatar">{isUser ? '你' : '墨'}</span>
       <div className="msg-body">
         <div className="msg-meta"><b>{isUser ? '你' : '司墨'}</b><span>·</span>{category && <><span className={`tag msg-tag msg-tag-${categoryKey}`}>{category}</span><span>·</span></>}<span>{formatTime(message.at)}</span>{failed && <span className="badge danger">失败</span>}{message.text.trim() && <button type="button" className="msg-copy" onClick={() => void copy()} aria-label="复制消息">{copyState === 'copied' ? '已复制' : copyState === 'error' ? '复制失败' : '复制'}</button>}</div>
@@ -603,6 +684,7 @@ export function MessageItem({ message, onCardAction, readOnly = false, onRetry, 
           {failed && onRetry && !readOnly && <button className="btn sm" type="button" onClick={() => onRetry(message)}>重试</button>}
           {(message.cards ?? []).map((card) => <CardBlock key={card.id} card={card} onSubmit={onCardAction} readOnly={readOnly} />)}
         </div>
+        {progressTask && <div className="msg-progress-link"><button type="button" onClick={() => { if (taskInfo?.task) taskInfo.onOpenTask?.(taskInfo.task); else taskInfo?.onOpen?.() }}>{taskInfo?.task ? `任务：${taskInfo.task.title}` : '查看任务'}</button></div>}
       </div>
     </article>
   )
@@ -1193,7 +1275,7 @@ export function saveInspOverviewCollapsed(sessionId: string | undefined, blocks:
 }
 
 /** 概览四块：固定顺序 目标 / 输入 / 任务 / 交付物，块头可折叠且按会话记忆。 */
-export function OverviewContent({ session, projection, loading, error = '', onRetry, onTaskClick, onArtifactOpen, counts, onJumpTasks, onJumpDeliverables }: {
+export function OverviewContent({ session, projection, loading, error = '', onRetry, onTaskClick, onArtifactOpen, counts, onJumpTasks, onJumpDeliverables, childSessions = [], onOpenChildSession }: {
   session: Session | null
   projection: import('../types').SessionSpecProjection | null
   loading: boolean
@@ -1206,11 +1288,20 @@ export function OverviewContent({ session, projection, loading, error = '', onRe
   onJumpTasks?: () => void
   /** 交付物块的「还有 N 个」跳到交付物标签。 */
   onJumpDeliverables?: () => void
+  /**
+   * PRD-TASK-005：直接子会话（只一层）。数量以投影的 childSessionCount 为准，
+   * 这里补标题；只有一个子会话时点入口直接进入，多个时先展开列表再选。
+   */
+  childSessions?: Array<{ id: string; title: string }>
+  /** 进入子会话视图：切到该会话，任务列表与普通会话同口径（只含它自己的任务）。 */
+  onOpenChildSession?: (sessionId: string) => void
 }): React.ReactNode {
   const statusLabel = projection ? ({ completed: '已完成', active: '进行中', draft: '草稿', blocked: '阻塞', done: '已完成' }[projection.status] ?? projection.status) : ''
   const [collapsedBlocks, setCollapsedBlocks] = useState<string[]>(() => readInspOverviewCollapsed(session?.id))
+  const [childOpen, setChildOpen] = useState(false)
   useEffect(() => {
     setCollapsedBlocks(readInspOverviewCollapsed(session?.id))
+    setChildOpen(false)
   }, [session?.id])
   const toggleBlock = (block: string): void => {
     setCollapsedBlocks((prev) => {
@@ -1231,8 +1322,14 @@ export function OverviewContent({ session, projection, loading, error = '', onRe
     ...(projection?.tasks.pending.items ?? []),
     ...(projection?.tasks.done.items ?? []),
   ]
-  const visibleTasks = overviewTasks.slice(0, 2)
+  const visibleTasks = overviewTasks.slice(0, 3)
   const moreTasks = Math.max(0, taskCounts.all - visibleTasks.length)
+  // 子会话入口的数量只认投影（后端按 sessions.parent_id 实时聚合）；id 用来在只有一个子会话时直接进入。
+  const childSessionCount = projection?.childSessionCount ?? 0
+  const childSessionIds = projection?.childSessionIds ?? []
+  const enterChild = (targetId: string | undefined): void => {
+    if (targetId) onOpenChildSession?.(targetId)
+  }
   const deliverables = projection?.deliverables.items ?? []
   const deliverablesTotal = projection?.deliverables.total ?? deliverables.length
   const visibleDeliverables = deliverables.slice(0, 2)
@@ -1274,6 +1371,37 @@ export function OverviewContent({ session, projection, loading, error = '', onRe
                 ))}
                 {visibleTasks.length === 0 && <p className="insp-text">本会话还没有任务。</p>}
                 {moreTasks > 0 && <button type="button" className="insp-more" onClick={onJumpTasks}>还有 {moreTasks} 个</button>}
+                {childSessionCount > 0 && (
+                  <div className="insp-children" data-child-sessions={childSessionCount}>
+                    <button
+                      type="button"
+                      className="insp-more insp-children-toggle"
+                      aria-expanded={childOpen}
+                      title="这些是子会话里的任务，不计入本会话"
+                      onClick={() => {
+                        // 只有一个子会话时一次点击就进它的视图；多个时先展开，由用户挑。
+                        if (childSessionCount === 1 || childSessions.length === 1) {
+                          enterChild(childSessionIds[0] ?? childSessions[0]?.id)
+                          return
+                        }
+                        setChildOpen((open) => !open)
+                      }}
+                    >含 {childSessionCount} 个子会话</button>
+                    {childOpen && (
+                      <ul className="insp-children-list">
+                        {childSessions.map((child) => (
+                          <li key={child.id}>
+                            <button type="button" className="exec-row" data-child-session-id={child.id} onClick={() => enterChild(child.id)}>
+                              <span className="exec-title" title={child.title}>{child.title}</span>
+                              <span className="exec-time">进入</span>
+                            </button>
+                          </li>
+                        ))}
+                        {childSessions.length === 0 && <li><p className="insp-text">子会话列表加载中…</p></li>}
+                      </ul>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </section>
@@ -1310,6 +1438,8 @@ export function OverviewPanel(props: React.ComponentProps<typeof OverviewContent
 
 type RightPanelProps = React.ComponentProps<typeof OverviewContent> & {
   counts?: TaskCounts
+  /** 当前会话本身是子会话时，任务详情标明来源（父层视角下看到的是子会话的任务）。 */
+  sourceSessionTitle?: string
   tasks?: TaskView[]
   tasksLoading?: boolean
   tasksError?: string
@@ -1350,6 +1480,10 @@ type RightPanelProps = React.ComponentProps<typeof OverviewContent> & {
   graphError?: string
   onCloseDetail?: () => void
   onRetryDetail?: () => void
+  /** 资源等待时详情层里的恢复入口；恢复成功后由 resumeNotice 说明从哪一步继续。 */
+  onResumeDetail?: () => void
+  resumeBusy?: boolean
+  resumeNotice?: string
   onCloseGraph?: () => void
   onRetryGraph?: () => void
   /** 旧概览的「展开执行组」入口在三标签版里不再渲染，属性保留以免调用点改签名。 */
@@ -1414,7 +1548,7 @@ export function RightPanel(props: RightPanelProps): React.ReactNode {
   }
   const selectTab = (key: RightTab): void => {
     // 零任务态：任务标签 aria-disabled，点击不切标签（F-CONV-009-04）。
-    if (key === 'tasks' && (counts?.all ?? 0) === 0) return
+    if (key === 'tasks' && (counts?.all ?? 0) === 0 && !props.tasksLoading) return
     const drawer = isDrawerRange()
     if (drawer) {
       setDrawerOpen(true)
@@ -1455,7 +1589,7 @@ export function RightPanel(props: RightPanelProps): React.ReactNode {
       <nav className="insp-rail" aria-label="右栏导航">
         {RIGHT_TABS.map((item) => {
           const active = item.key === activeTab
-          const disabled = item.key === 'tasks' && countsAll === 0
+          const disabled = item.key === 'tasks' && countsAll === 0 && !props.tasksLoading
           return (
             <button
               key={item.key}
@@ -1499,6 +1633,8 @@ export function RightPanel(props: RightPanelProps): React.ReactNode {
               counts={counts}
               onJumpTasks={props.onJumpToTasks ?? (() => props.onTabChange?.('tasks'))}
               onJumpDeliverables={() => props.onTabChange?.('deliverables')}
+              childSessions={props.childSessions}
+              onOpenChildSession={props.onOpenChildSession}
             />
           ) : activeTab === 'tasks' ? (
             <TasksTab
@@ -1546,6 +1682,10 @@ export function RightPanel(props: RightPanelProps): React.ReactNode {
           onClose={props.onCloseDetail ?? (() => undefined)}
           onRetry={props.onRetryDetail}
           onOpenFile={props.onOpenFile}
+          onResume={props.onResumeDetail}
+          resumeBusy={props.resumeBusy ?? false}
+          resumeNotice={props.resumeNotice ?? ''}
+          sourceSessionTitle={props.sourceSessionTitle}
         />
       )}
       <TaskGraphDialog
@@ -1637,3 +1777,4 @@ export function MetricsDashboard({ state = 'ready', windowKind = '7d', data, onW
     </section>
   )
 }
+

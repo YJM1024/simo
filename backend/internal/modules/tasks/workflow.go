@@ -499,7 +499,7 @@ func (m *Module) reportWorkflowTaskText(task coretask.Task, status, summary, nat
 		b.WriteString(next)
 	}
 	reportID := "msg-" + randomHex(8)
-	task.ReportMessageID = reportID
+	// reportMessageId 固定指开始消息（DEC-41）；工作流汇报只走 task.report 事件。
 	task.UpdatedAt = time.Now().UnixMilli()
 	_ = m.saveTask(context.Background(), task)
 	m.emit(context.Background(), eventlog.TypeTaskReport, map[string]any{
@@ -516,10 +516,15 @@ func (m *Module) retryWorkflowTask(task coretask.Task) {
 	}
 	task.Attempt++
 	task.Status = coretask.StatusPending
+	task.EndMessageID = ""
 	task.Progress = 0
 	task.Summary = "失败后自动重试"
 	task.Phases = resetPhases(task.Phases)
 	task.Steps = resetSteps(task.Steps)
+	// 自动重试与手工重试口径一致：重跑整条任务，两维用量归零、上限沿用任务原有配置
+	// （conv.go 的 resetBudgetUsage 注释）。不复位会把上一次 attempt 的步数计入本次，
+	// 撞上 maxSteps 后按 DEC-40 停在 running + 资源等待，自动重试链永远走不到终态。
+	m.resetBudgetUsage(&task, false)
 	task.UpdatedAt = time.Now().UnixMilli()
 	_ = m.saveTask(context.Background(), task)
 	m.emit(context.Background(), eventlog.TypeTaskUpdated, taskEvent(task, "", ""))

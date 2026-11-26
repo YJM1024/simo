@@ -33,20 +33,22 @@ func (m *Module) runRealAttempt(ctx context.Context, id string, attempt int) {
 	if err != nil || task.Attempt != attempt {
 		return
 	}
-	task.Status = coretask.StatusRunning
-	task.Progress = 5
-	task.UpdatedAt = clock.NowUnixMilli()
+	if !m.beginTaskNotice(context.Background(), &task, 5) {
+		return
+	}
 	m.saveAndEmit(context.Background(), task, "", "")
 	m.insertTaskCheckpoint(task, "dispatch")
 	// 真实执行分支同时维护 task_steps：执行期间有且只有当前步是 running，
 	// 确认后续跑时复用原来的 running 步，不再新建。
 	m.startRunningStep(context.Background(), task)
 
+	budget := m.budgetFor(task)
 	request := coretask.ExecutionRequest{
 		Task:        task,
 		Description: task.Payload,
-		MaxSteps:    8,
-		MaxTokens:   12000,
+		// 预算上限读任务自身的 budget_json（创建时由模块配置写入），不再写死。
+		MaxSteps:  budgetInt(budget, "maxSteps", defaultBudgetSteps),
+		MaxTokens: budgetInt(budget, "maxTokens", defaultBudgetTokens),
 	}
 	if task.WorkflowID != "" {
 		tasks, _ := m.workflowTasks(context.Background(), task.WorkflowID)
@@ -83,15 +85,19 @@ func (m *Module) runRealAttempt(ctx context.Context, id string, attempt int) {
 		task.Progress = 0
 		task.UpdatedAt = clock.NowUnixMilli()
 		m.failRunningStep(context.Background(), task, reason)
+		m.recordBudgetUsage(&task, result.Steps, result.Tokens)
 		m.saveAndEmit(context.Background(), task, "", "")
 		if task.WorkflowID != "" {
 			if task.Attempt <= 2 {
 				m.reportWorkflowTaskText(task, coretask.StatusFailed, task.Summary, "")
 				m.retryWorkflowTask(task)
 			} else {
+				m.finalizeTask(context.Background(), &task)
 				m.reportWorkflowTaskText(task, coretask.StatusFailed, task.Summary, "")
 				m.onWorkflowTaskFinished(task)
 			}
+		} else {
+			m.finalizeTask(context.Background(), &task)
 		}
 		return
 	}
@@ -110,6 +116,8 @@ func (m *Module) runRealAttempt(ctx context.Context, id string, attempt int) {
 			task.Summary = "任务超出 token/步数预算，已暂停"
 		}
 		task.UpdatedAt = clock.NowUnixMilli()
+		// 预算触顶只累计用量，status 保持 running，交给 waitingReason=resource 表达暂停。
+		m.recordBudgetUsage(&task, result.Steps, result.Tokens)
 		m.saveAndEmit(context.Background(), task, "", "")
 		if task.WorkflowID != "" {
 			m.reportWorkflowTaskText(task, coretask.StatusBlocked, task.Summary, result.Report)
@@ -128,6 +136,7 @@ func (m *Module) runRealAttempt(ctx context.Context, id string, attempt int) {
 			task.Summary = "任务等待审批/用户输入，已暂停"
 		}
 		task.UpdatedAt = clock.NowUnixMilli()
+		m.recordBudgetUsage(&task, result.Steps, result.Tokens)
 		m.saveAndEmit(context.Background(), task, "", "")
 		if task.WorkflowID != "" {
 			m.reportWorkflowTaskText(task, coretask.StatusBlocked, task.Summary, result.Report)
@@ -156,7 +165,9 @@ func (m *Module) runRealAttempt(ctx context.Context, id string, attempt int) {
 	task.UpdatedAt = clock.NowUnixMilli()
 	m.writeArtifactReport(task, result.Report)
 	m.completeConvSteps(context.Background(), task)
+	m.recordBudgetUsage(&task, result.Steps, result.Tokens)
 	m.saveAndEmit(context.Background(), task, "", "")
+	m.finalizeTask(context.Background(), &task)
 	if task.WorkflowID != "" {
 		m.reportWorkflowTaskText(task, coretask.StatusDone, task.Summary, result.Report)
 		m.onWorkflowTaskFinished(task)

@@ -483,7 +483,7 @@ func isWSEventType(typ string) bool {
 	switch typ {
 	case eventlog.TypeMessageCreated, eventlog.TypeMessageDelta, eventlog.TypeMessageDone, eventlog.TypeStatus,
 		eventlog.TypeReplyCreated, eventlog.TypeReplyDelta, eventlog.TypeReplyDone, eventlog.TypeReplyRetracted,
-		eventlog.TypeTaskCreated, eventlog.TypeTaskUpdated, eventlog.TypeTaskReport, eventlog.TypeTraceReasoning,
+		eventlog.TypeTaskCreated, eventlog.TypeTaskUpdated, eventlog.TypeTaskProgress, eventlog.TypeTaskReport, eventlog.TypeTraceReasoning,
 		eventlog.TypeWorkflowCreated, eventlog.TypeWorkflowUpdated, eventlog.TypeWorkflowDone,
 		eventlog.TypeViewUpdated, eventlog.TypeViewRender, eventlog.TypeViewBindingFailed, eventlog.TypeViewRendererError,
 		eventlog.TypeTeamCreated, eventlog.TypeTeamArchived, eventlog.TypeTeamTemplateApplied,

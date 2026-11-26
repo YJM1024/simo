@@ -8,7 +8,7 @@
  */
 import { createServer as createHttpServer, request } from 'node:http'
 import { readFile } from 'node:fs/promises'
-import { createServer as createNetServer } from 'node:net'
+import { createServer as createNetServer, connect as netConnect } from 'node:net'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { connect, waitFor, sleep } from '../../lib/ac-cdp.mjs'
@@ -88,6 +88,33 @@ export async function startDistServer({ apiBase, port } = {}) {
         res.end('not found')
       })
   })
+  // WebSocket：/api/events 等 upgrade 请求直连后端，页面才能收到 task.progress 等推送。
+  const sockets = new Set()
+  server.on('upgrade', (req, socket, head) => {
+    if (!(req.url ?? '').startsWith('/api')) { socket.destroy(); return }
+    const upstream = netConnect(Number(api.port || 80), api.hostname, () => {
+      const lines = [`${req.method} ${req.url} HTTP/1.1`]
+      const headers = { ...req.headers, host: `${api.hostname}:${api.port}` }
+      // 页面与后端在真实部署里同源；测试里 dist 站在另一个端口，WS 的 Origin 会被后端按 Host 校验拒绝。
+      // 反代把 Origin 改写成后端自己的源，语义上仍是「同源直连」，不改后端校验。
+      if (headers.origin) headers.origin = `http://${api.hostname}:${api.port}`
+      for (const [key, value] of Object.entries(headers)) {
+        if (Array.isArray(value)) for (const item of value) lines.push(`${key}: ${item}`)
+        else if (value !== undefined) lines.push(`${key}: ${value}`)
+      }
+      upstream.write(`${lines.join('\r\n')}\r\n\r\n`)
+      if (head && head.length > 0) upstream.write(head)
+      upstream.pipe(socket)
+      socket.pipe(upstream)
+    })
+    sockets.add(upstream)
+    sockets.add(socket)
+    const drop = () => { upstream.destroy(); socket.destroy() }
+    upstream.on('error', drop)
+    socket.on('error', drop)
+    upstream.on('close', () => sockets.delete(upstream))
+    socket.on('close', () => sockets.delete(socket))
+  })
   await new Promise((resolve, reject) => {
     server.once('error', reject)
     server.listen(listenPort, '127.0.0.1', resolve)
@@ -97,7 +124,12 @@ export async function startDistServer({ apiBase, port } = {}) {
     url: `http://127.0.0.1:${actual}`,
     port: actual,
     apiBase,
-    close: () => new Promise((resolve) => server.close(() => resolve())),
+    close: () => new Promise((resolve) => {
+      for (const socket of sockets) socket.destroy()
+      sockets.clear()
+      server.close(() => resolve())
+      server.closeAllConnections?.()
+    }),
   }
 }
 

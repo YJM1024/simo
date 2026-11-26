@@ -47,8 +47,8 @@ SYNC-005：完全未实现 → `gap`（P1 唯一 gap）。
 
 | 证据 ID | AC | 类型 | 命令 | 路径 | 生成时间 | 结果 | 可复跑 | 轮次 |
 |---|---|---|---|---|---|---|---|---|
-| E-AC-SYNC-004-01-01 | AC-SYNC-004-01 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-CONV-005/spec.md | 2026-11-21 | missing | 否 | 0 |
-| E-AC-SYNC-004-02-01 | AC-SYNC-004-02 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-CONV-005/spec.md | 2026-11-21 | missing | 否 | 0 |
-| E-AC-SYNC-005-01-01 | AC-SYNC-005-01 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-CONV-005/spec.md | 2026-11-21 | missing | 否 | 0 |
+| E-AC-SYNC-004-01-01 | AC-SYNC-004-01 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-CONV-005/spec.md | 2026-11-21 | missing | 否 | 0 |
+| E-AC-SYNC-004-02-01 | AC-SYNC-004-02 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-CONV-005/spec.md | 2026-11-21 | missing | 否 | 0 |
+| E-AC-SYNC-005-01-01 | AC-SYNC-005-01 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-CONV-005/spec.md | 2026-11-21 | missing | 否 | 0 |
 
 > 本表按 AC 汇总已有证据来源与判定；逐条细节仍以本文件下列各节与 `test-plan.md` 为准。

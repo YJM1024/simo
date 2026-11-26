@@ -37,15 +37,21 @@
  *   失败细节另起一行，格式按 GATES.md：
  *   `[GATE-STRUCT] <path>:<line> MX-G-NN <事实>；<修复动作>`
  *   末两行分别是 `FAILED: <e> error(s), <w> warning(s)`（或 `PASS (gate: struct, ...)`）
- *   与 `N passed, M failed`。退出码 0 无 error，1 有 error，2 参数或根目录错误。
+ *   与 `N passed, M failed`。结构门禁之后以独立进程跑子门禁（两项：
+ *   scripts/check-fp-coverage.mjs（MX-G-71）与 scripts/check-evidence.mjs（MX-G-38 至
+ *   MX-G-43、MX-G-47、MX-G-51），各 120 秒超时，仅 --stage change 运行），
+ *   子门禁原始输出照印，另补 `[GATE-SUB] <name> PASS|FAILED` 与 `[GATE-SUMMARY]` 合计行。
+ *   子门禁的 error 与 warning 分别计入总 error 与总 warning；超时按失败记，spawn 失败
+ *   记 1 error 并把退出码置 2。
+ *   退出码 0 无 error，1 有 error，2 参数、根目录或子门禁参数/环境错误。
  *
  * 用法：
- *   node scripts/check-gates.mjs                    # 扫描 specs/changes/
+ *   node scripts/check-gates.mjs                    # 扫描 specs/changes/ 与子门禁
  *   node scripts/check-gates.mjs --root <dir>       # 指定仓库根
  *   node scripts/check-gates.mjs --change <CHG-ID>  # 只查一个变更包
  *   node scripts/check-gates.mjs --stage pre|change # 开工前或变更级（默认 change）
  *   node scripts/check-gates.mjs --template auto|framework|legacy  按包结构选模板或强制十节/旧八节
- *   node scripts/check-gates.mjs --json             # 机器可读
+ *   node scripts/check-gates.mjs --json             # 机器可读，含 subGates 与 summary
  *   node scripts/check-gates.mjs --self-test        # 夹具自检，跑完清理
  *   node scripts/check-gates.mjs --help
  *
@@ -62,12 +68,34 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs'
+import { spawnSync } from 'node:child_process'
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 const DEFAULT_ROOT = resolve(SCRIPT_DIR, '..')
 const GATE = 'STRUCT'
+// 子门禁：与结构门禁同形，独立进程、固定超时、退出码透传，结果一并进汇总。
+// 每项跑 `node <script> --root <root> [--change <ID>] [--json]`，子脚本自己打印
+// PASS/FAILED 行；这里再补一行 `[GATE-SUB] <name> PASS|FAILED` 与总汇总。
+const SUB_GATES = [
+  {
+    name: 'fp-coverage',
+    script: 'check-fp-coverage.mjs',
+    title: '功能点覆盖门禁（MX-G-71）',
+    timeoutMs: 120_000,
+  },
+  {
+    name: 'evidence',
+    script: 'check-evidence.mjs',
+    title: '证据完整性门禁（MX-G-38 至 MX-G-43、MX-G-47、MX-G-51）',
+    timeoutMs: 120_000,
+    // check-evidence 的 --json 输出是证据项数组，没有 errors/warnings 汇总字段；
+    // 传 --json 会让统计行消失，error 数只能按退出码兜底成 1。这里走文本输出，
+    // 由 parseSubGateCounts 读末行 `FAILED: N error(s), M warning(s)`。
+    json: false,
+  },
+]
 // AC 编号有两种历史形态：新包用三段式 AC-<域>-<子域>-<序号>（如 AC-CONV-005-02），
 // CHG-LEGACY-* 等历史包的冻结验收项用两段式 AC-<域>-<序号>（如 AC-P5-01）。
 // 两段式编号随历史验收项冻结，改名等于改冻结 AC，补编号等于伪造，因此 MX-G-09 的
@@ -1421,7 +1449,114 @@ function toJson(run) {
   }
 }
 
-/* ----------------------------- 自检 ----------------------------- */
+/* ----------------------------- 子门禁 ----------------------------- */
+
+/** 从子门禁文本输出里取末行统计；取不到时按退出码兜底。 */
+function parseSubGateCounts(stdout, exitCode) {
+  const failed = stdout.match(/^FAILED:\s*(\d+) error\(s\),\s*(\d+) warning\(s\)/m)
+  if (failed) return { errors: Number(failed[1]), warnings: Number(failed[2]) }
+  const passed = stdout.match(/^PASS \(gate:[^,]+,\s*checks:\s*\d+,\s*warnings:\s*(\d+)\)/m)
+  if (passed) return { errors: 0, warnings: Number(passed[1]) }
+  return { errors: exitCode === 0 ? 0 : 1, warnings: 0 }
+}
+
+function runSubGate(entry, options) {
+  const args = [join(SCRIPT_DIR, entry.script), '--root', options.root]
+  if (options.change) args.push('--change', options.change)
+  if (options.json && entry.json !== false) args.push('--json')
+  const command = `node ${entry.script}${options.change ? ` --change ${options.change}` : ''}`
+  const startedAt = Date.now()
+  let result
+  try {
+    result = spawnSync(process.execPath, args, {
+      cwd: options.root,
+      encoding: 'utf8',
+      timeout: entry.timeoutMs,
+      windowsHide: true,
+      maxBuffer: 64 * 1024 * 1024,
+    })
+  } catch (error) {
+    return {
+      name: entry.name,
+      title: entry.title,
+      command,
+      stdout: '',
+      stderr: String(error?.message ?? error),
+      exitCode: 2,
+      timedOut: false,
+      spawnError: true,
+      durationMs: Date.now() - startedAt,
+      errors: 1,
+      warnings: 0,
+      detail: null,
+    }
+  }
+  const durationMs = Date.now() - startedAt
+  const stdout = result.stdout ?? ''
+  const stderr = result.stderr ?? ''
+  const timedOut = result.error?.code === 'ETIMEDOUT'
+  const exitCode = typeof result.status === 'number' ? result.status : timedOut ? 1 : 2
+  let detail = null
+  if (options.json && stdout.trim().startsWith('{')) {
+    try {
+      detail = JSON.parse(stdout)
+    } catch {
+      detail = null
+    }
+  }
+  const counts = detail
+    ? { errors: Number(detail.errors ?? 0), warnings: Number(detail.warnings ?? 0) }
+    : parseSubGateCounts(stdout, exitCode)
+  if (timedOut) counts.errors = Math.max(counts.errors, 1)
+  return {
+    name: entry.name,
+    title: entry.title,
+    command,
+    stdout,
+    stderr,
+    exitCode,
+    timedOut,
+    spawnError: Boolean(result.error) && !timedOut,
+    durationMs,
+    errors: counts.errors,
+    warnings: counts.warnings,
+    detail,
+  }
+}
+
+function runSubGates(options) {
+  // 子门禁都是变更级门禁（MX-G-71 在变更级验收前生效），开工前阶段不跑，避免新包在
+  // 还没有覆盖表时被阻断；--stage change 是默认值，等于默认流程一定带上。
+  if (options.stage !== 'change') return []
+  return SUB_GATES.map((entry) => runSubGate(entry, options))
+}
+
+function printSubGates(gates) {
+  for (const gate of gates) {
+    console.log(`[GATE-SUB] ${gate.name} ${gate.command} exit=${gate.exitCode} 用时 ${gate.durationMs} ms`)
+    if (gate.stdout.trim()) console.log(gate.stdout.trimEnd())
+    if (gate.stderr.trim()) console.error(gate.stderr.trimEnd())
+    if (gate.timedOut) console.log(`[GATE-SUB] ${gate.name} TIMEOUT：超过 ${SUB_GATES.find((entry) => entry.name === gate.name)?.timeoutMs ?? 0} ms，本条按失败计`)
+    const state = gate.exitCode === 0 && gate.errors === 0 ? 'PASS' : 'FAILED'
+    console.log(`[GATE-SUB] ${gate.name} ${state}: ${gate.errors} error(s), ${gate.warnings} warning(s)`)
+  }
+}
+
+/** 结构门禁与子门禁的合计口径；退出码 2 只来自参数或环境错误。 */
+function combineGates(run, gates) {
+  const structErrors = run.findings.filter((finding) => finding.severity === 'error').length
+  const structWarnings = run.findings.filter((finding) => finding.severity === 'warning').length
+  const subErrors = gates.reduce((sum, gate) => sum + gate.errors, 0)
+  const subWarnings = gates.reduce((sum, gate) => sum + gate.warnings, 0)
+  const errors = structErrors + subErrors
+  const warnings = structWarnings + subWarnings
+  const hardFailure = gates.some((gate) => gate.exitCode === 2 || gate.spawnError)
+  const exitCode = hardFailure ? 2 : errors > 0 ? 1 : 0
+  const breakdown = [`struct ${structErrors}`, ...gates.map((gate) => `${gate.name} ${gate.errors}`)].join(' + ')
+  return { structErrors, structWarnings, subErrors, subWarnings, errors, warnings, exitCode, breakdown }
+}
+
+
 
 function writeFixture(root, relativePath, content) {
   const path = join(root, relativePath)
@@ -1831,6 +1966,14 @@ function printHelp() {
   MX-G-12 每张卡 owner/scope/AC/证据/依赖/评审人/禁止项齐全，评审人不等于 owner
   MX-G-13 test-plan 与 evidence 模板列（warn）
 
+子门禁（结构门禁之后跑，独立进程、120 秒超时、退出码并入汇总；--stage pre 不跑）：
+  fp-coverage  scripts/check-fp-coverage.mjs（MX-G-71）：每个变更包要有“功能点覆盖”节，
+               非 draft 缺节记 error，draft 缺节记 warning；表内四列与 AC 登记逐点核对。
+  evidence     scripts/check-evidence.mjs（MX-G-38 至 MX-G-43、MX-G-47、MX-G-51）：
+               每条 AC 有证据行、路径可打开、十五字段与判定值合法、pass 证据有效、
+               原因码与解除信息齐全、并集覆盖无缺行、生成器与产物绑定；error 与
+               warning 分别计入总 error 与总 warning，超时按失败记。
+
 口径：
   旧格式包按 GATES.md 与 docs/process/templates/ 的八节核对；含「头部」节或
   变更号/判级/创建日期三字段的包按 docs/framework/templates/change.md 十节核对。
@@ -1843,7 +1986,10 @@ function printHelp() {
   每项一行 PASS/FAIL 检查项 期望 实际；失败细节按 GATES.md 的
   \`[GATE-STRUCT] path:line MX-G-NN 事实；修复动作\` 输出；末两行为
   \`FAILED: <e> error(s), <w> warning(s)\` 与 \`<p> passed, <f> failed\`。
-  退出码 0 表示无 error，1 表示有 error，2 表示参数或根目录错误。
+  子门禁原始输出之后补 \`[GATE-SUB] <name> PASS|FAILED\`，最后一行
+  \`[GATE-SUMMARY]\` 给出结构与子门禁的合计。--json 时统计在 summary 里，
+  逐项明细在 subGates 里。
+  退出码 0 表示无 error，1 表示有 error 或子门禁超时，2 表示参数或根目录错误。
 `)
 }
 
@@ -1901,10 +2047,34 @@ function main() {
   }
   try {
     const run = runStructure(options.root, options)
-    if (options.json) console.log(JSON.stringify(toJson(run), null, 2))
-    else printText(run)
-    const errors = run.findings.filter((finding) => finding.severity === 'error').length
-    process.exit(errors > 0 ? 1 : 0)
+    const gates = runSubGates(options)
+    const totals = combineGates(run, gates)
+    if (options.json) {
+      const json = toJson(run)
+      json.subGates = gates.map((gate) => ({
+        gate: gate.name,
+        title: gate.title,
+        command: gate.command,
+        ok: gate.exitCode === 0 && gate.errors === 0,
+        exitCode: gate.exitCode,
+        timedOut: gate.timedOut,
+        errors: gate.errors,
+        warnings: gate.warnings,
+        durationMs: gate.durationMs,
+        result: gate.detail,
+      }))
+      json.summary = { ok: totals.errors === 0, errors: totals.errors, warnings: totals.warnings, exitCode: totals.exitCode }
+      json.ok = totals.errors === 0
+      console.log(JSON.stringify(json, null, 2))
+    } else {
+      printText(run)
+      printSubGates(gates)
+      const state = totals.errors > 0
+        ? `FAILED: ${totals.errors} error(s), ${totals.warnings} warning(s)（error 来源：${totals.breakdown}）`
+        : `PASS (gate: struct${gates.length ? `+${gates.map((gate) => gate.name).join('+')}` : ''}, warnings: ${totals.warnings})`
+      console.log(`[GATE-SUMMARY] ${state}`)
+    }
+    process.exit(totals.exitCode)
   } catch (error) {
     if (error instanceof PreflightError) {
       console.error(error.message)

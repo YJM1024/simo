@@ -36,6 +36,7 @@ func TestPhasesCancelRetryArtifacts(t *testing.T) {
 	if err := db.Migrate(ctx, "tasks", mod.Migrations()); err != nil {
 		t.Fatal(err)
 	}
+	createMessagesTable(t, db)
 	if err := mod.Start(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -152,6 +153,7 @@ func TestCreateAndMockExecutorCompletes(t *testing.T) {
 	if err := db.Migrate(ctx, "tasks", mod.Migrations()); err != nil {
 		t.Fatal(err)
 	}
+	createMessagesTable(t, db)
 	if err := mod.Start(ctx); err != nil {
 		t.Fatal(err)
 	}

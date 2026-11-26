@@ -153,6 +153,8 @@ func (m *Module) handleList(w http.ResponseWriter, r *http.Request) {
 	for i := range list {
 		decorateTask(&list[i])
 	}
+	// PRD-TASK-005：全局列表同样补直接子会话投影，父层入口与 counts 的口径保持一致。
+	m.decorateChildSessions(r.Context(), list)
 	httpserver.WriteJSON(w, http.StatusOK, map[string]any{"tasks": list})
 }
 
@@ -210,12 +212,26 @@ func (m *Module) handleWorkflowCancel(w http.ResponseWriter, r *http.Request) {
 
 func (m *Module) handleGet(w http.ResponseWriter, r *http.Request) {
 	taskID := strings.TrimSpace(r.PathValue("id"))
+	// 旧路由兼容：P2 起必须带 sessionId 查询参数，缺参 400、跨会话 404。
+	// 旧调用方仍可继续用本路由，但需要补上 ?sessionId=<会话>；新代码应改用
+	// GET /api/sessions/{id}/tasks/{taskId}（会话内路由自带会话校验）。
+	sessionID := strings.TrimSpace(r.URL.Query().Get("sessionId"))
+	if sessionID == "" {
+		httpserver.WriteErrorCode(w, http.StatusBadRequest, "task_session_required", "缺少会话参数")
+		return
+	}
 	task, err := m.Get(r.Context(), taskID)
 	if err != nil {
 		m.writeTaskError(w, err)
 		return
 	}
+	if task.SessionID != sessionID {
+		// 与 ConvTaskDetail 一致：跨会话不暴露任务是否存在。
+		httpserver.WriteErrorCode(w, http.StatusNotFound, "task_not_found", "任务不存在")
+		return
+	}
 	decorateTask(&task)
+	m.decorateChildSessionsOne(r.Context(), &task)
 	payload := map[string]any{"ok": true, "task": task, "displayStatus": displayStatus(task.Status)}
 	// 新字段：步骤、轨迹、上下文与预算；旧客户端不读这些键也不受影响。
 	if steps, err := m.loadSteps(r.Context(), taskID); err == nil && len(steps) > 0 {
@@ -228,11 +244,14 @@ func (m *Module) handleGet(w http.ResponseWriter, r *http.Request) {
 	payload["context"] = map[string]any{
 		"goal": task.Goal, "inputs": task.Inputs, "constraints": task.Constraints, "historyCount": 0,
 	}
-	payload["budget"] = parseBudget(task.BudgetJSON)
+	payload["budget"] = m.budgetFor(task)
 	httpserver.WriteJSON(w, http.StatusOK, payload)
 }
 
 func (m *Module) handleCancel(w http.ResponseWriter, r *http.Request) {
+	if !m.checkLegacySessionScope(w, r, strings.TrimSpace(r.PathValue("id"))) {
+		return
+	}
 	scope := strings.TrimSpace(r.URL.Query().Get("scope"))
 	if scope == "chain" || scope == "self" {
 		task, cancelled, changed, err := m.CancelScope(r.Context(), strings.TrimSpace(r.PathValue("id")), scope)
@@ -255,24 +274,43 @@ func (m *Module) handleCancel(w http.ResponseWriter, r *http.Request) {
 }
 
 func (m *Module) handleRetry(w http.ResponseWriter, r *http.Request) {
-	// P1-CONV-009：只允许 failed/cancelled/interrupted，其余 409 task_state_conflict。
-	current, err := m.getTask(r.Context(), strings.TrimSpace(r.PathValue("id")))
-	if err != nil {
-		m.writeTaskError(w, err)
-		return
-	}
-	switch current.Status {
-	case coretask.StatusFailed, coretask.StatusCancelled, coretask.StatusInterrupted:
-	default:
-		writeConvError(w, errStateConflict(current.Status))
+	// 新旧两个 retry 入口共用 Module.Retry 里的状态守卫：只允许 failed/cancelled/interrupted，
+	// 其余返回 409 task_state_conflict，attempt 不变。
+	if !m.checkLegacySessionScope(w, r, strings.TrimSpace(r.PathValue("id"))) {
 		return
 	}
 	task, err := m.Retry(r.Context(), strings.TrimSpace(r.PathValue("id")))
 	if err != nil {
+		var convErr *ConvError
+		if errors.As(err, &convErr) {
+			writeConvError(w, err)
+			return
+		}
 		m.writeTaskError(w, err)
 		return
 	}
 	httpserver.WriteJSON(w, http.StatusOK, map[string]any{"ok": true, "task": task})
+}
+
+// checkLegacySessionScope 给没有会话路径段的旧任务路由补一层可选的会话隔离：
+// 调用方带了 ?sessionId= 就要求任务属于该会话，不属于时一律按不存在处理
+// （404 task_not_found，不暴露任务是否存在），与会话内路由同口径；
+// 不带该参数时保持旧行为，action 注册表与老调用方仍可直接按任务 id 操作。
+func (m *Module) checkLegacySessionScope(w http.ResponseWriter, r *http.Request, taskID string) bool {
+	sessionID := strings.TrimSpace(r.URL.Query().Get("sessionId"))
+	if sessionID == "" {
+		return true
+	}
+	task, err := m.Get(r.Context(), taskID)
+	if err != nil {
+		m.writeTaskError(w, err)
+		return false
+	}
+	if task.SessionID != sessionID {
+		httpserver.WriteErrorCode(w, http.StatusNotFound, "task_not_found", "任务不存在")
+		return false
+	}
+	return true
 }
 
 func (m *Module) writeTaskError(w http.ResponseWriter, err error) {

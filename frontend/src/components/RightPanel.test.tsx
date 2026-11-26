@@ -69,6 +69,53 @@ describe('RightPanel / OverviewPanel', () => {
     expect(screen.getByRole('button', { name: '目标' })).toHaveAttribute('aria-expanded', 'false')
   })
 
+  it('shows three task rows in the overview block and the remaining count', () => {
+    render(<RightPanel session={session()} projection={projection()} loading={false} />)
+    const taskBlock = document.querySelector('.insp-block[data-block="tasks"]') as HTMLElement
+    expect(taskBlock.querySelectorAll('.exec-row')).toHaveLength(3)
+    expect(taskBlock.querySelector('.insp-more')).toHaveTextContent('还有 2 个')
+  })
+
+  it('enters a child session from the overview task block, expanding when there are several', async () => {
+    const user = userEvent.setup()
+    const onOpenChildSession = vi.fn()
+    const { rerender } = render(
+      <RightPanel
+        session={session()}
+        projection={projection({ childSessionCount: 1, childSessionIds: ['kid-1'] })}
+        loading={false}
+        counts={counts()}
+        childSessions={[{ id: 'kid-1', title: '子会话 A' }]}
+        onOpenChildSession={onOpenChildSession}
+      />,
+    )
+    const taskBlock = document.querySelector('.insp-block[data-block="tasks"]') as HTMLElement
+    expect(taskBlock.querySelector('.insp-children')).toHaveAttribute('data-child-sessions', '1')
+    // 子会话任务不计入本会话计数：入口出现时任务统计仍是 fixture 的 2 进行中。
+    expect(screen.getByText('2 进行中 / 2 未开始 / 1 已完成 / 1 失败')).toBeInTheDocument()
+    await user.click(within(taskBlock).getByRole('button', { name: '含 1 个子会话' }))
+    expect(onOpenChildSession).toHaveBeenCalledWith('kid-1')
+
+    rerender(
+      <RightPanel
+        session={session()}
+        projection={projection({ childSessionCount: 2, childSessionIds: ['kid-1', 'kid-2'] })}
+        loading={false}
+        childSessions={[{ id: 'kid-1', title: '子会话 A' }, { id: 'kid-2', title: '子会话 B' }]}
+        onOpenChildSession={onOpenChildSession}
+      />,
+    )
+    const entry = within(taskBlock).getByRole('button', { name: '含 2 个子会话' })
+    expect(entry).toHaveAttribute('aria-expanded', 'false')
+    await user.click(entry)
+    expect(entry).toHaveAttribute('aria-expanded', 'true')
+    const rows = taskBlock.querySelectorAll('[data-child-session-id]')
+    expect(rows).toHaveLength(2)
+    await user.click(within(taskBlock).getByRole('button', { name: /子会话 B/ }))
+    expect(onOpenChildSession).toHaveBeenLastCalledWith('kid-2')
+  })
+
+
   it('switches to the tasks tab and renders the fixed four filters with counts', async () => {
     const user = userEvent.setup()
     const onTaskFilterChange = vi.fn()
@@ -161,3 +208,4 @@ describe('RightPanel / OverviewPanel', () => {
     expect(aside.querySelectorAll('form, input, textarea, select')).toHaveLength(0)
   })
 })
+

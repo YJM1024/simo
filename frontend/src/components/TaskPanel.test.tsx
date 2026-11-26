@@ -76,10 +76,24 @@ describe('TaskCard', () => {
     expect(card.querySelector('.task-tick')).toBeNull()
   })
 
+  it('renders the percent bar and text alongside step ticks for real progress', () => {
+    render(<TaskCard task={task({
+      progress: 40,
+      steps: [
+        { id: 's1', title: '读需求', status: 'done' },
+        { id: 's2', title: '写初稿', status: 'running' },
+      ],
+    })} onOpen={vi.fn()} />)
+    const card = document.querySelector('.task-card') as HTMLElement
+    expect(card.querySelectorAll('.task-tick')).toHaveLength(2)
+    expect(card.querySelector('.task-progress i')).toHaveStyle({ width: '40%' })
+    expect(card.querySelector('.task-progress-text')).toHaveTextContent('40%')
+  })
+
   it('opens the task on click and marks a jump target', async () => {
     const user = userEvent.setup()
     const onOpen = vi.fn()
-    render(<TaskCard task={task({ progress: undefined, displayStatus: 'failed', failReason: '超时' })} isJumpTarget onOpen={onOpen} />)
+    render(<TaskCard task={task({ progress: undefined, status: 'failed', displayStatus: 'failed', failReason: '超时' })} isJumpTarget onOpen={onOpen} />)
     const card = document.querySelector('.task-card') as HTMLElement
     expect(card).toHaveClass('is-jump-target')
     expect(card.querySelector('.task-progress')).toBeNull()
@@ -89,7 +103,7 @@ describe('TaskCard', () => {
   })
 
   it('maps unknown waiting reasons through and falls back to 未开始', () => {
-    render(<TaskCard task={task({ displayStatus: 'pending', waitingReason: 'quota', steps: [{ id: 's1', title: '读需求', status: 'pending' }] })} onOpen={vi.fn()} />)
+    render(<TaskCard task={task({ status: 'pending', displayStatus: 'pending', waitingReason: 'quota', steps: [{ id: 's1', title: '读需求', status: 'pending' }] })} onOpen={vi.fn()} />)
     expect(screen.getByText('未开始')).toBeInTheDocument()
     expect(screen.getByText('quota')).toBeInTheDocument()
     expect(screen.getByText('等待前置')).toBeInTheDocument()
@@ -115,9 +129,11 @@ describe('alignTaskListJump', () => {
 
 describe('TasksTab', () => {
   it('shows a skeleton while the first page loads', () => {
-    render(<TasksTab tasks={[]} counts={counts()} filter="all" loading onFilterChange={vi.fn()} onOpenTask={vi.fn()} />)
+    const { container } = render(<TasksTab tasks={[]} counts={counts()} filter="all" loading onFilterChange={vi.fn()} onOpenTask={vi.fn()} />)
     expect(screen.getByLabelText('任务加载中')).toBeInTheDocument()
     expect(screen.queryByRole('list')).not.toBeInTheDocument()
+    // 加载期不显示任何假百分比（AC-TASK-002-04）。
+    expect(container.textContent ?? '').not.toMatch(/\d+%/)
   })
 
   it('separates the empty all-state from the empty filtered state', () => {

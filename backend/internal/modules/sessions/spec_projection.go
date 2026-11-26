@@ -73,14 +73,18 @@ type specProjectionLinks struct {
 }
 
 type specProjection struct {
-	SessionID            string                         `json:"sessionId"`
-	Status               string                         `json:"status"`
-	Revision             int                            `json:"revision"`
-	UpdatedAt            int64                          `json:"updatedAt"`
-	Goal                 *specGoalView                  `json:"goal"`
-	Constraints          []specEntryView                `json:"constraints"`
-	Inputs               []specEntryView                `json:"inputs"`
-	Tasks                specTaskGroups                 `json:"tasks"`
+	SessionID   string          `json:"sessionId"`
+	Status      string          `json:"status"`
+	Revision    int             `json:"revision"`
+	UpdatedAt   int64           `json:"updatedAt"`
+	Goal        *specGoalView   `json:"goal"`
+	Constraints []specEntryView `json:"constraints"`
+	Inputs      []specEntryView `json:"inputs"`
+	Tasks       specTaskGroups  `json:"tasks"`
+	// PRD-TASK-005：父层「含 N 个子会话」入口的数量与 id 直接取 sessions.parent_id 的实时聚合。
+	// 这两个字段只描述直接子会话，不代表子会话里的任务；子会话任务不计入上面的 Tasks 各组。
+	ChildSessionCount    int                            `json:"childSessionCount"`
+	ChildSessionIDs      []string                       `json:"childSessionIds"`
 	Deliverables         specGroup[specDeliverableView] `json:"deliverables"`
 	PendingConfirmations specGroup[specPendingView]     `json:"pendingConfirmations"`
 	Links                specProjectionLinks            `json:"links"`
@@ -315,9 +319,14 @@ func (m *Module) buildSpecProjection(ctx context.Context, session Session, limit
 	}
 	pending.HasMore = pending.Total > len(pending.Items)
 
+	// 父层的「含 N 个子会话」与子会话 id 由 sessions.parent_id 实时聚合；只要直连子会话，
+	// 不把孙会话算进来，也不把子会话里的任务并进上面的 Tasks 分组。
+	childSessionIDs := m.ChildSessionIDs(ctx, session.ID)
+
 	projection := specProjection{
 		SessionID: session.ID, Status: status, Revision: revision, UpdatedAt: updatedAt,
 		Goal: goal, Constraints: constraints, Inputs: []specEntryView{}, Tasks: tasks,
+		ChildSessionCount: len(childSessionIDs), ChildSessionIDs: childSessionIDs,
 		Deliverables: deliverables, PendingConfirmations: pending,
 		Links: specProjectionLinks{
 			FullSpec: "/sessions/" + url.PathEscape(session.ID) + "/spec",

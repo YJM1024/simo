@@ -55,6 +55,11 @@ type Module struct {
 	StartDelay time.Duration
 	RunDelay   time.Duration
 
+	// 预算两维上限：New 时从 SIMO_TASK_MAX_STEPS / SIMO_TASK_MAX_TOKENS 读取，
+	// 不再是写死的 8 步 / 12000 token；<=0 时按 parseBudget 的缺省窗口兜底。
+	MaxSteps  int
+	MaxTokens int
+
 	ctx    context.Context
 	cancel context.CancelFunc
 	wg     sync.WaitGroup
@@ -63,6 +68,10 @@ type Module struct {
 
 	mu     sync.Mutex
 	active map[string]*attemptHandle
+
+	// progressMu/lastProgress 记录每个任务最近一次发出的进度，用于只在进度变化时补发 task.progress。
+	progressMu   sync.Mutex
+	lastProgress map[string]int
 
 	wfMu sync.Mutex
 
@@ -75,14 +84,30 @@ func (m *Module) SetExecutor(executor coretask.Executor) { m.executor = executor
 // New 创建 tasks 模块。
 func New(st *store.Store, events *eventlog.Logger, logger *slog.Logger, sandbox *workspace.Policy) *Module {
 	return &Module{
-		store:      st,
-		events:     events,
-		log:        logger,
-		sandbox:    sandbox,
-		StartDelay: mockExecutorStartDelay,
-		RunDelay:   mockExecutorDelay,
-		active:     make(map[string]*attemptHandle),
+		store:        st,
+		events:       events,
+		log:          logger,
+		sandbox:      sandbox,
+		StartDelay:   mockExecutorStartDelay,
+		RunDelay:     mockExecutorDelay,
+		MaxSteps:     envBudgetInt("SIMO_TASK_MAX_STEPS", defaultBudgetSteps),
+		MaxTokens:    envBudgetInt("SIMO_TASK_MAX_TOKENS", defaultBudgetTokens),
+		active:       make(map[string]*attemptHandle),
+		lastProgress: make(map[string]int),
 	}
+}
+
+// envBudgetInt 读预算上限：缺省或非法时用 fallback，不对上限做封顶。
+func envBudgetInt(key string, fallback int) int {
+	raw := strings.TrimSpace(os.Getenv(key))
+	if raw == "" {
+		return fallback
+	}
+	value, err := strconv.Atoi(raw)
+	if err != nil || value <= 0 {
+		return fallback
+	}
+	return value
 }
 
 // SetSessions 注入会话树端口（M6 跨会话 artifact 聚合）。
@@ -108,9 +133,41 @@ func (m *Module) Start(ctx context.Context) error {
 	m.ctx, m.cancel = context.WithCancel(ctx)
 	m.recoverInterrupted()
 	m.recoverWorkflows()
+	m.scheduleQueued()
 	m.startReminderLoop(m.ctx)
 	m.log.Debug("module started", "module", m.ID())
 	return nil
+}
+
+// scheduleQueued 把启动时遗留的独立 queued 任务交给执行器消费：恢复只认领状态，
+// 不重写任务行，也不新建 attempt（attempt 沿用），因此重启本身不产生额外事件。
+// 挂在 running workflow 下的 queued 任务由 recoverWorkflows 统一续跑，这里跳过，避免重复启动。
+func (m *Module) scheduleQueued() {
+	rows, err := m.store.Query(context.Background(), taskSelect+` WHERE status = 'queued'`)
+	if err != nil {
+		m.log.Warn("调度遗留 queued 任务失败", "err", err)
+		return
+	}
+	tasks := make([]coretask.Task, 0, 4)
+	for rows.Next() {
+		task, scanErr := scanTask(rows)
+		if scanErr != nil {
+			_ = rows.Close()
+			m.log.Warn("扫描遗留 queued 任务失败", "err", scanErr)
+			return
+		}
+		tasks = append(tasks, task)
+	}
+	_ = rows.Close()
+	for _, task := range tasks {
+		if task.WorkflowID != "" {
+			continue
+		}
+		m.startAttempt(task.ID, task.Attempt)
+	}
+	if len(tasks) > 0 {
+		m.log.Info("已调度遗留 queued 任务", "count", len(tasks))
+	}
 }
 
 // recoverInterrupted 处理上次进程遗留的 running/queued：不能永久卡 running。
@@ -302,6 +359,7 @@ func (m *Module) Create(ctx context.Context, input coretask.NewTask) (coretask.T
 	m.emit(ctx, eventlog.TypeTaskCreated, taskEvent(task, "", ""))
 	// 立即补一条 queued 的 task.updated，保证前端/WSE 在 task.created 后能拿到 phases/progress。
 	m.emit(ctx, eventlog.TypeTaskUpdated, taskEvent(task, "", ""))
+	m.emitProgress(ctx, task)
 	m.startAttempt(task.ID, task.Attempt)
 	return task, nil
 }
@@ -383,33 +441,37 @@ func (m *Module) Cancel(ctx context.Context, id string) (coretask.Task, error) {
 }
 
 // Retry 新建 attempt：重置 phases/steps/progress，task id 不变，artifacts 保留。
+// 状态白名单与 RetryConv 共用 retryableStatus：进行中或已成功返回 409 task_state_conflict。
 func (m *Module) Retry(ctx context.Context, id string) (coretask.Task, error) {
 	task, err := m.getTask(ctx, id)
 	if err != nil {
 		return coretask.Task{}, err
 	}
-	m.mu.Lock()
-	handle := m.active[id]
-	m.mu.Unlock()
-	if handle != nil {
-		handle.cancel()
-		select {
-		case <-handle.done:
-		case <-time.After(5 * time.Second):
-		}
+	if !retryableStatus(task.Status) {
+		return coretask.Task{}, errStateConflict(task.Status)
 	}
+	m.stopAttempt(task.ID)
 	task.Attempt++
 	task.Status = coretask.StatusQueued
 	task.Progress = 0
 	task.Summary = ""
 	task.Outcome = ""
+	task.FailReason = ""
+	task.WaitingReason = ""
+	task.WaitingSince = 0
+	task.StartedAt = 0
+	task.FinishedAt = 0
+	// 新 attempt 结束时再写一条结束消息，旧的 end_message_id 不能挡住 CAS。
+	task.EndMessageID = ""
 	task.Phases = resetPhases(task.Phases)
 	task.Steps = resetSteps(task.Steps)
+	m.resetBudgetUsage(&task, false)
 	task.UpdatedAt = time.Now().UnixMilli()
 	if err := m.saveTask(ctx, task); err != nil {
 		return coretask.Task{}, err
 	}
 	m.emit(ctx, eventlog.TypeTaskUpdated, taskEvent(task, "", ""))
+	m.emitProgress(ctx, task)
 	m.startAttempt(task.ID, task.Attempt)
 	return m.getTask(ctx, id)
 }
@@ -454,9 +516,9 @@ func (m *Module) runAttempt(ctx context.Context, id string, attempt int) {
 	if err != nil || task.Attempt != attempt {
 		return
 	}
-	task.Status = coretask.StatusRunning
-	task.Progress = 2
-	task.UpdatedAt = time.Now().UnixMilli()
+	if !m.beginTaskNotice(context.Background(), &task, 2) {
+		return
+	}
 	m.saveAndEmit(context.Background(), task, "", "")
 	m.insertTaskCheckpoint(task, "dispatch")
 
@@ -465,12 +527,20 @@ func (m *Module) runAttempt(ctx context.Context, id string, attempt int) {
 	if steps > 0 {
 		stepDelay = m.RunDelay / time.Duration(steps)
 	}
+	budget := m.budgetFor(task)
+	maxSteps := budgetInt(budget, "maxSteps", m.MaxSteps)
+	// Mock 执行器没有 token 计费，只按步数记账（token 维度由真实执行器 runRealAttempt 记账）；
+	// 触顶按 DEC-40 停在当前步：status 保持 running、waitingReason=resource、outcome=budget_exceeded。
 	for i := range task.Steps {
 		if ctx.Err() != nil {
 			m.markCancelled(context.Background(), id, "已取消，保留已完成阶段")
 			return
 		}
 		step := &task.Steps[i]
+		// 恢复续跑：已完成的步骤不重跑。
+		if step.Status == "done" {
+			continue
+		}
 		step.Status = "running"
 		markPhase(task.Phases, step.PhaseID, "running")
 		task.UpdatedAt = time.Now().UnixMilli()
@@ -497,6 +567,18 @@ func (m *Module) runAttempt(ctx context.Context, id string, attempt int) {
 		if ctx.Err() == nil {
 			_ = m.syncStepsFromTask(context.Background(), task)
 		}
+		m.recordBudgetUsage(&task, 1, 0)
+		if budgetInt(m.budgetFor(task), "usedSteps", 0) >= maxSteps {
+			// 预算触顶：不落 blocked、不结束任务，等用户「恢复」后从下一步继续。
+			task.Status = coretask.StatusRunning
+			task.WaitingReason = WaitingResource
+			task.WaitingSince = time.Now().UnixMilli()
+			task.Outcome = "budget_exceeded"
+			task.Summary = fmt.Sprintf("任务超出步数预算（%d 步）", maxSteps)
+			task.UpdatedAt = time.Now().UnixMilli()
+			m.saveAndEmit(context.Background(), task, "", "")
+			return
+		}
 	}
 
 	if strings.Contains(strings.ToLower(task.Title), "mock:fail") {
@@ -510,12 +592,16 @@ func (m *Module) runAttempt(ctx context.Context, id string, attempt int) {
 			if task.WorkflowID != "" {
 				m.reportWorkflowTask(task, coretask.StatusFailed, task.Summary)
 				m.retryWorkflowTask(task)
+			} else {
+				// 单任务没有自动重试：这次失败就是终态。
+				m.finalizeTask(context.Background(), &task)
 			}
 			return
 		}
 		task.Summary = "Mock 执行器模拟失败（重试已用尽）"
 		task.FailReason = truncateFailReason(fmt.Sprintf("执行器异常: Mock 执行器模拟失败（重试已用尽，共 %d 次）", task.Attempt))
 		m.saveAndEmit(context.Background(), task, "", "")
+		m.finalizeTask(context.Background(), &task)
 		if task.WorkflowID != "" {
 			m.reportWorkflowTask(task, coretask.StatusFailed, task.Summary)
 			m.onWorkflowTaskFinished(task)
@@ -533,6 +619,7 @@ func (m *Module) runAttempt(ctx context.Context, id string, attempt int) {
 	task.UpdatedAt = time.Now().UnixMilli()
 	m.writeArtifact(task)
 	m.saveAndEmit(context.Background(), task, "", "")
+	m.finalizeTask(context.Background(), &task)
 	if task.WorkflowID != "" {
 		m.reportWorkflowTask(task, coretask.StatusDone, task.Summary)
 		m.onWorkflowTaskFinished(task)
@@ -559,6 +646,11 @@ func (m *Module) markCancelled(ctx context.Context, id, summary string) {
 	}
 	task.UpdatedAt = time.Now().UnixMilli()
 	m.saveAndEmit(ctx, task, "", "")
+	// attempt 被 stopAttempt 取消（重试或整链取消）时由调用方决定终态与结束消息，
+	// 这里只在模块本身关闭（m.ctx 已取消）时写结束消息，避免重试前留下一条假终态。
+	if m.ctx == nil || m.ctx.Err() != nil {
+		m.finalizeTask(ctx, &task)
+	}
 	if task.WorkflowID != "" {
 		m.reportWorkflowTask(task, coretask.StatusCancelled, summary)
 		m.onWorkflowTaskFinished(task)
@@ -571,6 +663,7 @@ func (m *Module) saveAndEmit(ctx context.Context, task coretask.Task, phaseID, s
 		return
 	}
 	m.emit(ctx, eventlog.TypeTaskUpdated, taskEvent(task, phaseID, stepID))
+	m.emitProgress(ctx, task)
 	if task.Status == coretask.StatusDone {
 		m.notifyDependents(ctx, task.ID)
 		m.retriggerEach(ctx, task)
@@ -593,18 +686,20 @@ func saveTaskConvTx(ctx context.Context, tx *sql.Tx, task coretask.Task) error {
 	_, err := tx.ExecContext(ctx, `INSERT INTO tasks(
 			id, session_id, title, kind, status, payload, phases, steps, progress,
 			summary, outcome, attempt, workflow_id, depends_on_json, order_index, report_message_id,
+			end_message_id,
 			budget_json, created_at, updated_at,
 			mode, batch_id, goal, inputs_json, constraints_json, context_json,
 			waiting_reason, waiting_since, started_at, finished_at, fail_reason,
-			deadline_at, deadline_reminded_at, trigger_count)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-				?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			deadline_at, deadline_reminded_at, trigger_count, complexity)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+				?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			ON CONFLICT(id) DO UPDATE SET
 				title=excluded.title, status=excluded.status, phases=excluded.phases,
 				steps=excluded.steps, progress=excluded.progress, summary=excluded.summary,
 				outcome=excluded.outcome, attempt=excluded.attempt,
 				workflow_id=excluded.workflow_id, depends_on_json=excluded.depends_on_json,
 				order_index=excluded.order_index, report_message_id=excluded.report_message_id,
+				end_message_id=excluded.end_message_id,
 				budget_json=excluded.budget_json, updated_at=excluded.updated_at,
 				mode=excluded.mode, batch_id=excluded.batch_id, goal=excluded.goal,
 				inputs_json=excluded.inputs_json, constraints_json=excluded.constraints_json,
@@ -612,15 +707,16 @@ func saveTaskConvTx(ctx context.Context, tx *sql.Tx, task coretask.Task) error {
 				waiting_since=excluded.waiting_since, started_at=excluded.started_at,
 				finished_at=excluded.finished_at, fail_reason=excluded.fail_reason,
 				deadline_at=excluded.deadline_at, deadline_reminded_at=excluded.deadline_reminded_at,
-				trigger_count=excluded.trigger_count`,
+				trigger_count=excluded.trigger_count, complexity=excluded.complexity`,
 		task.ID, task.SessionID, task.Title, task.Kind, task.Status, task.Payload,
 		string(phases), string(steps), task.Progress, task.Summary, task.Outcome,
 		task.Attempt, task.WorkflowID, string(depends), task.OrderIndex, task.ReportMessageID,
+		task.EndMessageID,
 		task.BudgetJSON, task.CreatedAt, task.UpdatedAt,
 		firstNonEmptyValue(task.Mode, "plan"), task.BatchID, task.Goal,
 		string(inputs), string(constraints), firstNonEmptyValue(task.ContextJSON, "{}"),
 		task.WaitingReason, task.WaitingSince, task.StartedAt, task.FinishedAt, task.FailReason,
-		task.DeadlineAt, task.DeadlineRemindedAt, task.TriggerCount)
+		task.DeadlineAt, task.DeadlineRemindedAt, task.TriggerCount, task.Complexity)
 	return err
 }
 
@@ -639,6 +735,27 @@ func (m *Module) emit(ctx context.Context, typ string, payload any) {
 	}
 }
 
+// emitProgress 在任务进度变化时补发一条独立的 task.progress，字段与六类任务事件同构：
+// id 为任务 id，eventId 由事件信封给出，另带 taskId/progress/updatedAtMs。
+// 进度没变时不重复发，避免与 task.updated 同频刷屏。
+func (m *Module) emitProgress(ctx context.Context, task coretask.Task) {
+	m.progressMu.Lock()
+	prev, seen := m.lastProgress[task.ID]
+	if seen && prev == task.Progress {
+		m.progressMu.Unlock()
+		return
+	}
+	m.lastProgress[task.ID] = task.Progress
+	m.progressMu.Unlock()
+	m.emit(ctx, eventlog.TypeTaskProgress, map[string]any{
+		"id":          task.ID,
+		"taskId":      task.ID,
+		"sessionId":   task.SessionID,
+		"progress":    task.Progress,
+		"updatedAtMs": task.UpdatedAt,
+	})
+}
+
 func taskEvent(task coretask.Task, phaseID, stepID string) map[string]any {
 	payload := map[string]any{
 		"id": task.ID, "sessionId": task.SessionID, "title": task.Title, "status": task.Status,
@@ -647,6 +764,7 @@ func taskEvent(task coretask.Task, phaseID, stepID string) map[string]any {
 		"summary": task.Summary, "outcome": task.Outcome,
 		"workflowId": task.WorkflowID, "dependsOn": task.DependsOn,
 		"orderIndex": task.OrderIndex, "reportMessageId": task.ReportMessageID,
+		"endMessageId": task.EndMessageID,
 		"executorAgentId": firstNonEmptyWorkflow(task.ExecutorAgentID, configuredExecutorAgentID()),
 		"stateReason":     task.StateReason,
 		"displayStatus":   displayStatus(task.Status),
@@ -660,6 +778,7 @@ func taskEvent(task coretask.Task, phaseID, stepID string) map[string]any {
 		"startedAt":       task.StartedAt,
 		"finishedAt":      task.FinishedAt,
 		"triggerCount":    task.TriggerCount,
+		"complexity":      task.Complexity,
 	}
 	if phaseID != "" {
 		payload["phase"] = phaseID
@@ -740,10 +859,11 @@ func phaseStepsDone(steps []coretask.Step, phaseID string) bool {
 
 const taskSelect = `SELECT id, session_id, title, kind, status, payload, phases, steps,
 	progress, summary, outcome, attempt, workflow_id, depends_on_json, order_index, report_message_id,
+	end_message_id,
 	budget_json, created_at, updated_at,
 	mode, batch_id, goal, inputs_json, constraints_json, context_json,
 	waiting_reason, waiting_since, started_at, finished_at, fail_reason,
-	deadline_at, deadline_reminded_at, trigger_count FROM tasks`
+	deadline_at, deadline_reminded_at, trigger_count, complexity FROM tasks`
 
 type rowScanner interface {
 	Scan(dest ...any) error
@@ -756,10 +876,10 @@ func scanTask(row rowScanner) (coretask.Task, error) {
 	if err := row.Scan(&task.ID, &task.SessionID, &task.Title, &task.Kind, &task.Status,
 		&task.Payload, &phasesJSON, &stepsJSON, &task.Progress, &task.Summary,
 		&task.Outcome, &task.Attempt, &task.WorkflowID, &dependsJSON, &task.OrderIndex,
-		&task.ReportMessageID, &task.BudgetJSON, &task.CreatedAt, &task.UpdatedAt,
+		&task.ReportMessageID, &task.EndMessageID, &task.BudgetJSON, &task.CreatedAt, &task.UpdatedAt,
 		&task.Mode, &task.BatchID, &task.Goal, &inputsJSON, &constraintsJSON, &contextJSON,
 		&task.WaitingReason, &task.WaitingSince, &task.StartedAt, &task.FinishedAt, &task.FailReason,
-		&task.DeadlineAt, &task.DeadlineRemindedAt, &task.TriggerCount); err != nil {
+		&task.DeadlineAt, &task.DeadlineRemindedAt, &task.TriggerCount, &task.Complexity); err != nil {
 		return coretask.Task{}, err
 	}
 	_ = json.Unmarshal([]byte(phasesJSON), &task.Phases)

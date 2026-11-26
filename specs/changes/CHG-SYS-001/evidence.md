@@ -127,16 +127,16 @@ R3 的 `hasClue` 只把以 `node`/`npm` 等裸命令开头的片段当作命令�
 
 | 证据 ID | AC | 类型 | 命令 | 路径 | 生成时间 | 结果 | 可复跑 | 轮次 |
 |---|---|---|---|---|---|---|---|---|
-| E-AC-SYS-001-01-01 | AC-SYS-001-01 | 门禁脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
-| E-AC-SYS-001-02-01 | AC-SYS-001-02 | 门禁脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
-| E-AC-SYS-001-03-01 | AC-SYS-001-03 | 门禁脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
-| E-AC-SYS-001-04-01 | AC-SYS-001-04 | 门禁脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
-| E-AC-SYS-001-05-01 | AC-SYS-001-05 | 门禁脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
-| E-AC-SYS-001-06-01 | AC-SYS-001-06 | 门禁脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
-| E-AC-FIX-001-01-01 | AC-FIX-001-01 | 门禁脚本 | node scripts/check-gates.mjs | specs/changes/CHG-SYS-001/evidence.md | 2026-11-21 | partial | 是 | 1 |
-| E-AC-P1-01-01 | AC-P1-01 | 门禁脚本 | node scripts/check-gates.mjs | specs/changes/CHG-SYS-001/evidence.md | 2026-11-21 | partial | 是 | 1 |
-| E-AC-CONV-001-01 | AC-CONV-001 | 门禁脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
-| E-AC-FIX-999-01-01 | AC-FIX-999-01 | 门禁脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
-| E-AC-SYS-001-01 | AC-SYS-001 | 门禁脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
+| E-AC-SYS-001-01-01 | AC-SYS-001-01 | 断言脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
+| E-AC-SYS-001-02-01 | AC-SYS-001-02 | 断言脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
+| E-AC-SYS-001-03-01 | AC-SYS-001-03 | 断言脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
+| E-AC-SYS-001-04-01 | AC-SYS-001-04 | 断言脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
+| E-AC-SYS-001-05-01 | AC-SYS-001-05 | 断言脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
+| E-AC-SYS-001-06-01 | AC-SYS-001-06 | 断言脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
+| E-AC-FIX-001-01-01 | AC-FIX-001-01 | 断言脚本 | node scripts/check-gates.mjs | specs/changes/CHG-SYS-001/evidence.md | 2026-11-21 | partial | 是 | 1 |
+| E-AC-P1-01-01 | AC-P1-01 | 断言脚本 | node scripts/check-gates.mjs | specs/changes/CHG-SYS-001/evidence.md | 2026-11-21 | partial | 是 | 1 |
+| E-AC-CONV-001-01 | AC-CONV-001 | 断言脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
+| E-AC-FIX-999-01-01 | AC-FIX-999-01 | 断言脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
+| E-AC-SYS-001-01 | AC-SYS-001 | 断言脚本 | node scripts/check-sdd.mjs | specs/changes/CHG-SYS-001/evidence.md §1 | 2026-11-21 | partial | 是 | 1 |
 
 > 本表按 AC 汇总已有证据来源与判定；逐条细节仍以本文件下列各节与 `test-plan.md` 为准。

@@ -640,8 +640,10 @@ func (m *Module) CreateBatch(ctx context.Context, sessionID string, input BatchC
 			Inputs:      raw.Inputs,
 			Constraints: raw.Constraints,
 			DeadlineAt:  raw.DeadlineAt,
+			BudgetJSON:  m.newBudgetJSON(),
 			CreatedAt:   now,
 			UpdatedAt:   now,
+			Complexity:  input.Complexity,
 		}
 		if task.Mode == "plan" {
 			template := defaultSteps()
@@ -989,6 +991,8 @@ func (m *Module) ListConvTasks(ctx context.Context, sessionID string, filter Lis
 	if hasMore {
 		out = out[:filter.Limit]
 	}
+	// PRD-TASK-005：列表里的每条任务带上所在会话的直接子会话，父层据此显示「含 N 个子会话」。
+	m.decorateChildSessions(ctx, out)
 	nextBefore := ""
 	if len(out) > 0 {
 		last := out[len(out)-1]
@@ -1088,6 +1092,8 @@ func (m *Module) ConvTaskDetail(ctx context.Context, sessionID, taskID string, t
 		return ConvDetail{}, errTaskNotFound()
 	}
 	decorateTask(&task)
+	// PRD-TASK-005：详情同样带直接子会话，父层「含 N 个子会话」与列表口径一致。
+	m.decorateChildSessionsOne(ctx, &task)
 	steps, err := m.loadSteps(ctx, task.ID)
 	if err != nil {
 		return ConvDetail{}, err
@@ -1134,15 +1140,32 @@ func (m *Module) ConvTaskDetail(ctx context.Context, sessionID, taskID string, t
 			"constraints":  task.Constraints,
 			"historyCount": 0, // 预算内只注入目标/输入/约束，不注入历史。
 		},
-		Budget: parseBudget(task.BudgetJSON),
+		Budget: m.budgetFor(task),
 	}
 	return detail, nil
 }
 
+// 预算缺省窗口：仅在调用方没有配置上限时兜底，属于可配置值，不再是唯一取值。
+const (
+	defaultBudgetSteps  = 8
+	defaultBudgetTokens = 12000
+)
+
 // parseBudget 返回 N3 契约的 budget 四字段：maxTokens/maxSteps/usedTokens/usedSteps。
 // 历史行可能写成 stepsUsed/tokensUsed，读时统一改成 used 前缀，避免同一响应出现两套键名。
 func parseBudget(raw string) map[string]any {
-	budget := map[string]any{"maxSteps": 8, "maxTokens": 12000, "usedSteps": 0, "usedTokens": 0}
+	return parseBudgetWith(raw, defaultBudgetSteps, defaultBudgetTokens)
+}
+
+// parseBudgetWith 用调用方给的上限补齐缺失的 max 字段；任务行里的上限优先于兜底值。
+func parseBudgetWith(raw string, fallbackSteps, fallbackTokens int) map[string]any {
+	if fallbackSteps <= 0 {
+		fallbackSteps = defaultBudgetSteps
+	}
+	if fallbackTokens <= 0 {
+		fallbackTokens = defaultBudgetTokens
+	}
+	budget := map[string]any{"maxSteps": fallbackSteps, "maxTokens": fallbackTokens, "usedSteps": 0, "usedTokens": 0}
 	if strings.TrimSpace(raw) == "" {
 		return budget
 	}
@@ -1154,6 +1177,110 @@ func parseBudget(raw string) map[string]any {
 		budget[normalizeBudgetKey(key)] = value
 	}
 	return budget
+}
+
+// budgetLimits 是模块级预算上限：New 时从环境变量读取，未配置时用缺省窗口。
+func (m *Module) budgetLimits() (int, int) {
+	steps, tokens := defaultBudgetSteps, defaultBudgetTokens
+	if m != nil && m.MaxSteps > 0 {
+		steps = m.MaxSteps
+	}
+	if m != nil && m.MaxTokens > 0 {
+		tokens = m.MaxTokens
+	}
+	return steps, tokens
+}
+
+// newBudgetJSON 生成一条新任务的初始预算：两维用量从 0 起，上限取模块配置。
+func (m *Module) newBudgetJSON() string {
+	steps, tokens := m.budgetLimits()
+	raw, err := json.Marshal(map[string]int{
+		"maxSteps": steps, "maxTokens": tokens, "usedSteps": 0, "usedTokens": 0,
+	})
+	if err != nil {
+		return ""
+	}
+	return string(raw)
+}
+
+// budgetFor 读任务自身的预算行；历史行没有 max 字段时用模块上限补齐。
+func (m *Module) budgetFor(task coretask.Task) map[string]any {
+	steps, tokens := m.budgetLimits()
+	return parseBudgetWith(task.BudgetJSON, steps, tokens)
+}
+
+// budgetInt 从 budget map 取整数值，兼容 JSON 解出来的 float64 与历史字符串。
+func budgetInt(budget map[string]any, key string, fallback int) int {
+	if budget == nil {
+		return fallback
+	}
+	switch value := budget[key].(type) {
+	case float64:
+		if value > 0 {
+			return int(value)
+		}
+	case int:
+		if value > 0 {
+			return value
+		}
+	case string:
+		if parsed, err := strconv.Atoi(strings.TrimSpace(value)); err == nil && parsed > 0 {
+			return parsed
+		}
+	}
+	return fallback
+}
+
+// recordBudgetUsage 把本次 attempt 的两维用量累加进任务预算并写回 BudgetJSON。
+func (m *Module) recordBudgetUsage(task *coretask.Task, steps, tokens int) {
+	if task == nil {
+		return
+	}
+	budget := m.budgetFor(*task)
+	budget["usedSteps"] = budgetInt(budget, "usedSteps", 0) + steps
+	budget["usedTokens"] = budgetInt(budget, "usedTokens", 0) + tokens
+	raw, err := json.Marshal(budget)
+	if err != nil {
+		return
+	}
+	task.BudgetJSON = string(raw)
+}
+
+// resetBudgetUsage 清空两维用量。extend 为真时追加一档默认窗口（恢复 = 用户追加预算），
+// 否则保留任务原有上限（重试：重跑整条任务，预算口径不变）。
+func (m *Module) resetBudgetUsage(task *coretask.Task, extend bool) {
+	if task == nil {
+		return
+	}
+	budget := m.budgetFor(*task)
+	budget["usedSteps"] = 0
+	budget["usedTokens"] = 0
+	if extend {
+		// 恢复要能真的往下走：在既有上限上追加一个默认窗口，避免恢复一步又立刻触顶。
+		steps, tokens := m.budgetLimits()
+		if steps < defaultBudgetSteps {
+			steps = defaultBudgetSteps
+		}
+		if tokens < defaultBudgetTokens {
+			tokens = defaultBudgetTokens
+		}
+		budget["maxSteps"] = budgetInt(budget, "maxSteps", steps) + steps
+		budget["maxTokens"] = budgetInt(budget, "maxTokens", tokens) + tokens
+	}
+	raw, err := json.Marshal(budget)
+	if err != nil {
+		return
+	}
+	task.BudgetJSON = string(raw)
+}
+
+// retryableStatus 是重试的唯一状态白名单：新旧两个 retry 入口共用这一处判断。
+func retryableStatus(status string) bool {
+	switch status {
+	case coretask.StatusFailed, coretask.StatusCancelled, coretask.StatusInterrupted:
+		return true
+	}
+	return false
 }
 
 func normalizeBudgetKey(key string) string {
@@ -1186,6 +1313,7 @@ func (m *Module) Transition(ctx context.Context, taskID, to string, touch func(*
 		if err := m.saveTask(ctx, task); err != nil {
 			return coretask.Task{}, err
 		}
+		m.finalizeTask(ctx, &task)
 		return task, nil
 	}
 	// running→running 只允许改 waiting_reason。
@@ -1392,6 +1520,7 @@ func (m *Module) markInterruptedConv(ctx context.Context, id, reason string) (co
 	_, _ = m.appendTrace(ctx, task, runningStep, "interrupt", "", reason)
 	m.emit(ctx, eventlog.TypeTaskUpdated, m.taskEventV2(task, []string{"status"}))
 	m.emit(ctx, eventlog.TypeTaskReport, m.taskEventV2(task, nil))
+	m.finalizeTask(ctx, &task)
 	return task, nil
 }
 
@@ -1428,6 +1557,7 @@ func (m *Module) markCancelledConv(ctx context.Context, id, summary string) (cor
 	}
 	m.emit(ctx, eventlog.TypeTaskUpdated, m.taskEventV2(task, []string{"status"}))
 	m.emit(ctx, eventlog.TypeTaskReport, m.taskEventV2(task, nil))
+	m.finalizeTask(ctx, &task)
 	return task, nil
 }
 
@@ -1473,9 +1603,7 @@ func (m *Module) RetryConv(ctx context.Context, taskID string) (coretask.Task, i
 	if err != nil {
 		return coretask.Task{}, 0, 0, err
 	}
-	switch task.Status {
-	case coretask.StatusFailed, coretask.StatusCancelled, coretask.StatusInterrupted:
-	default:
+	if !retryableStatus(task.Status) {
 		return coretask.Task{}, 0, 0, errStateConflict(task.Status)
 	}
 	m.stopAttempt(task.ID)
@@ -1517,6 +1645,8 @@ func (m *Module) requeueConv(ctx context.Context, taskID string) (coretask.Task,
 	}
 	task.Attempt++
 	task.Status = coretask.StatusQueued
+	// 新 attempt 结束时再写一条结束消息，旧的 end_message_id 不能挡住 CAS。
+	task.EndMessageID = ""
 	task.Progress = 0
 	task.Summary = ""
 	task.Outcome = ""
@@ -1526,12 +1656,16 @@ func (m *Module) requeueConv(ctx context.Context, taskID string) (coretask.Task,
 	task.StartedAt = 0
 	task.FinishedAt = 0
 	task.Phases = resetPhases(task.Phases)
+	task.Steps = resetSteps(task.Steps)
+	// 新 attempt 从第一步重跑，两维用量归零；上限沿用任务原有配置。
+	m.resetBudgetUsage(&task, false)
 	task.UpdatedAt = now
 	if err := m.saveTask(ctx, task); err != nil {
 		return coretask.Task{}, 0, err
 	}
 	_ = m.mirrorSteps(ctx, taskID)
 	m.emit(ctx, eventlog.TypeTaskUpdated, m.taskEventV2(task, []string{"status", "attempt", "progress"}))
+	m.emitProgress(ctx, task)
 	return task, reset, nil
 }
 
@@ -1624,6 +1758,7 @@ func (m *Module) ConfirmConv(ctx context.Context, taskID string, input Confirmat
 		_ = m.mirrorSteps(ctx, task.ID)
 		m.emit(ctx, eventlog.TypeTaskUpdated, m.taskEventV2(task, []string{"status", "waitingReason"}))
 		m.emit(ctx, eventlog.TypeTaskReport, m.taskEventV2(task, nil))
+		m.finalizeTask(ctx, &task)
 		return task, currentStepID, nil
 	}
 	// confirm：清等待，继续执行。trigger_count 只记依赖放行与资源恢复，
@@ -1711,7 +1846,10 @@ func (m *Module) ResumeConv(ctx context.Context, taskID, reason string) (coretas
 	task.Status = coretask.StatusRunning
 	task.WaitingReason = ""
 	task.WaitingSince = 0
-	// 恢复计入 trigger_count（T03 卡口径）：预算计数不重置，已完成步骤原样保留。
+	// 恢复计入 trigger_count（T03 卡口径）：已完成步骤原样保留，只从暂停步继续。
+	// 预算用量清零并追加一档默认窗口，否则暂停时已耗尽的预算会立刻再次触顶。
+	task.Outcome = ""
+	m.resetBudgetUsage(&task, true)
 	task.TriggerCount++
 	task.UpdatedAt = now
 	if err := m.saveTask(ctx, task); err != nil {

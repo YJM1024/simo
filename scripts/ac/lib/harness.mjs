@@ -236,9 +236,22 @@ export async function saveEvidence(ac, payload) {
   fs.mkdirSync(TMP, { recursive: true })
   let text = JSON.stringify(payload, null, 2)
   if (Buffer.byteLength(text, 'utf8') > 8192) {
-    text = JSON.stringify({ ...payload, truncated: true, note: 'evidence truncated to 8KB' }, null, 2)
-    while (Buffer.byteLength(text, 'utf8') > 8192 && text.length > 200) {
-      text = text.slice(0, Math.floor(text.length * 0.8)) + '\n...'
+    // 截断必须保持 JSON 合法：按字段裁剪长字符串与长数组，不能对序列化文本做字符串切片。
+    const shrink = (value) => {
+      if (typeof value === 'string') return value.length > 160 ? `${value.slice(0, 160)}…（截断）` : value
+      if (Array.isArray(value)) return value.slice(0, 6).map((item) => shrink(item))
+      if (value && typeof value === 'object') {
+        const out = {}
+        for (const [key, item] of Object.entries(value)) out[key] = shrink(item)
+        return out
+      }
+      return value
+    }
+    let trimmed = { ...payload, truncated: true, note: 'evidence 超过 8KB，raw 已按字段截断', raw: shrink(payload.raw ?? {}) }
+    text = JSON.stringify(trimmed, null, 2)
+    if (Buffer.byteLength(text, 'utf8') > 8192) {
+      trimmed = { ac, at: payload.at, truncated: true, note: '证据过大，已截断为摘要', checks: payload.checks, raw: { note: 'raw 已省略' } }
+      text = JSON.stringify(trimmed, null, 2)
     }
   }
   const file = path.join(TMP, `${ac}.json`)

@@ -31,12 +31,12 @@ Implements: PRD-CONV-001、PRD-CONV-002、PRD-CONV-003
 
 | 证据 ID | AC | 类型 | 命令 | 路径 | 生成时间 | 结果 | 可复跑 | 轮次 |
 |---|---|---|---|---|---|---|---|---|
-| E-AC-CONV-001-01-01 | AC-CONV-001-01 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-21 | pass | 是 | 1 |
-| E-AC-CONV-001-02-01 | AC-CONV-001-02 | 前端组件测试 | npm test | frontend/review/TEST-REPORT.md | 2026-11-21 | partial | 是 | 1 |
-| E-AC-CONV-002-01-01 | AC-CONV-002-01 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-21 | pass | 是 | 1 |
-| E-AC-CONV-002-02-01 | AC-CONV-002-02 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-CONV-001/spec.md | 2026-11-21 | missing | 否 | 0 |
-| E-AC-CONV-003-01-01 | AC-CONV-003-01 | 后端测试 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-21 | partial | 是 | 1 |
-| E-AC-CONV-003-02-01 | AC-CONV-003-02 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-CONV-001/spec.md | 2026-11-21 | missing | 否 | 0 |
+| E-AC-CONV-001-01-01 | AC-CONV-001-01 | 单元测试日志 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-21 | pass | 是 | 1 |
+| E-AC-CONV-001-02-01 | AC-CONV-001-02 | 单元测试日志 | npm test | frontend/review/TEST-REPORT.md | 2026-11-21 | partial | 是 | 1 |
+| E-AC-CONV-002-01-01 | AC-CONV-002-01 | 单元测试日志 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-21 | pass | 是 | 1 |
+| E-AC-CONV-002-02-01 | AC-CONV-002-02 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-CONV-001/spec.md | 2026-11-21 | missing | 否 | 0 |
+| E-AC-CONV-003-01-01 | AC-CONV-003-01 | 单元测试日志 | go test ./... -count=1 | docs/testing/BACKEND-EVIDENCE-20261120.md | 2026-11-21 | partial | 是 | 1 |
+| E-AC-CONV-003-02-01 | AC-CONV-003-02 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-CONV-001/spec.md | 2026-11-21 | missing | 否 | 0 |
 
 > 本表按 AC 汇总已有证据来源与判定；逐条细节仍以本文件下列各节与 `test-plan.md` 为准。
 

@@ -51,32 +51,32 @@
 
 | 证据 ID | AC | 类型 | 命令 | 路径 | 生成时间 | 结果 | 可复跑 | 轮次 |
 |---|---|---|---|---|---|---|---|---|
-| E-AC-CHG-MOXIAN-V16-01-01 | AC-CHG-MOXIAN-V16-01 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-02-01 | AC-CHG-MOXIAN-V16-02 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-03-01 | AC-CHG-MOXIAN-V16-03 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-04-01 | AC-CHG-MOXIAN-V16-04 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-05-01 | AC-CHG-MOXIAN-V16-05 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-06-01 | AC-CHG-MOXIAN-V16-06 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-07-01 | AC-CHG-MOXIAN-V16-07 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-08-01 | AC-CHG-MOXIAN-V16-08 | 门禁脚本 | node scripts/check-gates.mjs | specs/changes/CHG-MOXIAN-V16/evidence.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-09-01 | AC-CHG-MOXIAN-V16-09 | 门禁脚本 | node scripts/check-gates.mjs | specs/changes/CHG-MOXIAN-V16/evidence.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-10-01 | AC-CHG-MOXIAN-V16-10 | 门禁脚本 | node scripts/check-gates.mjs | specs/changes/CHG-MOXIAN-V16/evidence.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-11-01 | AC-CHG-MOXIAN-V16-11 | 门禁脚本 | node scripts/check-gates.mjs | specs/changes/CHG-MOXIAN-V16/evidence.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-12-01 | AC-CHG-MOXIAN-V16-12 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-01-01-01 | AC-CHG-MOXIAN-V16-01-01 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-02-01-01 | AC-CHG-MOXIAN-V16-02-01 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-03-01-01 | AC-CHG-MOXIAN-V16-03-01 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-04-01-01 | AC-CHG-MOXIAN-V16-04-01 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-05-01-01 | AC-CHG-MOXIAN-V16-05-01 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-06-01-01 | AC-CHG-MOXIAN-V16-06-01 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-07-01-01 | AC-CHG-MOXIAN-V16-07-01 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-08-01-01 | AC-CHG-MOXIAN-V16-08-01 | 门禁脚本 | node scripts/check-gates.mjs | specs/changes/CHG-MOXIAN-V16/evidence.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-09-01-01 | AC-CHG-MOXIAN-V16-09-01 | 门禁脚本 | node scripts/check-gates.mjs | specs/changes/CHG-MOXIAN-V16/evidence.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-10-01-01 | AC-CHG-MOXIAN-V16-10-01 | 门禁脚本 | node scripts/check-gates.mjs | specs/changes/CHG-MOXIAN-V16/evidence.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-11-01-01 | AC-CHG-MOXIAN-V16-11-01 | 门禁脚本 | node scripts/check-gates.mjs | specs/changes/CHG-MOXIAN-V16/evidence.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-11-02-01 | AC-CHG-MOXIAN-V16-11-02 | 门禁脚本 | node scripts/check-gates.mjs | specs/changes/CHG-MOXIAN-V16/evidence.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-11-03-01 | AC-CHG-MOXIAN-V16-11-03 | 门禁脚本 | node scripts/check-gates.mjs | specs/changes/CHG-MOXIAN-V16/evidence.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-12-01-01 | AC-CHG-MOXIAN-V16-12-01 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
-| E-AC-CHG-MOXIAN-V16-12-02-01 | AC-CHG-MOXIAN-V16-12-02 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-01-01 | AC-CHG-MOXIAN-V16-01 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-02-01 | AC-CHG-MOXIAN-V16-02 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-03-01 | AC-CHG-MOXIAN-V16-03 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-04-01 | AC-CHG-MOXIAN-V16-04 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-05-01 | AC-CHG-MOXIAN-V16-05 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-06-01 | AC-CHG-MOXIAN-V16-06 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-07-01 | AC-CHG-MOXIAN-V16-07 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-08-01 | AC-CHG-MOXIAN-V16-08 | 断言脚本 | node scripts/check-gates.mjs | specs/changes/CHG-MOXIAN-V16/evidence.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-09-01 | AC-CHG-MOXIAN-V16-09 | 断言脚本 | node scripts/check-gates.mjs | specs/changes/CHG-MOXIAN-V16/evidence.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-10-01 | AC-CHG-MOXIAN-V16-10 | 断言脚本 | node scripts/check-gates.mjs | specs/changes/CHG-MOXIAN-V16/evidence.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-11-01 | AC-CHG-MOXIAN-V16-11 | 断言脚本 | node scripts/check-gates.mjs | specs/changes/CHG-MOXIAN-V16/evidence.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-12-01 | AC-CHG-MOXIAN-V16-12 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-01-01-01 | AC-CHG-MOXIAN-V16-01-01 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-02-01-01 | AC-CHG-MOXIAN-V16-02-01 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-03-01-01 | AC-CHG-MOXIAN-V16-03-01 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-04-01-01 | AC-CHG-MOXIAN-V16-04-01 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-05-01-01 | AC-CHG-MOXIAN-V16-05-01 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-06-01-01 | AC-CHG-MOXIAN-V16-06-01 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-07-01-01 | AC-CHG-MOXIAN-V16-07-01 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-08-01-01 | AC-CHG-MOXIAN-V16-08-01 | 断言脚本 | node scripts/check-gates.mjs | specs/changes/CHG-MOXIAN-V16/evidence.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-09-01-01 | AC-CHG-MOXIAN-V16-09-01 | 断言脚本 | node scripts/check-gates.mjs | specs/changes/CHG-MOXIAN-V16/evidence.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-10-01-01 | AC-CHG-MOXIAN-V16-10-01 | 断言脚本 | node scripts/check-gates.mjs | specs/changes/CHG-MOXIAN-V16/evidence.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-11-01-01 | AC-CHG-MOXIAN-V16-11-01 | 断言脚本 | node scripts/check-gates.mjs | specs/changes/CHG-MOXIAN-V16/evidence.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-11-02-01 | AC-CHG-MOXIAN-V16-11-02 | 断言脚本 | node scripts/check-gates.mjs | specs/changes/CHG-MOXIAN-V16/evidence.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-11-03-01 | AC-CHG-MOXIAN-V16-11-03 | 断言脚本 | node scripts/check-gates.mjs | specs/changes/CHG-MOXIAN-V16/evidence.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-12-01-01 | AC-CHG-MOXIAN-V16-12-01 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
+| E-AC-CHG-MOXIAN-V16-12-02-01 | AC-CHG-MOXIAN-V16-12-02 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-MOXIAN-V16/spec.md | 2026-11-25 | missing | 否 | 0 |
 
 > 本表按 AC 汇总已有证据来源与判定；逐条细节仍以本文件下列各节与 `test-plan.md` 为准。

@@ -287,5 +287,45 @@ func migrations() []sqlite.Migration {
 				return nil
 			},
 		},
+		{
+			Version: 10,
+			Name:    "P2-TASK-003 end message",
+			Up: func(ctx context.Context, tx *sql.Tx) error {
+				_, err := tx.ExecContext(ctx, `ALTER TABLE tasks ADD COLUMN end_message_id TEXT NOT NULL DEFAULT ''`)
+				return err
+			},
+		},
+		{
+			Version: 11,
+			Name:    "P2-TASK-004 complexity and task plans",
+			Up: func(ctx context.Context, tx *sql.Tx) error {
+				// 历史任务不回填分级：空串表示「历史任务·未分级」，前端据此显示。
+				if _, err := tx.ExecContext(ctx, `ALTER TABLE tasks ADD COLUMN complexity TEXT NOT NULL DEFAULT ''`); err != nil {
+					return err
+				}
+				if _, err := tx.ExecContext(ctx, `CREATE TABLE IF NOT EXISTS task_plans (
+					id TEXT PRIMARY KEY,
+					session_id TEXT NOT NULL,
+					complexity TEXT NOT NULL,
+					status TEXT NOT NULL,
+					plan_message_id TEXT NOT NULL DEFAULT '',
+					plan_steps_json TEXT NOT NULL DEFAULT '[]',
+					child_session_ids TEXT NOT NULL DEFAULT '[]',
+					task_ids_json TEXT NOT NULL DEFAULT '[]',
+					request_text TEXT NOT NULL DEFAULT '',
+					task_count INTEGER NOT NULL DEFAULT 0,
+					child_session_count INTEGER NOT NULL DEFAULT 0,
+					attempt INTEGER NOT NULL DEFAULT 0,
+					created_at INTEGER NOT NULL,
+					decided_at INTEGER NOT NULL DEFAULT 0,
+					expires_at INTEGER NOT NULL DEFAULT 0,
+					rejected_reason TEXT NOT NULL DEFAULT ''
+				)`); err != nil {
+					return err
+				}
+				_, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS idx_task_plans_session_status ON task_plans(session_id, status)`)
+				return err
+			},
+		},
 	}
 }

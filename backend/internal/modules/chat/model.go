@@ -4,6 +4,8 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"time"
+
+	coretask "simo/internal/core/task"
 )
 
 // Message 是消息投影（契约 §3 字段；role/status 与前端 v0.1 兼容）。
@@ -36,6 +38,8 @@ type Message struct {
 	RoutedTo         string            `json:"routedTo,omitempty"`
 	Internal         bool              `json:"internal,omitempty"`
 	Cards            []Card            `json:"cards,omitempty"`
+	// TaskPlan 只在 category=confirmation 的方案卡消息上出现（PRD-TASK-004）。
+	TaskPlan *coretask.TaskPlan `json:"taskPlan,omitempty"`
 }
 
 // ReplySnapshot 是被引用消息的只读快照（M15，跨会话允许）。

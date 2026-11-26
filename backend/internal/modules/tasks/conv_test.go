@@ -59,7 +59,18 @@ func newConvTestModule(t *testing.T) (*Module, *eventlog.Logger, context.Context
 	)`); err != nil {
 			return err
 		}
-		return nil
+		// PRD-TASK-004 的确认派生会直接写 sessions/specs（与任务同事务），单测补这两张表。
+		if _, err := tx.ExecContext(ctx, `CREATE TABLE IF NOT EXISTS sessions (
+			id TEXT PRIMARY KEY, parent_id TEXT NOT NULL DEFAULT '', title TEXT NOT NULL,
+			created_at INTEGER NOT NULL, archived INTEGER NOT NULL DEFAULT 0,
+			pinned INTEGER NOT NULL DEFAULT 0, owner_agent_id TEXT NOT NULL DEFAULT 'simo')`); err != nil {
+			return err
+		}
+		_, err := tx.ExecContext(ctx, `CREATE TABLE IF NOT EXISTS specs (
+			id TEXT PRIMARY KEY, session_id TEXT NOT NULL UNIQUE, status TEXT NOT NULL,
+			version INTEGER NOT NULL, acceptance_keys TEXT NOT NULL DEFAULT '[]',
+			evidence TEXT NOT NULL DEFAULT '[]', created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`)
+		return err
 	}); err != nil {
 		t.Fatal(err)
 	}

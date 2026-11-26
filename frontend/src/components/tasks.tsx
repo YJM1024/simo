@@ -4,7 +4,7 @@ import { badgeText, currentStepId } from '../taskEvents'
 
 /** P1-CONV §17 任务域视图组件。样式全部走 components.css 的 `task-*` / `insp-*` 选择器。 */
 
-const STATUS_LABEL: Record<string, string> = { pending: '未开始', running: '进行中', failed: '失败', done: '已完成' }
+const STATUS_LABEL: Record<string, string> = { pending: '未开始', queued: '排队中', blocked: '已阻塞', running: '进行中', failed: '失败', cancelled: '已取消', interrupted: '已中断', done: '已完成' }
 const WAITING_LABEL: Record<string, string> = { dependency: '等待前置', depends: '等待前置', confirmation: '等待确认', resource: '等待资源' }
 const MODE_LABEL: Record<string, string> = { plan: '计划', explore: '边做边想' }
 const TRACE_LABEL: Record<string, string> = { think: '思考', action: '动作', observe: '观察', tool: '工具', text: '文本' }
@@ -223,7 +223,7 @@ export function TaskCard({ task, isJumpTarget = false, onOpen }: { task: TaskVie
     >
       <span className="task-card-top">
         <b className="task-card-title">{task.title}</b>
-        <span className={`task-status task-status-${task.displayStatus}`}>{statusLabel(task.displayStatus)}</span>
+        <span className={`task-status task-status-${task.displayStatus}`} data-status={task.status}>{statusLabel(task.status || task.displayStatus)}</span>
       </span>
       <span className="task-card-meta">
         <span className="task-card-mode" data-mode={task.mode}>{modeLabel(task.mode)}</span>
@@ -235,8 +235,13 @@ export function TaskCard({ task, isJumpTarget = false, onOpen }: { task: TaskVie
         <span className="task-ticks" aria-hidden="true">
           {ticks.map((tick, index) => <i key={index} className="task-tick" data-state={tick} />)}
         </span>
-      ) : percent !== null ? (
-        <span className="task-progress" aria-hidden="true"><i style={{ width: `${percent}%` }} /></span>
+      ) : null}
+      {percent !== null ? (
+        // 有真实步骤时也要显示百分比条：进度按执行器写入的 progress 推进，不因步骤刻度存在而隐藏。
+        <span className="task-progress-row">
+          <span className="task-progress" aria-hidden="true"><i style={{ width: `${percent}%` }} /></span>
+          <span className="task-progress-text" data-task-progress={percent}>{percent}%</span>
+        </span>
       ) : null}
       {(steps.length > 0 || task.failReason) && (
         <span className="task-card-foot">
@@ -471,7 +476,7 @@ function fallbackDetail(task: TaskView): TaskDetailPayload {
   return { task, steps, traces: [], tracesHasMore: false, deliverables: [] }
 }
 
-export function TaskDetailLayer({ open, detail: loadedDetail, fallbackTask = null, loading, error = '', mode = 'overlay', collapsed = false, jumpStepId = null, onClose, onRetry, onOpenFile }: {
+export function TaskDetailLayer({ open, detail: loadedDetail, fallbackTask = null, loading, error = '', mode = 'overlay', collapsed = false, jumpStepId = null, onClose, onRetry, onOpenFile, onResume, resumeBusy = false, resumeNotice = '', sourceSessionTitle = '' }: {
   open: boolean
   detail: TaskDetailPayload | null
   fallbackTask?: TaskView | null
@@ -483,6 +488,13 @@ export function TaskDetailLayer({ open, detail: loadedDetail, fallbackTask = nul
   onClose: () => void
   onRetry?: () => void
   onOpenFile?: (file: TaskFile) => void
+  /** 资源等待时的恢复入口；只有 waitingReason=resource 才渲染按钮。 */
+  onResume?: () => void
+  resumeBusy?: boolean
+  /** 恢复成功后的落点提示，例如「已从第 3 步「整理资料」继续」。 */
+  resumeNotice?: string
+  /** PRD-TASK-005：任务来自子会话时，详情标明来源；空串表示会话本身就是任务的归属会话。 */
+  sourceSessionTitle?: string
 }): React.ReactNode {
   const detail = loadedDetail ?? (fallbackTask ? fallbackDetail(fallbackTask) : null)
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -582,6 +594,10 @@ export function TaskDetailLayer({ open, detail: loadedDetail, fallbackTask = nul
   const steps = detail?.steps ?? []
   const doneSteps = steps.filter((step) => step.status === 'done').length
   const budget = detail?.budget
+  // 预算触顶时暂停的是某一条具体步骤：恢复要从这一步继续，界面上要指出是第几步。
+  const pausedStep = task?.waitingReason === 'resource'
+    ? steps.find((step) => step.status === 'running') ?? steps.find((step) => step.status === 'pending') ?? null
+    : null
   const context = detail?.context
   const deliverables = detail?.deliverables ?? []
   const totalTraces = detailTraces.length
@@ -625,16 +641,37 @@ export function TaskDetailLayer({ open, detail: loadedDetail, fallbackTask = nul
         {detail && <>
           <div className="task-detail-title-row">
             <h2 className="task-detail-title">{task?.title ?? '任务详情'}</h2>
-            {task && <span className={`task-status task-status-${task.displayStatus}`}>{statusLabel(task.displayStatus)}</span>}
+            {task && <span className={`task-status task-status-${task.displayStatus}`} data-status={task.status}>{statusLabel(task.status || task.displayStatus)}</span>}
           </div>
           <p className="task-detail-meta">
             {task ? `${taskMode === 'explore' ? `循环轨迹 ${totalTraces} 条` : `${steps.length} 步 · 已完成 ${doneSteps}`} · 产出 ${deliverables.length} 个` : ''}
+            {task && typeof task.progress === 'number' ? ` · 进度 ${Math.max(0, Math.min(100, task.progress))}%` : ''}
+            {task && typeof task.attempt === 'number' && task.attempt > 0 ? ` · 尝试 ${task.attempt} 次` : ''}
           </p>
+          {sourceSessionTitle && (
+            <p className="task-detail-source" data-source-session={sourceSessionTitle}>来源子会话：{sourceSessionTitle}</p>
+          )}
           {(task?.failReason || task?.waitingReason) && (
             <p className="task-detail-note">
               {task?.failReason ? `失败：${task.failReason}` : waitingLabel(task?.waitingReason)}
             </p>
           )}
+          {task?.waitingReason === 'resource' && (
+            <div className="task-resume" data-task-resume="resource">
+              <p className="task-resume-text">
+                额度已用尽，任务停在当前步骤。
+                {pausedStep
+                  ? `恢复后从第 ${pausedStep.seq} 步「${pausedStep.title}」继续，已完成步骤不会重跑。`
+                  : '恢复后从当前暂停步骤继续，已完成步骤不会重跑。'}
+              </p>
+              {onResume && (
+                <button type="button" className="btn sm task-resume-btn" disabled={resumeBusy} onClick={onResume}>
+                  {resumeBusy ? '恢复中…' : '恢复任务'}
+                </button>
+              )}
+            </div>
+          )}
+          {resumeNotice && <p className="task-resume-notice" role="status">{resumeNotice}</p>}
           {taskMode === 'explore' ? (
             <>
               <p className="task-detail-tip">这一任务按 ReAct 循环推进，轨迹只有先后顺序，不划分步骤。</p>

@@ -96,3 +96,16 @@ Change：CHG-LEGACY-P4-FILE
 
 依赖：无新增外部依赖；证据来自本包 `test-plan.md` 与 `evidence.md` 引用的既有报告。
 - 风险：历史证据为引用而非本轮重跑，未验证项按 `missing` 记，不据此宣称通过。
+
+## 8. 功能点覆盖
+
+覆盖范围：`PRD-FILE-001`、`PRD-FILE-005`、`PRD-FILE-002`、`PRD-FILE-003`、`PRD-FILE-004`、`PRD-FILE-006`
+
+| 功能点ID | 状态 | 覆盖它的 AC | 备注 |
+|---|---|---|---|
+| `PRD-FILE-001` | partial | `AC-FILE-001-01` | artifacts、deliverables、files 路由与会话聚合已有，前端列表聚合与分页未验收 |
+| `PRD-FILE-005` | partial | `AC-FILE-005-01` | 交付物写入工作区与 SIMO_HOME，隔离与越界未形成验收 |
+| `PRD-FILE-002` | partial | `AC-FILE-002-01` | POST /api/uploads 与附件处理存在，前端上传入口、失败与大小限制未验收 |
+| `PRD-FILE-003` | in | `AC-FILE-003-01`、`AC-FILE-003-02` | 交付物卡片与列表；入口为消息内卡片与工作台列表 |
+| `PRD-FILE-004` | partial | `AC-FILE-004-01` | 真实下载已验证，PDF、图片与 Office 预览未执行 |
+| `PRD-FILE-006` | partial | `AC-FILE-006-01` | filegen、embed_office 与生成路径存在，格式矩阵、失败与隔离未全面验收 |

@@ -981,6 +981,10 @@ body { overflow: hidden; }
 .jump-bottom { position: absolute; left: 50%; bottom: var(--sp-16); transform: translateX(-50%); z-index: 12; height: var(--size-30); padding: 0 var(--sp-12); border: 1px solid var(--line); border-radius: var(--r-8); background: var(--surface); color: var(--ink); font-size: var(--font-11); box-shadow: var(--shadow-pop); }
 .msg-copy { margin-left: auto; height: var(--size-18); padding: 0 var(--sp-4); border: 0; border-radius: var(--r-4); background: transparent; color: var(--faint); font-size: var(--font-10); opacity: 0; }
 .msg:hover .msg-copy, .msg-copy:focus-visible { opacity: 1; }
+.msg-progress-link { margin-top: var(--sp-4); }
+.msg-progress-link button { padding: 0; border: 0; background: none; font: inherit; font-size: var(--font-10); color: var(--accent); cursor: pointer; }
+.msg-progress-link button:hover { text-decoration: underline; }
+.msg-progress-link button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--r-4); }
 .msg-text pre { max-width: 100%; overflow-x: auto; white-space: pre; }
 .msg-text code { overflow-wrap: anywhere; }
 @media (max-width: 30em) { .jump-bottom { bottom: var(--sp-8); } }
@@ -1180,6 +1184,12 @@ body { overflow: hidden; }
 .insp-task-counts { display: flex; flex-wrap: wrap; gap: var(--sp-4) var(--sp-8); font-size: var(--font-10); color: var(--muted); max-height: 2.9em; overflow: hidden; }
 .insp-task-counts b { color: var(--ink); font-weight: 600; }
 .insp-more { margin-top: var(--sp-4); font-size: var(--font-10); color: var(--accent); }
+/* 子会话入口：数量来自投影，展开后列出直接子会话，点一行切到该会话。 */
+.insp-children { margin-top: var(--sp-8); padding-top: var(--sp-8); border-top: 1px dashed var(--line-soft); }
+.insp-children-toggle { font-weight: 600; }
+.insp-children-list { display: flex; flex-direction: column; gap: var(--sp-4); margin: var(--sp-4) 0 0; padding: 0; list-style: none; }
+.insp-children-list .exec-row { width: 100%; }
+.task-detail-source { display: inline-flex; gap: var(--sp-4); margin: 0 0 var(--sp-8); padding: 0 var(--sp-8); border-radius: var(--r-4); font-size: var(--font-10); color: var(--accent); background: var(--accent-soft); }
 
 /* 任务标签 */
 .insp-task-pane { display: flex; flex-direction: column; min-height: 0; height: 100%; }
@@ -1197,6 +1207,9 @@ body { overflow: hidden; }
 .task-card-meta { display: flex; flex-wrap: wrap; gap: var(--sp-4) var(--sp-8); font-size: var(--font-10); color: var(--muted); }
 .task-progress { display: block; height: var(--size-2); border-radius: var(--r-4); background: var(--surface-3); overflow: hidden; }
 .task-progress i { display: block; height: 100%; background: var(--accent); }
+.task-progress-row { display: flex; align-items: center; gap: var(--sp-4); }
+.task-progress-row .task-progress { flex: 1; min-width: 0; }
+.task-progress-text { flex: none; font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .task-status { flex: none; font-size: var(--font-10); padding: 0 var(--sp-4); border-radius: var(--r-4); background: var(--surface-2); color: var(--muted); }
 .task-status-running { color: var(--accent); background: var(--accent-soft); }
 .task-status-done { color: var(--success-ink); background: var(--success-soft); }
@@ -1245,6 +1258,23 @@ body { overflow: hidden; }
 .task-summary-more { align-self: flex-start; height: 28px; font-size: var(--font-10); color: var(--accent); }
 .task-summary-error { display: flex; align-items: center; gap: var(--sp-8); font-size: var(--font-10); color: var(--danger); }
 .msg-task-summary-state { flex: none; font-size: var(--font-10); color: var(--faint); }
+
+/* 消息流任务方案卡（PRD-TASK-004）：确认前提供确认与拒绝各一个入口，终态只读。 */
+.msg-plan-card { display: flex; flex-direction: column; gap: var(--sp-6); max-width: 720px; margin-top: var(--sp-8); padding: var(--sp-12) var(--space-14); border: 1px solid var(--line); border-left: 2px solid var(--accent); border-radius: var(--r-8); background: var(--surface); }
+.msg-plan-card[data-status="confirmed"] { border-left-color: var(--success-ink); }
+.msg-plan-card[data-status="rejected"] { border-left-color: var(--faint); }
+.msg-plan-head { display: flex; align-items: center; gap: var(--sp-8); }
+.msg-plan-level { flex: none; padding: 0 var(--sp-4); border-radius: var(--r-4); background: var(--accent-soft); color: var(--accent); font-size: var(--font-10); font-weight: 600; }
+.msg-plan-title { flex: 1; min-width: 0; font-size: var(--font-12); color: var(--ink); }
+.msg-plan-status { flex: none; font-size: var(--font-10); color: var(--muted); }
+.msg-plan-status.is-confirmed { color: var(--success-ink); }
+.msg-plan-summary { font-size: var(--font-11); color: var(--ink-2); }
+.msg-plan-steps { display: flex; flex-direction: column; gap: 2px; margin: 0; padding-left: var(--sp-16); font-size: var(--font-10); color: var(--ink-2); }
+.msg-plan-request { font-size: var(--font-10); color: var(--muted); white-space: pre-wrap; }
+.msg-plan-hint { font-size: var(--font-10); color: var(--warning); }
+.msg-plan-hint.is-expired { color: var(--danger); }
+.msg-plan-result { font-size: var(--font-10); color: var(--muted); }
+.msg-plan-actions { display: flex; flex-wrap: wrap; gap: var(--sp-8); }
 .task-status-dot { flex: none; width: var(--size-6); height: var(--size-6); border-radius: 50%; background: var(--faint); }
 .task-status-dot[data-status="running"] { background: var(--accent); }
 .task-status-dot[data-status="done"] { background: var(--success-ink); }

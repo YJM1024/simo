@@ -301,3 +301,22 @@ Owner：产品（AC 口径与覆盖映射）/ 前端（`frontend/src/app.tsx`、
 
 依赖：无新增外部依赖；证据来自本包 `test-plan.md` 与 `evidence.md` 引用的既有报告。
 - 风险：历史证据为引用而非本轮重跑，未验证项按 `missing` 记，不据此宣称通过。
+
+## 12. 功能点覆盖
+
+覆盖范围：`PRD-CONV-001`、`PRD-CONV-002`、`PRD-CONV-003`、`PRD-CONV-004`、`PRD-CONV-005`、`PRD-CONV-006`、`PRD-CONV-007`、`PRD-CONV-008`、`PRD-SYNC-001`、`PRD-SYNC-002`、`PRD-SYNC-003`、`PRD-SYNC-004`
+
+| 功能点ID | 状态 | 覆盖它的 AC | 备注 |
+|---|---|---|---|
+| `PRD-CONV-001` | in | `AC-CONV-001-01`、`AC-CONV-001-02` | 会话树与主会话；域收口复验 |
+| `PRD-CONV-002` | in | `AC-CONV-002-01`、`AC-CONV-002-02` | 会话生命周期；域收口复验 |
+| `PRD-CONV-003` | in | `AC-CONV-003-01`、`AC-CONV-003-02` | 搜索与未读；域收口复验 |
+| `PRD-CONV-004` | in | `AC-CONV-004-01`、`AC-CONV-004-02` | 消息流与工具调用；域收口复验 |
+| `PRD-CONV-005` | in | `AC-CONV-005-01`、`AC-CONV-005-02` | 流式与停止；域收口复验 |
+| `PRD-CONV-006` | in | `AC-CONV-006-01`、`AC-CONV-006-02` | 失败与重试；域收口复验 |
+| `PRD-CONV-007` | in | `AC-CONV-007-01`、`AC-CONV-007-02` | 右栏任务概览；域收口复验 |
+| `PRD-CONV-008` | in | `AC-CONV-008-01`、`AC-CONV-008-02` | 会话投影四态；证据见域验收报告 |
+| `PRD-SYNC-001` | in | `AC-SYNC-001-01`、`AC-SYNC-001-02` | 多端同步；域收口复验 |
+| `PRD-SYNC-002` | in | `AC-SYNC-002-01`、`AC-SYNC-002-02` | 多标签同步；域收口复验 |
+| `PRD-SYNC-003` | in | `AC-SYNC-003-01`、`AC-SYNC-003-02` | 断线重连；域收口复验 |
+| `PRD-SYNC-004` | in | `AC-SYNC-004-01`、`AC-SYNC-004-02` | 未读游标；域收口复验 |

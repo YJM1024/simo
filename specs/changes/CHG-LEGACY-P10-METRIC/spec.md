@@ -92,3 +92,16 @@ Change：CHG-LEGACY-P10-METRIC
 
 依赖：无新增外部依赖；证据来自本包 `test-plan.md` 与 `evidence.md` 引用的既有报告。
 - 风险：历史证据为引用而非本轮重跑，未验证项按 `missing` 记，不据此宣称通过。
+
+## 8. 功能点覆盖
+
+覆盖范围：`PRD-METRIC-001`、`PRD-METRIC-002`、`PRD-METRIC-003`、`PRD-METRIC-004`、`PRD-METRIC-005`、`PRD-METRIC-006`
+
+| 功能点ID | 状态 | 覆盖它的 AC | 备注 |
+|---|---|---|---|
+| `PRD-METRIC-001` | in | `AC-METRIC-001-01`、`AC-METRIC-001-02` | 系统性能指标；入口为指标面板 |
+| `PRD-METRIC-002` | partial | `AC-METRIC-002-01` | 质量口径只在面板展示，真实任务样本与失败分布未验收 |
+| `PRD-METRIC-003` | partial | `AC-METRIC-003-01` | 延迟卡片有展示，聚合与边界未验收，无真实延迟样本 |
+| `PRD-METRIC-004` | in | `AC-METRIC-004-01`、`AC-METRIC-004-02` | 7/30 天窗口与 partial 标记 |
+| `PRD-METRIC-005` | in | `AC-METRIC-005-01`、`AC-METRIC-005-02` | 明细表与口径说明 |
+| `PRD-METRIC-006` | out | — | 未实现：导出、对比与告警没有入口和 API，归 P10 后续变更 |

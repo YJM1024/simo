@@ -120,6 +120,7 @@ type Task struct {
 	DependsOn       []string   `json:"dependsOn,omitempty"`
 	OrderIndex      int        `json:"orderIndex,omitempty"`
 	ReportMessageID string     `json:"reportMessageId,omitempty"`
+	EndMessageID    string     `json:"endMessageId,omitempty"`
 	BudgetJSON      string     `json:"-"`
 	StateReason     string     `json:"stateReason,omitempty"`
 	ExecutorAgentID string     `json:"executorAgentId,omitempty"`
@@ -141,6 +142,16 @@ type Task struct {
 	DeadlineAt         int64    `json:"deadlineAt,omitempty"`
 	DeadlineRemindedAt int64    `json:"deadlineRemindedAt,omitempty"`
 	TriggerCount       int      `json:"triggerCount,omitempty"`
+
+	// Complexity 是 PRD-TASK-004 的分级结果（C0–C4）。历史任务为空串，前端显示「历史任务·未分级」。
+	Complexity string `json:"complexity,omitempty"`
+
+	// ChildSessionIDs 是任务所在会话的直接子会话 id（只读投影，不落库）。
+	// 任务始终按 SessionID 归属一个会话；父会话用这层关系提供「含 N 个子会话」入口，
+	// 子会话里的任务不进入父会话的列表与计数。数据取 sessions.parent_id，实时聚合。
+	ChildSessionIDs []string `json:"childSessionIds"`
+	// ChildSessionCount 等于 len(ChildSessionIDs)，让前端与投影不必再数数组长度。
+	ChildSessionCount int `json:"childSessionCount"`
 }
 
 // NewTask 是创建输入。
@@ -213,6 +224,7 @@ type BatchCreateInput struct {
 	Tasks            []BatchTaskInput `json:"tasks"`
 	Title            string           `json:"title"`
 	Payload          string           `json:"payload"`
+	Complexity       string           `json:"complexity"`
 }
 
 // BatchCreateResult 是批量创建响应。

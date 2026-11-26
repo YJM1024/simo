@@ -34,6 +34,6 @@ AC 是行为断言，回答“这件事做对了没有”，判据是脚本或�
 
 ## 执行方式
 
-在仓库根目录运行 `node scripts/check-fp-coverage.mjs`，默认扫描 `specs/changes/` 下所有声明了覆盖节的变更包；`--change <CHG-ID>` 只检查一个包，缺覆盖节时记 error；`--json` 输出结构化结果；`--self-test` 在 `.tmp/fp-coverage-tooling` 下生成夹具并断言。退出码 0 通过、1 有 error、2 参数或环境错误。
+在仓库根目录运行 `node scripts/check-fp-coverage.mjs`，默认扫描 `specs/changes/` 下所有含 `spec.md` 的变更包：非草稿包缺覆盖节记 error，草稿包缺节只记 warning；`--change <CHG-ID>` 只检查一个包，同样按首部状态判定；`--json` 输出结构化结果；`--self-test` 在 `.tmp/fp-coverage-tooling` 下生成夹具并断言。退出码 0 通过、1 有 error、2 参数或环境错误。
 
-存量包没有声明覆盖节时不参与默认扫描，下一次变更级验收前按本模板补表；需要单独核对某个存量包时用 `--change` 强制检查。
+存量包同样参与默认扫描：非草稿包缺节记 error，草稿包缺节只记 warning；补表在下次变更级验收前完成，草稿包转出草稿后必须补齐，否则转为 error。

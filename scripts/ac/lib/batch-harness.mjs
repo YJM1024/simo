@@ -51,6 +51,14 @@ export const SPECS = [
 ]
 export const UI_LANES = 3
 
+// cdp 组 4 条并发泳道：每条泳道一套完全隔离的环境（后端、假上游、Chrome 调试端口、SIMO_HOME、实例锁）。
+// 端口段与其它组错开：backend 8789/8792、backend-tools 8791/8790、backend-clock 8793/8794、
+// UI 8787/8776/8766 与默认 Chrome 9223 都不与下面三段重叠。
+export const CDP_LANES = 4
+export const CDP_LANE_BACKEND_PORT = 8931 // 8931-8934
+export const CDP_LANE_UPSTREAM_PORT = 8941 // 8941-8944
+export const CDP_LANE_DEBUG_PORT = 9280 // 9280-9283
+
 export function specForGroup(group, index = 0) {
   const candidates = SPECS.filter((s) => s.groups.includes(group) && s.kind !== 'static' && s.groups.includes(group))
   if (candidates.length === 0) return null
@@ -281,6 +289,21 @@ export async function startBatch(groups, { runId } = {}) {
     runDir,
     instances,
     envFor(group, index = 0) {
+      // cdp 组没有共享实例：每个槽位下发独立的 BASE/HOME/上游/锁/Chrome 端口，脚本照旧自起自停后端。
+      // 不设 AC_CONV_SHARED，restartBackend 才能在同一泳道内重启自己那一个实例。
+      if (group === 'cdp') {
+        const lane = Math.max(0, Math.min(CDP_LANES - 1, index))
+        const home = path.join(runDir, 'cdp', `lane-${lane + 1}`)
+        fs.mkdirSync(home, { recursive: true })
+        return {
+          AC_CONV_BASE: `http://127.0.0.1:${CDP_LANE_BACKEND_PORT + lane}`,
+          AC_CONV_HOME: home,
+          AC_CONV_UPSTREAM_PORT: String(CDP_LANE_UPSTREAM_PORT + lane),
+          AC_CONV_LOCK: path.join(home, 'backend.lock'),
+          AC_CDP_PORT: String(CDP_LANE_DEBUG_PORT + lane),
+          AC_UI_NEW_TARGET: '1',
+        }
+      }
       const spec = specForGroup(group, index)
       const handle = spec && instances.get(spec.name)
       if (!handle) return {}

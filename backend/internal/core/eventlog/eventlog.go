@@ -35,11 +35,16 @@ const (
 	TypeReplyRetracted = "reply.retracted"
 	TypeTaskCreated    = "task.created"
 	TypeTaskUpdated    = "task.updated"
+	TypeTaskProgress   = "task.progress"
 	TypeTaskReport     = "task.report"
 	TypeTaskStep       = "task.step"
 	TypeTaskTrace      = "task.trace"
 	TypeTaskReminder   = "task.reminder"
 	TypeTraceReasoning = "trace.reasoning"
+
+	// P2-TASK-004 复杂度分级与方案确认（审计，落库不广播）。
+	TypeComplexityClassified = "complexity_classified"
+	TypeTaskConfirmed        = "task_confirmed"
 
 	TypeWorkflowCreated = "workflow.created"
 	TypeWorkflowUpdated = "workflow.updated"
@@ -102,6 +107,7 @@ var persistedTypes = map[string]struct{}{
 	TypeReplyRetracted:  {},
 	TypeTaskCreated:     {},
 	TypeTaskUpdated:     {},
+	TypeTaskProgress:    {},
 	TypeTaskReport:      {},
 	TypeTaskStep:        {},
 	TypeTaskTrace:       {},
@@ -110,6 +116,9 @@ var persistedTypes = map[string]struct{}{
 	TypeWorkflowCreated: {},
 	TypeWorkflowUpdated: {},
 	TypeWorkflowDone:    {},
+
+	TypeComplexityClassified: {},
+	TypeTaskConfirmed:        {},
 
 	TypeIntentFrame:    {},
 	TypeTurnStep:       {},

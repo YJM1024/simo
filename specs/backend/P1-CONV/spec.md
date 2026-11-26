@@ -5,7 +5,7 @@
 | 域 | P1-CONV（会话域） |
 | 产物类型 | 后端开发 Spec（长期 Spec，随域常驻） |
 | 状态 | implemented（12 个 PRD 中 7 个已实现、1 个部分实现、4 个后端 N/A；行为变更 3 项未实现，见 §13）；`PRD-CONV-009` 见 §17，已实现（2026-11-25 落地，2026-11-26 复核） |
-| 版本 | v1.4 |
+| 版本 | v1.5 |
 | 最后更新 | 2026-11-26 |
 | owner | 后端角色（TASK-CHG-CONV-006-10） |
 | 产品输入 | `specs/product/P1-CONV/spec.md`（PRD-CONV-001..008、PRD-CONV-009 见 §17 + PRD-SYNC-001..004；SYNC-005 已于 2026-11-22 移除） |
@@ -560,7 +560,7 @@ N/A：投影是 HTTP 拉取（可按 ETag 304 复用）；后端不推送投影�
 | `ping` | 无 | no-op（服务端 30s 控制 ping 已覆盖保活） |
 | 其它 | — | `error{code:"bad_request",message:"未知帧类型: <type>"}` |
 
-**服务端帧**：`wsEnvelope{type string, data json.RawMessage, id int64(omitempty)}`（`http.go` 类型定义）。`type` 白名单（`isWSEventType`，472-487）：`message.created/delta/done/status`、`reply.created/delta/done/retracted`、`task.created/updated/report`、`trace.reasoning`、`workflow.created/updated/done`、`view.updated/render/binding_failed/renderer_error`、`team.created/archived/template_applied/member_added/member_status/owner_changed/message_queued/delivered/failed/trigger_fired/failed/deliverable_ready`、`card.updated/card.action`。`id` 来自事件日志自增主键，严格递增、同一事件对多客户端同 id。
+**服务端帧**：`wsEnvelope{type string, data json.RawMessage, id int64(omitempty)}`（`http.go` 类型定义）。`type` 白名单（`isWSEventType`，472-487）：`message.created/delta/done/status`、`reply.created/delta/done/retracted`、`task.created/updated/step/trace/report/reminder/progress`、`trace.reasoning`、`workflow.created/updated/done`、`view.updated/render/binding_failed/renderer_error`、`team.created/archived/template_applied/member_added/member_status/owner_changed/message_queued/delivered/failed/trigger_fired/failed/deliverable_ready`、`card.updated/card.action`。`id` 来自事件日志自增主键，严格递增、同一事件对多客户端同 id。任务事件白名单以 `backend/internal/modules/chat/http.go:486` 为准。
 
 **顺序与去重**：`wsPump` 先 `events.Subscribe` 再按需 `Replay(since)`（避免 replay/live 缝隙），跳过 `ev.ID <= last`；随后按事件 channel 顺序转发（`http.go:419-469`）。正常连接内事件 id 单调、不重（`server_test.go:243`、`m88_ws_fanout_test.go:23`、`p1_conv_ws_test.go` 的 monotonic 断言）。
 
@@ -755,6 +755,7 @@ N/A：投影是 HTTP 拉取（可按 ETag 304 复用）；后端不推送投影�
 | 2026-11-22 | v1.2 | §8 投影 ETag 从 `"spec-<id>-<revision>"` 改为响应内容摘要（规范化 JSON + 生效 `taskLimit` 的 SHA-256 前 8 字节），条件请求改走 `etagMatches`，200/304 都带 `Cache-Control: no-cache`；补 304 语义（空 body、前端保留现有数据）与 5 个自动化用例；T-08/T-09 关闭 | `backend/internal/modules/sessions/spec_projection.go:99-162`、`spec_projection_etag_test.go`；`go test ./internal/modules/sessions -run TestSpecProjectionETag -v`、`go test ./... -count=1`（16 包 ok / 0 FAIL） |
 | 2026-11-23 | v1.3 | 新增 §17「会话内任务与编排」（`PRD-CONV-009`）：任务、步骤、轨迹、批次、依赖五组数据的字段与迁移（tasks 模块 v8/v9、chat 模块 v23）；8 个存储状态、4 个展示态、3 类等待与迁移触发者；9 个新增接口与 5 个改造接口；`task.*` 6 个 WS 事件与任务卡片消息落库规则；隔离与审批、禁网禁子进程、上下文与额度、幂等与并发、10 个新增错误码；登记与现有实现（`blocked` 级联、steps JSON、全局 `/api/tasks`）的差异与 8 项未决。§0 索引补 §17 一行，头部版本与最后更新同步 | `specs/product/P1-CONV/spec.md` §4.6 与 `AC-CONV-009-01..18`；`specs/design/P1-CONV/spec.md` §17；`specs/changes/CHG-CONV-007/spec.md`；`docs/plan/DECISIONS.md` DEC-26 至 DEC-29；`backend/internal/modules/tasks/`、`backend/internal/modules/chat/category.go`、`backend/internal/modules/chat/loop.go` |
 | 2026-11-26 | v1.4 | §17 状态从 planned 改为 implemented：头部状态表、§0 索引行、§17 正文三处同步为实现已完成（2026-11-25 落地、2026-11-26 复核），证据指向 §17.12 与 `evidence.md` §1；契约正文、接口、错误码未变 | `specs/changes/CHG-CONV-007/evidence.md` §1（pass 26 条、断言 560 条）；`specs/test/P1-CONV/test-plan.md` §18.2 |
+| 2026-11-26 | v1.5 | 补两处实现新增内容：§17.5.3 WS 事件表新增 `task.progress`（进度百分比变化且非终态时发送，payload 为 `id`、`taskId`、`sessionId`、`progress`、`updatedAtMs`，进度未变化不发，与其它事件同用事件信封 `id` 去重）；§17.4.2 旧路由 `GET /api/tasks/{id}` 补 `sessionId` 必填、缺失 400 `task_session_required`、跨会话 404 `task_not_found`，并推荐改用会话内路由；同步四处漂移：§9.2 白名单补齐七类 `task.*`、§17.11 事件数改为 7、§17.13 eventlog 行补 `task.progress`、§17.10 补 `task_session_required` | `backend/internal/modules/tasks/service.go:653`；`backend/internal/core/eventlog/eventlog.go:38`、`:106`；`backend/internal/modules/tasks/http.go:213-228`；`backend/internal/modules/chat/http.go:486` |
 
 ---
 
@@ -1074,10 +1075,12 @@ N/A：投影是 HTTP 拉取（可按 ETag 304 复用）；后端不推送投影�
 | 方法 | 路径 | 改造点 | 兼容性 |
 |---|---|---|---|
 | GET | `/api/tasks` | 新增 `sessionId`、`batchId` 查询参数，返回 `counts` 与 `displayStatus`；缺省仍返回全部任务 | 旧字段保留，新增字段向前兼容 |
-| GET | `/api/tasks/{id}` | 响应增加 `steps`、`currentStepId`、`traces`、`context`、`budget`、`mode`、`waitingReason`、`failReason`、`displayStatus` | 旧字段保留；`steps` 与旧 `phases` 并存 |
+| GET | `/api/tasks/{id}` | 新增 `steps`、`currentStepId`、`traces`、`context`、`budget`、`mode`、`waitingReason`、`failReason`、`displayStatus`；必须带 `sessionId` 查询参数，缺失返回 400 `task_session_required`，与任务所属会话不一致返回 404 `task_not_found` | 旧字段保留；`steps` 与旧 `phases` 并存；不带 `sessionId` 的旧调用由 200 变为 400，属契约收紧 |
 | POST | `/api/tasks/{id}/cancel` | 接受 `scope` 查询参数，语义同 N4；终态返回 200 且 `changed=false` | 旧调用不传 `scope` 时行为等于 `self` |
 | POST | `/api/tasks/{id}/retry` | 限定状态为 `failed`、`cancelled`、`interrupted`，其它状态 409 `task_state_conflict` | 旧调用对 `done` 重试会从 200 变为 409，属契约收紧，须在实现时同步前端 |
 | GET | `/api/sessions/{id}/artifacts` | 响应元素增加 `typeBadge`、`taskTitle`；保留原有扁平分页 | 旧字段与 `ETag` 语义不变 |
+
+旧路由 `GET /api/tasks/{id}` 保留但收紧（`backend/internal/modules/tasks/http.go:213-228`）：`sessionId` 查询参数必填，缺失返回 400 `task_session_required`；任务不属于该会话时返回 404 `task_not_found`，文案为「任务不存在」，不暴露任务是否存在。新代码应改用 `GET /api/sessions/{sid}/tasks/{taskId}`，会话内路由自带归属校验。
 
 ### 17.5 消息与事件
 
@@ -1111,6 +1114,7 @@ N/A：投影是 HTTP 拉取（可按 ETag 304 复用）；后端不推送投影�
 |---|---|---|
 | `task.created` | 批内每个任务创建后各发 1 条 | `id`、`sessionId`、`batchId`、`mode`、`status`、`displayStatus`、`title`、`dependsOn`、`orderIndex`、`createdAt` |
 | `task.updated` | 状态、等待原因、进度、尝试次数变化 | `id`、`sessionId`、`batchId`、`status`、`displayStatus`、`waitingReason`、`progress`、`attempt`、`triggerCount`、`failReason`、`changed`（字符串数组，元素取 `status`、`waitingReason`、`progress`、`attempt`） |
+| `task.progress` | 任务进度百分比变化且非终态 | `id`、`taskId`、`sessionId`、`progress`（0–100 整数）、`updatedAtMs`；进度未变化不发，与其它事件同用事件信封 `id` 去重 |
 | `task.step` | 步骤进入 `running` 或终态 | `id`、`stepId`、`stepSeq`、`status`、`traceCount`、`progress`、`at` |
 | `task.trace` | 追加一条轨迹 | `id`、`stepId`、`traceSeq`、`category`、`tool`、`text`（前 200 字）、`at` |
 | `task.report` | 任务进入终态并需要汇报 | 既有字段不变，增加 `displayStatus` 与 `failReason` |
@@ -1193,6 +1197,7 @@ N/A：投影是 HTTP 拉取（可按 ETag 304 复用）；后端不推送投影�
 | 错误码 | HTTP | 何时返回 | 文案要点与客户端动作 |
 |---|---|---|---|
 | `task_not_found` | 404 | 任务 id 不存在，或任务与会话不匹配 | 「任务不存在」；前端退出详情并刷新列表，不提示“无权限” |
+| `task_session_required` | 400 | 旧路由 `GET /api/tasks/{id}` 缺少 `sessionId` 查询参数 | 「缺少会话参数」；前端补 `sessionId`，或改用 `/api/sessions/{sid}/tasks/{taskId}` |
 | `task_state_conflict` | 409 | 重试、确认、恢复的状态前提不满足 | 「当前状态不支持该操作」，带 `currentStatus`；前端刷新该任务后隐藏不适用入口 |
 | `invalid_task_mode` | 400 | `mode` 不是 `plan`/`explore`，或 `explore` 携带步骤 | 「执行模式不合法」；前端回退到 `plan` |
 | `invalid_task_status` | 400 | 列表筛选 `status` 含未知值 | 「筛选状态不合法」；前端重置为全部 |
@@ -1216,7 +1221,7 @@ N/A：投影是 HTTP 拉取（可按 ETag 304 复用）；后端不推送投影�
 | 列表 | 全局 `GET /api/tasks` 返回全部任务，无筛选无计数 | 会话内列表，四态筛选、批次筛选、计数与游标 | 新增 N2，全局接口保留 |
 | 取消 | 只取消单个任务，等待执行器 5 秒，无级联、无条件更新 | 支持 `scope=chain`，条件更新，终态 200 幂等 | 改造既有取消，补级联 |
 | 重试 | 任意状态都能重试，包括 `done` | 只允许 `failed`、`cancelled`、`interrupted` | 收紧为 409，需同步前端 |
-| WS | 只有 `task.created`、`task.updated`、`task.report`，payload 无 `displayStatus`、`waitingReason`、`triggerCount` | 6 个 `task.*` 事件，payload 含展示态、等待原因、触发计数 | 扩白名单与 payload，保持旧字段 |
+| WS | 只有 `task.created`、`task.updated`、`task.report`，payload 无 `displayStatus`、`waitingReason`、`triggerCount` | 7 个 `task.*` 事件，payload 含展示态、等待原因、触发计数 | 扩白名单与 payload，保持旧字段 |
 | 执行器上下文 | 沿用聊天回合上下文，受 12 分钟墙钟取消 | 任务独立取消上下文，无系统执行超时 | 执行器入口改为接收任务级 `context.Context` |
 | 交付物 | 全局 `GET /api/deliverables` 扁平分页，无类型徽标与任务名 | 会话内按任务分组，`typeBadge`、`taskTitle`、下载地址 | 新增 N9，全局接口保留 |
 | 任务数上限 | 工作流上限 12、并发 3，由 `maxWorkflowTasks`、`maxWorkflowConcurrency` 控制 | 批量上限 12 沿用；并发默认 3，可用 `SIMO_WORKFLOW_CONCURRENCY` 覆盖 | 沿用现有常量与配置项 |
@@ -1261,7 +1266,7 @@ N/A：投影是 HTTP 拉取（可按 ETag 304 复用）；后端不推送投影�
 | `backend/internal/modules/chat/category.go` | `category` 白名单加入 `task`，仅服务端可写 |
 | `backend/internal/modules/chat/cards.go` | 卡片与汇总卡写入 `batch_id` |
 | `backend/internal/modules/chat/loop.go` | `delegate` 改调会话内创建服务，执行器使用任务级上下文 |
-| `backend/internal/core/eventlog/eventlog.go` | 白名单加入 `task.step`、`task.trace`、`task.reminder` |
+| `backend/internal/core/eventlog/eventlog.go` | 白名单加入 `task.step`、`task.trace`、`task.reminder`、`task.progress` |
 | `scripts/ac/AC-CONV-009-*.mjs` | 18 个断言脚本已建，证据见 `specs/changes/CHG-CONV-007/evidence.md` §1 |
 
 ### 17.14 未实现项与未决问题

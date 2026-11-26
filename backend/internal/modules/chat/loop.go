@@ -493,7 +493,12 @@ func (m *Module) runTurn(active *activeTurn, user Message, decision DecisionEnve
 	}
 
 	if decision.Kind == DecisionDelegate {
-		m.delegate(ctx, active, decision, userText)
+		if note, handled := m.delegate(ctx, active, decision, userText); handled {
+			// 方案已生成或方案生成失败：本回合不调模型，避免工具写入在确认前产生产物（DEC-39）。
+			m.setReplyCategory(ctx, active.ReplyID, CategoryProgress)
+			m.streamText(ctx, active, note)
+			return
+		}
 	}
 
 	err := m.streamModel(ctx, active, userText)
@@ -546,62 +551,72 @@ func (m *Module) streamClarify(ctx context.Context, active *activeTurn, decision
 	m.streamText(ctx, active, question)
 }
 
-func (m *Module) delegate(ctx context.Context, active *activeTurn, decision DecisionEnvelope, userText string) {
+// delegate 处理 DELEGATE 回合。只有方案端口可用时才介入：C2+ 返回方案卡说明并停下本回合；
+// C0/C1 与未接方案端口一律返回 false，交给普通对话直接回答。这里不创建任何任务（DEC-43）。
+func (m *Module) delegate(ctx context.Context, active *activeTurn, decision DecisionEnvelope, userText string) (string, bool) {
 	taskIntent, intentReason := classifyTaskIntent(userText)
 	if decision.Kind != DecisionDelegate || !decision.TaskIntent || !taskIntent {
 		m.log.Info("跳过 DELEGATE：非明确任务",
 			"decision_kind", decision.Kind, "taskIntent", taskIntent,
 			"skipReason", intentReason, "taskId", "")
-		return
+		return "", false
 	}
 	if m.taskSvc == nil {
 		m.log.Info("跳过 DELEGATE：tasks 模块未启用",
 			"decision_kind", decision.Kind, "taskIntent", taskIntent,
 			"skipReason", "tasks_module_disabled", "taskId", "")
-		return
+		return "", false
 	}
 	title := strings.TrimSpace(decision.TaskTitle)
 	if title == "" {
 		title = truncate(userText, 60)
 	}
-	// DELEGATE 走批量创建（同一服务方法、同一幂等与卡片写入），旧 /api/tasks 保留为兼容层。
-	if creator, ok := m.taskSvc.(coretask.BatchCreator); ok {
-		result, err := creator.CreateBatch(ctx, active.SessionID, coretask.BatchCreateInput{
-			Mode: "plan",
-			Goal: userText,
-			Kind: "mock",
-			Tasks: []coretask.BatchTaskInput{{
-				Key: "t1", Title: title, Mode: "plan", Goal: userText, Payload: userText,
-			}},
-		})
-		if err != nil {
-			m.log.Error("创建后台任务失败（回复继续）", "err", err,
-				"decision_kind", decision.Kind, "taskIntent", taskIntent,
-				"skipReason", "create_failed", "taskId", "")
-			return
-		}
-		taskID := ""
-		if len(result.Tasks) > 0 {
-			taskID = result.Tasks[0].ID
-		}
-		m.log.Info("后台任务已创建", "taskId", taskID, "batchId", result.BatchID, "title", title,
-			"decision_kind", decision.Kind, "taskIntent", taskIntent, "skipReason", "")
-		return
+
+	// 复杂请求先出方案卡：C2 及以上只落 pending 方案与 confirmation 卡片，确认前不建任务、不建子会话、不产生产物（DEC-39）。
+	// 复杂度与派生规则复用 tasks 模块的 CreateTaskPlan，chat 只提供原文与由原文派生的步骤和拆分依据（DEC-43）。
+	planner, ok := m.taskSvc.(coretask.PlanCreator)
+	if !ok {
+		m.log.Info("跳过 DELEGATE：方案端口不可用，按普通对话直接回答",
+			"decision_kind", decision.Kind, "taskIntent", taskIntent,
+			"skipReason", "plan_port_missing", "taskId", "")
+		return "", false
 	}
-	task, err := m.taskSvc.Create(ctx, coretask.NewTask{
-		SessionID: active.SessionID,
-		Title:     title,
-		Kind:      "mock",
-		Payload:   userText,
+	multiRound, crossDomain := coretask.PlanFlags(userText)
+	steps, stepReason := coretask.DerivePlanSteps(userText)
+	plan, err := planner.PlanTask(ctx, active.SessionID, coretask.PlanRequest{
+		RequestText: userText,
+		Title:       title,
+		Goal:        userText,
+		Steps:       steps,
+		StepReason:  stepReason,
+		MultiRound:  multiRound,
+		CrossDomain: crossDomain,
 	})
 	if err != nil {
-		m.log.Error("创建后台任务失败（回复继续）", "err", err,
-			"decision_kind", decision.Kind, "taskIntent", taskIntent,
-			"skipReason", "create_failed", "taskId", "")
-		return
+		m.log.Error("生成任务方案失败（未建任务）", "err", err,
+			"decision_kind", decision.Kind, "taskIntent", taskIntent, "taskId", "")
+		return "任务方案生成失败，本次没有创建任务、子会话或产物，可以重试一次，或把请求拆成更小的步骤。", true
 	}
-	m.log.Info("后台任务已创建", "taskId", task.ID, "title", task.Title,
-		"decision_kind", decision.Kind, "taskIntent", taskIntent, "skipReason", "")
+	if plan.RequiresConfirmation {
+		m.log.Info("复杂任务已生成方案，等待确认", "planId", plan.PlanID, "complexity", plan.Complexity,
+			"taskCount", plan.TaskCount, "childSessionCount", plan.ChildSessionCount, "reason", plan.Reason,
+			"decision_kind", decision.Kind, "taskIntent", taskIntent)
+		return planConfirmationNote(plan), true
+	}
+	// C0/C1：不建任务、不建子会话、不出方案卡，直接由普通对话回答（DEC-43）。
+	m.log.Info("C0/C1 请求直接回答，不建任务", "complexity", plan.Complexity, "reason", plan.Reason,
+		"decision_kind", decision.Kind, "taskIntent", taskIntent,
+		"skipReason", "lightweight_request", "taskId", "")
+	return "", false
+}
+
+// planConfirmationNote 是方案卡回合的助手说明，指向卡片上的两个入口。
+func planConfirmationNote(plan coretask.PlanDecision) string {
+	detail := fmt.Sprintf("%d 个任务", plan.TaskCount)
+	if plan.ChildSessionCount > 0 {
+		detail += fmt.Sprintf("、%d 个子会话", plan.ChildSessionCount)
+	}
+	return fmt.Sprintf("已整理成 %s 方案（%s）。确认前不会创建任务、子会话或产物，请在方案卡上选择“确认执行”或“拒绝”。", plan.Complexity, detail)
 }
 
 // streamModel 调用真实/mock provider；支持工具回合；content 增量实时落库并推送。

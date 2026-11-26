@@ -91,3 +91,16 @@ Change：CHG-LEGACY-P5-MEM
 
 依赖：无新增外部依赖；证据来自本包 `test-plan.md` 与 `evidence.md` 引用的既有报告。
 - 风险：历史证据为引用而非本轮重跑，未验证项按 `missing` 记，不据此宣称通过。
+
+## 8. 功能点覆盖
+
+覆盖范围：`PRD-MEM-001`、`PRD-MEM-002`、`PRD-MEM-003`、`PRD-MEM-004`、`PRD-MEM-005`、`PRD-MEM-006`
+
+| 功能点ID | 状态 | 覆盖它的 AC | 备注 |
+|---|---|---|---|
+| `PRD-MEM-001` | partial | `AC-MEM-001-01` | api/memory 查询、scope 过滤、FTS 与注入已有，产品级作用域与搜索 AC 未全过 |
+| `PRD-MEM-002` | partial | `AC-MEM-002-01` | V3 entities、graph、pyramid、canonical 接口与表已有，金字塔与实体关系 AC 未验收 |
+| `PRD-MEM-003` | partial | `AC-MEM-003-01` | conflict、canonical、disputed 字段与合并、撤回已有，争议保留 AC 未验收 |
+| `PRD-MEM-004` | partial | `AC-MEM-004-01` | recall、debug 与上下文召回已有，R1 与 R2 产品 AC 未全过 |
+| `PRD-MEM-005` | partial | `AC-MEM-005-01` | 本地 TF-IDF 向量、融合与 consolidation job 已有，向量召回 AC 未验收 |
+| `PRD-MEM-006` | out | — | 未实现：v1–v6 SQLite 迁移代码存在，但缺少迁移、回滚与兼容验收 |

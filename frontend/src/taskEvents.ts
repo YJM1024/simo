@@ -98,7 +98,7 @@ export class TaskEventLog {
   }
 }
 
-/** `task.created` / `task.updated` / `task.report` 的可合并字段。 */
+/** `task.created` / `task.updated` / `task.progress` / `task.report` 的可合并字段。 */
 export function mergeTaskView(task: TaskView, event: TaskEvent): TaskView {
   const next: TaskView = { ...task }
   for (const key of ['status', 'displayStatus', 'waitingReason', 'progress', 'attempt', 'triggerCount', 'failReason', 'renderType'] as const) {

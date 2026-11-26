@@ -52,7 +52,7 @@ describe.skipIf(!browser)('coarse hit areas and narrow-layout occlusion in Chrom
   }
 
   it('measures every exec row of every expanded task group at >=44px, not only the first', async () => {
-    // 概览四块（DEC-36）：目标/输入/任务/交付物各一个可折叠头，展开后任务 2 行 + 交付物 1 行
+    // 概览四块（DEC-36）：目标/输入/任务/交付物各一个可折叠头，展开后任务 3 行 + 交付物 1 行（AC-TASK-001-01）
     const view = render(<RightPanel session={session()} projection={projection()} loading={false} />)
     const heads = [...view.container.querySelectorAll<HTMLButtonElement>('button.insp-block-head')]
     expect(heads).toHaveLength(4)
@@ -71,8 +71,8 @@ describe.skipIf(!browser)('coarse hit areas and narrow-layout occlusion in Chrom
         const rect = node.getBoundingClientRect()
         return { height: rect.height, width: rect.width, text: node.textContent ?? '' }
       }))
-      // 任务行最多 2 行 + 交付物行 1 行（DEC-36）
-      expect(rows).toHaveLength(3)
+      // 任务行 3 行 + 交付物行 1 行（AC-TASK-001-01 要求概览展示 3 条任务）
+      expect(rows).toHaveLength(4)
       for (const row of rows) expect(row.height, `命中区不足 44px：${row.text}`).toBeGreaterThanOrEqual(44)
     } finally {
       await context.close()

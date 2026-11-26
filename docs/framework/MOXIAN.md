@@ -1298,7 +1298,7 @@ scope 允许: <文件或目录>
 | 合规门 | 数据迁移、安全修复与导出删除类变更 | 产品（合规判定人）按 `ROLES.md` MX-R-37 发起 | 验收，出口级由合规判定人双签 | 法规依据、数据范围、保留例外、完成时限与第三方回执，写入 `templates/compliance-disposal-record.md`；判定按 `GATES.md` MX-G-68 |
 | 插件市场审核门 | 独立工具与插件类新功能 | 市场审核人按 `ROLES.md` MX-R-41 发起 | 复核人独立复核出结论，验收签最终判定 | 受理、审核、驳回、申诉、复核决定五类事件记录，写入 `templates/audit-events.md`；判定按 `GATES.md` MX-G-69 |
 | 独立工具发布门 | 独立工具附加类型 | 后端发起 | 验收 | `templates/cli-release-checklist.md` 与 `templates/gray-release.md` 记录、产物哈希与版本号；判定按 `GATES.md` MX-G-70 |
-| 功能点覆盖门 | 变更级验收；变更包 `spec.md` 声明了功能点覆盖表时逐包生效 | 变更包 owner 填表，产品核对功能点范围 | 验收 | 覆盖表所在 `spec.md` 的“功能点覆盖”节与 `scripts/check-fp-coverage.mjs` 输出；判定按 `GATES.md` MX-G-71 |
+| 功能点覆盖门 | 变更级验收，`specs/changes/` 下每个变更包逐包生效；包首部状态为 `draft`、`草稿`、`proposed` 或 `新建` 的缺覆盖表记 warning，其余（含状态行缺失）记 error | 变更包 owner 填表，产品核对功能点范围 | 验收 | 覆盖表所在 `spec.md` 的“功能点覆盖”节与 `scripts/check-fp-coverage.mjs` 输出；判定按 `GATES.md` MX-G-71 |
 
 每道检查门禁至少配一个通过样例与一个失败样例。样例由各门禁脚本的 `--self-test` 按固定时钟在 `.tmp/selftest-<gate>-*` 下生成，跑完移入隔离目录，不留在仓库；结构、契约、增量覆盖率与证据四道已有通过样例与失败样例，语言与追溯沿用各自脚本已有的自检。语言与追溯的自检只覆盖 R1 至 R7 与 T1 至 T6、R4，不覆盖 `MX-G-14` 至 `MX-G-19` 与 `MX-G-21` 至 `MX-G-25`；这 11 条规则在脚本补齐前按人工判据执行，不属于样例缺失，仍保留在默认阻断名单内。样例缺失的门禁按未验证处理，不进入默认阻断名单；`MX-G-46`、`MX-G-48`、`MX-G-49`、`MX-G-50`、`MX-G-53` 与 `MX-G-54` 的样例随 U-12 补齐，样例未持久化与六条规则的缺口登记为 U-08。
 

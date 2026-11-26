@@ -91,3 +91,16 @@ Change：CHG-LEGACY-P6-TEAM
 
 依赖：无新增外部依赖；证据来自本包 `test-plan.md` 与 `evidence.md` 引用的既有报告。
 - 风险：历史证据为引用而非本轮重跑，未验证项按 `missing` 记，不据此宣称通过。
+
+## 8. 功能点覆盖
+
+覆盖范围：`PRD-TEAM-001`、`PRD-TEAM-002`、`PRD-TEAM-003`、`PRD-TEAM-004`、`PRD-TEAM-005`、`PRD-TEAM-006`
+
+| 功能点ID | 状态 | 覆盖它的 AC | 备注 |
+|---|---|---|---|
+| `PRD-TEAM-001` | partial | `AC-TEAM-001-01` | 团队创建、成员与角色 API 及右栏展示已有，完整产品 AC 未全过 |
+| `PRD-TEAM-002` | partial | `AC-TEAM-002-01` | 团队会话与消息归属已有，共享上下文与权限 AC 未验收 |
+| `PRD-TEAM-003` | partial | `AC-TEAM-003-01` | 成员管理与角色变更已有，边界与冲突 AC 未验收 |
+| `PRD-TEAM-004` | out | — | 只有只读 view 端点，缺完整投影、版本与会话创建 API，产品 AC 未过 |
+| `PRD-TEAM-005` | partial | `AC-TEAM-005-01` | 团队运行与状态展示已有，失败与恢复 AC 未验收 |
+| `PRD-TEAM-006` | out | — | 未实现：没有并行子 agent 调度与团队看板端点、UI |

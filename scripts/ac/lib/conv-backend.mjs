@@ -22,7 +22,9 @@ const EXE = path.join(T06, 'simo.exe')
 // 通过 SIMO_TEST_CLOCK 放大服务端时钟。生产构建 simo.exe 不含这段代码，传了环境变量也无效。
 const EXE_TESTCLOCK = path.join(T06, 'simo-testclock.exe')
 const TEST_CLOCK_DEFAULT = 'rate=200'
-const LOCK = path.join(T06, 'backend.lock')
+// 单脚本模式的实例锁：默认仍是共享的一把（旧行为不变）；cdp 并发泳道由 harness 经 AC_CONV_LOCK
+// 下发各自 HOME 下的独立锁，否则 4 条泳道会抢同一把锁而退化成串行。
+const LOCK = process.env.AC_CONV_LOCK || path.join(T06, 'backend.lock')
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 // 批次共享模式：run-ac.mjs 已起好实例并经 AC_CONV_BASE / AC_CONV_HOME 下发；
 // 脚本不再抢锁、不再起停服务。未设时保持单脚本模式（自起自停，作回退与对照基线）。
@@ -219,6 +221,7 @@ async function portHealthy() {
 
 async function acquireLock() {
   fs.mkdirSync(T06, { recursive: true })
+  fs.mkdirSync(path.dirname(LOCK), { recursive: true })
   const end = Date.now() + 240000
   while (Date.now() < end) {
     try {
@@ -236,7 +239,7 @@ async function acquireLock() {
       await sleep(500)
     }
   }
-  throw new AcError('R-ENV', '等待实例锁超时（另一个 AC 脚本长时间占用 8789）', '240s 内取得锁', '超时')
+  throw new AcError('R-ENV', `等待实例锁超时（另一个 AC 脚本长时间占用 ${PORT} 的锁 ${LOCK}）`, '240s 内取得锁', '超时')
 }
 
 function releaseLock() {
@@ -287,7 +290,7 @@ async function startBackend(ac, opts = {}) {
   await stopBackend(child)
   if (upstream) await stopBackend(upstream)
   restoreRealMode(configBackup)
-  throw new AcError('R-ENV', `后端 8789 未就绪；日志尾部: ${tail.replace(/\s+/g, ' ').slice(-500)}`, 'GET /api/health 200', '未就绪')
+  throw new AcError('R-ENV', `后端 ${PORT} 未就绪；日志尾部: ${tail.replace(/\s+/g, ' ').slice(-500)}`, 'GET /api/health 200', '未就绪')
 }
 
 /**
@@ -384,6 +387,31 @@ async function stopBackend(child) {
   }
 }
 
+// 当前脚本持有的实例（单脚本模式）。重启类判据（AC-TASK-003-04）需要杀掉再起同一 HOME 的实例。
+let currentServer = null
+
+/**
+ * 重启隔离实例：停掉当前进程、等端口释放，再用同一 SIMO_HOME 起一份。
+ * 只在单脚本模式可用；共享模式下实例由 run-ac 统一管理，杀掉会波及同批其它脚本。
+ */
+export async function restartBackend(ac = 'restart') {
+  if (SHARED) {
+    throw new AcError('R-ENV', '重启判据只能在单脚本模式执行（cdp 组）', 'AC_CONV_SHARED!=1', SHARED)
+  }
+  if (!currentServer) {
+    throw new AcError('R-ENV', '没有可重启的实例（未通过 runAc 启动）', 'currentServer', 'null')
+  }
+  const server = currentServer
+  currentServer = null
+  if (server.upstream) await stopBackend(server.upstream)
+  if ('configBackup' in server) restoreRealMode(server.configBackup)
+  await stopBackend(server.child)
+  const end = Date.now() + 10000
+  while (Date.now() < end && await portHealthy()) await sleep(200)
+  currentServer = await startBackend(ac, {})
+  return currentServer
+}
+
 export async function runAc(ac, fn, opts = {}) {
   const ctx = makeCtx()
   let server = null
@@ -393,6 +421,7 @@ export async function runAc(ac, fn, opts = {}) {
     if (!SHARED) {
       await acquireLock()
       server = await startBackend(ac, opts)
+      currentServer = server
     }
     await fn(ctx)
     const failed = ctx.checks.filter((c) => !c.ok)
@@ -413,9 +442,11 @@ export async function runAc(ac, fn, opts = {}) {
     }
   } finally {
     if (!SHARED) {
+      server = currentServer || server
       if (server && server.upstream) await stopBackend(server.upstream)
       if (server && 'configBackup' in server) restoreRealMode(server.configBackup)
       await stopBackend(server && server.child)
+      currentServer = null
       releaseLock()
     }
   }

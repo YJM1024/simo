@@ -98,3 +98,22 @@ Change：CHG-LEGACY-P8-SET
 
 依赖：无新增外部依赖；证据来自本包 `test-plan.md` 与 `evidence.md` 引用的既有报告。
 - 风险：历史证据为引用而非本轮重跑，未验证项按 `missing` 记，不据此宣称通过。
+
+## 8. 功能点覆盖
+
+覆盖范围：`PRD-SET-001`、`PRD-SET-002`、`PRD-SET-003`、`PRD-SET-004`、`PRD-SET-005`、`PRD-SET-006`、`PRD-SYS-001`、`PRD-SYS-002`、`PRD-SYS-003`、`PRD-SYS-004`、`PRD-SYS-005`、`PRD-SYS-006`
+
+| 功能点ID | 状态 | 覆盖它的 AC | 备注 |
+|---|---|---|---|
+| `PRD-SET-001` | partial | `AC-SET-001-01` | 设置页与偏好读写已有，默认值、范围与持久化 AC 未全过 |
+| `PRD-SET-002` | partial | `AC-SET-002-01` | 模型与供应商配置已有，密钥、校验与回退 AC 未验收 |
+| `PRD-SET-003` | out | — | 未实现：没有通知渠道配置、测试发送与开关 |
+| `PRD-SET-004` | partial | `AC-SET-004-01` | 外观与语言设置已有，主题变量与实时生效 AC 未全过 |
+| `PRD-SET-005` | out | — | 未实现：没有快捷键配置与冲突检测 |
+| `PRD-SET-006` | out | — | 未实现：没有数据导入导出与重置入口 |
+| `PRD-SYS-001` | partial | `AC-SYS-001-01` | 运行时配置读写与热更新已有，校验与回滚 AC 未全过 |
+| `PRD-SYS-002` | partial | `AC-SYS-002-01` | 日志与诊断接口已有，级别切换与下载 AC 未验收 |
+| `PRD-SYS-003` | in | `AC-SYS-003-01`、`AC-SYS-003-02` | 健康检查与运行时状态；入口为设置页状态卡 |
+| `PRD-SYS-004` | partial | `AC-SYS-004-01` | 版本与更新检查接口已有，下载与安装引导 AC 未验收 |
+| `PRD-SYS-005` | partial | `AC-SYS-005-01` | 备份与恢复脚本存在，路径校验与回滚 AC 未验收 |
+| `PRD-SYS-006` | partial | `AC-SYS-006-01` | 数据目录与迁移提示已有，跨盘与权限边界 AC 未验收 |

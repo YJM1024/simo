@@ -43,6 +43,28 @@ export interface Message {
   cards?: Card[]
   attachments?: Array<{ id: string; name?: string; mime?: string }>
   sessionPath?: SessionPath[]
+  /** 只在 category=confirmation 的方案卡消息上出现（PRD-TASK-004）。 */
+  taskPlan?: TaskPlan
+}
+
+/** 复杂度分级后的任务方案；确认前 taskIds/childSessionIds 为空。 */
+export interface TaskPlan {
+  id: string
+  sessionId: string
+  complexity: string
+  status: 'pending' | 'confirmed' | 'rejected' | string
+  planMessageId?: string
+  childSessionIds: string[]
+  taskIds: string[]
+  planSteps: string[]
+  requestText?: string
+  taskCount: number
+  childSessionCount: number
+  attempt: number
+  createdAt: number
+  decidedAt?: number
+  expiresAt?: number
+  rejectedReason?: string
 }
 
 export interface Card {
@@ -150,6 +172,10 @@ export interface SessionSpecProjection {
   constraints: string[]
   inputs: string[]
   tasks: { done: SpecTaskGroup; running: SpecTaskGroup; pending: SpecTaskGroup }
+  /** PRD-TASK-005：直接子会话数量，父层「含 N 个子会话」入口用它；子会话任务不计入上面各组。 */
+  childSessionCount?: number
+  /** 直接子会话 id，顺序与 GET /api/sessions/{id}/children 一致。 */
+  childSessionIds?: string[]
   deliverables: { total: number; items: SpecDeliverable[]; hasMore: boolean }
   pendingConfirmations: { total: number }
 }
@@ -185,6 +211,10 @@ export interface TaskView {
   steps?: Array<{ id: string; title: string; status: string }>
   /** 产出文件摘要（后端口径 artifacts），用于卡面「产出 N 个」与交付物分组。 */
   artifacts?: Array<{ id?: string; name?: string; size?: number; createdAt?: number; mime?: string }>
+  /** PRD-TASK-005：本会话的直接子会话 id（按 sessions.parent_id 实时聚合，恒为数组）。 */
+  childSessionIds?: string[]
+  /** 直接子会话数量，与 childSessionIds.length 一致；子会话里的任务不计入本任务。 */
+  childSessionCount?: number
 }
 export interface TraceItem {
   id?: string
@@ -225,7 +255,7 @@ export interface DeliverablesPayload { groups: DeliverableGroup[]; total: number
 export interface TaskGraphNode { id: string; title: string; mode: 'plan' | 'explore'; status: string; displayStatus: TaskDisplayStatus; waitingReason?: string; progress?: number; failReason?: string; dependsOn?: string[] }
 export interface TaskGraphEdge { from: string; to: string; joinMode?: string; style?: string }
 export interface TaskGraphPayload { nodes: TaskGraphNode[]; edges: TaskGraphEdge[]; layers: Array<{ index: number; nodeIds: string[] }>; total: number }
-export type TaskEventType = 'task.created' | 'task.updated' | 'task.step' | 'task.trace' | 'task.report' | 'task.reminder'
+export type TaskEventType = 'task.created' | 'task.updated' | 'task.progress' | 'task.step' | 'task.trace' | 'task.report' | 'task.reminder'
 export interface TaskEvent {
   type: TaskEventType | 'message.created'
   id: string

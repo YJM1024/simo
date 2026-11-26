@@ -6,15 +6,14 @@
  * é€€å‡ºç  0 è¡¨ç¤ºé€šè¿‡ã€1 è¡¨ç¤ºå¤±è´¥ã€2 è¡¨ç¤ºå‚æ•°æˆ–çŽ¯å¢ƒé”™è¯¯ã€‚runner è´Ÿè´£åˆ†ç»„ã€å¹¶å‘ã€
  * è¶…æ—¶ã€è¯æ®è½ç›˜ä¸Žæ±‡æ€»ã€‚
  *
- * ä¸¤ç§æ‰§è¡Œæ¨¡å¼ï¼š
- *   - å…±äº«æ¨¡å¼ï¼ˆé»˜è®¤ï¼‰ï¼šå…ˆèµ·æœ¬æ‰¹è¦ç”¨çš„åŽç«¯åˆ†ç‰‡ä¸Žé¡µé¢æœåŠ¡ï¼ˆè§ scripts/ac/lib/batch-harness.mjsï¼‰ï¼Œ
- *     ç»„é—´å¹¶è¡Œã€ç»„å†…ä¸²è¡Œï¼›base-url ä¸Žéš”ç¦»åº“è·¯å¾„ç»çŽ¯å¢ƒå˜é‡ä¸‹å‘ç»™å­è„šæœ¬ï¼Œè„šæœ¬ä¸å†è‡ªå·±èµ·åœæœåŠ¡ã€
- *     ä¸å†æŠ¢ backend.lockï¼Œæ‰¹æœ«ç»Ÿä¸€åœæ­¢ã€‚å¹¶è¡Œä¸Šé™ï¼šä¸¤ä¸ª mock åˆ†ç‰‡å„ 1 æ¡ã€çœŸå®žåˆ†ç‰‡ 1 æ¡ã€UI 3 æ¡ã€‚
- *   - å•è„šæœ¬æ¨¡å¼ï¼ˆ--legacyï¼‰ï¼šä¿æŒåŽŸè¡Œä¸ºï¼Œæ¯æ¡è„šæœ¬è‡ªå·±èµ·åŽç«¯ã€è‡ªå·±åœã€æŠ¢ 8789 çš„æ–‡ä»¶é”ã€‚
- *     å¯¹ç…§åŸºçº¿ç”¨è¿™ä¸ªæ¨¡å¼ï¼Œå›žé€€ä¹Ÿç”¨å®ƒã€‚
+ * 两种执行模式：
+ *   - 共享模式（默认）：先起本批要用的后端分片与页面服务（见 scripts/ac/lib/batch-harness.mjs），组间并行；
+ *     每组按 GROUP_CONCURRENCY 开槽位，槽位环境经 batch.envFor(group, lane) 下发（独立端口、独立库、独立实例锁）。
+ *     并发上限：ui 3 条泳道；cdp 4 条泳道（后端 8931-8934、假上游 8941-8944、Chrome 调试 9280-9283）；其余组单槽。
+ *   - 单脚本模式（--legacy）：保持原行为，每条脚本自己起后端、自己停、抢 8789 的文件锁。对照基线用这个模式，回退也用它。
  *
- * åˆ†ç»„ï¼šscripts/ac/groups.json æ˜¾å¼åˆ—å‡º AC â†’ backend / backend-tools / uiï¼›
- * æœªç™»è®°çš„è„šæœ¬æŒ‰ cdp ä¸²è¡Œç»„èµ°å•è„šæœ¬æ¨¡å¼ï¼ˆAC-SYNC-* è‡ªç®¡ CDPï¼Œä¸å—å…±äº« harness å½±å“ï¼‰ã€‚
+ * 分组：scripts/ac/groups.json 显式列出 AC → backend / backend-tools / backend-clock / ui / cdp；
+ * 未登记脚本按单脚本模式执行（AC-SYNC-* 自管 CDP，不受共享 harness 影响）。
  * è¶…æ—¶ï¼šå•æ¡è„šæœ¬ 120 ç§’ï¼Œè¶…æ—¶åˆ¤ timeout å¹¶ç»ˆæ­¢å­è¿›ç¨‹ã€‚
  * è¯æ®ï¼šæ¯æ¡è„šæœ¬å†™ .tmp/ac/<AC-ID>.jsonï¼ˆå«å‘½ä»¤ã€å‚æ•°ã€æ—¶é—´ã€è€—æ—¶ã€é€€å‡ºç ã€stdout çš„ JSON è¡Œï¼‰ï¼›
  * è„šæœ¬è‡ªå·±å†™çš„è¯æ®å…ˆè¢«å¤åˆ¶åˆ° .tmp/ac-tooling/script-evidence/<AC-ID>.json å†è¦†ç›–ï¼Œæ–­è¨€æ¡æ•°ä»Žå®ƒè¯»ã€‚
@@ -24,6 +23,7 @@
  *
  * ç”¨æ³•ï¼š
  *   node scripts/run-ac.mjs --only AC-CONV-009-04,AC-CONV-009-05
+ *   node scripts/run-ac.mjs --only AC-TASK-          # 以 - 结尾的模式按前缀选中 30 条
  *   node scripts/run-ac.mjs --only ... --legacy       # æ”¹é€ å‰è¡Œä¸ºï¼ˆå¯¹ç…§åŸºçº¿ï¼‰
  *   node scripts/run-ac.mjs --only ... --build        # åªåœ¨æºç æ¯”äº§ç‰©æ–°æ—¶é‡å»º
  *   node scripts/run-ac.mjs --impact backend/internal/modules/chat/x.go,frontend/src/App.tsx
@@ -38,7 +38,7 @@ import { closeSync, copyFileSync, existsSync, mkdirSync, openSync, readFileSync,
 import { basename, dirname, join, relative, resolve } from 'node:path'
 import { spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
-import { startBatch, stopBatch } from './ac/lib/batch-harness.mjs'
+import { startBatch, stopBatch, CDP_LANES } from './ac/lib/batch-harness.mjs'
 import { ensureBackendBuilt, ensureFrontendBuilt, impactSelection } from './ac/lib/build-cache.mjs'
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
@@ -46,12 +46,22 @@ const DEFAULT_ROOT = resolve(SCRIPT_DIR, '..')
 const FIXTURE_DIR = join(DEFAULT_ROOT, '.tmp', 'ac-tooling', 'fixtures', 'runner')
 const DEFAULT_TIMEOUT_MS = 120_000
 const CONCURRENCY = 4
-const UI_CONCURRENCY = 3
+/**
+ * 按组并发槽位表。
+ *   ui            3 条页面泳道（页面端口 8787/8776/8766，各槽独立库）
+ *   cdp           4 条自起后端泳道（后端 8931-8934、假上游 8941-8944、Chrome 调试 9280-9283）
+ *   backend       1（按 2 片轮转，两个 mock 分片 8789/8792）
+ *   backend-tools 1（8791，配 8790 假上游）
+ *   backend-clock 1（按 2 片轮转，testclock 构建 8793/8794）
+ */
+const GROUP_CONCURRENCY = { ui: 3, cdp: CDP_LANES, backend: 1, 'backend-tools': 1, 'backend-clock': 1 }
 const IO_DIR = join('.tmp', 'ac-tooling', 'runner-io')
 const GROUPS = new Set(['cdp', 'http', 'unit'])
 const SHARED_GROUPS = new Set(['backend', 'backend-tools', 'backend-clock', 'ui'])
 /** 组内可切两片并行（共享库的写操作按脚本互不相干；backend-clock 两条各等 30 秒真实周期，切片省一半）。 */
 const SHARDED_GROUPS = new Set(['backend', 'backend-clock'])
+/** 不共享 harness 实例、但按槽位下发隔离环境的组：cdp 每条泳道自起后端与浏览器，槽位内串行。 */
+const LANE_GROUPS = new Set(['cdp'])
 
 /** è¯»å– scripts/ac/groups.jsonï¼šAC â†’ å…±äº«ç»„åã€‚æ²¡æœ‰è¯¥æ–‡ä»¶æ—¶å…¨éƒ¨å›žè½åˆ°å•è„šæœ¬æ¨¡å¼ã€‚ */
 function readGroupMap(root) {
@@ -314,13 +324,60 @@ async function runAll(root, entries, options) {
  *   - uiï¼šåŒä¸€ Chrome é‡Œæ¯æ¡è„šæœ¬ä¸€ä¸ªæ ‡ç­¾é¡µï¼Œ3 æ¡å¹¶è¡Œï¼›
  *   - cdp/å…¶å®ƒæœªç™»è®°è„šæœ¬ï¼šèµ°å•è„šæœ¬æ¨¡å¼ä¸²è¡Œï¼ˆè‡ªèµ·è‡ªåœï¼‰ã€‚
  */
+/** 上次一条脚本的实际耗时（毫秒），用于泳道负载均衡；没有证据（或证据正被占用）时按 0 返回，由调用方估算。 */
+function lastDurationMs(root, ac) {
+  const file = join(root, '.tmp', 'ac', `${ac}.json`)
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const record = JSON.parse(readFileSync(file, 'utf8'))
+      const value = Number(record?.durationMs)
+      if (Number.isFinite(value) && value > 0) return value
+      return 0
+    } catch {
+      // 上一轮刚写完时可能短暂读不到（句柄/扫描占用），重试一次再放弃。
+      if (attempt === 0) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50)
+    }
+  }
+  return 0
+}
+
+/**
+ * 按耗时做 LPT 分配：先排长脚本，依次放进当前累计负载最小的泳道，避免平均切造成长尾。
+ * 读不到耗时的条目按已知耗时的中位数估算，不能当成 0——否则这些条目会被全部堆进同一条泳道。
+ * 完全没有历史耗时（首跑）时按发现顺序轮转，保证各泳道条数尽量均匀。
+ */
+function assignLanes(entries, laneCount, root) {
+  const buckets = Array.from({ length: laneCount }, () => [])
+  const timed = entries.map((entry) => ({ entry, ms: lastDurationMs(root, entry.ac) }))
+  if (timed.every((item) => item.ms === 0)) {
+    entries.forEach((entry, index) => buckets[index % laneCount].push(entry))
+    return buckets
+  }
+  const known = timed.map((item) => item.ms).filter((ms) => ms > 0).sort((left, right) => left - right)
+  const median = known[Math.floor(known.length / 2)]
+  for (const item of timed) if (item.ms === 0) item.ms = median
+  const loads = new Array(laneCount).fill(0)
+  timed.sort((left, right) => right.ms - left.ms || left.entry.index - right.entry.index)
+  for (const { entry, ms } of timed) {
+    let target = 0
+    for (let lane = 1; lane < laneCount; lane += 1) {
+      if (loads[lane] < loads[target]) target = lane
+    }
+    buckets[target].push(entry)
+    loads[target] += ms
+  }
+  for (const bucket of buckets) bucket.sort((left, right) => left.index - right.index)
+  return buckets
+}
+
 async function runAllShared(root, entries, options) {
   const shared = entries.filter((entry) => SHARED_GROUPS.has(entry.group))
-  const legacy = entries.filter((entry) => !SHARED_GROUPS.has(entry.group))
+  const lane = entries.filter((entry) => LANE_GROUPS.has(entry.group))
+  const legacy = entries.filter((entry) => !SHARED_GROUPS.has(entry.group) && !LANE_GROUPS.has(entry.group))
   const results = []
   const timings = { startMs: 0, groups: {}, stopMs: 0 }
 
-  if (shared.length === 0) {
+  if (shared.length === 0 && lane.length === 0) {
     return { results: await runAll(root, entries, options), timings }
   }
 
@@ -336,7 +393,7 @@ async function runAllShared(root, entries, options) {
     for (const group of groups) {
       const list = shared.filter((entry) => entry.group === group)
       const shardCount = SHARDED_GROUPS.has(group) ? 2 : 1
-      const concurrency = group === 'ui' ? UI_CONCURRENCY : 1
+      const concurrency = GROUP_CONCURRENCY[group] ?? 1
       for (let shard = 0; shard < shardCount; shard += 1) {
         const queue = list.filter((_, i) => i % shardCount === shard)
         if (queue.length === 0) continue
@@ -370,6 +427,32 @@ async function runAllShared(root, entries, options) {
     }
     // æœªç™»è®°è„šæœ¬ï¼ˆæ—¶é—´ç±»åˆ¤æ®èµ° testclock å•è„šæœ¬æ¨¡å¼ï¼‰è‡ªæˆä¸€æ¡ä¸²è¡Œé“¾ï¼Œä¸Žå…±äº«ç»„å¹¶è¡Œï¼š
     // å®ƒä»¬å½¼æ­¤è¦æŠ¢ 8789 ä¸Ž backend.lockï¼Œåªèƒ½ä¸²è¡Œï¼›ä½†ä¸å¿…ç­‰å…±äº«ç»„è·‘å®Œï¼Œå¦åˆ™æ•´æ‰¹è¢«æ‹–åˆ°åˆ†é’Ÿçº§ã€‚
+    // cdp 组按槽位分泳道：槽位环境由 batch.envFor('cdp', lane) 下发（独立后端/上游/Chrome/HOME/锁），
+    // 泳道内脚本串行（同一槽位共用一份库），泳道之间并行。分配按上次耗时做 LPT，不平均切。
+    for (const group of new Set(lane.map((entry) => entry.group))) {
+      const list = lane.filter((entry) => entry.group === group)
+      const laneCount = GROUP_CONCURRENCY[group] ?? 1
+      const buckets = assignLanes(list, laneCount, root)
+      for (let laneIndex = 0; laneIndex < buckets.length; laneIndex += 1) {
+        const bucket = buckets[laneIndex]
+        if (bucket.length === 0) continue
+        const key = `${group}#lane-${laneIndex + 1}`
+        const stat = { count: bucket.length, concurrency: 1, wallMs: 0 }
+        shards.set(key, stat)
+        timings.groups[key] = { scripts: bucket.map((entry) => entry.ac), concurrency: 1 }
+        const laneEnv = batch.envFor(group, laneIndex)
+        for (const entry of bucket) {
+          entry.env = laneEnv
+          entry.baseUrl = laneEnv.AC_CONV_BASE ?? options.baseUrl
+        }
+        workers.push((async () => {
+          const t0 = Date.now()
+          for (const entry of bucket) results.push(await runOne(root, entry, options))
+          stat.wallMs = Date.now() - t0
+        })())
+      }
+    }
+
     workers.push((async () => {
       for (const entry of legacy) results.push(await runOne(root, entry, options))
     })())
@@ -613,7 +696,12 @@ async function main() {
 
   let entries = discoverScripts(options.root)
   if (options.group) entries = entries.filter((entry) => entry.group === options.group)
-  if (options.only.length > 0) entries = entries.filter((entry) => options.only.includes(entry.ac))
+  // --only 支持精确 ID 与前缀：以「-」结尾的模式按前缀匹配（如 AC-TASK- 选中 30 条任务域脚本）。
+  if (options.only.length > 0) {
+    entries = entries.filter((entry) => options.only.some((pattern) => (
+      pattern.endsWith('-') ? entry.ac.startsWith(pattern) : entry.ac === pattern
+    )))
+  }
 
   if (entries.length === 0) {
     console.log('æ²¡æœ‰åŒ¹é…çš„ AC æ–­è¨€è„šæœ¬')

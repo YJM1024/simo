@@ -3,6 +3,7 @@ import {
   connectEvents,
   type ChatEvents,
   archiveSession,
+  confirmTaskPlan,
   createSessionDraft,
   decideTaskConfirmation,
   getArtifactContent,
@@ -12,6 +13,7 @@ import {
   listSessionTasks,
   markSessionRead,
   resumeTask,
+  rejectTaskPlan,
   unarchiveSession,
   getPermissions,
   getAllSessionMessages,
@@ -202,6 +204,10 @@ export default function App(): React.ReactNode {
   const [expandedBatches, setExpandedBatches] = useState<Set<string>>(new Set())
   const [taskActionBusyId, setTaskActionBusyId] = useState('')
   const [taskActionError, setTaskActionError] = useState<{ taskId: string; message: string } | null>(null)
+  const [planActionBusyId, setPlanActionBusyId] = useState('')
+  const [planActionError, setPlanActionError] = useState<{ planId: string; message: string } | null>(null)
+  /** 恢复成功后详情层里的落点提示：说明从第几步继续，避免用户以为重头跑。 */
+  const [resumeNotice, setResumeNotice] = useState<{ taskId: string; text: string } | null>(null)
   const [deliverableGroups, setDeliverableGroups] = useState<DeliverableGroup[]>([])
   const [tabDeliverablesLoading, setTabDeliverablesLoading] = useState(false)
   const [tabDeliverablesError, setTabDeliverablesError] = useState('')
@@ -707,6 +713,7 @@ export default function App(): React.ReactNode {
     setJumpStepId(stepId)
     setDetailTaskId(taskId)
     setTaskDetail(null)
+    setResumeNotice(null)
     void loadTaskDetail(sessionId, taskId)
   }, [loadTaskDetail])
 
@@ -715,6 +722,7 @@ export default function App(): React.ReactNode {
     setTaskDetail(null)
     setDetailError('')
     setJumpStepId(null)
+    setResumeNotice(null)
   }, [])
 
   const loadTaskGraph = useCallback(async (sessionId: string): Promise<void> => {
@@ -764,13 +772,53 @@ export default function App(): React.ReactNode {
     }
   }, [detailTaskId, loadTaskDetail, refreshTasksSoon])
 
+  // PRD-TASK-004：确认才派生任务与子会话；拒绝不动任务。两者都按方案卡消息回流刷新。
+  const decidePlan = useCallback(async (planId: string, decision: 'confirm' | 'reject'): Promise<void> => {
+    const sessionId = activeIdRef.current
+    if (!sessionId) return
+    setPlanActionBusyId(planId)
+    setPlanActionError(null)
+    try {
+      const payload = decision === 'confirm'
+        ? await confirmTaskPlan(sessionId, planId)
+        : await rejectTaskPlan(sessionId, planId, '用户拒绝方案')
+      const plan = payload.plan
+      if (plan) setMessages((current) => current.map((message) => message.taskPlan?.id === planId ? { ...message, taskPlan: plan } : message))
+      refreshTasksSoon()
+      void loadMessages(sessionId)
+    } catch (err) {
+      setPlanActionError({ planId, message: err instanceof Error ? err.message : '方案操作失败' })
+    } finally {
+      setPlanActionBusyId('')
+    }
+  }, [loadMessages, refreshTasksSoon])
+
   const resumeTaskById = useCallback(async (taskId: string): Promise<void> => {
     const sessionId = activeIdRef.current
     if (!sessionId) return
     setTaskActionBusyId(taskId)
     setTaskActionError(null)
+    setResumeNotice(null)
     try {
-      await resumeTask(sessionId, taskId, '用户从任务卡恢复')
+      const payload = await resumeTask(sessionId, taskId, '用户从任务卡恢复')
+      const resumedStepId = payload.resumedStepId
+      // resumedStepId 优先对齐详情层步骤；对不上时退到「详情层里正在跑或待跑的步骤」，
+      // 再退到响应体 task.steps 里的 running 步，保证提示始终写清从哪一步继续。
+      const detailSteps = taskDetail?.task.id === taskId ? taskDetail.steps : []
+      const detailStep = (resumedStepId ? detailSteps.find((step) => step.id === resumedStepId) : undefined)
+        ?? detailSteps.find((step) => step.status === 'running')
+        ?? detailSteps.find((step) => step.status === 'pending')
+      const apiTask = payload.task as { steps?: Array<{ id?: string; seq?: number; title?: string; status?: string }> } | undefined
+      const apiSteps = Array.isArray(apiTask?.steps) ? apiTask.steps : []
+      const apiStep = (resumedStepId ? apiSteps.find((step) => step.id === resumedStepId) : undefined)
+        ?? apiSteps.find((step) => step.status === 'running')
+      const step = detailStep ?? (apiStep && typeof apiStep.title === 'string'
+        ? { seq: apiStep.seq ?? apiSteps.indexOf(apiStep) + 1, title: apiStep.title }
+        : undefined)
+      setResumeNotice({
+        taskId,
+        text: step && step.title ? `已从第 ${step.seq} 步「${step.title}」继续` : '已从暂停步骤继续',
+      })
       refreshTasksSoon()
       if (detailTaskId === taskId) void loadTaskDetail(sessionId, taskId)
     } catch (err) {
@@ -778,7 +826,7 @@ export default function App(): React.ReactNode {
     } finally {
       setTaskActionBusyId('')
     }
-  }, [detailTaskId, loadTaskDetail, refreshTasksSoon])
+  }, [detailTaskId, loadTaskDetail, refreshTasksSoon, taskDetail])
 
   const changeRightTab = useCallback((tab: RightTab): void => {
     setRightTab(tab)
@@ -833,6 +881,17 @@ export default function App(): React.ReactNode {
     if (event.type === 'task.step') {
       setTaskDetail((prev) => prev && prev.task.id === event.id ? { ...prev, steps: prev.steps.map((step) => step.id === event.stepId ? mergeTaskStep(step, event) : step) } : prev)
       refreshTasksSoon()
+      return
+    }
+    if (event.type === 'task.progress') {
+      // 进度只改任务自身的 progress：就地合并任务卡与详情，不整表重取；
+      // 计数由状态决定，进度事件不改变计数，因此不触发 refreshTasksSoon。
+      setTasks((prev) => prev.map((task) => task.id === event.id ? mergeTaskView(task, event) : task))
+      setTaskDetail((prev) => prev && prev.task.id === event.id ? { ...prev, task: mergeTaskView(prev.task, event) } : prev)
+      setTaskIndex((current) => {
+        const existing = current[event.id]
+        return existing ? { ...current, [event.id]: mergeTaskView(existing, event) } : current
+      })
       return
     }
     setTasks((prev) => prev.map((task) => task.id === event.id ? mergeTaskView(task, event) : task))
@@ -1345,6 +1404,11 @@ export default function App(): React.ReactNode {
 
   const flatAll = useMemo(() => flattenTree(sessions), [sessions])
   const activeMeta = flatAll.find((session) => session.id === activeId) ?? null
+  // PRD-TASK-005：父层右栏「含 N 个子会话」的展开列表。数量以投影为准，这里只补标题与 id。
+  const childSessions = useMemo(
+    () => flatAll.filter((session) => session.parentId === activeId && !session.draft).map((session) => ({ id: session.id, title: session.title })),
+    [flatAll, activeId],
+  )
   const loadedAncestorIds = useMemo(() => new Set(ancestorMessages.map((message) => message.sessionId)), [ancestorMessages])
   const visitedAncestorIds = useMemo(() => new Set([...loadedAncestorIds, ...emptyAncestorIds]), [loadedAncestorIds, emptyAncestorIds])
   const nextParent = useMemo(() => {
@@ -1459,13 +1523,16 @@ export default function App(): React.ReactNode {
     const task = message.taskId ? taskLookup.get(message.taskId) : undefined
     const batch = message.batchId ? batchTasks[message.batchId] : undefined
     const batchId = message.batchId
+    const plan = message.taskPlan
     return {
       task,
       tasks: batch?.tasks ?? [],
       total: batch?.total ?? message.taskCount ?? 0,
       expanded: batchId ? expandedBatches.has(batchId) : false,
-      busy: task ? taskActionBusyId === task.id : false,
-      error: task && taskActionError?.taskId === task.id ? taskActionError.message : '',
+      busy: plan ? planActionBusyId === plan.id : task ? taskActionBusyId === task.id : false,
+      error: plan
+        ? (planActionError?.planId === plan.id ? planActionError.message : '')
+        : (task && taskActionError?.taskId === task.id ? taskActionError.message : ''),
       onOpen: () => { if (task) openTaskDetail(task) },
       onOpenTask: (item) => openTaskDetail(item),
       onOpenSummary: () => changeRightTab('tasks'),
@@ -1491,6 +1558,8 @@ export default function App(): React.ReactNode {
       onConfirm: () => { if (task) void decideTask(task.id, 'confirm') },
       onCancel: () => { if (task) void decideTask(task.id, 'cancel') },
       onResume: () => { if (task) void resumeTaskById(task.id) },
+      onConfirmPlan: plan ? () => { void decidePlan(plan.id, 'confirm') } : undefined,
+      onRejectPlan: plan ? () => { void decidePlan(plan.id, 'reject') } : undefined,
     }
   }
 
@@ -1541,7 +1610,7 @@ export default function App(): React.ReactNode {
                       {combinedMessages.map((message, index) => {
                         const previous = combinedMessages[index - 1]
                         const divider = !previous || previous.sessionId !== message.sessionId
-                        return <div key={message.id}>{divider && <div className="session-divider"><span>{message.sessionTitle ?? (message.sessionId === activeId ? activeSession?.title : '会话')}</span></div>}<MessageItem message={message} onCardAction={handleCardAction} readOnly={Boolean(activeSession?.archived) || message.sessionId !== activeId} onRetry={retryFailedReply} taskInfo={message.category === 'task' ? taskInfoFor(message) : undefined} /></div>
+                        return <div key={message.id}>{divider && <div className="session-divider"><span>{message.sessionTitle ?? (message.sessionId === activeId ? activeSession?.title : '会话')}</span></div>}<MessageItem message={message} onCardAction={handleCardAction} readOnly={Boolean(activeSession?.archived) || message.sessionId !== activeId} onRetry={retryFailedReply} taskInfo={message.category === 'task' || message.category === 'confirmation' || (message.category === 'progress' && message.taskId) ? taskInfoFor(message) : undefined} /></div>
                       })}
                     </div>
                   </ConversationPanel>
@@ -1574,6 +1643,9 @@ export default function App(): React.ReactNode {
                 onTaskFilterChange={setTaskFilter}
                 onOpenTask={openTaskDetail}
                 onJumpToTasks={jumpToTasks}
+                childSessions={childSessions}
+                onOpenChildSession={(sessionId) => switchSession(sessionId)}
+                sourceSessionTitle={activeMeta && activeMeta.parentId ? activeMeta.title : ''}
                 onLoadMoreTasks={() => { if (activeId) void loadTasks(activeId, taskFilter, true) }}
                 onRetryTasks={() => { if (activeId) { taskBeforeRef.current = undefined; void loadTasks(activeId, taskFilter) } }}
                 deliverableGroups={deliverableGroups}
@@ -1593,6 +1665,9 @@ export default function App(): React.ReactNode {
                 jumpStepId={jumpStepId}
                 onCloseDetail={closeTaskDetail}
                 onRetryDetail={() => { if (activeId && detailTaskId) void loadTaskDetail(activeId, detailTaskId) }}
+                onResumeDetail={() => { if (detailTaskId) void resumeTaskById(detailTaskId) }}
+                resumeBusy={detailTaskId ? taskActionBusyId === detailTaskId : false}
+                resumeNotice={resumeNotice && resumeNotice.taskId === detailTaskId ? resumeNotice.text : ''}
                 graphOpen={graphOpen}
                 graph={taskGraph}
                 graphLoading={graphLoading}

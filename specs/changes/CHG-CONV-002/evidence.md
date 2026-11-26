@@ -20,10 +20,10 @@ Implements: PRD-CONV-004、PRD-CONV-007
 
 | 证据 ID | AC | 类型 | 命令 | 路径 | 生成时间 | 结果 | 可复跑 | 轮次 |
 |---|---|---|---|---|---|---|---|---|
-| E-AC-CONV-004-01-01 | AC-CONV-004-01 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-CONV-002/spec.md | 2026-11-21 | pass | 是 | 1 |
-| E-AC-CONV-004-02-01 | AC-CONV-004-02 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-CONV-002/spec.md | 2026-11-21 | partial | 是 | 1 |
-| E-AC-CONV-007-01-01 | AC-CONV-007-01 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-CONV-002/spec.md | 2026-11-21 | pass | 是 | 1 |
-| E-AC-CONV-007-02-01 | AC-CONV-007-02 | 文档核对 | N/A：实现未开始 | specs/changes/CHG-CONV-002/spec.md | 2026-11-21 | partial | 是 | 1 |
+| E-AC-CONV-004-01-01 | AC-CONV-004-01 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-CONV-002/spec.md | 2026-11-21 | pass | 是 | 1 |
+| E-AC-CONV-004-02-01 | AC-CONV-004-02 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-CONV-002/spec.md | 2026-11-21 | partial | 是 | 1 |
+| E-AC-CONV-007-01-01 | AC-CONV-007-01 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-CONV-002/spec.md | 2026-11-21 | pass | 是 | 1 |
+| E-AC-CONV-007-02-01 | AC-CONV-007-02 | 人工记录 | N/A：实现未开始 | specs/changes/CHG-CONV-002/spec.md | 2026-11-21 | partial | 是 | 1 |
 
 > 本表按 AC 汇总已有证据来源与判定；逐条细节仍以本文件下列各节与 `test-plan.md` 为准。
 

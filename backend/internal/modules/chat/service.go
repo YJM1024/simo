@@ -3,8 +3,11 @@ package chat
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
+
+	coretask "simo/internal/core/task"
 )
 
 // TurnRecord 是 turns 表投影（M2 最小）。
@@ -51,6 +54,9 @@ func (m *Module) listMessages(ctx context.Context, sessionID string) ([]Message,
 		return nil, err
 	}
 	if err := m.attachTaskCounts(ctx, out); err != nil {
+		return nil, err
+	}
+	if err := m.attachTaskPlans(ctx, out); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -117,6 +123,9 @@ func (m *Module) listMessagesPage(ctx context.Context, sessionIDs []string, befo
 	if err := m.attachTaskCounts(ctx, out); err != nil {
 		return nil, err
 	}
+	if err := m.attachTaskPlans(ctx, out); err != nil {
+		return nil, err
+	}
 	return out, nil
 }
 
@@ -155,6 +164,9 @@ func (m *Module) listMessagesForSessions(ctx context.Context, sessionIDs []strin
 		return nil, err
 	}
 	if err := m.attachTaskCounts(ctx, out); err != nil {
+		return nil, err
+	}
+	if err := m.attachTaskPlans(ctx, out); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -210,6 +222,67 @@ func (m *Module) attachTaskCounts(ctx context.Context, messages []Message) error
 	for i := range messages {
 		if n, ok := counts[messages[i].BatchID]; ok && n > 0 {
 			messages[i].TaskCount = n
+		}
+	}
+	return nil
+}
+
+// attachTaskPlans 只对 category=confirmation 的消息批量补方案投影（PRD-TASK-004）。
+// 普通消息列表不发起额外查询。
+func (m *Module) attachTaskPlans(ctx context.Context, messages []Message) error {
+	ids := make([]string, 0, 2)
+	for i := range messages {
+		if messages[i].Category == "confirmation" {
+			ids = append(ids, messages[i].ID)
+		}
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	placeholders := make([]string, len(ids))
+	args := make([]any, len(ids))
+	for i, id := range ids {
+		placeholders[i] = "?"
+		args[i] = id
+	}
+	rows, err := m.store.Query(ctx, `SELECT id, session_id, complexity, status, plan_message_id,
+		plan_steps_json, child_session_ids, task_ids_json, request_text, task_count, child_session_count,
+		attempt, created_at, decided_at, expires_at, rejected_reason
+		FROM task_plans WHERE plan_message_id IN (`+strings.Join(placeholders, ",")+`)`, args...)
+	if err != nil {
+		return fmt.Errorf("查询任务方案失败: %w", err)
+	}
+	defer rows.Close()
+	byMessage := make(map[string]*coretask.TaskPlan, len(ids))
+	for rows.Next() {
+		var plan coretask.TaskPlan
+		var stepsJSON, childJSON, taskJSON string
+		if err := rows.Scan(&plan.ID, &plan.SessionID, &plan.Complexity, &plan.Status, &plan.PlanMessageID,
+			&stepsJSON, &childJSON, &taskJSON, &plan.RequestText, &plan.TaskCount, &plan.ChildSessionCount,
+			&plan.Attempt, &plan.CreatedAt, &plan.DecidedAt, &plan.ExpiresAt, &plan.RejectedReason); err != nil {
+			return fmt.Errorf("扫描任务方案失败: %w", err)
+		}
+		_ = json.Unmarshal([]byte(stepsJSON), &plan.PlanSteps)
+		_ = json.Unmarshal([]byte(childJSON), &plan.ChildSessionIDs)
+		_ = json.Unmarshal([]byte(taskJSON), &plan.TaskIDs)
+		if plan.PlanSteps == nil {
+			plan.PlanSteps = []string{}
+		}
+		if plan.ChildSessionIDs == nil {
+			plan.ChildSessionIDs = []string{}
+		}
+		if plan.TaskIDs == nil {
+			plan.TaskIDs = []string{}
+		}
+		copied := plan
+		byMessage[plan.PlanMessageID] = &copied
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("遍历任务方案失败: %w", err)
+	}
+	for i := range messages {
+		if plan, ok := byMessage[messages[i].ID]; ok {
+			messages[i].TaskPlan = plan
 		}
 	}
 	return nil
