@@ -189,14 +189,14 @@ P1 会话域已经完成建域并签收（12 个 PRD `covered`，33 条 AC `pass
 | 产品 spec | ✅ | `specs/product/P1-CONV/spec.md` §4.6、A9、§6、§7 ⑧ 已于 2026-11-23 定稿 |
 | 变更 spec | ✅ | 本文件；18 条 `Covers` 与 8 条变更级 AC 已落 |
 | 设计 spec | ✅ | `specs/design/P1-CONV/spec.md` §17（`:756-1042`），45 条 `V-CONV-009-*` 判据（`:983-1026`），§16 变更记录 v0.3（`:748`）；原四处旧值已于 2026-11-23 回写，DEC-30/31 对齐完成，见 §9 与 `evidence.md` §5 |
-| 前端开发 spec | ⚠️ | 变更包内无 `frontend.md`；前端契约在长期 spec `specs/frontend/P1-CONV/spec.md` §17，已按 2026-11-26 实现复核 |
-| 后端开发 spec | ⚠️ | 变更包内无 `backend.md`；路由、表、错误码与护栏落在实现与 [`evidence.md`](evidence.md) 的接口证据里 |
-| 组件 spec | ⚠️ | `COMP-task-card`、`COMP-right-panel-tabs`、`COMP-task-graph` 三份文件未建、未签收，组件列继续记 `missing` |
+| 前端开发 spec | ✅ | [`frontend.md`](frontend.md) 已建，13 节；组件落点按实现（`tasks.tsx`）而非长期 spec §17.2.2 的 `library.tsx`，差异与回写建议写在该文件 §12 |
+| 后端开发 spec | ✅ | [`backend.md`](backend.md) 已建，11 节；九个接口、迁移 tasks v8/v9 与 chat v24、状态机、六个事件、十个错误码与 AC 承载齐备 |
+| 组件 spec | ✅ | [`COMP-task-message-card.md`](../../../docs/testing/COMP-task-message-card.md)、[`COMP-task-detail-layer.md`](../../../docs/testing/COMP-task-detail-layer.md)、[`COMP-right-panel-tabs.md`](../../../docs/testing/COMP-right-panel-tabs.md) 三份已建，状态 `verified`；独立组件签收未执行，未写 `accepted` |
 | 任务卡 | ✅ | [`tasks.md`](tasks.md) 17 张旧卡重排为 T01–T10 共 10 张，四要素齐全，全部完成 |
 | test-plan | ✅ | §18 的 `TC-P1-CONV-037..054` 18 条已建并全部 `pass` |
 | 证据 | ✅ | [`evidence.md`](evidence.md) 已回填；26 条 AC 全部 pass、560 条断言，验收报告 [`ACCEPT-CONV-007-R5-20261126.md`](../../../docs/testing/ACCEPT-CONV-007-R5-20261126.md) |
 
-> 单独产物说明：本包不单独建 `frontend.md` 与 `backend.md`，N/A：前端契约并入长期 spec `specs/frontend/P1-CONV/spec.md` §17，后端契约与接口证据落在实现与 `evidence.md`；三份 COMP 仍缺，见上表。
+> 单独产物说明：`frontend.md` 与 `backend.md` 于 2026-11-26 补齐，分别写前端增量（组件、右栏、卡片、详情、任务图、事件、无障碍）与后端增量（接口、迁移、状态机、事件、错误码、护栏），长期契约仍以 `specs/frontend/P1-CONV/spec.md` §17 与 `specs/backend/P1-CONV/spec.md` §17 为准。三份 COMP 落在 `docs/testing/`，未放进 `specs/COMP-<kebab>/`：`check-sdd` 的 S1/S3 会要求同目录 `test-plan.md` 或 `evidence.md` 与「目标/需求/非目标/影响范围」章节，超出本次可写范围；长期组件登记作为后续动作，见 §13。
 
 ## 8. 影响、风险与回滚
 
@@ -272,8 +272,8 @@ P1 会话域已经完成建域并签收（12 个 PRD `covered`，33 条 AC `pass
 ## 13. 待确认
 
 1. `evidence.md` §5 记录的剩余行号漂移尚未回写设计 spec，属于引用精度问题，不影响 18 条 AC 的判据；由设计列在下一次回写时统一处理。
-2. 已解除：前端与后端契约分别落在长期 spec `specs/frontend/P1-CONV/spec.md` §17 与实现；变更包 `frontend.md`、`backend.md` 仍未建，已在 §7 记 ⚠️。
-3. 仍未解除：`COMP-task-card`、`COMP-right-panel-tabs`、`COMP-task-graph` 三份组件 spec 未签收，组件列继续记 `missing`。
+2. 已解除：前端与后端契约除长期 spec 外，另有变更包 [`frontend.md`](frontend.md) 与 [`backend.md`](backend.md)，§7 对应行已改 ✅。
+3. 部分解除：`COMP-task-message-card`、`COMP-task-detail-layer`、`COMP-right-panel-tabs` 三份组件 spec 已建并记 `verified`，独立组件签收尚未执行，需独立验收 Agent 出具签收记录后才可改 `accepted`；长期登记 `specs/COMP-<kebab>/spec.md` 未建，原因见 §7 单独产物说明。
 4. 已解除：`specs/test/P1-CONV/test-plan.md` §18 的 18 条 TC（`TC-P1-CONV-037..054`）已建并全部 `pass`。
 5. 已解除：8 条变更级 AC 已全部 `pass`（逐条断言数 14/14/52/15/31/17/25/25），证据见 [`evidence.md`](evidence.md)。
 
@@ -289,10 +289,11 @@ P1 会话域已经完成建域并签收（12 个 PRD `covered`，33 条 AC `pass
 - 2026-11-23：建立本包并首次登记状态。
 - 2026-11-23：按门禁要求补齐首部字段、模板节与证据列，状态词按七值口径登记；内容口径不变。
 - 2026-11-26：交付并签发；26 条 AC 全部 pass、560 条断言，8 条变更级 AC 全部 pass。
+- 2026-11-26：补齐变更包 `frontend.md`、`backend.md` 与三份组件 spec，回填 §7 六类状态与 §13 未解除项；不改已冻结 AC，不改验收结论。
 
 ## 收口
 
-已收口：2026-11-26 交付并签发。26 条 AC（18 条产品 AC + 8 条变更级 AC）全部 `pass`、560 条断言（产品 367 + 变更 193）；独立验收报告 [`ACCEPT-CONV-007-R5-20261126.md`](../../../docs/testing/ACCEPT-CONV-007-R5-20261126.md)，复盘 [`RETRO-CHG-CHG-CONV-007.md`](../../../docs/plan/RETRO-CHG-CHG-CONV-007.md)。六类产物中变更包 `frontend.md`、`backend.md` 与三份 COMP 仍缺，已在 §7 与 §13 登记，不影响本次签发。
+已收口：2026-11-26 交付并签发。26 条 AC（18 条产品 AC + 8 条变更级 AC）全部 `pass`、560 条断言（产品 367 + 变更 193）；独立验收报告 [`ACCEPT-CONV-007-R5-20261126.md`](../../../docs/testing/ACCEPT-CONV-007-R5-20261126.md)，复盘 [`RETRO-CHG-CHG-CONV-007.md`](../../../docs/plan/RETRO-CHG-CHG-CONV-007.md)。六类产物已齐：`frontend.md`、`backend.md` 与三份 COMP 于 2026-11-26 补齐，组件记 `verified`，独立组件签收待办，见 §7 与 §13。
 
 ## 风险与依赖
 依赖：无新增外部依赖；证据来自本包 `test-plan.md` 与 `evidence.md` 引用的既有报告。

@@ -316,7 +316,7 @@
 
 - 优先级：P1
 - 实现状态：`implemented`（覆盖 `covered`；26 条 AC 全 pass、560 条断言，验收报告 `docs/testing/ACCEPT-CONV-007-R5-20261126.md`、复盘 `docs/plan/RETRO-CHG-CHG-CONV-007.md`；形态以原型 `docs/design/task-prototype-v3-20261123.html` 九屏为准，2026-11-26）
-- 六类状态：产品 spec ✅（本节）/ CHANGE ✅（`CHG-CONV-007` 已交付签发，`specs/changes/CHG-CONV-007/`，17 张任务卡）/ 前端开发 spec ⚠️（变更包内无 `frontend.md`；前端契约在 `specs/frontend/P1-CONV/spec.md` §17，已按实现复核）/ 后端开发 spec ⚠️（变更包内无 `backend.md`；接口实现与证据见 `evidence.md`）/ 组件 ⚠️（`COMP-task-card`、`COMP-right-panel-tabs`、`COMP-task-graph` 三份文件未建、未签收）/ 任务卡 ✅（`tasks.md` 17 张旧卡重排为 T01–T10 共 10 张，已全部完成）/ test-plan ✅（§18 的 `TC-P1-CONV-037..054` 18 条已建并全部 `pass`）/ 证据 ✅（18 条断言脚本已建；26 条 AC 全部 pass、560 条断言，`evidence.md` 与 `ACCEPT-CONV-007-R5-20261126.md`）
+- 六类状态：产品 spec ✅（本节）/ CHANGE ✅（`CHG-CONV-007` 已交付签发，`specs/changes/CHG-CONV-007/`，17 张任务卡）/ 前端开发 spec ✅（变更包 [`frontend.md`](../../changes/CHG-CONV-007/frontend.md) 已建，13 节：组件落点、右栏三标签、消息卡、详情层、任务图、数据与事件、错误降级、无障碍、AC 对应；长期契约仍在 `specs/frontend/P1-CONV/spec.md` §17）/ 后端开发 spec ✅（变更包 [`backend.md`](../../changes/CHG-CONV-007/backend.md) 已建，11 节：九个接口、tasks v8/v9 与 chat v24 迁移、状态机与三类等待、六个事件、十个错误码、隔离护栏与 AC 承载）/ 组件 ✅（[`COMP-task-message-card.md`](../../../docs/testing/COMP-task-message-card.md)、[`COMP-task-detail-layer.md`](../../../docs/testing/COMP-task-detail-layer.md)、[`COMP-right-panel-tabs.md`](../../../docs/testing/COMP-right-panel-tabs.md) 三份已建，状态 `verified`，随 26 条 AC 复核；独立组件签收未执行，未写 `accepted`）/ 任务卡 ✅（`tasks.md` 17 张旧卡重排为 T01–T10 共 10 张，已全部完成）/ test-plan ✅（§18 的 `TC-P1-CONV-037..054` 18 条已建并全部 `pass`）/ 证据 ✅（18 条断言脚本已建；26 条 AC 全部 pass、560 条断言，`evidence.md` 与 `ACCEPT-CONV-007-R5-20261126.md`）
 - 边界：本 PRD 承担会话内的任务创建、呈现、编排与归属；任务执行器与生命周期状态机仍归 `P2-TASK`（编号不动），交付物存储与下载实现仍归 `P4-FILE`。
 - 目标行为：
   1. 创建任务提供单个与批量两个入口；发起时把目标、输入、约束三类内容注入任务上下文，缺省项按会话当前内容补齐；
@@ -379,7 +379,7 @@
 | A6 | 权限/隔离默认拒绝（归档只读、越权路径不依赖前端隐藏按钮） | 涉及权限必验 | **部分**：归档只读后端测试有；无鉴权面 |
 | A7 | `PRD-SYNC-005` 已从 TREE/TRACEABILITY/spec/test-plan 移除，编号不复用、不计 covered | 必验 | **满足**（2026-11-22 移除，文档口径一致） |
 | A8 | 每个 AC 至少映射一个用例；证据缺失写 `missing`，不写“通过” | 必验 | **满足**：33 行既有 AC 已映射（test-plan §3）；33 条全部生效 = 33 pass / 0 partial / 0 blocked（`AC-CONV-006-02` 已由 CDP 合成组合态证据转 pass）；`PRD-CONV-009` 的 18 条见 A9 |
-| A9 | `PRD-CONV-009` 的 18 条 AC 各有断言脚本与 test-plan 用例，六类产物齐备后才计入本域覆盖 | 本组必验 | **部分**：18 条断言脚本与 `TC-P1-CONV-037..054` 已建、26 条 AC 全部 `pass`（560 条断言）；六类产物仍缺变更包 `frontend.md`、`backend.md` 与三份 COMP（见 §4.6 六类状态），覆盖按已签发验收报告计 `covered` |
+| A9 | `PRD-CONV-009` 的 18 条 AC 各有断言脚本与 test-plan 用例，六类产物齐备后才计入本域覆盖 | 本组必验 | **满足**：18 条断言脚本与 `TC-P1-CONV-037..054` 已建、26 条 AC 全部 `pass`（560 条断言）；六类产物已齐，变更包 `frontend.md`、`backend.md` 与三份 COMP 于 2026-11-26 补齐，组件状态 `verified`（独立组件签收未执行），覆盖按已签发验收报告计 `covered` |
 
 ## 6. 当前实现状态与未实现项
 
