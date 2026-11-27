@@ -739,5 +739,19 @@ async function main() {
   return failed > 0 ? 1 : 0
 }
 
+// 本脚本覆盖的 v2 规则位（GATES.md 表 2-1 指派），供 check-rule-fields.mjs 双向核对。
+const RULES = ['MXV2-7-13'];
+
+// 本脚本按整册执行 AC，没有按规则单条的入口；传 --rule 时显式拒绝并给出非 0 退出码，
+// 不静默跑整册，免得调用方把整册结果当成单条判据。
+const __ruleIndex = process.argv.indexOf('--rule');
+if (__ruleIndex >= 0) {
+  const __ruleId = process.argv[__ruleIndex + 1] ?? '';
+  console.error(`run-ac.mjs: 该脚本不支持按规则单跑（收到 --rule ${__ruleId}）；请不带 --rule 运行整册，或改用 scripts/ac/<AC-ID>.mjs 单条执行。`);
+  process.exit(2);
+}
+
 main().then((code) => process.exit(code))
+
+
 

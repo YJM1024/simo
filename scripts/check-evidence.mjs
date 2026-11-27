@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /**
+ * 规则级命令已移交 ai-review（MOXIAN 对应执行行注明“该脚本为批处理入口，不支持单跑”）；
+ * 本脚本作为整套门禁运行，不再解析 --rule。
  * check-evidence.mjs — 证据完整性门禁（零依赖，只读）
  *
  * 依据 docs/framework/GATES.md 第 3.6 节与 docs/framework/templates/evidence-index.md。
@@ -101,6 +103,8 @@ const RULES = {
   release: 'MX-G-43',
   coverAll: 'MX-G-47',
   binding: 'MX-G-51',
+  product: 'MX-G-58',
+  dependency: 'MX-G-60',
 }
 
 const STATUS_VALUES = ['pass', 'partial', 'missing', 'blocked']
@@ -747,6 +751,95 @@ function checkFreshness(now, buildTime, maxAgeDays, value, result) {
 }
 
 /* ------------------------------------------------------------------ */
+/* 产物证据与依赖漏洞替代证据（MX-G-58 / MX-G-60）                        */
+/* ------------------------------------------------------------------ */
+
+// 产物类证据按扩展名识别：PDF 与二进制产物。截图（png/jpg）属界面证据，不在此列。
+const PRODUCT_EXT = new Set([
+  'pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx',
+  'zip', '7z', 'tar', 'gz', 'exe', 'msi', 'apk', 'dmg', 'bin',
+])
+const HASH_LENGTH = { sha256: 64, sha1: 40, md5: 32 }
+const VAGUE_FONT = /^(正常|通过|一致|无异常|ok|pass)$/i
+
+function productExt(value) {
+  const raw = String(value ?? '').trim().replace(/^`|`$/g, '')
+  const m = raw.match(/\.([A-Za-z0-9]+)(?:[?#].*)?$/)
+  return m ? m[1].toLowerCase() : ''
+}
+
+function isProductArtifact(value) {
+  return PRODUCT_EXT.has(productExt(value))
+}
+
+function artifactBuffer(root, rel) {
+  const abs = join(root, ...normalizePath(rel).split('/'))
+  if (!existsSync(abs)) return null
+  try {
+    return readFileSync(abs)
+  } catch {
+    return null
+  }
+}
+
+/** MX-G-58（E-P1）：产物证据四项——路径可打开、哈希算法与哈希值与文件一致、页面数为正整数、
+ *  字体与元数据写比对对象与结论。不适用时返回 null。 */
+function checkProductEvidence(root, values) {
+  if (!isProductArtifact(values.path)) return null
+  const rel = String(values.path).trim().replace(/^`|`$/g, '')
+  const note = String(values.note ?? '')
+  const problems = []
+  const buffer = artifactBuffer(root, rel)
+  if (!buffer) problems.push(`产物路径打不开：${rel}`)
+
+  const hashHit = note.match(/(sha256|sha1|md5)\s*[:：=]\s*([0-9a-fA-F]+)/i)
+  if (!hashHit) {
+    problems.push('备注缺哈希算法与哈希值（写 sha256:<64 位十六进制>）')
+  } else {
+    const algo = hashHit[1].toLowerCase()
+    const expected = hashHit[2].toLowerCase()
+    if (expected.length !== HASH_LENGTH[algo]) {
+      problems.push(`哈希长度与 ${algo} 不符：${expected.length} 位`)
+    } else if (buffer) {
+      const actual = createHash(algo).update(buffer).digest('hex')
+      if (actual !== expected) problems.push(`哈希与文件实际哈希不一致：写 ${expected}，实际 ${actual}`)
+    }
+  }
+
+  const pages = note.match(/(?:页面数|页数)\s*[:：]\s*(\d+)/)
+  if (!pages || Number(pages[1]) <= 0) {
+    problems.push('备注缺页面数（写 页面数:<正整数>，取产物打开后的实际页数）')
+  }
+
+  const font = note.match(/(?:字体与元数据|字体元数据)\s*[:：]\s*([^；;|]+)/)
+  const fontValue = font ? font[1].trim() : ''
+  if (!fontValue) problems.push('备注缺字体与元数据比对结论（写比对对象与结论）')
+  else if (fontValue.length < 6 || VAGUE_FONT.test(fontValue)) {
+    problems.push(`字体与元数据结论只写「${fontValue}」，须写比对对象与结论`)
+  }
+
+  return problems
+}
+
+/** MX-G-60（E-D1）：依赖漏洞替代证据三选一，扫描命中、上游安全公告、上游 PoC 至少一类，
+ *  且附链接与日期。备注不含依赖漏洞标记时返回 null。 */
+function checkDependencyEvidence(values) {
+  const note = String(values.note ?? '')
+  if (!/依赖漏洞|漏洞替代|依赖扫描/.test(note)) return null
+  const problems = []
+  if (!/(扫描命中|上游安全公告|上游\s*PoC)/i.test(note)) {
+    problems.push('备注未写替代证据类型（扫描命中、上游安全公告、上游 PoC 三选一）')
+  }
+  if (!/https?:\/\/\S+/.test(note) && !/快照\s*[:：]\s*\S+/.test(note)) {
+    problems.push('备注缺链接（http(s) 地址或本地快照路径）')
+  }
+  if (!/\b20\d{2}-\d{2}-\d{2}\b/.test(note)) {
+    problems.push('备注缺核对日期（YYYY-MM-DD）')
+  }
+  return problems
+}
+
+/* ------------------------------------------------------------------ */
 /* 分析                                                                 */
 /* ------------------------------------------------------------------ */
 
@@ -888,9 +981,13 @@ function analyze(options) {
     judge: [],
     card: [],
     release: [],
+    product: [],
+    dependency: [],
   }
   let checkedPaths = 0
   let checkedTimes = 0
+  let productRows = 0
+  let dependencyRows = 0
   const fieldComplete = new Map()
 
   for (const row of rows) {
@@ -975,6 +1072,18 @@ function analyze(options) {
     if (resultOk && !(row.legacy && row.absent.has('note') && row.absent.has('reason'))) {
       const releaseCheck = checkRelease(values.result, values)
       if (releaseCheck && releaseCheck.status === 'FAIL') problems.release.push({ row, detail: releaseCheck.detail })
+    }
+
+    const productProblems = checkProductEvidence(root, values)
+    if (productProblems) {
+      productRows += 1
+      for (const detail of productProblems) problems.product.push({ row, detail })
+    }
+
+    const dependencyProblems = checkDependencyEvidence(values)
+    if (dependencyProblems) {
+      dependencyRows += 1
+      for (const detail of dependencyProblems) problems.dependency.push({ row, detail })
     }
   }
 
@@ -1062,6 +1171,39 @@ function analyze(options) {
       RULES.release,
       { expected: '未验证项写明解除条件、待执行动作、责任人与到期日，结论不得只写通过', actual: `${rows.length} 条未验证项解除信息齐全` },
       '按 MX-9-16 补解除条件、待执行动作、责任人与到期日，空泛结论改为可复跑线索',
+    )
+
+    const emitGate = (bucket, check, rule, applicable, expected, passActual, hint) => {
+      const entries = problems[bucket]
+      if (entries.length === 0) {
+        items.push(
+          item('PASS', check, rule, '-', 0, expected, applicable > 0 ? passActual : '无适用证据行，按无输入记 PASS'),
+        )
+        return
+      }
+      for (const entry of entries) {
+        items.push(
+          item('FAIL', check, rule, entry.row.file, entry.row.line, expected, entry.detail, hint, entry.row.acs[0] ?? ''),
+        )
+      }
+    }
+    emitGate(
+      'product',
+      '产物证据',
+      RULES.product,
+      productRows,
+      '产物证据四项：路径可打开、哈希与文件一致、页面数为正整数、字体与元数据写比对对象与结论',
+      `${productRows} 条产物证据四项齐全`,
+      '在备注列补产物路径、哈希算法与哈希值、页面数、字体与元数据比对结论；哈希按 Get-FileHash/sha256sum 的实测值写',
+    )
+    emitGate(
+      'dependency',
+      '依赖漏洞替代证据',
+      RULES.dependency,
+      dependencyRows,
+      '依赖漏洞替代证据三选一且附链接与日期',
+      `${dependencyRows} 条替代证据类型、链接与日期齐全`,
+      '写选中类型（扫描命中、上游安全公告、上游 PoC）、取值、核对人、链接与日期；非依赖类漏洞写 N/A：<理由>',
     )
   }
 
@@ -1256,6 +1398,40 @@ function buildFailFixture(root) {
   writeFixture(root, 'docs/testing/EVIDENCE-20261124.md', FAIL_EVIDENCE)
   writeFixture(root, 'docs/testing/fx/pass.png', 'PNG 自检占位')
   writeBindingFixture(root, 'fail')
+}
+
+const GATE_HEADER = [
+  '| 证据编号 | AC 编号 | 证据类型 | 路径 | 生成命令 | 生成时间 | 判定人 | 判定结果 | 未验证原因码 | 关联任务卡 | 轮次 | 可复跑 | 构建版本 | 失效标记 | 备注 |',
+  '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|',
+]
+
+/** E-P1 与 E-D1 的专用夹具：一条 PDF 产物证据、一条依赖漏洞替代证据。 */
+function writeGateFixture(root, mode) {
+  const passing = mode === 'pass'
+  const pdf = '%PDF-1.4 自检用产物占位\n'
+  writeFixture(root, 'docs/artifacts/report.pdf', pdf)
+  writeFixture(root, 'docs/artifacts/scan.txt', 'npm audit 输出占位\n')
+  const pdfHash = createHash('sha256').update(pdf).digest('hex')
+  const productNote = passing
+    ? `产物路径：docs/artifacts/report.pdf；sha256:${pdfHash}；页面数：12；字体与元数据：与 v1.7.5 归档件比对，字体清单一致，无嵌入缺失`
+    : `产物路径：docs/artifacts/report.pdf；sha256:${'0'.repeat(64)}；页面数：0；字体与元数据：正常`
+  const dependencyNote = passing
+    ? '依赖漏洞替代证据：扫描命中 npm audit 10.2.0，规则集 GHSA；命中依赖 lodash@4.17.20，调用链不可达；链接 https://github.com/advisories/GHSA-0000-0000-0000；核对日期 2026-11-24'
+    : '依赖漏洞替代证据：扫描命中 npm audit 10.2.0；未附链接与日期'
+  const row = (id, ac, path, note) =>
+    `| ${id} | ${ac} | 断言脚本 | \`${path}\` | \`node scripts/ac/${ac}.mjs\` | \`2026-11-24T11:00+08:00\` | 自动 | pass | 不适用 | TASK-${ac} | R1 | 是 | \`main@abc123，buildId fx-1\` | 有效 | ${note} |`
+  writeFixture(
+    root,
+    'docs/testing/EVIDENCE-GATE.md',
+    [
+      '# 证据索引 · 产物与依赖漏洞夹具',
+      '',
+      ...GATE_HEADER,
+      row('EV-GATE-001', 'AC-FX-ART-01', 'docs/artifacts/report.pdf', productNote),
+      row('EV-GATE-002', 'AC-FX-ART-02', 'docs/artifacts/scan.txt', dependencyNote),
+      '',
+    ].join('\n'),
+  )
 }
 
 function quarantineFixture(dir) {
@@ -1566,6 +1742,63 @@ function runSelfTest() {
       judgeProblems.map((entry) => entry.ac).join('、') || '无问题项',
     )
 
+    const gateRoot = join(base, 'gate')
+    const gateBadRoot = join(base, 'gate-bad')
+    writeGateFixture(gateRoot, 'pass')
+    writeGateFixture(gateBadRoot, 'fail')
+    const gateOptions = {
+      ...baseOptions,
+      root: gateRoot,
+      testPlans: [],
+      acs: ['AC-FX-ART-01', 'AC-FX-ART-02'],
+      indexes: [join(gateRoot, 'docs/testing/EVIDENCE-GATE.md')],
+    }
+    const gatePass = analyze(gateOptions)
+    const gateBad = analyze({
+      ...gateOptions,
+      root: gateBadRoot,
+      indexes: [join(gateBadRoot, 'docs/testing/EVIDENCE-GATE.md')],
+    })
+    const passProduct = gatePass.items.filter((entry) => entry.rule === 'MX-G-58')
+    const badProduct = gateBad.items.filter((entry) => entry.rule === 'MX-G-58' && entry.status === 'FAIL')
+    const passDependency = gatePass.items.filter((entry) => entry.rule === 'MX-G-60')
+    const badDependency = gateBad.items.filter((entry) => entry.rule === 'MX-G-60' && entry.status === 'FAIL')
+    const passFixtureProduct = pass.items.filter((entry) => entry.rule === 'MX-G-58')
+
+    // docs/framework/GATES.md:104（MX-G-58）：无产物类证据时输出一条 PASS 并记无输入。
+    assert(
+      '无产物证据时产物证据记无输入 PASS',
+      passFixtureProduct.length === 1 &&
+        passFixtureProduct[0].status === 'PASS' &&
+        /无输入/.test(passFixtureProduct[0].actual),
+      passFixtureProduct.map((entry) => `${entry.status}:${entry.actual}`).join('; ') || '缺失',
+    )
+    // 四项齐全且哈希与文件实测一致记 PASS；哈希写错记 error。
+    assert(
+      '产物证据四项齐全记 PASS，哈希不一致记 error',
+      passProduct.length === 1 &&
+        passProduct[0].status === 'PASS' &&
+        badProduct.every((entry) => entry.severity === 'error') &&
+        badProduct.some((entry) => /哈希与文件实际哈希不一致/.test(entry.actual)),
+      `pass=${passProduct.map((entry) => entry.status).join(',') || '无'}；fail=${badProduct.map((entry) => entry.actual).join(' / ') || '无'}`,
+    )
+    // 页面数为 0 与字体结论只写“正常”都记 error。
+    assert(
+      '产物页数与字体结论不合格记 error',
+      badProduct.some((entry) => /页面数/.test(entry.actual)) &&
+        badProduct.some((entry) => /字体与元数据/.test(entry.actual) && /正常/.test(entry.actual)),
+      badProduct.map((entry) => entry.actual).join(' / ') || '无',
+    )
+    // 三类替代证据齐备且附链接与日期记 PASS；缺链接与日期记 error。
+    assert(
+      '依赖漏洞替代证据齐备记 PASS，缺链接与日期记 error',
+      passDependency.length === 1 &&
+        passDependency[0].status === 'PASS' &&
+        badDependency.some((entry) => /缺链接/.test(entry.actual)) &&
+        badDependency.some((entry) => /核对日期/.test(entry.actual)),
+      `pass=${passDependency.map((entry) => entry.status).join(',') || '无'}；fail=${badDependency.map((entry) => entry.actual).join(' / ') || '无'}`,
+    )
+
     const signatureOf = (result) =>
       result.items
         .filter((entry) => entry.status !== 'PASS')
@@ -1606,6 +1839,8 @@ function runSelfTest() {
   return 0
 }
 
+// 规则级命令已移交 ai-review；本脚本按整套门禁运行，不接受 --rule 参数。
+
 function main() {
   const options = parseArgs(process.argv.slice(2))
   if (options.help) {
@@ -1642,3 +1877,5 @@ function main() {
 }
 
 process.exitCode = main()
+
+

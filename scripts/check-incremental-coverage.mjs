@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /**
+ * 规则级命令已移交 ai-review（MOXIAN 对应执行行注明“该脚本为批处理入口，不支持单跑”）；
+ * 本脚本作为整套门禁运行，不再解析 --rule。
  * check-incremental-coverage.mjs — 增量覆盖率门禁（零依赖，只读）
  *
  * 依据 docs/framework/GATES.md 第 3.5 节。输入是本次改动涉及的文件清单，逐项判断
@@ -981,12 +983,13 @@ function runReportEntries(raw) {
 function coverageItems(root, options, context = {}) {
   const items = []
   const stage = options.stage ?? 'change'
+  const threshold = options.threshold ?? 100
   const measurement = measureCoverage(root, context.files ?? [], context.changedLines ?? new Map())
   const hint = '提供 frontend/coverage/coverage-final.json 或 backend/coverage.out，并用 --changed-lines 或 --from-git 给出改动行区间'
 
   if (!measurement.present) {
     items.push(
-      item('PENDING', '改动行覆盖率', RULES.lineCoverage, '-', 0, '改动行覆盖率不低于 80%', '未提供覆盖率报告，记待补，不按 0% 计', hint),
+      item('PENDING', '改动行覆盖率', RULES.lineCoverage, '-', 0, `改动行覆盖率不低于 ${threshold}%`, '未提供覆盖率报告，记待补，不按 0% 计', hint),
     )
   } else if (measurement.filesWithoutRanges.length > 0 && measurement.lineTotal === 0) {
     items.push(
@@ -996,7 +999,7 @@ function coverageItems(root, options, context = {}) {
         RULES.lineCoverage,
         '-',
         0,
-        '改动行覆盖率不低于 80%',
+        `改动行覆盖率不低于 ${threshold}%`,
         `缺少 ${measurement.filesWithoutRanges.length} 个改动文件的改动行区间，记待补：${measurement.filesWithoutRanges.join('、')}`,
         hint,
       ),
@@ -1009,7 +1012,7 @@ function coverageItems(root, options, context = {}) {
         RULES.lineCoverage,
         '-',
         0,
-        '改动行覆盖率不低于 80%',
+        `改动行覆盖率不低于 ${threshold}%`,
         `覆盖率报告（${measurement.names.join('、')}）没有覆盖改动行，记待补`,
         hint,
       ),
@@ -1018,12 +1021,12 @@ function coverageItems(root, options, context = {}) {
     const percent = (measurement.lineCovered / measurement.lineTotal) * 100
     items.push(
       item(
-        percent >= 80 ? 'PASS' : 'WARN',
+        percent >= threshold ? 'PASS' : 'WARN',
         '改动行覆盖率',
         RULES.lineCoverage,
         '-',
         0,
-        '改动行覆盖率不低于 80%',
+        `改动行覆盖率不低于 ${threshold}%`,
         `${measurement.lineCovered}/${measurement.lineTotal} 行，${percent.toFixed(1)}%（报告 ${measurement.names.join('、')}）`,
         '补测改动行或登记豁免；低于阈值按 warn 登记原因与到期日',
       ),
@@ -1032,7 +1035,7 @@ function coverageItems(root, options, context = {}) {
 
   if (!measurement.present) {
     items.push(
-      item('PENDING', '改动分支覆盖率', RULES.branchCoverage, '-', 0, '改动分支覆盖率不低于 70%', '未提供覆盖率报告，记待补，不按 0% 计', hint),
+      item('PENDING', '改动分支覆盖率', RULES.branchCoverage, '-', 0, `改动分支覆盖率不低于 ${threshold}%`, '未提供覆盖率报告，记待补，不按 0% 计', hint),
     )
   } else if (measurement.branchTotal === 0) {
     items.push(
@@ -1042,7 +1045,7 @@ function coverageItems(root, options, context = {}) {
         RULES.branchCoverage,
         '-',
         0,
-        '改动分支覆盖率不低于 70%',
+        `改动分支覆盖率不低于 ${threshold}%`,
         measurement.filesWithoutRanges.length > 0 ? '缺少改动行区间，记待补' : '覆盖率报告不含改动分支数据，记待补',
         hint,
       ),
@@ -1051,12 +1054,12 @@ function coverageItems(root, options, context = {}) {
     const percent = (measurement.branchCovered / measurement.branchTotal) * 100
     items.push(
       item(
-        percent >= 70 ? 'PASS' : 'WARN',
+        percent >= threshold ? 'PASS' : 'WARN',
         '改动分支覆盖率',
         RULES.branchCoverage,
         '-',
         0,
-        '改动分支覆盖率不低于 70%',
+        `改动分支覆盖率不低于 ${threshold}%`,
         `${measurement.branchCovered}/${measurement.branchTotal} 个分支，${percent.toFixed(1)}%`,
         '补测改动分支或登记豁免；低于阈值按 warn 登记原因与到期日',
       ),
@@ -1447,6 +1450,16 @@ function quarantineFixture(dir) {
 /* 命令行                                                               */
 /* ------------------------------------------------------------------ */
 
+function parseThreshold(value) {
+  const raw = String(value ?? '').trim()
+  if (!/^\d+$/.test(raw)) throw new UsageError(`--threshold 只接受 1 到 100 的整数：${raw || '(空)'}`)
+  const parsed = Number(raw)
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 100) {
+    throw new UsageError(`--threshold 只接受 1 到 100 的整数：${raw}`)
+  }
+  return parsed
+}
+
 function parseArgs(argv) {
   const options = {
     root: REPO_ROOT,
@@ -1463,6 +1476,7 @@ function parseArgs(argv) {
     changedLines: new Map(),
     runReport: null,
     stage: 'change',
+    threshold: 100,
     error: null,
   }
   try {
@@ -1501,6 +1515,10 @@ function parseArgs(argv) {
         const value = valueAt(index++, '--stage')
         if (!['change', 'commit'].includes(value)) throw new UsageError('--stage 只取 change 或 commit')
         options.stage = value
+      } else if (arg.startsWith('--threshold=')) {
+        options.threshold = parseThreshold(arg.slice('--threshold='.length))
+      } else if (arg === '--threshold') {
+        options.threshold = parseThreshold(valueAt(index++, '--threshold'))
       } else if (arg === '--now') options.now = valueAt(index++, '--now')
       else if (arg.startsWith('-')) throw new UsageError(`未知参数 ${arg}`)
       else options.files.push(arg)
@@ -1535,6 +1553,7 @@ function printHelp() {
       '  --changed-lines <文件> 改动行区间 JSON，形如 {"frontend/src/a.tsx": [[1, 3], [7, 7]]}',
       '  --run-report <文件>    映射测试运行记录 JSON，数组或 {tests:[...]}，每项含 path、status、exitCode',
       '  --stage <change|commit> 判定阶段，默认 change；提交前未运行的映射测试记待补',
+      '  --threshold <1-100>    改动行与改动分支覆盖率阈值，默认 100；非整数或越界报错',
       '  --root <目录>          仓库根，默认脚本所在目录的上一级',
       '  --now <ISO 时间>       固定时钟，用于豁免到期判定与自检复现',
       '  --json                 输出对象数组，每项含 gate/rule/severity/path/line/ac/hint',
@@ -1547,8 +1566,8 @@ function printHelp() {
       'WARN，三条全无且无有效豁免记 error。',
       '',
       '覆盖率两项从 frontend/coverage/coverage-final.json 与 backend/coverage.out 计算，',
-      '阈值分别为 80% 与 70%，低于阈值记 WARN；报告或改动行区间缺失时记 PENDING，',
-      '退出码 2，不按 0% 计。MX-G-37 按 --run-report 核对真跑、skipped 与退出码。',
+      '阈值默认 100%（改动行与改动分支同一阈值，可用 --threshold 调整），低于阈值记 WARN；',
+      '报告或改动行区间缺失时记 PENDING，退出码 2，不按 0% 计。MX-G-37 按 --run-report 核对真跑、skipped 与退出码。',
       '',
       '退出码：0 通过或仅 warn；1 存在 error；2 参数或环境错误，或存在待补项。',
       '',
@@ -1666,6 +1685,36 @@ function runSelfTest() {
       exemptItems.map((entry) => `${entry.rule}:${entry.actual}`).join('; '),
     )
 
+    const strictParse = parseArgs(['--threshold', '60'])
+    const floatParse = parseArgs(['--threshold', '60.5'])
+    const overParse = parseArgs(['--threshold=101'])
+    const zeroParse = parseArgs(['--threshold=0'])
+    const tight = analyze({
+      ...baseOptions,
+      files: PASS_FILES,
+      changedLines: PASS_CHANGED_LINES,
+      runReport: PASS_RUN_REPORT,
+      threshold: 60,
+    })
+    const tightCoverage = tight.items.filter(
+      (entry) => entry.rule === RULES.lineCoverage || entry.rule === RULES.branchCoverage,
+    )
+    assert(
+      '--threshold 接受 1 到 100 的整数并作用于判定',
+      strictParse.error === null &&
+        strictParse.threshold === 60 &&
+        tightCoverage.length === 2 &&
+        tightCoverage.every((entry) => entry.status === 'PASS' && /不低于 60%/.test(entry.expected)),
+      `error=${strictParse.error}, threshold=${strictParse.threshold}, items=${tightCoverage.map((entry) => `${entry.status}:${entry.expected}`).join('; ')}`,
+    )
+    assert(
+      '--threshold 非整数或越界报错',
+      /只接受 1 到 100 的整数/.test(floatParse.error ?? '') &&
+        /只接受 1 到 100 的整数/.test(overParse.error ?? '') &&
+        /只接受 1 到 100 的整数/.test(zeroParse.error ?? ''),
+      `float=${floatParse.error}, over=${overParse.error}, zero=${zeroParse.error}`,
+    )
+
     const signatureOf = (result) =>
       result.items
         .filter((entry) => entry.status !== 'PASS')
@@ -1706,6 +1755,8 @@ function runSelfTest() {
   return 0
 }
 
+// 规则级命令已移交 ai-review；本脚本按整套门禁运行，不接受 --rule 参数。
+
 function main() {
   const options = parseArgs(process.argv.slice(2))
   if (options.help) {
@@ -1744,3 +1795,5 @@ function main() {
 }
 
 process.exitCode = main()
+
+

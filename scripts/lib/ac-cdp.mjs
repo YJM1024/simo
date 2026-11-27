@@ -184,7 +184,13 @@ export async function connect(baseUrl, { targetId = '', newTarget = false } = {}
   await send('Runtime.enable');
   // headless 默认窗口 800×600 会把 .inspector（≥1180 档才显示）与侧栏藏成 display:none，
   // 右栏判据必须先在宽屏档取样；375 档由脚本自己 setDeviceMetricsOverride 覆盖并清理。
-  await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+  // 端到端三档用 AC_VIEWPORT_WIDTH/HEIGHT 注入；默认仍是 1440×900（右栏判据按宽屏取样）。
+  await send('Emulation.setDeviceMetricsOverride', {
+    width: Number(process.env.AC_VIEWPORT_WIDTH || 1440),
+    height: Number(process.env.AC_VIEWPORT_HEIGHT || 900),
+    deviceScaleFactor: 1,
+    mobile: false,
+  });
 
   const navigate = async (url) => {
     const loaded = once('Page.loadEventFired', 20000).catch(() => null);

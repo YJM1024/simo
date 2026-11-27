@@ -16,8 +16,11 @@ test.describe('E2E-SHELL-001 / E2E-RESP-001 首屏与响应式', () => {
     await expect(page.locator('.msg.from-user').filter({ hasText: text })).toBeVisible()
     await expect(page.locator('.msg.from-agent').filter({ hasText: 'Mock 模型' }).first()).toBeVisible()
     // 时间轴与右栏都必须渲染（首屏结构，不只是消息列表）。
+    // 右栏自 CHG-CONV-007 起 aria-label 改为「会话右栏」，旧断言「会话概览」已过期。
     await expect(page.locator('.timeline.timeline-groups')).toBeVisible()
-    await expect(page.locator('.inspector[aria-label="会话概览"]')).toBeVisible()
+    const inspector = page.locator('.inspector[aria-label="会话右栏"]')
+    await expect(inspector).toBeVisible()
+    await expect(inspector).toHaveAttribute('data-tab', 'overview')
   })
 
   test('375 宽度下消息卡与 Composer 不横向溢出，时间轴隐藏', async ({ page }) => {

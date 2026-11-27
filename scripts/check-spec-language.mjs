@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /**
+ * 规则级命令已移交 ai-review（MOXIAN 对应执行行注明“该脚本为批处理入口，不支持单跑”）；
+ * 本脚本作为整套门禁运行，不再解析 --rule。
  * check-spec-language.mjs：AC 语言门禁（零依赖，只读）
  *
  * 规则表以 docs/process/SPEC-STANDARD.md 第 2.5 节为准，脚本只读 specs 目录下
@@ -699,4 +701,8 @@ function main() {
   process.exit(result.failures.length > 0 ? 1 : 0)
 }
 
+// 规则级命令已移交 ai-review；本脚本按整套门禁运行，不接受 --rule 参数。
+
 main()
+
+

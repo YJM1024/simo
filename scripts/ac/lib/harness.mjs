@@ -6,6 +6,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
 import { DatabaseSync } from 'node:sqlite'
+import { artifactStamp } from './core/bootstrap.mjs'
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
 export const TMP = path.join(ROOT, '.tmp', 'ac')
@@ -260,7 +261,7 @@ export async function saveEvidence(ac, payload) {
 }
 
 export async function report(ac, { pass, detail, checks = {}, raw = {} }) {
-  const evidence = { ac, at: new Date().toISOString(), baseUrl: process.argv.join(' '), checks, raw }
+  const evidence = { ac, at: new Date().toISOString(), baseUrl: process.argv.join(' '), artifact: artifactStamp(), checks, raw }
   const file = await saveEvidence(ac, evidence)
   const line = JSON.stringify({ ac, pass: Boolean(pass), detail: String(detail).slice(0, 600), evidence: file })
   console.log(line)

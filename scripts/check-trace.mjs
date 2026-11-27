@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /**
+ * 规则级命令按 GATES.md 表 3-1 的内部检查映射收窄：--rule 只保留该规则名下的失败项与提示项，
+ * 并用该规则名下的检查数判定（零检查不得判 PASS）；未知规则直接退出 2；不带 --rule 时按整套门禁运行。
  * check-trace.mjs — 产品需求追溯硬门禁（零依赖、只读）
  *
  * 旧检查（保留，不退化）：
@@ -44,10 +46,13 @@ import {
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { tmpdir } from 'node:os'
+import { isPass } from './lib/v2-rule-mode.mjs'
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 const DEFAULT_ROOT = resolve(SCRIPT_DIR, '..')
 const PRD_RE = /\bPRD-[A-Z][A-Z0-9]*-\d{3}\b/g
+// 三段式与两段式 AC 都认：历史包的冻结验收项是 AC-<域>-<序号>，新包是三段式。
+const AC_RE = /\bAC-(?:[A-Z0-9]+-){1,}\d+\b/g
 const PRD_ANCHORED_RE = /^`?(PRD-[A-Z][A-Z0-9]*-\d{3})`?$/
 const NA_REASON_MIN = 8
 const TEST_TARGET_RE = /(?:^|\/)specs\/test\/([^/]+)\/test-plan\.md(?:#|$)/
@@ -75,6 +80,8 @@ function createRun(root) {
   return {
     root,
     checks: 0,
+    // 按内部检查编号（T1..T7、R4）计数，供 --rule 单跑时给出该规则名下的检查数。
+    checksByRule: {},
     failures: [],
     warnings: [],
     governance: [],
@@ -99,8 +106,9 @@ function createRun(root) {
   }
 }
 
-function addCheck(run, count = 1) {
-  run.checks += count
+function addCheck(run, rule) {
+  run.checks += 1
+  if (rule) run.checksByRule[rule] = (run.checksByRule[rule] ?? 0) + 1
 }
 
 function fail(run, rule, file, line, message, extra = {}) {
@@ -137,7 +145,7 @@ function readRequired(run, rel) {
   const file = join(run.root, rel)
   const text = readText(file)
   if (text === null) {
-    addCheck(run)
+    addCheck(run, 'T1')
     fail(run, 'T1', file, 1, `必需文件不存在或不可读：${rel}；补该文件`)
     return null
   }
@@ -262,7 +270,7 @@ function explicitAnchorIds(text) {
 }
 
 function validateTestLink(run, baseFile, link, prd, expectedDomain, source, line) {
-  addCheck(run)
+  addCheck(run, 'T4')
   const resolved = resolveTarget(run, baseFile, link.target)
   if (resolved.external) {
     run.stats.invalidTestLinks++
@@ -421,7 +429,7 @@ function checkTraceabilityConsistency(run, traceText, traceFile) {
         .replace(/[^a-z]/g, '')
       if (status === 'covered') {
         for (const col of classColumns) {
-          addCheck(run)
+          addCheck(run, 'R4')
           const value = cleanCell(row.cells[col.idx] || '')
           if (isBlankCell(value)) {
             fail(
@@ -434,7 +442,7 @@ function checkTraceabilityConsistency(run, traceText, traceFile) {
           }
         }
       } else if (status === 'partial' || status === 'gap') {
-        addCheck(run)
+        addCheck(run, 'R4')
         if (gapIdx < 0) {
           fail(run, 'R4', traceFile, row.line, `${first} 状态为 ${status}，但表头缺少「缺口」列；补该列`)
           continue
@@ -446,7 +454,7 @@ function checkTraceabilityConsistency(run, traceText, traceFile) {
       }
     }
   }
-  addCheck(run)
+  addCheck(run, 'R4')
   if (!identifiedCoverageTable) {
     fail(run, 'R4', traceFile, 1, '未找到含「覆盖」状态列的追溯表；按规范补表头')
   } else if (!identifiedClassColumns) {
@@ -468,7 +476,7 @@ function runChecks(run) {
   const treeRows = prdRows(treeText)
   const treePrds = new Map()
   for (const row of treeRows) {
-    addCheck(run)
+    addCheck(run, 'T1')
     if (treePrds.has(row.prd)) {
       fail(run, 'T1', treeFile, row.line, `TREE.md 中 ${row.prd} 重复出现；删除重复行`, { prd: row.prd })
       continue
@@ -481,7 +489,7 @@ function runChecks(run) {
   run.stats.treeTotal = treeTotal ? treeTotal.value : null
   run.stats.traceabilityTotal = traceTotal ? traceTotal.value : null
 
-  addCheck(run)
+  addCheck(run, 'T1')
   if (treeTotal === null) {
     fail(run, 'T1', treeFile, 1, 'TREE.md 未找到「合计」行或无法解析 L3(PRD) 总数；补合计行')
   } else if (treeTotal.value !== treePrds.size) {
@@ -493,7 +501,7 @@ function runChecks(run) {
       `TREE.md 合计 ${treeTotal.value} 与解析到的 PRD 行数 ${treePrds.size} 不一致；修正合计行`,
     )
   }
-  addCheck(run)
+  addCheck(run, 'T1')
   if (traceTotal === null) {
     fail(run, 'T1', traceFile, 1, 'TRACEABILITY.md 未找到「合计」行或无法解析 PRD 总数；补合计行')
   } else if (traceTotal.value !== treePrds.size) {
@@ -509,7 +517,7 @@ function runChecks(run) {
   const traceRows = prdRows(traceText)
   const tracePrds = new Map()
   for (const row of traceRows) {
-    addCheck(run)
+    addCheck(run, 'T1')
     if (tracePrds.has(row.prd)) {
       fail(run, 'T1', traceFile, row.line, `TRACEABILITY.md 中 ${row.prd} 重复出现；删除重复行`, { prd: row.prd })
       continue
@@ -538,7 +546,7 @@ function runChecks(run) {
 
   // 每个 TREE PRD：产品 spec、TEST 链接。
   for (const [prd, row] of treePrds) {
-    addCheck(run)
+    addCheck(run, 'T3')
     const productLinks = row.links.filter((link) => PRODUCT_TARGET_RE.test(link.target))
     const testLinks = row.links.filter((link) => TEST_TARGET_RE.test(link.target))
 
@@ -584,7 +592,7 @@ function runChecks(run) {
   // 产品 spec 中出现但 TREE 不存在的 PRD。
   for (const [domain, declarations] of productDeclarations) {
     for (const prd of declarations) {
-      addCheck(run)
+      addCheck(run, 'T3')
       if (!treePrds.has(prd)) {
         run.stats.productSpecIssues++
         fail(run, 'T3', join(run.root, 'specs/product', domain, 'spec.md'), 1, `${prd} 未出现在 TREE.md 中；删除声明或补进 TREE`, {
@@ -596,7 +604,7 @@ function runChecks(run) {
 
   // 每个 TREE PRD 必须出现在 TRACEABILITY，且其 TEST 链接有效。
   for (const [prd, row] of treePrds) {
-    addCheck(run)
+    addCheck(run, 'T2')
     const traceRow = tracePrds.get(prd)
     if (!traceRow) {
       run.stats.missingPrds++
@@ -621,7 +629,7 @@ function runChecks(run) {
 
   // TRACEABILITY 中出现但 TREE 不存在的 PRD。
   for (const prd of tracePrds.keys()) {
-    addCheck(run)
+    addCheck(run, 'T2')
     if (!treePrds.has(prd)) {
       run.stats.unknownPrds++
       fail(run, 'T2', traceFile, 1, `${prd} 出现在 TRACEABILITY.md，但 TREE.md 中没有；补进 TREE 或删除`, { prd })
@@ -634,7 +642,7 @@ function runChecks(run) {
   )
   run.stats.changePackages = changeFiles.length
   for (const file of changeFiles) {
-    addCheck(run)
+    addCheck(run, 'T5')
     const text = readText(file)
     if (text === null) {
       run.stats.changeIssues++
@@ -672,7 +680,7 @@ function runChecks(run) {
 
   // E2E 测试计划入口。
   const e2eReadme = join(run.root, 'specs/test/e2e/README.md')
-  addCheck(run)
+  addCheck(run, 'T6')
   run.stats.e2eReadme = existsSync(e2eReadme) && statSync(e2eReadme).isFile()
   if (!run.stats.e2eReadme) {
     fail(run, 'T6', e2eReadme, 1, '缺少 specs/test/e2e/README.md；补 E2E 测试计划入口')
@@ -702,8 +710,20 @@ function runChecks(run) {
 /* 输出                                                                */
 /* ------------------------------------------------------------------ */
 
+/** 判定：零检查不得判 PASS；--rule 单跑时用该规则名下的检查数。 */
+function decideRun(run) {
+  const count = run.stats.ruleFilter ? (run.filteredChecks ?? 0) : run.checks
+  return { pass: isPass(run.failures, count), count }
+}
+
+function reportExitCode(run) {
+  return decideRun(run).pass ? 0 : 1
+}
+
 function report(run, asJson) {
-  const ok = run.failures.length === 0
+  const decision = decideRun(run)
+  const ok = decision.pass
+  const checks = decision.count
   const failures = run.failures.map((item) => ({
     rule: item.rule,
     severity: 'error',
@@ -736,8 +756,9 @@ function report(run, asJson) {
         {
           ok,
           root: run.root,
-          checks: run.checks,
+          checks,
           stats: { ...run.stats, failures: run.failures.length },
+          change: run.stats.changeId || null,
           failures,
           warnings,
           governance,
@@ -761,6 +782,7 @@ function report(run, asJson) {
   console.log(`  产品 spec PRD 声明：${run.stats.productSpecPrds}，产品 spec 问题：${run.stats.productSpecIssues}`)
   console.log(`  change 包：${run.stats.changePackages}，change 问题：${run.stats.changeIssues}，治理豁免：${run.stats.governance}`)
   console.log(`  E2E README：${run.stats.e2eReadme ? '存在' : '缺失'}；R4 检查行：${run.stats.r4Rows}`)
+  if (run.stats.ruleFilter) console.log(`  规则过滤：${run.stats.ruleFilter}（只统计该规则名下的检查）`)
   console.log(`  失败项：${run.failures.length}，提示项：${run.warnings.length}`)
 
   for (const item of governance) {
@@ -772,11 +794,17 @@ function report(run, asJson) {
   for (const item of warnings) {
     console.log(`[WARN] ${item.file}:${item.line} ${item.rule} ${item.message}`)
   }
+  console.log(formatGateLine(run))
+  const ruleSuffix = run.stats.ruleFilter ? `, rule: ${run.stats.ruleFilter}` : ''
   if (ok) {
-    console.log(`PASS (checks: ${run.checks})`)
+    console.log(`PASS (checks: ${checks}${ruleSuffix})`)
     return 0
   }
-  console.log(`FAILED: ${run.failures.length} issue(s)`)
+  if (run.failures.length === 0) {
+    console.log(`FAILED: 零检查不得判 PASS (checks: ${checks}${ruleSuffix})`)
+    return 1
+  }
+  console.log(`FAILED: ${run.failures.length} issue(s)${run.stats.ruleFilter ? ` (rule: ${run.stats.ruleFilter})` : ''}`)
   return 1
 }
 
@@ -911,6 +939,26 @@ function runSelfTest() {
     assert('违规夹具命中 R4', badRules.has('R4'), `rules=${[...badRules].join(',')}`)
     assert('违规夹具命中 T5', badRules.has('T5'), `rules=${[...badRules].join(',')}`)
 
+    // RC-11：零检查结果必须判红，不得因“没有失败项”放行。
+    const zeroRun = createRun(goodRoot)
+    const zeroLogs = []
+    const originalLog = console.log
+    let zeroCode = 0
+    try {
+      console.log = (...args) => zeroLogs.push(args.join(' '))
+      zeroCode = report(zeroRun, false)
+    } finally {
+      console.log = originalLog
+    }
+    assert('零检查结果退出码非 0', zeroCode === 1, `exit=${zeroCode}`)
+    assert('零检查结果输出判红行', zeroLogs.some((line) => line.includes('零检查不得判 PASS')), zeroLogs.slice(-1).join(''))
+    assert('合规夹具退出码 0', reportExitCode(good) === 0, `exit=${reportExitCode(good)}`)
+    assert('违规夹具退出码 1', reportExitCode(bad) === 1, `exit=${reportExitCode(bad)}`)
+    const zeroRuleRun = createRun(goodRoot)
+    zeroRuleRun.stats.ruleFilter = 'MXV2-1-06'
+    zeroRuleRun.filteredChecks = 0
+    assert('--rule 零检查退出码非 0', reportExitCode(zeroRuleRun) === 1, `exit=${reportExitCode(zeroRuleRun)}`)
+
     // AC-04 / AC-06：5 行矩阵只报 002（covered 缺任务）、003（partial 缺缺口）、
     // 004（gap 占位符「无」）；001（完整 covered）与 005（partial 有缺口）必须通过。
     const r4 = bad.failures.filter((f) => f.rule === 'R4')
@@ -941,6 +989,86 @@ function runSelfTest() {
       naShort.length === 1 && naShort[0].rule === 'T5',
       naShort.map((f) => `${f.rule}:${f.message}`).join('; ') || '无失败',
     )
+
+    // T7（--change 单包闭环）：每个包放在独立根目录，避免 T5 把其它夹具包一起扫进来。
+    const changeRoot = (tag) => {
+      const root = join(tmp, `change-${tag}`)
+      buildSelfTestFixture(root, 'good')
+      return root
+    }
+    const root001 = changeRoot('ok')
+    writeFixtureFile(root001, 'specs/changes/CHG-T7-001/spec.md', [
+      '# CHG-T7-001',
+      '',
+      'Implements: PRD-DEMO-001',
+      '',
+      '| AC | 判据 |',
+      '|---|---|',
+      '| AC-DEMO-001 | 变更包合规 |',
+      '',
+    ].join('\n'))
+    writeFixtureFile(root001, 'specs/changes/CHG-T7-001/evidence.md', '# 证据\n\nAC-DEMO-001 由 test-plan 覆盖。\n')
+    const root002 = changeRoot('orphan-ac')
+    writeFixtureFile(root002, 'specs/changes/CHG-T7-002/spec.md', [
+      '# CHG-T7-002',
+      '',
+      'Implements: PRD-DEMO-001',
+      '',
+      'AC-DEMO-999 只写在 spec.md 里。',
+      '',
+    ].join('\n'))
+    const root003 = changeRoot('no-implements')
+    writeFixtureFile(root003, 'specs/changes/CHG-T7-003/spec.md', '# CHG-T7-003\n\n没有 Implements 行，也没有 AC。\n')
+    const root004 = changeRoot('stray-prd')
+    writeFixtureFile(root004, 'specs/changes/CHG-T7-004/spec.md', [
+      '# CHG-T7-004',
+      '',
+      'Implements: PRD-DEMO-777',
+      '',
+    ].join('\n'))
+
+    const changeRun = (root, id) => {
+      const run = createRun(root)
+      run.stats.changeId = id
+      runChecks(run)
+      checkChangeTrace(run, id)
+      return run
+    }
+    const okChange = changeRun(root001, 'CHG-T7-001')
+    assert(
+      '合规变更包 T7 零失败',
+      okChange.failures.length === 0,
+      okChange.failures.map((f) => `${f.rule}:${f.message}`).join('; '),
+    )
+    const missing = changeRun(root001, 'CHG-T7-404')
+    assert(
+      '缺失变更包命中 T7',
+      missing.failures.length === 1 && missing.failures[0].rule === 'T7' && missing.failures[0].message.includes('不存在'),
+      missing.failures.map((f) => `${f.rule}:${f.message}`).join('; ') || '无失败',
+    )
+    const orphanAc = changeRun(root002, 'CHG-T7-002')
+    assert(
+      'AC 未被任务/证据/测试引用命中 T7',
+      orphanAc.failures.some((f) => f.rule === 'T7' && f.message.includes('AC-DEMO-999')),
+      orphanAc.failures.map((f) => f.rule + ':' + f.message).join('; ') || '无失败',
+    )
+    const noImplements = changeRun(root003, 'CHG-T7-003')
+    assert(
+      '缺 Implements 命中 T7',
+      noImplements.failures.some((f) => f.rule === 'T7' && f.message.includes('Implements')),
+      noImplements.failures.map((f) => f.rule + ':' + f.message).join('; ') || '无失败',
+    )
+    const strayPrd = changeRun(root004, 'CHG-T7-004')
+    assert(
+      'Implements 的 PRD 不在矩阵命中 T7',
+      strayPrd.failures.some((f) => f.rule === 'T7' && f.message.includes('PRD-DEMO-777')),
+      strayPrd.failures.map((f) => f.rule + ':' + f.message).join('; ') || '无失败',
+    )
+    assert(
+      '[GATE-TRACE] 汇总行含 checks/failures/change/status',
+      /^\[GATE-TRACE\] checks=\d+ failures=\d+ change=CHG-T7-001 status=PASS$/.test(formatGateLine(okChange)),
+      formatGateLine(okChange),
+    )
   } catch {
     // 断言已记录，交给下方统一输出。
   } finally {
@@ -962,7 +1090,45 @@ function runSelfTest() {
 /* 入口                                                                */
 /* ------------------------------------------------------------------ */
 
+const RULES = ['MXV2-1-06', 'MXV2-2-05', 'MXV2-4-04', 'MXV2-7-02', 'MXV2-7-05'];
+
+/** GATES.md 表 3-1：规则位与内部检查编号的映射，供 --rule 单跑收窄。 */
+const RULE_ROOTS = {
+  T1: ['MXV2-1-06'],
+  T2: ['MXV2-2-05'],
+  T3: ['MXV2-4-04'],
+  T4: ['MXV2-7-02'],
+  T5: ['MXV2-7-05'],
+  T6: ['MXV2-1-06', 'MXV2-2-05'],
+}
+
+function narrowRun(run, rule) {
+  const internal = new Set(
+    Object.entries(RULE_ROOTS)
+      .filter(([, rules]) => rules.includes(rule))
+      .map(([code]) => code),
+  )
+  run.failures = run.failures.filter((item) => internal.has(item.rule))
+  run.warnings = run.warnings.filter((item) => internal.has(item.rule))
+  // 单跑时只计该规则名下的检查数；零检查不得借整册计数判 PASS。
+  run.filteredChecks = [...internal].reduce((sum, code) => sum + (run.checksByRule[code] ?? 0), 0)
+  run.stats.ruleFilter = rule
+}
+
 function parseArgs(argv) {
+  const knownFlags = new Set(['--self-test', '--json'])
+  const valueFlags = new Set(['--root', '--change', '--rule'])
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i]
+    if (valueFlags.has(arg)) {
+      i += 1
+      continue
+    }
+    if (!knownFlags.has(arg)) {
+      console.error(`✗ 未知参数 ${arg}；可用：--self-test --json --root <dir> --change <CHG-ID>`)
+      process.exit(2)
+    }
+  }
   const opt = (name, fallback = '') => {
     const i = argv.indexOf(name)
     return i >= 0 && argv[i + 1] ? argv[i + 1] : fallback
@@ -971,11 +1137,99 @@ function parseArgs(argv) {
     selfTest: argv.includes('--self-test'),
     json: argv.includes('--json'),
     root: resolve(opt('--root', DEFAULT_ROOT)),
+    change: opt('--change', ''),
+    rule: opt('--rule', ''),
   }
+}
+
+/**
+ * 变更包追溯闭环（T7）：--change 指定变更包时，核对「本包声明的 AC 是否真的被
+ * 任务/证据/测试引用」以及「本包 Implements 的 PRD 是否在追溯矩阵里」。整册 T1–T6
+ * 只看 PRD 层，T7 补的是单包层，两者不互相替代。
+ */
+function checkChangeTrace(run, changeId) {
+  const dir = join(run.root, 'specs/changes', changeId)
+  run.stats.changeId = changeId
+  addCheck(run, 'T7')
+  if (!existsSync(dir) || !statSync(dir).isDirectory()) {
+    fail(run, 'T7', join(dir, 'spec.md'), 1, `--change 指定的变更包不存在：specs/changes/${changeId}；核对包号或先建包`, {
+      change: changeId,
+    })
+    return
+  }
+  const specFile = join(dir, 'spec.md')
+  const specText = existsSync(specFile) ? readText(specFile) : null
+  addCheck(run, 'T7')
+  if (specText === null) {
+    fail(run, 'T7', specFile, 1, `变更包 ${changeId} 缺 spec.md；按模板补 spec.md 并声明 Implements 与 AC`, {
+      change: changeId,
+    })
+    return
+  }
+
+  const traceText = readText(join(run.root, 'docs/product/TRACEABILITY.md')) ?? ''
+  const tracePrds = new Set((traceText.match(PRD_RE) || []).map((id) => id.toUpperCase()))
+  const implementsMatch = /Implements\s*[:：]\s*([^\n]*)/.exec(specText)
+  addCheck(run, 'T7')
+  if (!implementsMatch) {
+    fail(run, 'T7', specFile, 1, `变更包 ${changeId} 的 spec.md 缺「Implements: PRD-…」声明；补实现对象`, {
+      change: changeId,
+    })
+  } else {
+    const declared = (implementsMatch[1].match(PRD_RE) || []).map((id) => id.toUpperCase())
+    if (declared.length === 0 && !/N\/A/.test(implementsMatch[1])) {
+      fail(run, 'T7', specFile, 1, `变更包 ${changeId} 的 Implements 既不是 PRD 也不是 N/A：<理由>；改写声明`, {
+        change: changeId,
+      })
+    }
+    for (const prd of declared) {
+      addCheck(run, 'T7')
+      if (!tracePrds.has(prd)) {
+        fail(run, 'T7', specFile, 1, `变更包 ${changeId} 声明实现 ${prd}，但追溯矩阵里没有这个 PRD；先在 TRACEABILITY.md 登记`, {
+          change: changeId,
+          prd,
+        })
+      }
+    }
+  }
+
+  // AC 必须在 spec.md 之外至少被引用一次（任务卡、证据、测试计划都算），
+  // 否则「验收条目」只是写在纸面上，没有人会去跑。
+  const acIds = [...new Set((specText.match(AC_RE) || []).map((id) => id.toUpperCase()))]
+  const referenced = new Set()
+  for (const file of listFiles(dir)) {
+    if (file === specFile || !file.endsWith('.md')) continue
+    const text = readText(file) ?? ''
+    for (const id of text.match(AC_RE) || []) referenced.add(id.toUpperCase())
+  }
+  for (const file of listFiles(join(run.root, 'specs/test'))) {
+    if (!file.endsWith('.md')) continue
+    const text = readText(file) ?? ''
+    for (const id of text.match(AC_RE) || []) referenced.add(id.toUpperCase())
+  }
+  for (const id of acIds) {
+    addCheck(run, 'T7')
+    if (!referenced.has(id)) {
+      fail(run, 'T7', specFile, 1, `变更包 ${changeId} 的 ${id} 只写在 spec.md 里，任务/证据/测试都没有引用；补引用`, {
+        change: changeId,
+        ac: id,
+      })
+    }
+  }
+}
+
+function formatGateLine(run) {
+  const decision = decideRun(run)
+  const status = decision.pass ? 'PASS' : 'FAILED'
+  return `[GATE-TRACE] checks=${decision.count} failures=${run.failures.length} change=${run.stats.changeId || '-'} status=${status}`
 }
 
 function main() {
   const options = parseArgs(process.argv.slice(2))
+  if (options.rule && !RULES.includes(options.rule)) {
+    console.error(`✗ 不覆盖规则 ${options.rule}；覆盖：${RULES.join('、')}`)
+    process.exit(2)
+  }
   if (options.selfTest) {
     process.exit(runSelfTest())
   }
@@ -984,8 +1238,10 @@ function main() {
     process.exit(2)
   }
   const run = createRun(options.root)
+  if (options.change) run.stats.changeId = options.change
   try {
     runChecks(run)
+    if (options.change) checkChangeTrace(run, options.change)
   } catch (e) {
     if (e instanceof PreflightError) {
       console.error(`✗ ${e.message}`)
@@ -993,7 +1249,12 @@ function main() {
     }
     throw e
   }
+  if (options.rule) narrowRun(run, options.rule)
   process.exit(report(run, options.json))
 }
 
+// 规则级命令按内部检查映射收窄；零检查结果一律判红（见 decideRun）。
+
 main()
+
+

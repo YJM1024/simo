@@ -14,6 +14,8 @@ import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
+
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const TMP = path.join(ROOT, '.tmp');
 const DEFAULT_PORT = 9223;
@@ -291,6 +293,20 @@ async function main() {
   const result = await probe(port, { launch });
   emit(result, asJson);
   process.exit(result.ok ? 0 : 3);
+}
+
+// 本脚本覆盖的 v2 规则位（GATES.md 表 2-1 指派），供 check-rule-fields.mjs 双向核对。
+const RULES = ['MXV2-8-04'];
+
+// 既有脚本的 --rule 是整册口径：参数被接受并校验归属，检查仍跑全套（覆盖面大于单条）。
+const __ruleIndex = process.argv.indexOf('--rule');
+if (__ruleIndex >= 0) {
+  const __ruleId = process.argv[__ruleIndex + 1];
+  if (!__ruleId || !RULES.includes(__ruleId)) {
+    console.error(`probe-cdp.mjs: 不覆盖规则 ${__ruleId ?? ''}；覆盖 ${RULES.join(', ')}`);
+    process.exit(2);
+  }
+  process.argv.splice(__ruleIndex, 2);
 }
 
 main().catch((err) => {

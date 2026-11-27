@@ -20,6 +20,7 @@ moxian-framework/
 deploy/dist/
 backend/internal/webui/dist/
 frontend/dist/
+/build/
 
 # ---- transient test / incident artifacts ----
 .leadcheck/
@@ -47,6 +48,7 @@ archive/labs/storybook/.home/
 # ---- local toolchain & machine-specific artifacts ----
 .tools/
 scratch/
+_scratch/
 data-backup-*/
 data-preprod-*/
 .tmp-*/

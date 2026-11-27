@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /**
+ * 规则级命令已移交 ai-review（MOXIAN 对应执行行注明“该脚本为批处理入口，不支持单跑”）；
+ * 本脚本作为整套门禁运行，不再解析 --rule。
  * ac-coverage.mjs：AC 判据覆盖统计（零依赖，只读）
  *
  * AC 清单只取 specs/test 下各级 test-plan.md 的映射矩阵行，行内必须有一个状态单元格
@@ -292,4 +294,8 @@ function main() {
   process.exit(result.missing.length > 0 ? 1 : 0)
 }
 
+// 规则级命令已移交 ai-review；本脚本按整套门禁运行，不接受 --rule 参数。
+
 main()
+
+

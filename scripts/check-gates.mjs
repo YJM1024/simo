@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /**
+ * 规则级命令已移交 ai-review（MOXIAN 对应执行行注明“该脚本为批处理入口，不支持单跑”）；
+ * 本脚本作为整套门禁运行，不再解析 --rule。
  * check-gates.mjs — 墨线结构门禁（零依赖，只读真实仓库；自检只写 .tmp 夹具）
  *
  * 依据：docs/framework/GATES.md 第 3.1 节 MX-G-08 至 MX-G-13，字段来源：
@@ -49,7 +51,7 @@
  *   node scripts/check-gates.mjs                    # 扫描 specs/changes/ 与子门禁
  *   node scripts/check-gates.mjs --root <dir>       # 指定仓库根
  *   node scripts/check-gates.mjs --change <CHG-ID>  # 只查一个变更包
- *   node scripts/check-gates.mjs --stage pre|change # 开工前或变更级（默认 change）
+ *   node scripts/check-gates.mjs --stage pre|point|exit|change # 开工前/点级/出口/变更级（默认 change）
  *   node scripts/check-gates.mjs --template auto|framework|legacy  按包结构选模板或强制十节/旧八节
  *   node scripts/check-gates.mjs --json             # 机器可读，含 subGates 与 summary
  *   node scripts/check-gates.mjs --self-test        # 夹具自检，跑完清理
@@ -80,6 +82,38 @@ const GATE = 'STRUCT'
 // PASS/FAILED 行；这里再补一行 `[GATE-SUB] <name> PASS|FAILED` 与总汇总。
 const SUB_GATES = [
   {
+    name: 'rule-fields',
+    script: 'check-rule-fields.mjs',
+    title: '规则字段门禁（MXV2-6-01 至 6-11、6-17）',
+    rules: ['MXV2-6-01', 'MXV2-6-02', 'MXV2-6-03', 'MXV2-6-07', 'MXV2-6-08', 'MXV2-6-10', 'MXV2-6-11', 'MXV2-6-17'],
+    timeoutMs: 120_000,
+    json: false,
+  },
+  {
+    name: 'archive',
+    script: 'check-archive.mjs',
+    title: '归档与复盘门禁（MXV2-1-11、3-13、4-23、9-15）',
+    rules: ['MXV2-1-11', 'MXV2-3-13', 'MXV2-4-23', 'MXV2-9-15'],
+    timeoutMs: 120_000,
+    json: false,
+  },
+  {
+    name: 'points',
+    script: 'check-points.mjs',
+    title: '流程点链门禁（MXV2-2-02 至 9-03）',
+    rules: ['MXV2-2-02', 'MXV2-2-04', 'MXV2-3-01', 'MXV2-3-09', 'MXV2-4-08', 'MXV2-4-10', 'MXV2-4-12', 'MXV2-4-14', 'MXV2-4-15', 'MXV2-5-02', 'MXV2-5-07', 'MXV2-6-16', 'MXV2-8-12', 'MXV2-9-03'],
+    timeoutMs: 120_000,
+    json: false,
+  },
+  {
+    name: 'mapping',
+    script: 'check-mapping.mjs',
+    title: '编号映射与收口门禁（MXV2-1-01 至 5-10）',
+    rules: ['MXV2-1-01', 'MXV2-2-03', 'MXV2-2-06', 'MXV2-4-01', 'MXV2-4-02', 'MXV2-4-05', 'MXV2-4-11', 'MXV2-4-22', 'MXV2-5-10'],
+    timeoutMs: 120_000,
+    json: false,
+  },
+  {
     name: 'fp-coverage',
     script: 'check-fp-coverage.mjs',
     title: '功能点覆盖门禁（MX-G-71）',
@@ -94,6 +128,49 @@ const SUB_GATES = [
     // 传 --json 会让统计行消失，error 数只能按退出码兜底成 1。这里走文本输出，
     // 由 parseSubGateCounts 读末行 `FAILED: N error(s), M warning(s)`。
     json: false,
+  },
+  // 以下四道是出口级红门禁：--stage exit（含 change 别名）必须一起汇总，
+  // 否则 exit 的“零错误”只覆盖七项，红门禁被漏在外面，等于假绿。
+  // 它们统一走文本输出：trace 的 --json 不存在，docs/contract/matrix 的
+  // 统计行在文本末行，由 parseSubGateCounts 读取。
+  {
+    name: 'trace',
+    script: 'check-trace.mjs',
+    title: '追溯门禁（MXV2-1-06、2-05、4-04、7-02、7-05）',
+    rules: ['MXV2-1-06', 'MXV2-2-05', 'MXV2-4-04', 'MXV2-7-02', 'MXV2-7-05'],
+    timeoutMs: 240_000,
+    json: false,
+    exitOnly: true,
+  },
+  {
+    name: 'docs',
+    script: 'check-docs.mjs',
+    title: '框架文档门禁（MXV2-1-09、3-15）',
+    rules: ['MXV2-1-09', 'MXV2-3-15'],
+    timeoutMs: 120_000,
+    json: false,
+    change: false,
+    exitOnly: true,
+  },
+  {
+    name: 'contract',
+    script: 'check-contract.mjs',
+    title: '契约门禁（MXV2-5-11 至 5-17、7-07）',
+    rules: ['MXV2-5-11', 'MXV2-5-12', 'MXV2-5-13', 'MXV2-5-14', 'MXV2-5-15', 'MXV2-5-16', 'MXV2-5-17', 'MXV2-7-07'],
+    timeoutMs: 180_000,
+    json: false,
+    change: false,
+    exitOnly: true,
+  },
+  {
+    name: 'matrix',
+    script: 'check-matrix-coverage.mjs',
+    title: '任务矩阵覆盖门禁（MXV2-4-03、5-01、5-03、5-04、8-15）',
+    rules: ['MXV2-4-03', 'MXV2-5-01', 'MXV2-5-03', 'MXV2-5-04', 'MXV2-8-15'],
+    timeoutMs: 120_000,
+    json: false,
+    change: false,
+    exitOnly: true,
   },
 ]
 // AC 编号有两种历史形态：新包用三段式 AC-<域>-<子域>-<序号>（如 AC-CONV-005-02），
@@ -1453,18 +1530,27 @@ function toJson(run) {
 
 /** 从子门禁文本输出里取末行统计；取不到时按退出码兜底。 */
 function parseSubGateCounts(stdout, exitCode) {
-  const failed = stdout.match(/^FAILED:\s*(\d+) error\(s\),\s*(\d+) warning\(s\)/m)
-  if (failed) return { errors: Number(failed[1]), warnings: Number(failed[2]) }
-  const passed = stdout.match(/^PASS \(gate:[^,]+,\s*checks:\s*\d+,\s*warnings:\s*(\d+)\)/m)
-  if (passed) return { errors: 0, warnings: Number(passed[1]) }
+  const lines = String(stdout ?? '').trimEnd().split(/\r?\n/)
+  for (let index = lines.length - 1; index >= 0; index -= 1) {
+    const line = lines[index].trim()
+    // `FAILED: N error(s), M warning(s)`（contract/matrix）、
+    // `FAILED: N issue(s)`（trace）、`FAILED: N issue(s) (checks: N)`（docs）。
+    const failed = line.match(/^FAILED:\s*(\d+)\s*(?:error|issue)\(s\)(?:,\s*(\d+)\s*warning\(s\))?/)
+    if (failed) return { errors: Number(failed[1]), warnings: Number(failed[2] ?? 0) }
+    // `PASS (checks: N)`（trace）、`PASS (gate: X, checks: N, warnings: M)`（contract/matrix）、
+    // `PASS (checks: N, rule: X)`（check-docs/check-archive 等走 v2-rule-mode 的脚本）。
+    const passed = line.match(/^PASS \((?:gate:[^,]+,\s*)?(?:checks:\s*\d+(?:,\s*)?)*(?:warnings:\s*(\d+))?(?:rule:[^)]+)?\)$/)
+    if (passed) return { errors: 0, warnings: Number(passed[1] ?? 0) }
+  }
   return { errors: exitCode === 0 ? 0 : 1, warnings: 0 }
 }
 
 function runSubGate(entry, options) {
   const args = [join(SCRIPT_DIR, entry.script), '--root', options.root]
-  if (options.change) args.push('--change', options.change)
+  const withChange = Boolean(options.change) && entry.change !== false
+  if (withChange) args.push('--change', options.change)
   if (options.json && entry.json !== false) args.push('--json')
-  const command = `node ${entry.script}${options.change ? ` --change ${options.change}` : ''}`
+  const command = `node ${entry.script}${withChange ? ` --change ${options.change}` : ''}`
   const startedAt = Date.now()
   let result
   try {
@@ -1524,11 +1610,16 @@ function runSubGate(entry, options) {
   }
 }
 
+/** 按阶段取子门禁条目：pre 不跑；point 只跑点级项；exit（含 change）跑全部。 */
+function selectSubGates(stage) {
+  if (stage === 'pre') return []
+  return SUB_GATES.filter((entry) => !entry.exitOnly || stage !== 'point')
+}
+
 function runSubGates(options) {
   // 子门禁都是变更级门禁（MX-G-71 在变更级验收前生效），开工前阶段不跑，避免新包在
-  // 还没有覆盖表时被阻断；--stage change 是默认值，等于默认流程一定带上。
-  if (options.stage !== 'change') return []
-  return SUB_GATES.map((entry) => runSubGate(entry, options))
+  // 还没有覆盖表时被阻断；point 只跑点级七项，exit（含 change 别名）跑全部十一项。
+  return selectSubGates(options.stage).map((entry) => runSubGate(entry, options))
 }
 
 function printSubGates(gates) {
@@ -1920,6 +2011,61 @@ function runSelfTest(options = {}) {
     const jsonRun = runStructure(passRoot, { stage: 'change', change: null })
     const json = toJson(jsonRun)
     line(json.gate === 'struct' && Array.isArray(json.findings), '--json 结构 期望 gate=struct 且 findings 为数组 实际 符合')
+
+    // 出口汇总：四道红门禁必须进入 exit 阶段，任一门禁红则 exit 非 0。
+    const exitEntries = selectSubGates('exit')
+    const exitNames = exitEntries.map((entry) => entry.name)
+    for (const name of ['trace', 'docs', 'contract', 'matrix']) {
+      line(
+        exitNames.includes(name),
+        `exit 阶段包含 ${name} 门禁 期望 包含 实际 ${exitNames.includes(name) ? '包含' : '缺失'}`,
+      )
+    }
+    const pointExitOnly = selectSubGates('point').filter((entry) => entry.exitOnly)
+    line(
+      pointExitOnly.length === 0,
+      `point 阶段不跑出口专属门禁 期望 0 实际 ${pointExitOnly.length}`,
+    )
+    line(selectSubGates('pre').length === 0, `pre 阶段不跑子门禁 期望 0 实际 ${selectSubGates('pre').length}`)
+    line(
+      exitNames.length === SUB_GATES.length,
+      `exit 阶段覆盖全部子门禁 期望 ${SUB_GATES.length} 实际 ${exitNames.length}`,
+    )
+    // 汇总口径逐门禁验证：任一真实门禁有 error 时，汇总退出码必须非 0。
+    for (const entry of SUB_GATES) {
+      const totals = combineGates({ findings: [] }, [
+        { name: entry.name, errors: 1, warnings: 0, exitCode: 1 },
+      ])
+      line(
+        totals.exitCode !== 0 && totals.errors === 1,
+        `${entry.name} 红时 exit 非 0 期望 非 0 实际 ${totals.exitCode}`,
+      )
+    }
+    // 端到端：真起一个红门禁子进程，经 runSubGate → combineGates 后 exit 非 0。
+    const redScript = join(base, 'red-gate.mjs')
+    writeFileSync(redScript, "console.log('FAILED: 1 issue(s)'); process.exit(1)\n", 'utf8')
+    const redGate = runSubGate(
+      { name: 'red-fixture', script: '../.tmp/gate-self-test/struct/red-gate.mjs', title: '红门禁夹具', timeoutMs: 30_000 },
+      { root: passRoot, stage: 'exit', change: null, json: false },
+    )
+    line(redGate.errors === 1, `红门禁子进程解析 error 数 期望 1 实际 ${redGate.errors}`)
+    const redTotals = combineGates({ findings: [] }, [redGate])
+    line(redTotals.exitCode === 1, `红门禁端到端 exit 期望 1 实际 ${redTotals.exitCode}`)
+    // 末行解析覆盖四种真实格式。
+    const formats = [
+      ['FAILED: 1 issue(s)', 1, 0],
+      ['FAILED: 2 issue(s) (checks: 11)', 2, 0],
+      ['FAILED: 1 error(s), 0 warning(s)', 1, 0],
+      ['PASS (gate: matrix, checks: 66, warnings: 0)', 0, 0],
+      ['PASS (checks: 12, rule: MXV2-7-22)', 0, 0],
+    ]
+    for (const [text, expectedErrors, expectedWarnings] of formats) {
+      const parsed = parseSubGateCounts(text, expectedErrors === 0 ? 0 : 1)
+      line(
+        parsed.errors === expectedErrors && parsed.warnings === expectedWarnings,
+        `末行解析 ${text} 期望 ${expectedErrors}/${expectedWarnings} 实际 ${parsed.errors}/${parsed.warnings}`,
+      )
+    }
   } finally {
     // 自检夹具是本进程在 .tmp/gate-self-test/struct 下新建的临时产物，按任务
     // 要求跑完清理；路径守卫保证只删这一棵自检目录，不触碰仓库文件。
@@ -1951,7 +2097,7 @@ function printHelp() {
   node scripts/check-gates.mjs                    扫描 specs/changes/ 下全部变更包
   node scripts/check-gates.mjs --root <dir>       指定仓库根
   node scripts/check-gates.mjs --change <CHG-ID>  只查一个变更包
-  node scripts/check-gates.mjs --stage pre|change 开工前或变更级（默认 change）
+  node scripts/check-gates.mjs --stage pre|point|exit|change  开工前/点级/出口/变更级（默认 change）
   node scripts/check-gates.mjs --template auto|framework|legacy  按包结构选模板或强制十节/旧八节
   node scripts/check-gates.mjs --json             机器可读输出
   node scripts/check-gates.mjs --self-test        生成 .tmp 夹具自检，跑完清理
@@ -1973,6 +2119,15 @@ function printHelp() {
                每条 AC 有证据行、路径可打开、十五字段与判定值合法、pass 证据有效、
                原因码与解除信息齐全、并集覆盖无缺行、生成器与产物绑定；error 与
                warning 分别计入总 error 与总 warning，超时按失败记。
+  出口专属门禁（--stage exit 与 change 跑，--stage point 与 pre 不跑）：
+  trace        scripts/check-trace.mjs（MXV2-1-06、2-05、4-04、7-02、7-05）：PRD 追溯
+               结构、引用编号、变更包闭环；1 个失败即红。
+  docs         scripts/check-docs.mjs（MXV2-1-09、3-15）：框架文档版本、门禁条数与
+               规则位核对；条数不一致即红。
+  contract     scripts/check-contract.mjs（MXV2-5-11 至 5-17、7-07）：契约表五列与冻结
+               字段、变更单号、schema；缺字段即红。
+  matrix       scripts/check-matrix-coverage.mjs（MXV2-4-03、5-01、5-03、5-04、8-15）：
+               六十六格任务矩阵的字段、模板、门禁与规则位；缺格或引用无效即红。
 
 口径：
   旧格式包按 GATES.md 与 docs/process/templates/ 的八节核对；含「头部」节或
@@ -2013,7 +2168,10 @@ function parseArgs(argv) {
       index += 1
     } else if (arg === '--stage') {
       const value = argv[index + 1]
-      if (value !== 'pre' && value !== 'change') return { error: '--stage 只接受 pre 或 change' }
+      // GATES.md 第 4 节定义 pre / point / exit 三档；change 是 exit 的历史别名。
+      if (value !== 'pre' && value !== 'point' && value !== 'exit' && value !== 'change') {
+        return { error: '--stage 只接受 pre、point、exit（change 等同 exit）' }
+      }
       options.stage = value
       index += 1
     } else if (arg === '--template') {
@@ -2054,6 +2212,7 @@ function main() {
       json.subGates = gates.map((gate) => ({
         gate: gate.name,
         title: gate.title,
+        rule: (SUB_GATES.find((entry) => entry.name === gate.name)?.rules ?? []).join(' '),
         command: gate.command,
         ok: gate.exitCode === 0 && gate.errors === 0,
         exitCode: gate.exitCode,
@@ -2084,4 +2243,8 @@ function main() {
   }
 }
 
+// 规则级命令已移交 ai-review；本脚本按整套门禁运行，不接受 --rule 参数。
+
 main()
+
+

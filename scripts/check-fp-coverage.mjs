@@ -47,6 +47,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { isPass } from './lib/v2-rule-mode.mjs'
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 const DEFAULT_ROOT = resolve(SCRIPT_DIR, '..')
@@ -288,13 +289,13 @@ function checkPackage(root, changeId) {
   const abs = join(root, path)
   if (!existsSync(abs)) {
     records.push(makeRecord(path, 1, `变更包缺少 spec.md：${changeId}`, '补齐变更包后再跑门禁'))
-    return { records, rows: 0, packages: 1, points: [] }
+    return { records, rows: 0, declarations: 0, packages: 1, points: [] }
   }
   const lines = readLines(abs)
   const start = findCoverageHeading(lines)
   if (start < 0) {
     records.push(missingSectionRecord(root, changeId, path))
-    return { records, rows: 0, packages: 1, points: [] }
+    return { records, rows: 0, declarations: 0, packages: 1, points: [] }
   }
 
   const end = sectionEnd(lines, start)
@@ -329,10 +330,10 @@ function checkPackage(root, changeId) {
       if (linked.length) {
         records.push(makeRecord(path, scope.line, `“覆盖范围”声明无功能点，但本包声明或树里关联了功能点：${[...new Set(linked)].join('、')}`, '二者只能取一个：要么列出这些功能点，要么去掉 Implements 与 TREE 的 CHANGE 关联'))
       }
-      return { records, rows: 0, packages: 1, points: [] }
+      return { records, rows: 0, declarations: 1, packages: 1, points: [] }
     }
     records.push(makeRecord(path, sectionLine, '“功能点覆盖”节缺少四列表', '按模板补表头：功能点ID、状态、覆盖它的 AC、备注'))
-    return { records, rows: 0, packages: 1, points: [] }
+    return { records, rows: 0, declarations: 0, packages: 1, points: [] }
   }
 
   const header = table.header.map((cell) => plain(cell))
@@ -342,7 +343,7 @@ function checkPackage(root, changeId) {
   const noteCol = header.findIndex((cell) => /^备注$/i.test(cell))
   if (idCol < 0 || statusCol < 0 || acCol < 0 || noteCol < 0) {
     records.push(makeRecord(path, table.line, '覆盖表缺列，四列必须是功能点ID、状态、覆盖它的 AC、备注', '按模板改表头'))
-    return { records, rows: 0, packages: 1, points: [] }
+    return { records, rows: 0, declarations: 0, packages: 1, points: [] }
   }
   if (!/^\s*\|[\s:|-]+\|\s*$/.test(lines[table.line] ?? '')) {
     records.push(makeRecord(path, table.line + 1, '表头后缺少分隔行', '在表头下行补 |---|---|---|---|'))
@@ -443,14 +444,16 @@ function checkPackage(root, changeId) {
     }
   }
 
-  return { records, rows, packages: 1, points: details }
+  const declarations = noPoint?.reason && rows === 0 ? 1 : 0
+  return { records, rows, declarations, packages: 1, points: details }
 }
 function checkAll(root) {
   const base = join(root, 'specs/changes')
-  if (!existsSync(base)) return { records: [makeRecord('specs/changes', 1, '找不到 specs/changes 目录', '确认 --root 指向仓库根')], rows: 0, packages: 0, points: [] }
+  if (!existsSync(base)) return { records: [makeRecord('specs/changes', 1, '找不到 specs/changes 目录', '确认 --root 指向仓库根')], rows: 0, declarations: 0, packages: 0, points: [] }
   const records = []
   const points = []
   let rows = 0
+  let declarations = 0
   let packages = 0
   const ids = readdirSync(base)
     .filter((name) => {
@@ -467,22 +470,32 @@ function checkAll(root) {
     const result = checkPackage(root, id)
     records.push(...result.records)
     rows += result.rows
+    declarations += result.declarations ?? 0
     packages += result.packages
     points.push(...result.points)
   }
-  return { records, rows, packages, points }
+  return { records, rows, declarations, packages, points }
 }
 
 function render(records, stats) {
   const errors = records.filter((record) => record.severity === 'error').length
   const warnings = records.filter((record) => record.severity === 'warning').length
   const notices = records.filter((record) => record.severity === 'notice').length
+  // 检查项 = 覆盖表行数 + 无功能点声明数；零检查不得判 PASS（无功能点的合法声明计 1 项）。
+  const checks = (stats.rows ?? 0) + (stats.declarations ?? 0)
+  const pass = isPass(records.filter((record) => record.severity === 'error'), checks)
   const lines = records.map((record) => `[FP-COVER] ${record.path}:${record.line} MX-G-71 ${record.severity} ${record.message}；${record.hint}`)
   const tail = `${errors} error(s), ${warnings} warning(s), ${notices} notice(s)`
   // PASS 行保留 `warnings: <m>)` 结尾，`check-gates.mjs` 的子门禁计数正则按此解析；
   // notice 数放在括号后，不破坏既有汇总。
-  lines.push(errors ? `FAILED: ${tail}` : `PASS (gate: fp-coverage, checks: ${stats.rows}, warnings: ${warnings}) notices: ${notices}`)
-  return { text: lines.join('\n'), errors, warnings, notices }
+  if (pass) {
+    lines.push(`PASS (gate: fp-coverage, checks: ${checks}, warnings: ${warnings}) notices: ${notices}`)
+  } else if (errors) {
+    lines.push(`FAILED: ${tail}`)
+  } else {
+    lines.push(`FAILED: 零检查不得判 PASS (checks: ${checks}) ${tail}`)
+  }
+  return { text: lines.join('\n'), pass, checks, errors, warnings, notices }
 }
 
 function parseArgs(argv) {
@@ -579,6 +592,10 @@ function warningsOf(result) {
 
 function noticesOf(result) {
   return result.records.filter((record) => record.severity === 'notice')
+}
+
+function exitCodeOf(stats) {
+  return render(stats.records ?? [], stats).pass ? 0 : 1
 }
 
 function runSelfTest() {
@@ -850,8 +867,17 @@ function runSelfTest() {
   })
   check('无功能点没写理由记 error', count(checkPackage(noPointNoReasonDir, 'CHG-GATE-001'), /括号里没有理由/), 1)
 
-  check('合法样例退出码', errorsOf(pass).length ? 1 : 0, 0)
-  check('partial 样例退出码', errorsOf(partial).length ? 1 : 0, 1)
+  check('合法样例退出码', exitCodeOf(pass), 0)
+  check('partial 样例退出码', exitCodeOf(partial), 1)
+
+  // 零检查回归：没有任何覆盖表行、也没有无功能点声明时，旧实现会因 0 error 判 PASS；
+  // 现在必须走 isPass 判红并给出“零检查不得判 PASS”。
+  const zero = render([], { rows: 0, declarations: 0 })
+  check('零检查退出码非 0', zero.pass ? 0 : 1, 1)
+  checkTrue('零检查输出判红行', zero.text.includes('零检查不得判 PASS'), zero.text.split('\n').pop())
+  const noPointZero = render([], { rows: 0, declarations: 1 })
+  check('无功能点声明计 1 项检查', noPointZero.checks, 1)
+  checkTrue('无功能点声明可判 PASS', noPointZero.pass, noPointZero.text.split('\n').pop())
   checkTrue(
     '两次运行结果一致',
     JSON.stringify(checkPackage(partialDir, 'CHG-GATE-001').records) === JSON.stringify(checkPackage(partialDir, 'CHG-GATE-001').records),
@@ -864,6 +890,20 @@ function runSelfTest() {
   }
   console.log(`SELF-TEST PASS：${passed} 条断言`)
   return 0
+}
+
+// 本脚本覆盖的 v2 规则位（GATES.md 表 2-1 指派），供 check-rule-fields.mjs 双向核对。
+const RULES = ['MXV2-7-22'];
+
+// 既有脚本的 --rule 是整册口径：参数被接受并校验归属，检查仍跑全套（覆盖面大于单条）。
+const __ruleIndex = process.argv.indexOf('--rule');
+if (__ruleIndex >= 0) {
+  const __ruleId = process.argv[__ruleIndex + 1];
+  if (!__ruleId || !RULES.includes(__ruleId)) {
+    console.error(`check-fp-coverage.mjs: 不覆盖规则 ${__ruleId ?? ''}；覆盖 ${RULES.join(', ')}`);
+    process.exit(2);
+  }
+  process.argv.splice(__ruleIndex, 2);
 }
 
 const options = parseArgs(process.argv.slice(2))
@@ -882,8 +922,10 @@ if (!existsSync(join(root, 'specs'))) {
 const result = options.change ? checkPackage(root, options.change) : checkAll(root)
 const output = render(result.records, result)
 if (options.json) {
-  console.log(JSON.stringify({ gate: 'fp-coverage', checks: result.rows, warnings: output.warnings, notices: output.notices, errors: output.errors, points: result.points ?? [], records: result.records }, null, 2))
+  console.log(JSON.stringify({ gate: 'fp-coverage', checks: output.checks, rows: result.rows, declarations: result.declarations ?? 0, warnings: output.warnings, notices: output.notices, errors: output.errors, pass: output.pass, points: result.points ?? [], records: result.records }, null, 2))
 } else {
   console.log(output.text)
 }
-process.exit(output.errors > 0 ? 1 : 0)
+process.exit(output.pass ? 0 : 1)
+
+

@@ -4,7 +4,7 @@
       "E:\\dsh_home\\dsh-runtimes\\dsh-primary-runtime\\dependencies\\node\\bin\\node.exe",
       "E:\\dsh_home\\workspaces\\agent\\frontend\\e2e\\node_modules\\@playwright\\test\\cli.js",
       "test",
-      "--list"
+      "--config=frontend/e2e/playwright.config.ts"
     ],
     "configFile": "E:\\dsh_home\\workspaces\\agent\\frontend\\e2e\\playwright.config.ts",
     "rootDir": "E:/dsh_home/workspaces/agent/frontend/e2e/specs",
@@ -17,14 +17,18 @@
     "grep": {},
     "grepInvert": null,
     "maxFailures": 0,
-    "metadata": {},
+    "metadata": {
+      "actualWorkers": 1
+    },
     "preserveOutput": "always",
     "projects": [
       {
         "outputDir": "E:/dsh_home/workspaces/agent/frontend/e2e/report/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 1
+        },
         "id": "system-chrome",
         "name": "system-chrome",
         "testDir": "E:/dsh_home/workspaces/agent/frontend/e2e/specs",
@@ -42,7 +46,9 @@
         "outputDir": "E:\\dsh_home\\workspaces\\agent\\frontend\\e2e\\report\\test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 1
+        },
         "name": "system-chrome",
         "testDir": "E:\\dsh_home\\workspaces\\agent\\frontend\\e2e\\specs",
         "snapshotDir": "E:\\dsh_home\\workspaces\\agent\\frontend\\e2e\\specs",
@@ -140,8 +146,22 @@
                   "expectedStatus": "passed",
                   "projectId": "system-chrome",
                   "projectName": "system-chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1164,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-26T22:20:26.426Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "860e65d8bad1da712126-7363a63272057c8fe2db",
@@ -160,13 +180,27 @@
                   "expectedStatus": "passed",
                   "projectId": "system-chrome",
                   "projectName": "system-chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 483,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-26T22:20:28.136Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "860e65d8bad1da712126-87919da7d9e45d532222",
               "file": "01-session-load.spec.ts",
-              "line": 23,
+              "line": 26,
               "column": 3
             }
           ]
@@ -197,8 +231,22 @@
                   "expectedStatus": "passed",
                   "projectId": "system-chrome",
                   "projectName": "system-chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1200,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-26T22:20:28.652Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "f1cc0326fccb3074bcaf-e6628a37277e258ae7bc",
@@ -234,8 +282,22 @@
                   "expectedStatus": "passed",
                   "projectId": "system-chrome",
                   "projectName": "system-chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1322,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-26T22:20:29.872Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "270643efe97fdee9397e-c040a7c9943dbf72f25d",
@@ -271,8 +333,22 @@
                   "expectedStatus": "passed",
                   "projectId": "system-chrome",
                   "projectName": "system-chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5775,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-26T22:20:31.223Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "a9087f35b6559b4b711b-45ab17f2bd239a7b011d",
@@ -291,17 +367,31 @@
                   "expectedStatus": "passed",
                   "projectId": "system-chrome",
                   "projectName": "system-chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1556,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-26T22:20:37.012Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "a9087f35b6559b4b711b-df7e3b5a0b241c561974",
               "file": "04-fe007-ancestor.spec.ts",
-              "line": 94,
+              "line": 104,
               "column": 3
             },
             {
-              "title": "403 时显示“无权读取该上级会话”",
+              "title": "403 时显示一条中性提示“无权读取该上级会话”",
               "ok": true,
               "tags": [],
               "tests": [
@@ -311,17 +401,31 @@
                   "expectedStatus": "passed",
                   "projectId": "system-chrome",
                   "projectName": "system-chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1561,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-26T22:20:38.579Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
-              "id": "a9087f35b6559b4b711b-e09a3d7e71d24fd480ba",
+              "id": "a9087f35b6559b4b711b-2005d7c74a34f9a4f911",
               "file": "04-fe007-ancestor.spec.ts",
-              "line": 110,
+              "line": 120,
               "column": 3
             },
             {
-              "title": "空上级显示“上级没有消息”并允许继续向上",
+              "title": "空上级静默不提示并允许继续向上",
               "ok": true,
               "tags": [],
               "tests": [
@@ -331,13 +435,27 @@
                   "expectedStatus": "passed",
                   "projectId": "system-chrome",
                   "projectName": "system-chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1278,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-26T22:20:40.150Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
-              "id": "a9087f35b6559b4b711b-0ab8da2fd2fa1a106a1c",
+              "id": "a9087f35b6559b4b711b-edb3c4e2545c4c8ecffd",
               "file": "04-fe007-ancestor.spec.ts",
-              "line": 124,
+              "line": 135,
               "column": 3
             }
           ]
@@ -368,8 +486,22 @@
                   "expectedStatus": "passed",
                   "projectId": "system-chrome",
                   "projectName": "system-chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1088,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-26T22:20:41.460Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "e5a7a9d7d5ba504d5f36-1a7099a0ac9e35a0921c",
@@ -405,8 +537,22 @@
                   "expectedStatus": "passed",
                   "projectId": "system-chrome",
                   "projectName": "system-chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 17154,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-26T22:20:42.572Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "afd78a5236e427cb208b-54b908c198ab3160ce4d",
@@ -442,8 +588,22 @@
                   "expectedStatus": "passed",
                   "projectId": "system-chrome",
                   "projectName": "system-chrome",
-                  "results": [],
-                  "status": "skipped"
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1334,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-26T22:20:59.753Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
                 }
               ],
               "id": "5dc55e451955ffa42804-1be81fab584ba0fbeece",
@@ -458,10 +618,10 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-11-20T07:29:38.545Z",
-    "duration": 213.71899999999994,
-    "expected": 0,
-    "skipped": 11,
+    "startTime": "2026-11-26T22:20:25.201Z",
+    "duration": 36534.965,
+    "expected": 11,
+    "skipped": 0,
     "unexpected": 0,
     "flaky": 0
   }

@@ -1,89 +1,13 @@
-// AC-TASK-001-01 概览任务块默认 3 行、展开后上限 50 行与分页
-// 覆盖：默认 3 行的标题/状态逐行一致；55 条任务时概览仍只展示 3 行且“还有 N 个”；
-// 进入任务标签首屏按合同上限 50 行，加载更多后补齐 55 行；接口 taskLimit 边界
-// （1/3/50 合法，0/51 返回 400 invalid_task_limit）。
-// 证据：接口 groups/items 与 DOM 行、任务卡逐条标题对照；断言 29 条（以本轮运行结果为准）。
-import {
-  runAc, createSession, createBatch, api, detail, list, execDb, queryRows, waitFor, sleep, BASE,
-} from './lib/conv-backend.mjs'
-import { startDistServer, openConversation } from './lib/conversation-ui.mjs'
+// AC-TASK-001-01 概览任务块默认 3 行、展开后上限 50 行与分页；断言 29 条。
+// 夹具见 lib/fixtures/task-001.mjs；启停与截图见 lib/core。
+import { runAc, api, list, queryRows, BASE } from './lib/conv-backend.mjs'
+import { seed, pinTask, cloneTasks, projectionItems, rowsOf, cardTitles } from './lib/fixtures/task-001.mjs'
+import { startFrontend, openSession, screenshot, VIEWPORT } from './lib/core/cdp.mjs'
 import { waitFor as uiWaitFor, count, text, clickSel } from './lib/task-ui-helpers.mjs'
 
 const AC = 'AC-TASK-001-01'
-const TERMINAL = new Set(['done', 'failed', 'cancelled', 'interrupted'])
-
-async function settle(sessionId, ids) {
-  const deadline = Date.now() + 60000
-  while (Date.now() < deadline) {
-    const res = await list(sessionId, '?limit=100')
-    const byId = new Map((res.json?.tasks || []).map((t) => [t.id, t.status]))
-    const pending = ids.filter((id) => !TERMINAL.has(byId.get(id))).length
-    if (pending === 0) return
-    await sleep(200)
-  }
-  throw new Error('任务未在 60s 内进入终态')
-}
-
-async function seed(title, taskTitles) {
-  const sessionId = await createSession(title)
-  const batch = await createBatch(sessionId, {
-    mode: 'plan',
-    goal: title,
-    tasks: taskTitles.map((t, i) => ({ key: `t${i + 1}`, title: t, mode: 'plan', goal: t })),
-    clientMutationId: `ac-001-01-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-  })
-  const ids = (batch.json.tasks || []).map((t) => t.id)
-  const batchId = batch.json.batch?.id || ''
-  await settle(sessionId, ids)
-  return { sessionId, ids, batchId }
-}
-
-async function pinTask(sessionId, taskId, status, progress) {
-  execDb('UPDATE tasks SET status = ?, progress = ?, updated_at = ? WHERE id = ?', [status, progress, Date.now(), taskId])
-  const deadline = Date.now() + 8000
-  while (Date.now() < deadline) {
-    const r = await detail(sessionId, taskId)
-    if (r.json?.task?.status === status && Number(r.json?.task?.progress) === progress) return
-    await sleep(150)
-  }
-  throw new Error(`任务 ${taskId} 未能固定到 ${status}/${progress}`)
-}
-
-function cloneTasks(sourceId, total) {
-  const cols = queryRows('PRAGMA table_info(tasks)').map((c) => c.name).filter((c) => c !== 'id')
-  const colList = cols.join(', ')
-  const insert = `INSERT INTO tasks (id, ${colList}) SELECT ?, ${colList} FROM tasks WHERE id = ?`
-  const base = Date.now()
-  for (let i = 2; i <= total; i += 1) {
-    const id = `fx-00101-${i}-${base}`
-    execDb(insert, [id, sourceId])
-    execDb(
-      "UPDATE tasks SET title = ?, status = 'done', progress = 100, updated_at = ?, created_at = ? WHERE id = ?",
-      [`分页任务 ${String(i).padStart(2, '0')}`, base + i, base + i, id],
-    )
-  }
-}
-
-function projectionItems(json) {
-  const tasks = json?.tasks || {}
-  // 与右栏概览一致：running → pending → done 依次拼接。
-  return [...(tasks.running?.items || []), ...(tasks.pending?.items || []), ...(tasks.done?.items || [])]
-}
-
-async function rowsOf(client) {
-  return client.evaluate(`(() => Array.from(document.querySelectorAll('#insp-block-tasks .exec-row')).map((el) => {
-    const title = el.querySelector('.exec-title')?.textContent?.trim() || ''
-    const status = el.querySelector('.exec-time')?.textContent?.trim() || ''
-    return { id: el.getAttribute('data-task-id') || '', title, status }
-  }))()`)
-}
-
-async function cardTitles(client) {
-  return client.evaluate(`(() => Array.from(document.querySelectorAll('.task-card')).map((el) => el.querySelector('.task-card-title')?.textContent?.trim() || ''))()`)
-}
 
 async function acCase(ctx) {
-  // 第一段：3 条任务时的默认展示与逐行对照。
   const main = await seed('AC-001-01 概览三分组', ['任务甲：整理结论', '任务乙：核对数据', '任务丙：输出摘要'])
   await pinTask(main.sessionId, main.ids[0], 'done', 100)
   await pinTask(main.sessionId, main.ids[1], 'running', 40)
@@ -100,8 +24,8 @@ async function acCase(ctx) {
   ctx.check(tasks.done?.total === 1, 'done.total 为 1', 1, tasks.done?.total, 'R-DATA')
   const apiTitles = items.map((t) => t.title)
 
-  const server = await startDistServer({ apiBase: BASE })
-  let client = await openConversation(main.sessionId, { url: server.url })
+  const server = await startFrontend({ apiBase: BASE })
+  let client = await openSession(main.sessionId, { url: server.url })
   try {
     await uiWaitFor(client, `document.querySelectorAll('#insp-block-tasks .exec-row').length === 3`, { label: '概览任务块 3 行' })
     const rows = await rowsOf(client)
@@ -112,7 +36,6 @@ async function acCase(ctx) {
     ctx.check(rows.every((r) => ['已完成', '进行中', '失败', '未开始'].includes(r.status)), '每行状态文案可识别', true, rows.map((r) => r.status), 'R-UI')
     ctx.check((await count(client, '#insp-block-tasks .exec-row')) === 3, '无更多任务时仍为 3 行', 3, await count(client, '#insp-block-tasks .exec-row'), 'R-UI')
 
-    // 第二段：55 条任务时的 50 行上限与分页。
     const many = await seed('AC-001-01 五十五条分页', ['分页基线任务'])
     await pinTask(many.sessionId, many.ids[0], 'done', 100)
     cloneTasks(many.ids[0], 55)
@@ -139,7 +62,7 @@ async function acCase(ctx) {
     ctx.check(zero.status === 400, 'taskLimit=0 返回 400', 400, zero.status, 'R-API')
 
     client.close()
-    client = await openConversation(many.sessionId, { url: server.url })
+    client = await openSession(many.sessionId, { url: server.url })
     await uiWaitFor(client, `document.querySelectorAll('#insp-block-tasks .exec-row').length === 3`, { label: '55 条会话概览 3 行' })
     const moreText = (await text(client, '#insp-block-tasks .insp-more')).trim()
     ctx.check(moreText === '还有 52 个', '概览“还有 N 个”提示 52 条', '还有 52 个', moreText, 'R-UI')
@@ -158,6 +81,7 @@ async function acCase(ctx) {
     await uiWaitFor(client, `document.querySelectorAll('.task-card').length === 55`, { label: '分页补齐 55 张卡', timeout: 12000 })
     const allTitles = await cardTitles(client)
     ctx.check(allTitles.length === 55, '加载更多后共 55 行', 55, allTitles.length, 'R-UI')
+    await screenshot(client, `${AC}-${VIEWPORT.width}x${VIEWPORT.height}.png`)
 
     const list2 = await list(many.sessionId, `?limit=50&before=${encodeURIComponent(list1.json?.nextBefore || '')}`)
     const secondIds = (list2.json?.tasks || []).map((t) => t.id)

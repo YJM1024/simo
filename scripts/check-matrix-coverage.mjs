@@ -73,7 +73,7 @@ const PHASES = ['受理与判级', '契约与设计', '拆分与派单', '执行
 const ADDITIONAL_TYPES = ['文档交付', '设计交付', '独立工具']
 const EXPECTED_TOTAL = MAIN_TYPES.length * PHASES.length + ADDITIONAL_TYPES.length * PHASES.length
 
-const RULE_ID_RE = /MX-[A-Z0-9]{1,8}-\d+/g
+const RULE_ID_RE = /MX[A-Z0-9]{1,8}-\d+(?:-\d+)?/g
 
 const TEMPLATE_FILES = new Map([
   ['proposal', 'docs/process/templates/proposal.md'],
@@ -92,6 +92,7 @@ const TEMPLATE_FILES = new Map([
   ['组件 spec', 'docs/framework/templates/component-spec.md'],
   ['ADR', 'docs/framework/templates/adr.md'],
   ['repro', 'docs/framework/templates/repro.md'],
+  ['accept', 'docs/framework/templates/accept.md'],
 ])
 
 /**
@@ -308,16 +309,23 @@ function scanTables(text) {
 
 function findMainTable(tables) {
   return tables.find((table) => {
-    if (table.headers[0] !== '任务类型') return false
+    if (table.headers[0] !== '任务类型' && table.headers[0] !== '类型') return false
     return PHASES.every((phase, index) => table.headers[index + 1] === phase)
   })
 }
 
+function splitCellSegments(text) {
+  const raw = String(text ?? '')
+  if (/<br\s*\/?>/i.test(raw)) return raw.split(/<br\s*\/?>/i)
+  return raw.split(/[；;]/)
+}
+
 function parseMainCellText(text) {
-  const segments = String(text ?? '').split(/<br\s*\/?>/i)
+  const segments = splitCellSegments(text)
   const actionParts = []
   let templateRaw = ''
   let gateRaw = ''
+  let ruleRaw = ''
   for (const segment of segments) {
     if (!segment.trim()) continue
     const templateMatch = segment.match(/^\s*模板\s*[:：]\s*([\s\S]*)$/)
@@ -330,6 +338,11 @@ function parseMainCellText(text) {
       gateRaw = gateMatch[1].trim()
       continue
     }
+    const ruleMatch = segment.match(/^\s*规则位\s*[:：]?\s*([\s\S]*)$/)
+    if (ruleMatch) {
+      ruleRaw = ruleMatch[1].trim()
+      continue
+    }
     actionParts.push(segment.trim())
   }
   const actionRaw = actionParts.join(' ')
@@ -337,6 +350,7 @@ function parseMainCellText(text) {
     actionRaw,
     templateRaw,
     gateRaw,
+    ruleRaw,
     valuation: extractValuation(actionRaw),
   }
 }
@@ -365,6 +379,7 @@ function placeholderCell(group, type, phase, line, kind, detail) {
     actionRaw: '',
     templateRaw: '',
     gateRaw: '',
+    ruleRaw: '',
     valuation: '',
     problems: [makeProblem(kind, detail)],
     warnings: [],
@@ -472,7 +487,11 @@ function parseMainCells(table, structureIssues) {
 function detectAdditionalType(lines, startLine) {
   const from = Math.max(0, startLine - 9)
   for (let index = startLine - 2; index >= from; index -= 1) {
-    const match = String(lines[index] ?? '').match(/(文档交付|设计交付|独立工具)在六个阶段/)
+    const line = String(lines[index] ?? '')
+    const match =
+      line.match(/(文档交付|设计交付|独立工具)在六个阶段/) ??
+      line.match(/^#{1,6}\s*.*(文档交付|设计交付|独立工具)\s*$/) ??
+      line.match(/^表\s*6-\d+\s*(文档交付|设计交付|独立工具)\s*$/)
     if (match) return match[1]
   }
   return null
@@ -480,14 +499,24 @@ function detectAdditionalType(lines, startLine) {
 
 function parseAdditionalCells(tables, matrixText, structureIssues) {
   const lines = String(matrixText ?? '').split(/\r?\n/)
-  const candidates = tables.filter(
-    (table) =>
-      table.headers.length === 4 &&
-      table.headers[0] === '阶段' &&
-      table.headers[1] === '加做的必做项' &&
-      table.headers[2] === '模板' &&
-      table.headers[3] === '门禁',
-  )
+  const candidates = tables.filter((table) => {
+    if (table.headers[0] !== '阶段') return false
+    if (table.headers.length === 4) {
+      return (
+        table.headers[1] === '加做的必做项' &&
+        table.headers[2] === '模板' &&
+        table.headers[3] === '门禁'
+      )
+    }
+    if (table.headers.length === 5) {
+      return (
+        (table.headers[1] === '取值与动作' || table.headers[1] === '加做的必做项') &&
+        table.headers[2] === '模板' &&
+        table.headers[3] === '门禁'
+      )
+    }
+    return false
+  })
   const cells = []
   const usedTypes = new Set()
 
@@ -573,7 +602,8 @@ function parseAdditionalCells(tables, matrixText, structureIssues) {
         actionRaw: row.cells[1] ?? '',
         templateRaw: row.cells[2] ?? '',
         gateRaw: row.cells[3] ?? '',
-        valuation: '必做',
+        ruleRaw: row.cells[4] ?? '',
+        valuation: extractValuation(row.cells[1] ?? '') || '必做',
         problems: [],
         warnings: [],
         templateRefs: [],
@@ -606,8 +636,26 @@ function parseAdditionalCells(tables, matrixText, structureIssues) {
   return cells
 }
 
+function expandRuleRanges(text) {
+  // 规则位允许区间简写：MXV2-4-01..4-09、5-01..5-10（后者沿用 MXV2 前缀）。
+  const source = String(text ?? '').replace(
+    /(?:MXV2-)?(\d+)-(\d{2})\s*\.\.\s*(?:(\d+)-)?(\d{2})/g,
+    (match, chapter, from, chapter2, to) => {
+      const start = Number(from)
+      const end = Number(to)
+      if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) return match
+      const ids = []
+      for (let n = start; n <= end; n += 1) {
+        ids.push(`MXV2-${chapter2 ?? chapter}-${String(n).padStart(2, '0')}`)
+      }
+      return ids.join(' ')
+    },
+  )
+  return [...new Set(source.match(RULE_ID_RE) ?? [])]
+}
+
 function addRuleIds(target, text, source) {
-  for (const id of String(text ?? '').match(RULE_ID_RE) ?? []) {
+  for (const id of expandRuleRanges(text)) {
     if (!target.has(id)) target.set(id, source)
   }
 }
@@ -642,6 +690,8 @@ function collectGates(matrixText, gatesText) {
   for (const line of String(gatesText ?? '').split(/\r?\n/)) {
     const match = line.match(/^###\s+\d+(?:\.\d+)?\s+(.+?门禁?)\s*$/)
     if (match) gates.add(match[1].trim())
+    const rowMatch = line.match(/^\|\s*C\d+\s*\|\s*([^|]+?门)\s*\|/)
+    if (rowMatch) gates.add(rowMatch[1].trim())
   }
   return gates
 }
@@ -834,8 +884,8 @@ function validateGates(cell, context, stats) {
 }
 
 function validateRules(cell, context, stats) {
-  const text = [cell.actionRaw, cell.templateRaw, cell.gateRaw].join(' ')
-  const ids = [...new Set(String(text ?? '').match(RULE_ID_RE) ?? [])]
+  const text = [cell.actionRaw, cell.templateRaw, cell.gateRaw, cell.ruleRaw].join(' ')
+  const ids = expandRuleRanges(text)
   for (const id of ids) {
     stats.rules.total += 1
     const source = context.rules.get(id)
@@ -857,8 +907,18 @@ function validateCells(cells, context) {
     if (!hasActionContent(cell.actionRaw)) {
       addProblem(cell, 'action-missing', '动作字段为空')
     }
-    validateTemplates(cell, context, stats)
-    validateGates(cell, context, stats)
+    const optionalCell =
+      cell.valuation === '可省' && /省/.test(cell.actionRaw) && /理由/.test(cell.actionRaw)
+    const templateEmpty = !String(cell.templateRaw ?? '').trim()
+    const gateEmpty = !String(cell.gateRaw ?? '').trim()
+    if (optionalCell && (templateEmpty || gateEmpty)) {
+      cell.warnings.push({
+        kind: 'optional-omitted',
+        detail: '可省格按表 2-3 省略模板或门禁并写明理由，对应字段允许为空',
+      })
+    }
+    if (!(optionalCell && templateEmpty)) validateTemplates(cell, context, stats)
+    if (!(optionalCell && gateEmpty)) validateGates(cell, context, stats)
     validateRules(cell, context, stats)
   }
   return stats
@@ -1140,7 +1200,7 @@ function renderMainCell({ valuation, action, template, gate }) {
 function mainFixtureCell(type, phase, fail) {
   const key = `${type}/${phase}`
   let valuation = '必做'
-  let action = `完成${type}${phase}动作，依据 MX-6-03。`
+  let action = `完成${type}${phase}动作，依据 MXV2-6-03。`
   let template = 'proposal'
   let gate = gateForPhase(phase)
 
@@ -1165,15 +1225,15 @@ function mainFixtureCell(type, phase, fail) {
     if (key === '新功能/拆分与派单') gate = ''
     if (key === '新功能/执行') gate = '质量门'
     if (key === '新功能/测试与证据') action = ''
-    if (key === '新功能/验收与收口') action = `${action}另见 MX-99-99。`
+    if (key === '新功能/验收与收口') action = `${action}另见 MXV2-99-99。`
   }
 
   return renderMainCell({ valuation, action, template, gate })
 }
 
 function additionalFixtureAction(type, phase) {
-  const suffix = type === '独立工具' && phase === '执行' ? '，依据 MX-BE-42' : ''
-  return `完成${type}${phase}动作，依据 MX-6-03${suffix}。`
+  const suffix = type === '独立工具' && phase === '执行' ? '，依据 MXV2-11-42' : ''
+  return `完成${type}${phase}动作，依据 MXV2-6-03${suffix}。`
 }
 
 function additionalFixtureTemplate(type, phase, fail) {
@@ -1237,7 +1297,7 @@ function buildFixture(root, variant, skipTemplates = []) {
       '# 总册',
       '',
       '- MX-5-21 复现记录写 `.tmp/intake/<CHG-ID>/repro.md`，记录环境、版本、复现步骤、期望结果、实际结果与严重级别六项。',
-      '- MX-6-03 组件 spec 保留组件名与编号、状态矩阵、截图档位、复用来源四项。',
+      '- MXV2-6-03 组件 spec 保留组件名与编号、状态矩阵、截图档位、复用来源四项。',
       '- MX-4-17 缺陷严重级别取致命、严重、一般、轻微四值。',
       '- MX-2-14 复核不可得时由 Lead 指派代理。',
       '- MX-12-01 回滚按文件、提交与推送三种状态分别执行。',
@@ -1285,7 +1345,7 @@ function buildFixture(root, variant, skipTemplates = []) {
     root,
     'docs/framework/domains/backend.md',
     [
-      '- MX-BE-42 资源边界用例覆盖会话 ID、上传 ID、文件路径与工具参数。',
+      '- MXV2-11-42 资源边界用例覆盖会话 ID、上传 ID、文件路径与工具参数。',
       '- MX-BE-74 命令行契约字段七项。',
       '- MX-BE-76 命令行自验写构建、测试与产物校验三条命令。',
       '',
@@ -1498,4 +1558,8 @@ function main() {
   }
 }
 
+// 规则级命令已移交 ai-review；本脚本按整套门禁运行，不接受 --rule 参数。
+
 main()
+
+

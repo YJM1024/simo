@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /**
+ * 规则级命令已移交 ai-review（MOXIAN 对应执行行注明“该脚本为批处理入口，不支持单跑”）；
+ * 本脚本作为整套门禁运行，不再解析 --rule。
  * check-contract.mjs — 墨线契约一致性门禁（零依赖，只读真实仓库；自检只写 .tmp 夹具）
  *
  * 依据：docs/framework/GATES.md 第 3.4 节 MX-G-26 至 MX-G-31，
@@ -56,6 +58,7 @@
  */
 
 import {
+  cpSync,
   existsSync,
   mkdirSync,
   readFileSync,
@@ -2029,7 +2032,7 @@ function runContract(root, options) {
   }
   for (const contract of contracts) {
     run.contracts += 1
-    for (const rule of [runMxG26, runMxG27, runMxG28, runMxG29, runMxG30, runMxG31, runMxG52]) {
+    for (const rule of [runMxG26, runMxG27, runMxG28, runMxG29, runMxG30, runMxG31, runMxG52, runMxG46, runMxG48, runMxG49, runMxG63]) {
       rule(run, contract)
     }
   }
@@ -2111,8 +2114,250 @@ function toJson(run) {
   }
 }
 
-/* ----------------------------- 自检夹具 ----------------------------- */
+/* ----------------------------- 契约口径补充（v2 规则 5-11、5-14、5-15、5-17） ----------------------------- */
 
+const CONTRACT_PATH_RE = /specs\/contract\/([^/\s`)]+)\/contract\.md/
+
+/**
+ * MXV2-5-11 / MX-G-46：契约表是字段、状态、错误码的唯一位置。变更包 spec.md 引用
+ * 契约表路径时，必须同时写冻结时间、冻结人、变更单号（首部四项，MXV2-5-16），
+ * 否则「引用」等于没写清版本依据。没有变更包引用契约表时不适用。
+ */
+function runMxG46(run, contract) {
+  const check = startCheck(
+    run,
+    'MX-G-46',
+    '契约表唯一位置引用',
+    contract.rel,
+    1,
+    '引用契约表的 spec.md 同时写冻结时间、冻结人、变更单号；字段/状态/错误码只在契约表定义一次',
+  )
+  let problems = 0
+  const changesDir = join(run.root, 'specs/changes')
+  const specs = []
+  if (isDir(changesDir)) {
+    for (const name of readdirSync(changesDir)) {
+      const file = join(changesDir, name, 'spec.md')
+      if (isFile(file)) specs.push(file)
+    }
+  }
+  for (const file of specs) {
+    const text = readText(file) ?? ''
+    if (!CONTRACT_PATH_RE.test(text)) continue
+    const missing = ['冻结时间', '冻结人', '变更单号'].filter(
+      (label) => !new RegExp(`${label}\\s*[:：]`).test(text),
+    )
+    if (missing.length > 0) {
+      problems += 1
+      record(check, run, {
+        rule: 'MX-G-46',
+        severity: 'error',
+        path: relPath(run.root, file),
+        line: 1,
+        item: '契约表引用',
+        expected: '引用契约表路径时同段写冻结时间、冻结人、变更单号',
+        actual: `缺 ${missing.join('、')}`,
+        hint: '按 MXV2-5-16 补变更包首部四项；冻结信息只写一次，不复制契约表内容',
+        message: `spec.md 引用契约表但缺 ${missing.join('、')}`,
+      })
+    }
+  }
+  finishCheck(check, run, problems === 0 ? '无变更包引用契约表或引用四项齐全' : `${problems} 个变更包缺首部字段`)
+}
+
+/**
+ * MXV2-5-14 / MX-G-48：契约表状态为冻结时必须满足四个条件。五列齐全由 MX-G-26 负责，
+ * 本条补「表首签字与冻结日期、owner、待确认清零、类 6 每条 AC 有判据与判定人」。
+ */
+function runMxG48(run, contract) {
+  const check = startCheck(
+    run,
+    'MX-G-48',
+    '契约冻结四条件',
+    contract.rel,
+    1,
+    '状态为冻结时：表首有冻结日期与签字、每项 AC 有判据与判定人、待确认项清零',
+  )
+  const state = contract.meta['状态']?.value ?? ''
+  if (state !== '冻结') {
+    finishCheck(check, run, `状态为${state || '未声明'}，冻结四条件不适用`)
+    return
+  }
+  let problems = 0
+  for (const label of ['冻结日期', 'owner']) {
+    if (!contract.meta[label]) {
+      problems += 1
+      record(check, run, {
+        rule: 'MX-G-48',
+        severity: 'error',
+        path: contract.rel,
+        line: 1,
+        item: '冻结表首',
+        expected: `表首声明「${label}」`,
+        actual: '缺失',
+        hint: '冻结签字与时间写在表首，改动后重新签字',
+        message: `冻结状态缺表首字段：${label}`,
+      })
+    }
+  }
+  if (!/签字|签名/.test(contract.text)) {
+    problems += 1
+    record(check, run, {
+      rule: 'MX-G-48',
+      severity: 'error',
+      path: contract.rel,
+      line: 1,
+      item: '冻结表首',
+      expected: '表首有冻结签字',
+      actual: '未找到签字行',
+      hint: '补「签字：<姓名>」行；签字人与实现者不同',
+      message: '冻结状态缺表首签字',
+    })
+  }
+  const pending = /待确认\s*[:：]\s*(\d+)/.exec(contract.text)
+  if (pending && Number(pending[1]) > 0) {
+    problems += 1
+    record(check, run, {
+      rule: 'MX-G-48',
+      severity: 'error',
+      path: contract.rel,
+      line: 1,
+      item: '待确认项',
+      expected: '冻结前待确认项清零',
+      actual: `待确认 ${pending[1]} 项`,
+      hint: '逐项确认后清零，或在表内写明确认人与日期',
+      message: `冻结状态仍有 ${pending[1]} 项待确认`,
+    })
+  }
+  const acceptance = contract.classes.acceptance.table
+  if (acceptance) {
+    for (const row of acceptance.rows) {
+      const object = rowObject(acceptance, row)
+      const ac = cleanInline(cell(object, 'AC编号', 'AC'))
+      if (!ac) continue
+      const judge = cleanInline(cell(object, '判定人', '判据判定人'))
+      const criterion = cleanInline(cell(object, '判据摘要', '判据'))
+      if (!judge || !criterion) {
+        problems += 1
+        record(check, run, {
+          rule: 'MX-G-48',
+          severity: 'error',
+          path: contract.rel,
+          line: row.line,
+          item: 'AC 判定人',
+          expected: `${ac} 有判据摘要与判定人`,
+          actual: `判据=${criterion || '空'}，判定人=${judge || '空'}`,
+          hint: '每条 AC 必须写判据摘要与判定人，否则冻结后没人能判',
+          message: `${ac} 缺判据或判定人`,
+        })
+      }
+    }
+  }
+  finishCheck(check, run, problems === 0 ? '冻结四条件满足' : `${problems} 处不满足`)
+}
+
+/**
+ * MXV2-5-15 / MX-G-49：状态为已变更时必须挂契约变更单，且写明涉及契约项、受影响
+ * AC、复验结论与批准人。没有变更单的「已变更」等于无法追溯谁批准了改动。
+ */
+function runMxG49(run, contract) {
+  const check = startCheck(
+    run,
+    'MX-G-49',
+    '契约变更单',
+    contract.rel,
+    1,
+    '状态为已变更时挂 CC-<变更包号>-<序号> 单号，并写涉及契约项、受影响 AC、复验结论、批准人',
+  )
+  const state = contract.meta['状态']?.value ?? ''
+  if (state !== '已变更') {
+    finishCheck(check, run, `状态为${state || '未声明'}，契约变更单不适用`)
+    return
+  }
+  const unit = contract.meta['变更单号']?.value ?? ''
+  let problems = 0
+  if (!/^CC-[A-Z0-9-]+-\d{2}$/.test(unit)) {
+    problems += 1
+    record(check, run, {
+      rule: 'MX-G-49',
+      severity: 'error',
+      path: contract.rel,
+      line: 1,
+      item: '变更单号',
+      expected: '变更单号匹配 CC-<变更包号>-<NN>',
+      actual: unit || '空',
+      hint: '一单一议，一单只改一项；不使用「无」',
+      message: `已变更状态缺合法契约变更单号：${unit || '空'}`,
+    })
+  }
+  for (const [label, re] of [
+    ['涉及契约项', /涉及契约项/],
+    ['受影响 AC', /受影响\s*AC|受影响的?\s*AC/],
+    ['复验结论', /复验/],
+    ['批准人', /批准人/],
+  ]) {
+    if (!re.test(contract.text)) {
+      problems += 1
+      record(check, run, {
+        rule: 'MX-G-49',
+        severity: 'error',
+        path: contract.rel,
+        line: 1,
+        item: '变更单字段',
+        expected: `变更单写「${label}」`,
+        actual: '缺失',
+        hint: '契约变更五项齐全后才可改表；改完重跑受影响 AC',
+        message: `契约变更单缺字段：${label}`,
+      })
+    }
+  }
+  finishCheck(check, run, problems === 0 ? '变更单五项齐全' : `${problems} 处缺失`)
+}
+
+/**
+ * MXV2-5-17 / MX-G-63（C1）：依赖升级类安全修复要在契约表写四项：API 变化、受影响
+ * 调用点、锁文件更新、回滚点。非依赖升级任务不适用；写了「依赖升级」却缺项即 error。
+ */
+function runMxG63(run, contract) {
+  const check = startCheck(
+    run,
+    'MX-G-63',
+    '依赖升级契约四项',
+    contract.rel,
+    1,
+    '依赖升级行写 API 变化、调用点、锁文件、回滚点四项，或 N/A：<≥8 字理由>',
+  )
+  if (!/依赖升级|大版本升级/.test(contract.text)) {
+    finishCheck(check, run, '非依赖升级任务，本条不适用')
+    return
+  }
+  const na = /N\/A\s*[:：]\s*(.{8,})/.exec(contract.text)
+  const items = [
+    ['API 变化', /API\s*变化|接口.{0,4}(?:字段|行为)?.{0,2}变化/],
+    ['受影响调用点', /调用点/],
+    ['锁文件更新', /锁文件|go\.mod|go\.sum|pnpm-lock|package\.json/],
+    ['回滚点', /回滚点|回滚提交|回滚命令/],
+  ]
+  const missing = items.filter(([, re]) => !re.test(contract.text)).map(([name]) => name)
+  let problems = 0
+  if (missing.length > 0 && !na) {
+    problems += 1
+    record(check, run, {
+      rule: 'MX-G-63',
+      severity: 'error',
+      path: contract.rel,
+      line: 1,
+      item: '依赖升级四项',
+      expected: 'API 变化、调用点、锁文件、回滚点四项齐全',
+      actual: `缺 ${missing.join('、')}`,
+      hint: '逐项补清单；非依赖升级任务改写为 N/A：<理由>（≥8 字）',
+      message: `依赖升级契约缺 ${missing.join('、')}`,
+    })
+  }
+  finishCheck(check, run, problems === 0 ? '四项齐全或已声明 N/A' : '四项不全')
+}
+
+/* ----------------------------- 自检夹具 ----------------------------- */
 function writeFixture(root, relativePath, content) {
   const path = join(root, relativePath)
   mkdirSync(dirname(path), { recursive: true })
@@ -2135,6 +2380,7 @@ function contractFixture(options = {}) {
 版本：v1.0
 冻结日期：2026-11-24
 owner：设计
+签字：设计负责人
 变更单号：无
 
 ## 类 1 数据形状
@@ -2319,6 +2565,7 @@ function gapContractFixture(options = {}) {
 版本：v1.0
 冻结日期：2026-11-24
 owner：设计
+签字：设计负责人
 变更单号：无
 
 ## 类 1 数据形状
@@ -2526,10 +2773,60 @@ function runSelfTest(options = {}) {
     const passRun = runContract(passRoot, { domain: null })
     const passErrors = passRun.findings.filter((finding) => finding.severity === 'error').length
     line(passErrors === 0, `通过样例 error 数 期望 0 实际 ${passErrors}`)
-    line(passRun.checks.length === 7, `通过样例检查项 期望 7 实际 ${passRun.checks.length}`)
+    line(passRun.checks.length === 11, `通过样例检查项 期望 11 实际 ${passRun.checks.length}`)
     line(passRun.contracts === 1, `通过样例契约表数 期望 1 实际 ${passRun.contracts}`)
     const passNumeric = passRun.findings.filter((finding) => finding.rule === 'MX-G-52')
     line(passNumeric.length === 0, `通过样例 MX-G-52 命中数 期望 0 实际 ${passNumeric.length}`)
+
+    // v2 规则 5-11、5-14、5-15、5-17（MX-G-46、MX-G-48、MX-G-49、MX-G-63）：
+    // 每条在通过样例的副本上注入一处缺陷，断言只命中对应规则，证明新增检查不是恒真。
+    const mutateContract = (tag, transform) => {
+      const root = join(base, tag)
+      rmSync(root, { recursive: true, force: true })
+      cpSync(passRoot, root, { recursive: true })
+      const file = join(root, 'specs/contract/CONV/contract.md')
+      writeFileSync(file, transform(readFileSync(file, 'utf8')))
+      return root
+    }
+    const changedRun = runContract(
+      mutateContract('v2-changed', (text) => text.replace('状态：冻结', '状态：已变更')),
+      { domain: null },
+    )
+    line(
+      changedRun.findings.some((finding) => finding.rule === 'MX-G-49' && finding.severity === 'error'),
+      `已变更但缺契约变更单 期望 命中 MX-G-49 实际 ${changedRun.findings.map((f) => f.rule).join('、') || '无'}`,
+    )
+    const noFreezeDateRun = runContract(
+      mutateContract('v2-no-freeze-date', (text) => text.replace('冻结日期：2026-11-24\n', '')),
+      { domain: null },
+    )
+    line(
+      noFreezeDateRun.findings.some((finding) => finding.rule === 'MX-G-48' && finding.severity === 'error'),
+      `冻结状态缺冻结日期 期望 命中 MX-G-48 实际 ${noFreezeDateRun.findings.map((f) => f.rule).join('、') || '无'}`,
+    )
+    const depRun = runContract(
+      mutateContract(
+        'v2-dep',
+        (text) =>
+          `${text}\n## 依赖升级\n\n| 编号 | 概念 | 说明 |\n|---|---|---|\n| CT-CONV-061 | 依赖升级 | 升级 task-sdk 到 2.0 |\n`,
+      ),
+      { domain: null },
+    )
+    line(
+      depRun.findings.some((finding) => finding.rule === 'MX-G-63' && finding.severity === 'error'),
+      `依赖升级缺四项 期望 命中 MX-G-63 实际 ${depRun.findings.map((f) => f.rule).join('、') || '无'}`,
+    )
+    const refRoot = mutateContract('v2-contract-ref', (text) => text)
+    writeFixture(
+      refRoot,
+      'specs/changes/CHG-CT-900/spec.md',
+      '# CHG-CT-900\n\n契约表路径：specs/contract/CONV/contract.md\n冻结时间：2026-11-24\n变更单号：CC-CHG-CT-900-01\n\nImplements: PRD-DEMO-001\n',
+    )
+    const refRun = runContract(refRoot, { domain: null })
+    line(
+      refRun.findings.some((finding) => finding.rule === 'MX-G-46' && finding.severity === 'error'),
+      `引用契约表缺冻结人 期望 命中 MX-G-46 实际 ${refRun.findings.map((f) => f.rule).join('、') || '无'}`,
+    )
 
     const underscoreRun = runContract(join(base, 'pass-underscore'), { domain: null })
     const underscoreErrors = underscoreRun.findings.filter((finding) => finding.severity === 'error').length
@@ -2792,4 +3089,8 @@ function main() {
   }
 }
 
+// 规则级命令已移交 ai-review；本脚本按整套门禁运行，不接受 --rule 参数。
+
 main()
+
+

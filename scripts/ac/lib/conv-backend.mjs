@@ -7,6 +7,7 @@ import path from 'node:path'
 import { spawn, spawnSync } from 'node:child_process'
 import { DatabaseSync } from 'node:sqlite'
 import { ROOT, report } from './harness.mjs'
+import { backendExe, testclockExe } from './core/bootstrap.mjs'
 
 export const T06 = path.join(ROOT, '.tmp', 'chg-007-T06')
 export const HOME = process.env.AC_CONV_HOME || path.join(ROOT, '.tmp', 'ac-conv-009', 'home')
@@ -17,10 +18,10 @@ export const DB_FILE = path.join(HOME, 'simo.db')
 export const PORT = Number(new URL(BASE).port || (BASE.startsWith('https') ? 443 : 80))
 export const UPSTREAM_PORT = Number(process.env.AC_CONV_UPSTREAM_PORT || (PORT === 8789 ? 8790 : PORT + 1))
 export const UPSTREAM_BASE = `http://127.0.0.1:${UPSTREAM_PORT}`
-const EXE = path.join(T06, 'simo.exe')
+const EXE = backendExe()
 // 带 -tags testclock 的测试构建：只用于时间类判据（30 分钟窗口、1 分钟提醒），
 // 通过 SIMO_TEST_CLOCK 放大服务端时钟。生产构建 simo.exe 不含这段代码，传了环境变量也无效。
-const EXE_TESTCLOCK = path.join(T06, 'simo-testclock.exe')
+const EXE_TESTCLOCK = testclockExe()
 const TEST_CLOCK_DEFAULT = 'rate=200'
 // 单脚本模式的实例锁：默认仍是共享的一把（旧行为不变）；cdp 并发泳道由 harness 经 AC_CONV_LOCK
 // 下发各自 HOME 下的独立锁，否则 4 条泳道会抢同一把锁而退化成串行。

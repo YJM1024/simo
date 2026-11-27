@@ -74,11 +74,21 @@ test.describe('E2E-ANCESTOR-001 FE-007 加载上级会话', () => {
     expect(Math.abs(opacity - 0.55)).toBeLessThan(0.06)
     await expect(page.locator('.message-top button')).toHaveAttribute('title', '主会话')
 
-    // prepend 锚定由 App 的 useLayoutEffect + rAF 恢复；等两帧布局稳定再测量。
-    await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
-    const afterOffset = anchor ? await messageOffsetInScroller(page, anchor.id) : null
+    // prepend 锚定由 App 的 useLayoutEffect + rAF 恢复。固定等两帧会在恢复回调之前测量，
+    // 曾偶发读到校正前的 22.7px 偏移；改为轮询到稳定值，判据仍是 1px 内。
+    const anchorId = anchor?.id ?? ''
+    const anchorOffset = anchor?.offset ?? 0
+    await expect
+      .poll(
+        async () => {
+          const offset = await messageOffsetInScroller(page, anchorId)
+          return offset === null ? Number.POSITIVE_INFINITY : Math.abs(offset - anchorOffset)
+        },
+        { timeout: 5_000, message: '加载上级后锚定消息应回到原偏移' },
+      )
+      .toBeLessThanOrEqual(1)
+    const afterOffset = await messageOffsetInScroller(page, anchorId)
     expect(afterOffset, '加载上级后锚定消息仍应存在').not.toBeNull()
-    expect(Math.abs((afterOffset ?? 0) - (anchor?.offset ?? 0))).toBeLessThanOrEqual(1)
 
     // 再加载一级到根：时间轴组继续增长，按钮消失。
     await dispatchClick(page, '.message-top button')

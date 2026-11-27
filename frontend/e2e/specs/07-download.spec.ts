@@ -10,10 +10,12 @@ test.describe('E2E-DELIVERABLE-001 交付物下载', () => {
     const deliverable = await seedDeliverable(session.id)
     expect(deliverable.downloadUrl, '交付物应带 downloadUrl').toBeTruthy()
 
-    // 右栏（会话概览）也应展示该交付物。
+    // 右栏（会话概览）也应展示该交付物。旧断言用的 .deliverable-line 是未挂载的旧组件标记，
+    // 当前概览在 data-block="deliverables" 里用 button.exec-row + .exec-title 渲染投影交付物。
     await openSession(page, title)
-    const inspectorLine = page.locator('.inspector .deliverable-line', { hasText: 'mock-write.txt' }).first()
+    const inspectorLine = page.locator('.inspector [data-block="deliverables"] .exec-row', { hasText: 'mock-write.txt' }).first()
     await expect(inspectorLine).toBeVisible({ timeout: 20_000 })
+    await expect(inspectorLine.locator('.exec-title')).toHaveText('mock-write.txt')
 
     await switchToWorkbench(page)
     const line = page.locator('.deliverable-line', { hasText: 'mock-write.txt' }).first()

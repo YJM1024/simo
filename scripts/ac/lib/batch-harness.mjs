@@ -14,11 +14,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { spawn, spawnSync } from 'node:child_process'
-import { ensureTestClockBuilt, TESTCLOCK_EXE } from './build-cache.mjs'
+import { backendExe, testclockExe, frontendDir } from './core/bootstrap.mjs'
 
 export const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\//, '')), '..', '..', '..')
 export const HARNESS_DIR = path.join(ROOT, '.tmp', 'chg-007-harness')
-export const EXE = path.join(ROOT, '.tmp', 'chg-007-T06', 'simo.exe')
+export const EXE = backendExe()
 const MOCK_LLM = path.join(ROOT, 'scripts', 'ac', 'lib', 'mock-llm.mjs')
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
@@ -30,7 +30,7 @@ const p = (base) => base + PORT_OFFSET
 /** é¡µé¢å®žä¾‹çš„åº“å¿«ç…§ï¼šå¸¦ session 'main' ä¸Žç§å­ä»»åŠ¡ï¼ŒUI è„šæœ¬éœ€è¦å®ƒæ‰èƒ½æ¸²æŸ“å³æ ã€‚ */
 export const UI_SNAPSHOT = path.join(HARNESS_DIR, 'snapshots', 'ui-main.db')
 /** é¡µé¢é™æ€æœåŠ¡ï¼šT07 çš„ dist + /api åä»£ï¼Œæ¯” simo å†…åµŒ dist æ–°ï¼Œå³æ æ‰æ¸²æŸ“å¾—å‡ºæ¥ã€‚ */
-export const PAGE_STATIC = path.join(ROOT, '.tmp', 'chg-007-T07', 'serve.mjs')
+export const PAGE_STATIC = path.join(ROOT, 'scripts', 'ac', 'lib', 'core', 'frontend-server.mjs')
 
 /** å®žä¾‹è§„æ ¼ï¼šgroups å†³å®šå“ªäº›è„šæœ¬è½åˆ°è¿™ä¸ªå®žä¾‹ä¸Šã€‚UI ç”¨ä¸‰æ¡æ³³é“ï¼Œæ¯æ¡æ³³é“ä¸€å¥—ã€Œé™æ€é¡µ + ç‹¬ç«‹åº“ã€ï¼Œ
  *  ç«¯å£ä¸åŒå³ origin ä¸åŒï¼ŒlocalStorage ä¸Ž simo.db éƒ½ä¸å…±äº«ï¼Œä¸‰æ¡æ³³é“æ‰èƒ½çœŸæ­£å¹¶è¡Œã€‚ */
@@ -193,7 +193,7 @@ export async function startInstance(spec, runDir, instances = new Map()) {
     const fd = fs.openSync(log, 'a')
     const child = spawn(process.execPath, [PAGE_STATIC], {
       cwd: ROOT,
-      env: { ...process.env, PORT: String(spec.port), API_PORT: String(api.port) },
+      env: { ...process.env, PORT: String(spec.port), API_PORT: String(api.port), API_HOST: '127.0.0.1', DIST_DIR: frontendDir() },
       stdio: ['ignore', fd, fd],
       windowsHide: true,
     })
@@ -216,11 +216,8 @@ export async function startInstance(spec, runDir, instances = new Map()) {
   // æ—¶é—´ç±»å®žä¾‹ç”¨ testclock æµ‹è¯•æž„å»ºï¼ˆä¸Žç”Ÿäº§ exe åˆ†å¼€å­˜æ”¾ï¼‰ï¼Œé¦–æ¬¡å¯åŠ¨æ—¶æŒ‰ä¿®æ”¹æ—¶é—´å¢žé‡æž„å»ºã€‚
   let exe = EXE
   if (spec.testclock) {
-    const built = ensureTestClockBuilt(ROOT)
-    if (!built.rebuilt && built.ms === 0 && !fs.existsSync(path.join(ROOT, TESTCLOCK_EXE))) {
-      throw new Error(`ç¼ºå°‘ testclock æµ‹è¯•æž„å»ºä¸”æž„å»ºå¤±è´¥ï¼š${built.reason}`)
-    }
-    exe = path.join(ROOT, TESTCLOCK_EXE)
+    exe = testclockExe()
+    if (!fs.existsSync(exe)) throw new Error('missing testclock artifact; run node scripts/verify-all.mjs')
   }
   // åº“å¿«ç…§å¤ç”¨ï¼šé¡µé¢å®žä¾‹ç›´æŽ¥æ¢å¤åˆ°é¢„ç½®åº“ï¼ˆsession 'main' + ç§å­ä»»åŠ¡ï¼‰ï¼ŒçœæŽ‰æ¯è½®é‡æ–°é€ æ•°æ®ã€‚
   if (spec.seed) {

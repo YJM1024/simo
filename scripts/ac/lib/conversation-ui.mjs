@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 会话界面的只读辅助：把已构建的 frontend/dist 起在空闲端口，/api 反代到当前隔离后端，
+ * 会话界面的只读辅助：把 verify-all 产出的前端（清单里的 build/frontend）起在空闲端口，/api 反代到当前隔离后端，
  * 再用 CDP 打开脚本自己创建的那个真实会话（localStorage 指向该 sessionId）。
  *
  * 这样做的好处是界面断言与接口断言共用同一份数据：不埋会话夹具、不改 dist、不碰 5174/8787，
@@ -12,9 +12,15 @@ import { createServer as createNetServer, connect as netConnect } from 'node:net
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { connect, waitFor, sleep } from '../../lib/ac-cdp.mjs'
+import { frontendDir } from './core/bootstrap.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 export const DIST_DIR = path.resolve(here, '../../../frontend/dist')
+
+/** 默认服务清单里的前端产物；清单缺失时退回本地 dist，供不经过 verify-all 的老脚本使用。 */
+function defaultDistDir() {
+  try { return frontendDir() } catch { return DIST_DIR }
+}
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -40,8 +46,9 @@ export function freePort() {
 }
 
 /** 起静态服务：dist 资源直读，/api 原样反代到 apiBase（含查询串与请求体）。 */
-export async function startDistServer({ apiBase, port } = {}) {
+export async function startDistServer({ apiBase, port, distDir } = {}) {
   const api = new URL(apiBase)
+  const root = distDir ? path.resolve(distDir) : defaultDistDir()
   const listenPort = port ?? (await freePort())
   const server = createHttpServer((req, res) => {
     const url = new URL(req.url ?? '/', 'http://127.0.0.1')
@@ -64,8 +71,8 @@ export async function startDistServer({ apiBase, port } = {}) {
       return
     }
     const rel = url.pathname === '/' ? '/index.html' : url.pathname
-    const file = path.resolve(DIST_DIR, `.${rel}`)
-    if (!file.startsWith(DIST_DIR)) {
+    const file = path.resolve(root, `.${rel}`)
+    if (!file.startsWith(root)) {
       res.writeHead(403, { 'content-type': 'text/plain; charset=utf-8' })
       res.end('forbidden')
       return
@@ -78,7 +85,7 @@ export async function startDistServer({ apiBase, port } = {}) {
       .catch(async () => {
         if (rel === '/index.html' || path.extname(rel) === '') {
           try {
-            const html = await readFile(path.join(DIST_DIR, 'index.html'))
+            const html = await readFile(path.join(root, 'index.html'))
             res.writeHead(200, { 'content-type': TYPES['.html'], 'cache-control': 'no-store' })
             res.end(html)
             return
