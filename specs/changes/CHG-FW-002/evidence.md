@@ -1,5 +1,7 @@
 # EVIDENCE · CHG-FW-002
 
+> 2026-11-27 文书削减：本文记录的是当时实际跑过的命令与输出，正文里的 `spec.md`、`change.md`、`tasks.md`、`IMPLEMENT.md` 路径属历史路径。现在契约与 AC 判据在 `proposal.md` 第 11 节与第 12 节，施工内容在 `docs/framework/v2/DESIGN.md` 的「怎么实施」节，原文件副本在 `E:\dsh_home\trash\pending-delete\fw-cut-20261127\`。
+
 状态：实现中。
 
 ## 1. 结论
@@ -93,16 +95,12 @@ MOXIAN.md current 4234CCC99095FB4BEFEADE8BDB194D9BAD17941108D90D29EB078F4C199A4E
 
 ## 3. 测试
 
-| AC | 用例/命令 | 结果 | 证据路径 |
-|---|---|---|---|
-| `AC-CHG-FW-002-01` | 12 份副本逐份 `Get-FileHash` 与复制前比较 | PASS（复制时 12/12 一致）；交付前复算 11/12，`MOXIAN.md` 被并行 P1 改写，见第 2 节与第 6 节 | `docs/framework/archive/v1.7.5/INDEX.md`、本节第 2 节 |
-| `AC-CHG-FW-002-01` | `(Get-ChildItem docs/framework/archive/v1.7.5 -Recurse -File).Count` | PASS，13（12 副本 + 1 索引） | 本节第 2 节 |
-| `AC-CHG-FW-002-01` | 检查四份变更包文件存在且状态为进行中 | PASS，`proposal.md` 59 行、`change.md` 128 行、`tasks.md` 49 行，状态均为进行中；`evidence.md` 为本文件 | `specs/changes/CHG-FW-002/` |
-| `AC-CHG-FW-002-01` | 检查 `INDEX.md` 主表行数 | PASS，九列主表 12 行，一行一份；补充表 12 行 | `docs/framework/archive/v1.7.5/INDEX.md` |
-| `AC-CHG-FW-002-01` | 检查回滚包步骤与复验命令 | PASS，`ROLLBACK.md` 136 行，含单文件、整批、已提交三种回滚与三项复验 | `docs/framework/v2/ROLLBACK.md` |
-| `AC-CHG-FW-002-01` | 越界检查：枚举本次新建文件 | PASS，18 个新文件全部落在允许写作用域（12 副本 + 索引 + 4 变更包 + 回滚包） | 本节第 2 节、`INDEX.md` |
+| AC | 结论 | 证据路径 |
+|---|---|---|
+| `AC-CHG-FW-002-01` | pass（复制时 12/12 一致；交付前复算 11/12，差异见第 2 节） | `docs/framework/archive/v1.7.5/INDEX.md`、本文件第 2 节 |
+| `AC-CHG-FW-002-02` 至 `-06` | missing（P1 至 P5 未开工，解除条件见 `test-plan.md` 的 TC-FW-002 至 006） | `specs/changes/CHG-FW-002/test-plan.md` |
 
-P0 通过/失败/未跑：通过 6 项，失败 0 项；`AC-CHG-FW-002-02` 至 `-06` 未跑，不在本次证据范围。
+断言数、耗时、退出码一律读脚本产出的 JSON：`.out/evidence/gates.json`（门禁）、`.out/evidence/rule-fields.json`（规则字段）、`.out/evidence/contract-coverage.json`（契约覆盖）、`.out/evidence/format-health.json`（格式体检）。本文件只写结论与路径，不抄数字。
 
 ## 4. 截图/DOM/测量
 

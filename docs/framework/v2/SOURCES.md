@@ -1,6 +1,6 @@
 # 墨线框架 v2 来源总表（SOURCES）
 
-本表依据 `docs/framework/v2/sources/` 下七份原始表整理：`sdd.md` 十二行、`agents.md` 十二行、`standards.md` 十行、`product-design.md` 二十七行、`engineering.md` 十五行、`testing.md` 十四行、`skills.md` 二十二行，原始表合计一百一十二行。按“同一来源占多行时合并一行”的规则，WCAG 2.2 的十一条准则合并为一条、WAI-ARIA Authoring Practices 的三个模式页合并为一条，合并后共 **100 条**，编号 S-001 至 S-100。细则与逐条判据仍以原始表为准，本表只记来源级的判定与落点。
+本表依据 `docs/framework/v2/sources/SOURCES-RAW.md` 整理（七份原始表于 2026-11-27 合订，分节序号不变）：`sdd.md` 十二行、`agents.md` 十二行、`standards.md` 十行、`product-design.md` 二十七行、`engineering.md` 十五行、`testing.md` 十四行、`skills.md` 二十二行，原始表合计一百一十二行。按“同一来源占多行时合并一行”的规则，WCAG 2.2 的十一条准则合并为一条、WAI-ARIA Authoring Practices 的三个模式页合并为一条，合并后共 **100 条**，编号 S-001 至 S-100。细则与逐条判据仍以合订本为准，本表只记来源级的判定与落点。
 
 判定口径：**采纳**指原样纳入框架，落点必须能指到具体章节、规则号或门禁；**改造后采纳**指只取其中与框架相容的部分，其余部分说明不取的理由；**不采纳**指整条不进入框架，必须写理由，落点写“不适用”。“判据能否脚本化”按来源自身给出的判据判断：能，指有命令、退出码或可机械核对的结构；部分，指一部分可脚本核对、另一部分需人工评审；不能，指来源明确是原则或经验法则。
 
@@ -143,6 +143,6 @@
 
 ## 合并与缺项说明
 
-- WCAG 2.2 在原表占十一行，总表合并为 S-048，十一条准则的逐条判据见 `docs/framework/v2/sources/product-design.md` 第 3 节；合并后仍按“部分可脚本化”记，因为对比度、目标尺寸、名称角色值可脚本核对，替代文本等价性与焦点可见性需人工评审。
-- WAI-ARIA Authoring Practices 在原表占三行（手风琴、对话框、标签页），总表合并为 S-049，逐条 role 与键盘行为见同文件第 3 节。
+- WCAG 2.2 在原表占十一行，总表合并为 S-048，十一条准则的逐条判据见 `docs/framework/v2/sources/SOURCES-RAW.md` 的 `product-design.md` 第 3 节；合并后仍按“部分可脚本化”记，因为对比度、目标尺寸、名称角色值可脚本核对，替代文本等价性与焦点可见性需人工评审。
+- WAI-ARIA Authoring Practices 在原表占三行（手风琴、对话框、标签页），总表合并为 S-049，逐条 role 与键盘行为见 SOURCES-RAW.md 的 product-design.md 第 3 节。
 - `skills.md` 已到位（216 行、22 条链接），S-079 至 S-100 按该表判定，无“未到”占位。若后续补入第七份之外的来源，按同一编号规则追加 S-101 起，并同步更新本节统计。

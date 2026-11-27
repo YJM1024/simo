@@ -115,6 +115,11 @@ export function loadCtx(root, opts = {}) {
   for (const name of ['proposal.md', 'spec.md', 'change.md', 'tasks.md', 'evidence.md', 'LINKAGE.md']) {
     files[name] = dir ? readTextSafe(join(dir, name)) : null;
   }
+  if (files['proposal.md']) {
+    for (const name of ['spec.md', 'change.md', 'tasks.md', 'LINKAGE.md']) {
+      if (!files[name]) files[name] = files['proposal.md'];
+    }
+  }
   const pointsDir = dir ? join(dir, 'points') : null;
   const pointFiles = [];
   if (pointsDir && existsSync(pointsDir)) {

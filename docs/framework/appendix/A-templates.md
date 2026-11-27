@@ -1,11 +1,13 @@
 # 附录 A 模板清单
 
+> 2026-11-27 文书削减：原 `docs/framework/v2/IMPLEMENT.md` 已并入 `docs/framework/v2/DESIGN.md` 的「怎么实施」节；本文引用该文件时保留原节号与行号，副本在 `E:\dsh_home\trash\pending-delete\fw-cut-20261127\docs\framework\v2\IMPLEMENT.md`。
+
 状态：v1.0，2026-11-27。变更号 CHG-FW-002。本文件登记 `docs/framework/templates/` 下的模板，逐条写用途、使用时机、必填节与示例位置。
 
 ## 1 数据来源与口径
 
 - 目录清点：`docs/framework/templates/` 于 2026-11-27 实有 31 个 Markdown 文件，`Get-ChildItem -File` 计数为 31，逐行列在第 2 节第 1 至 31 行。
-- 待建四份：`docs/framework/v2/IMPLEMENT.md` 第 2.2 节第 96 至 111 行列出新增 `linkage.md`、`point.md`、`rule-card.md`、`change-record.md`，本表记在 32 至 35 行并标「待建」。31 份实有加 4 份待建等于该节声明的 35 份。
+- 待建四份：`docs/framework/v2/DESIGN.md 的「怎么实施」节` 第 2.2 节第 96 至 111 行列出新增 `linkage.md`、`point.md`、`rule-card.md`、`change-record.md`，本表记在 32 至 35 行并标「待建」。31 份实有加 4 份待建等于该节声明的 35 份。
 - 节名与示例位置：`必填节` 列按各文件全部二级标题、按文件内顺序抄录，用分号分隔，缺节即模板不完整；文件自身标注为条件填写的节保留原标注（如 `change.md` 的「受控节（安全修复必填）」）。`示例位置` 取标题含「示例」的二级标题所在节号与行号，`第 N 节` 指模板正文的节序，`行 N` 指该文件内的行号。
 - 路径登记差异：`docs/framework/MOXIAN.md` 第 1781 行把附录 A 清单登记为 `docs/framework/templates/README.md`。本次按 CHG-FW-002 的任务书把清单写在本文件，未改 MOXIAN.md，差异留给收口时统一。
 
@@ -54,9 +56,9 @@
 | 项 | 数量 | 依据 |
 |---|---:|---|
 | 目录实有 | 31 | `Get-ChildItem docs/framework/templates -File` 计数 |
-| 待建 | 4 | `docs/framework/v2/IMPLEMENT.md` 第 108 至 111 行 |
+| 待建 | 4 | `docs/framework/v2/DESIGN.md 的「怎么实施」节` 第 108 至 111 行 |
 | 合计 | 35 | 同文件第 98 行「31 份现有模板逐份处置，加 4 份新增，合计 35 份」 |
 
 实有文件与第 2 节 1 至 31 行逐名一致；目录内没有未被本表登记的 Markdown 文件，第 2 节也没有指向不存在文件的「实有」行。第 7 行 `compliance-disposal-record.md` 的节号从第 6 节直接跳到第 9 节，属模板自身的节号缺号，本表照实登记，未改动该文件。
 
-核对方式：用 PowerShell 读第 2 节 35 行，对 31 个实有模板逐个提取 `^## ` 标题，与 `必填节` 列按分号拆开后的集合求双向差集，差集为空；再对标题含「示例」的二级标题提取行号，与 `示例位置` 列逐行比对，12 份有示例节的模板全部一致，其余 19 份无该标题且列内写「无独立示例节」或说明字段表后附示例。待建四份无文件可比，其必填节取 `docs/framework/v2/IMPLEMENT.md` 第 108 至 111 行的字段说明。
+核对方式：用 PowerShell 读第 2 节 35 行，对 31 个实有模板逐个提取 `^## ` 标题，与 `必填节` 列按分号拆开后的集合求双向差集，差集为空；再对标题含「示例」的二级标题提取行号，与 `示例位置` 列逐行比对，12 份有示例节的模板全部一致，其余 19 份无该标题且列内写「无独立示例节」或说明字段表后附示例。待建四份无文件可比，其必填节取 `docs/framework/v2/DESIGN.md 的「怎么实施」节` 第 108 至 111 行的字段说明。

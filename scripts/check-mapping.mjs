@@ -95,11 +95,20 @@ export function loadCtx(root, opts = {}) {
     for (const name of ['proposal.md', 'spec.md', 'change.md', 'tasks.md', 'evidence.md', 'LINKAGE.md']) {
       files[name] = existsSync(join(dir, name)) ? readTextSafe(join(dir, name)) : null;
     }
+    if (files['proposal.md']) {
+      for (const name of ['spec.md', 'change.md', 'tasks.md', 'LINKAGE.md']) {
+        if (!files[name]) files[name] = files['proposal.md'];
+      }
+    }
     const mtime = (name) => {
       try {
         return statSync(join(dir, name)).mtimeMs;
       } catch {
-        return null;
+        try {
+          return statSync(join(dir, 'proposal.md')).mtimeMs;
+        } catch {
+          return null;
+        }
       }
     };
     return { id, dir, rel, exists: existsSync(dir), files, mtime, notes: [] };
@@ -126,7 +135,7 @@ function checkPackage(p) {
     issues.push({ rule: 'MXV2-1-01', file: p.rel, msg: '变更包目录不存在' });
     return { checks, issues };
   }
-  for (const name of ['proposal.md', 'spec.md']) {
+  for (const name of ['proposal.md']) {
     if (!p.files[name]) issues.push({ rule: 'MXV2-1-01', file: p.rel, msg: `缺 ${name}` });
   }
   const proposal = p.files['proposal.md'] ?? '';
@@ -166,7 +175,7 @@ function checkCarrier(p) {
   const text = p.files['change.md'];
   if (!text) return { checks: 1, issues };
   checks++;
-  const t = findTable(text, (x) => x.header.includes('载体')) ?? findTable(text, (x) => x.header.includes('字段') && x.header.includes('落点'));
+  const t = findTable(text, (x) => x.header.includes('载体')) ?? findTable(text, (x) => x.header.some((h) => h.includes('列')) && x.header.some((h) => h.includes('产出')));
   if (!t) {
     issues.push({ rule: 'MXV2-4-05', file: `${p.rel}/change.md`, msg: '没有立项字段载体表' });
     return { checks, issues };
@@ -260,7 +269,7 @@ function checkLinkage(p) {
     return { checks: 1, issues };
   }
   checks++;
-  const t = findTable(text, (x) => x.header.includes('规则点') || x.header.includes('起点编号') || x.header.length >= 8);
+  const t = findTable(text, (x) => x.header.includes('起点编号') && x.header.includes('终点编号'));
   if (!t) {
     issues.push({ rule: 'MXV2-4-11', file: `${p.rel}/LINKAGE.md`, msg: 'LINKAGE.md 没有八列表格' });
     return { checks, issues };
@@ -289,7 +298,7 @@ function checkCloseout(p) {
   const issues = [];
   let checks = 0;
   const change = p.files['change.md'] ?? '';
-  const passed = /状态[^\n]*通过/.test(change);
+  const passed = /^\s*\|?\s*状态\s*[:：|]\s*通过/m.test(change);
   if (!passed) {
     p.notes.push('变更未标通过，收口三段未核对');
     return { checks: 1, issues };

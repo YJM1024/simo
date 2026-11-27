@@ -1,4 +1,4 @@
-# 墨线门禁与证据（GATES）
+﻿# 墨线门禁与证据（GATES）
 
 - 版本：v2.0.0，变更包 CHG-FW-002
 - 依据：`MOXIAN.md` 第 6 章（规则格式与判定）、第 7 章（门禁与证据）
@@ -78,7 +78,7 @@
 | `scripts/check-fp-coverage.mjs` | 1 | 功能点覆盖门 | 已建 |
 | `scripts/probe-cdp.mjs` | 1 | 出口级真机与安装路径 | 已建 |
 
-`scripts/check-sdd.mjs` 不挂 v2 规则，保留用于存量变更包的结构检查，退出码非 0 时按存量技术债处理。`scripts/verify-all.mjs` 汇总各门禁，按 `--stage pre|point|exit` 三种取值运行。
+`scripts/check-sdd.mjs` 不挂 v2 规则，保留用于存量变更包的结构检查，退出码非 0 时按存量技术债处理。`scripts/verify-all.mjs` 汇总各门禁，按 `--stage pre|point|exit` 三种取值运行；`scripts/check-gates.mjs` 另支持 `--stage pre-commit`，只跑格式类结构检查。
 
 十八个脚本覆盖一百五十八条规则：script 四十五条走单条命令与断言，ai-review 一百一十三条按四要素人工判定。两类判定都已落地，没有待建脚本，也不把人工核对写成脚本通过。
 
@@ -122,9 +122,9 @@
 
 表 3-1 与表 3-2 合计二十四条，十四加十，旁路零条。这二十四条里，原写「待脚本」的十四项现在都有脚本与断言编号；原写「人工」的十项现在都有判定角色与判据落点。
 
-## 4 运行时机与三档
+## 4 运行时机与四档
 
-门禁按三种时机跑：提交前 `pre`、点级 `point`、出口级 `exit`。时机不同，覆盖范围不同，退出码含义相同，0 为通过，非 0 为阻断。
+门禁按四种时机跑：开工前 `pre`、点级 `point`、出口级 `exit`、提交前格式 `pre-commit`。时机不同，覆盖范围不同，退出码含义相同，0 为通过，非 0 为阻断。
 
 表 4-1 运行时机
 
@@ -132,7 +132,12 @@
 |---|---|---|---|
 | pre | 每次提交前 | `node scripts/verify-all.mjs --stage pre` | 结构、追溯、语言、契约、规则卡、册内自证 |
 | point | 点完成 | `node scripts/verify-all.mjs --stage point` | pre 全部加增量覆盖与证据门 |
-| exit | 变更级与出口 | `node scripts/verify-all.mjs --stage exit` | 全部门禁加真机与安装路径 |
+| exit | 变更级与出口 | `node scripts/verify-all.mjs --stage exit` | 功能、契约与证据门禁加真机与安装路径；不判格式 |
+| pre-commit | 提交前一次 | `node scripts/check-gates.mjs --stage pre-commit` | 只跑 `MX-G-09` 至 `MX-G-13` 五道格式类判断 |
+
+格式类判断（首部字段、必填节、任务表列、任务卡字段、模板列）从出口验收里移出，只在 `pre-commit` 跑；出口结论只看功能与契约，格式问题由 `scripts/check-format.mjs` 一次列全、一次改完，不作为验收不通过的理由。
+
+2026-11-27 削减后的实测基线：`--stage exit` 结构检查 21 项、0 error、67 warning（全部来自子门禁：证据 65、矩阵 2）；`--stage pre-commit` 结构检查 126 项、0 error、31 warning（旧七值 18 条、模板与字段类 13 条）；`check-gates --self-test` 42 条断言通过。
 
 单门禁可以单独跑，命令写 `node scripts/check-gates.mjs --stage pre --change <变更包号>`。汇总脚本失败时先看第一个非 0 的门禁，不在多个失败之间来回跳。
 

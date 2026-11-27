@@ -99,8 +99,24 @@ export function loadCtx(root, opts = {}) {
   if (existsSync(changesDir)) {
     for (const d of readdirSync(changesDir)) {
       const f = join(changesDir, d, 'closure.md');
-      if (!existsSync(f)) continue;
-      closures.push({ id: d, rel: `specs/changes/${d}/closure.md`, text: readTextSafe(f) ?? '' });
+      if (existsSync(f)) {
+        closures.push({ id: d, rel: `specs/changes/${d}/closure.md`, text: readTextSafe(f) ?? '' });
+        continue;
+      }
+      // 2026-11-27 起关闭记录并入 proposal.md 的「收口」节；没有独立 closure.md 时
+      // 从该节取字段表与六条件表，仍按同一套字段与状态校验，不放宽也不跳过。
+      const merged = join(changesDir, d, 'proposal.md');
+      if (!existsSync(merged)) continue;
+      const text = readTextSafe(merged) ?? '';
+      const section = text.match(/^##\s+\d*\s*收口[^\n]*\n([\s\S]*?)(?=\n##\s|(?![^])$)/m);
+      if (!section) continue;
+      // 只认写全关闭字段表与六条件表的「收口」节；其余包的收口小节是流程说明，
+      // 没有关闭记录可审，跳过而不是拿它充数。
+      const body = section[1];
+      const hasFieldTable = /^\|\s*字段\s*\|\s*值\s*\|/m.test(body);
+      const hasConditionTable = /^\|\s*条件\s*\|\s*状态\s*\|/m.test(body);
+      if (!hasFieldTable || !hasConditionTable) continue;
+      closures.push({ id: d, rel: `specs/changes/${d}/proposal.md#收口`, text: body });
     }
   }
   return {

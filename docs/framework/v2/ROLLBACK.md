@@ -1,6 +1,8 @@
 # 框架 v2 回滚包
 
-状态：2026-11-27 由 P5 按现状重写，替换 P0 骨架。回滚对象是 `docs/framework/` 下随 v2.0.0 发布、且与 v1.7.5 有差异的内容；过程记录 `docs/framework/v2/` 与只读快照 `docs/framework/archive/v1.7.5/` 不参与回滚。规则依据是 `docs/framework/MOXIAN.md` 第 9 章 `MXV2-9-01`（四类触发与命令区分）、`MXV2-9-03`（单文件回滚与改动清单复核），以及 `docs/framework/v2/IMPLEMENT.md` 第 8.2 节（回滚包三件）。
+> 2026-11-27 文书削减：原 `docs/framework/v2/IMPLEMENT.md` 已并入 `docs/framework/v2/DESIGN.md` 的「怎么实施」节；本文引用该文件时保留原节号与行号，副本在 `E:\dsh_home\trash\pending-delete\fw-cut-20261127\docs\framework\v2\IMPLEMENT.md`。
+
+状态：2026-11-27 由 P5 按现状重写，替换 P0 骨架。回滚对象是 `docs/framework/` 下随 v2.0.0 发布、且与 v1.7.5 有差异的内容；过程记录 `docs/framework/v2/` 与只读快照 `docs/framework/archive/v1.7.5/` 不参与回滚。规则依据是 `docs/framework/MOXIAN.md` 第 9 章 `MXV2-9-01`（四类触发与命令区分）、`MXV2-9-03`（单文件回滚与改动清单复核），以及 `docs/framework/v2/DESIGN.md 的「怎么实施」节` 第 8.2 节（回滚包三件）。
 
 回滚基线是 `docs/framework/archive/v1.7.5/` 的 12 份正文副本与 1 份 `INDEX.md`，逐份 sha256 与字节数在 `INDEX.md` 的“补充字段”表内。归档只读：回滚只从归档复制回正文，不修改归档内容。执行人由 Lead 或其委派的子智能体担任，复核人由未参与本次改写的验收角色担任；已推送提交的撤销由发布员执行，本次由 Lead 代行并在 `docs/framework/v2/JOURNAL.md` 注明代行。
 
@@ -11,17 +13,17 @@
 | 对象 | 当前状态 | 回滚处置 | 依据 |
 |---|---|---|---|
 | `MOXIAN.md`、`GATES.md`、`TASK-MATRIX.md`、`ROLES.md`、`EFFORT.md`、`README.md`、`ADOPTION.md`、`ABSORB-RECONCILE.md`、`domains/backend.md`、`domains/frontend.md`、`domains/testing.md`、`domains/product-design.md` | v2 改写后的正文，12 份 | 从归档逐份复制回原位，覆盖当前正文 | `archive/v1.7.5/INDEX.md` |
-| `VERSION` | v2 新增，内容 `v2.0.0` | 移入隔离目录，不就地删除 | `IMPLEMENT.md` 第 2.1 节第 26 行 |
+| `VERSION` | v2 新增，内容 `v2.0.0` | 移入隔离目录，不就地删除 | `DESIGN.md` 的「怎么实施」节 第 2.1 节第 26 行 |
 | `appendix/` | v2 新增目录，4 份（A 至 D）；v1.7.5 把附录写在总册第 1181 至 1380 行 | 整目录移入隔离目录 | `archive/v1.7.5/MOXIAN.md` 附录 A 至 D |
-| `templates/` | v1.7.5 已存在，现 31 份；v2 改写 6 份、新增 4 份待建未落地 | 保留原位；6 份改写无归档基线，只能用 Git 历史恢复，恢复不了的登记为残留 | `IMPLEMENT.md` 第 2.2 节；`ADOPTION.md` 第 24 行 |
+| `templates/` | v1.7.5 已存在，现 31 份；v2 改写 6 份、新增 4 份待建未落地 | 保留原位；6 份改写无归档基线，只能用 Git 历史恢复，恢复不了的登记为残留 | `DESIGN.md` 的「怎么实施」节 第 2.2 节；`ADOPTION.md` 第 24 行 |
 | `adapters/` | v1.7.5 已存在，现 2 份（`README.md`、`deepseek.md`）；v2 在 P3 对齐参数 | 保留原位；同样无归档基线，按 Git 历史恢复，恢复不了的登记为残留 | `archive/v1.7.5/MOXIAN.md` 第 1215 行 |
-| `v2/` | 9 份过程文档加 `sources/` 7 份 | 原样保留，不参与回滚 | `IMPLEMENT.md` 第 2.2 节 |
+| `v2/` | 9 份过程文档加 `sources/` 7 份 | 原样保留，不参与回滚 | `DESIGN.md` 的「怎么实施」节 第 2.2 节 |
 | `archive/v1.7.5/` | 9 份根文件（含 `INDEX.md`）加 `domains/` 4 份 | 原样保留，只读 | `INDEX.md` |
 | `accept/`、`absorb/`、`_draft/` | v2 之前既有的验收记录与吸收稿 | 不动 | 不在 v2 变更清单内 |
 
 处置对象 17 个：12 份正文复制回原位，`VERSION` 与 `appendix/` 的 5 个文件移入隔离目录；保留对象 33 个：`templates/` 31 份、`adapters/` 2 份。`specs/`、`scripts/`、`backend/`、`frontend/` 不在本包范围。
 
-`templates/` 的 6 份改写是 `change.md`、`task-card.md`、`contract-table.md`、`evidence-index.md`、`review.md`、`visual-baseline.md`（`IMPLEMENT.md` 第 102 至 107 行）。有 Git 历史时按第 5 节路径三的 `git restore --source` 逐份恢复；没有 Git 时保留 v2 版本，在 `JOURNAL.md` 登记“模板 6 份未回退”的残留与原因。
+`templates/` 的 6 份改写是 `change.md`、`task-card.md`、`contract-table.md`、`evidence-index.md`、`review.md`、`visual-baseline.md`（`DESIGN.md` 的「怎么实施」节 第 102 至 107 行）。有 Git 历史时按第 5 节路径三的 `git restore --source` 逐份恢复；没有 Git 时保留 v2 版本，在 `JOURNAL.md` 登记“模板 6 份未回退”的残留与原因。
 
 ## 2 回滚前确认
 
@@ -234,9 +236,9 @@ Test-Path -LiteralPath (Join-Path $trash 'VERSION')
 
 本会话的 `git` 不在 PATH，常见安装路径也未找到，因此路径一与路径三的 Git 命令本次未在真实仓库执行，文件级路径以归档复制为准；需要 Git 的动作在有 Git CLI 的环境执行，并按 `git status --short` 与 `git diff --stat` 留下范围证据。
 
-归档按 `IMPLEMENT.md` 第 6 节只收 12 份正文，`templates/` 与 `adapters/` 的 v1.7.5 版本没有副本，这是回滚包在文件级的不完整处：这两处只能靠 Git 历史恢复，恢复不了就保留现状并登记残留。补归档需要从 Git 历史导出旧副本，不能在当前工作区重造，已登记在 `docs/framework/v2/BACKLOG.md`。
+归档按 `DESIGN.md` 的「怎么实施」节 第 6 节只收 12 份正文，`templates/` 与 `adapters/` 的 v1.7.5 版本没有副本，这是回滚包在文件级的不完整处：这两处只能靠 Git 历史恢复，恢复不了就保留现状并登记残留。补归档需要从 Git 历史导出旧副本，不能在当前工作区重造，已登记在 `docs/framework/v2/BACKLOG.md`。
 
-`docs/framework/accept/` 与 `docs/framework/absorb/` 是 v2 之前既有的记录目录，归档里没有对应副本，回滚不动它们；如果确认其中某份是 v2 新增，按 `IMPLEMENT.md` 第 2.1 节清单补登后再移入隔离目录，不凭目录名猜测。
+`docs/framework/accept/` 与 `docs/framework/absorb/` 是 v2 之前既有的记录目录，归档里没有对应副本，回滚不动它们；如果确认其中某份是 v2 新增，按 `DESIGN.md` 的「怎么实施」节 第 2.1 节清单补登后再移入隔离目录，不凭目录名猜测。
 
 ## 9 演练记录
 

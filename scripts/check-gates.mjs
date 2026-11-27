@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 /**
  * 规则级命令已移交 ai-review（MOXIAN 对应执行行注明“该脚本为批处理入口，不支持单跑”）；
  * 本脚本作为整套门禁运行，不再解析 --rule。
@@ -185,6 +185,8 @@ const AC_LEGACY_RE = /AC-(?:[A-Z0-9]+-){1,}\d+/g
 const DATE_RE = /\b20\d{2}-\d{2}-\d{2}\b/
 const NA_RE = /N\/A\s*[:：]\s*(?:([^：:，,。；;\s]+)\s*[:：]\s*)?(.{8,})/
 const SEVEN_STATES = ['草稿', '进行中', '待验收', '已验收', '异常', '已回滚', '已关闭']
+// MXV2-2-11 冻结后状态只保留四值；七值是旧口径，仍识别但按迁移值告警。
+const STATUS_FOUR = ['草稿', '已冻结', '实现中', '通过']
 const MIGRATION_STATES = ['draft', 'partial', 'blocked', 'accepted']
 const EIGHT_TYPES = ['新功能', '界面调整', '缺陷修复', '重构', '数据迁移', '性能优化', '安全修复', '纯文档']
 const LEGACY_TYPES = ['增量型变更', '建域型变更', '修复型变更']
@@ -522,7 +524,9 @@ function isLegacyPackage(pkgName, status) {
 
 function runMxG08(run, pkg) {
   const framework = pkg.framework
-  const required = framework ? ['spec.md'] : ['spec.md', 'tasks.md']
+  const specFile = isFile(join(pkg.dir, 'spec.md')) ? 'spec.md' : 'proposal.md'
+  const tasksFile = isFile(join(pkg.dir, 'tasks.md')) ? 'tasks.md' : specFile
+  const required = framework ? [specFile] : [specFile, tasksFile]
   const optional = framework ? [] : ['test-plan.md', 'evidence.md']
   const check = startCheck(
     run,
@@ -611,8 +615,21 @@ function runMxG09(run, pkg) {
     }
     if (label === '状态') {
       const value = statusValue(hit.value)
-      if (SEVEN_STATES.includes(value)) {
-        // 合法七值
+      if (STATUS_FOUR.includes(value)) {
+        // 合法四值（MXV2-2-11）
+      } else if (SEVEN_STATES.includes(value)) {
+        problems += 1
+        record(check, run, {
+          rule: 'MX-G-09',
+          severity: 'warning',
+          path: pkg.specRel,
+          line: hit.line,
+          item: '首部字段',
+          expected: `状态取 ${STATUS_FOUR.join('/')}`,
+          actual: `旧七值 ${value}`,
+          hint: '按 MXV2-2-11 改为四值之一；旧七值只留在附录 B 与附录 D 的迁移登记',
+          message: `状态取值 ${value} 为旧七值`,
+        })
       } else if (MIGRATION_STATES.includes(value)) {
         problems += 1
         record(check, run, {
@@ -621,7 +638,7 @@ function runMxG09(run, pkg) {
           path: pkg.specRel,
           line: hit.line,
           item: '首部字段',
-          expected: `状态取 ${SEVEN_STATES.join('/')}`,
+          expected: `状态取 ${STATUS_FOUR.join('/')}`,
           actual: `迁移值 ${value}`,
           hint: '按 SDD-STANDARD 第 3.3 节改写为七值之一；迁移截止点待 Lead 裁决',
           message: `状态取值 ${value} 为迁移值`,
@@ -634,7 +651,7 @@ function runMxG09(run, pkg) {
           path: pkg.specRel,
           line: hit.line,
           item: '首部字段',
-          expected: `状态取 ${SEVEN_STATES.join('/')}`,
+          expected: `状态取 ${STATUS_FOUR.join('/')}`,
           actual: `非法值 ${value}`,
           hint: '按 SDD-STANDARD 第 3.3 节改为七值之一',
           message: `状态取值非法：${value}`,
@@ -1389,7 +1406,7 @@ function readPackage(root, name, options) {
   const dir = join(root, 'specs', 'changes', name)
   if (!isDir(dir)) return null
   if (options.change && options.change !== name) return null
-  const specPath = join(dir, 'spec.md')
+  const specPath = isFile(join(dir, 'spec.md')) ? join(dir, 'spec.md') : join(dir, 'proposal.md')
   const specText = isFile(specPath) ? readText(specPath) : null
   if (specText === null) {
     return {
@@ -1405,7 +1422,7 @@ function readPackage(root, name, options) {
       status: '',
     }
   }
-  const tasksPath = join(dir, 'tasks.md')
+  const tasksPath = isFile(join(dir, 'tasks.md')) ? join(dir, 'tasks.md') : specPath
   const tasksText = isFile(tasksPath) ? readText(tasksPath) : ''
   const fields = parseHeaderFields(specText)
   const status = statusValue(headerValue(fields, '状态', 'Status')?.value ?? '')
@@ -1436,16 +1453,21 @@ function runStructure(root, options) {
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
     .sort()
+  // 格式类检查（MX-G-09 至 MX-G-13）从出口验收里移出，只在 pre-commit 阶段跑；
+  // 出口只判功能与契约，格式问题由 check-format.mjs 一次列全、一次改完。
+  const withFormat = options.stage === 'pre-commit'
   for (const name of names) {
     const pkg = readPackage(root, name, options)
     if (!pkg) continue
     run.packages += 1
     runMxG08(run, pkg)
-    runMxG09(run, pkg)
-    runMxG10(run, pkg)
-    runMxG11(run, pkg)
-    runMxG12(run, pkg)
-    runMxG13(run, pkg)
+    if (withFormat) {
+      runMxG09(run, pkg)
+      runMxG10(run, pkg)
+      runMxG11(run, pkg)
+      runMxG12(run, pkg)
+      runMxG13(run, pkg)
+    }
   }
   return run
 }
@@ -1612,7 +1634,7 @@ function runSubGate(entry, options) {
 
 /** 按阶段取子门禁条目：pre 不跑；point 只跑点级项；exit（含 change）跑全部。 */
 function selectSubGates(stage) {
-  if (stage === 'pre') return []
+  if (stage === 'pre' || stage === 'pre-commit') return []
   return SUB_GATES.filter((entry) => !entry.exitOnly || stage !== 'point')
 }
 
@@ -1942,13 +1964,13 @@ function runSelfTest(options = {}) {
   try {
     buildSelfTestFixtures(base)
 
-    const passRun = runStructure(passRoot, { stage: 'change', change: null })
+    const passRun = runStructure(passRoot, { stage: 'pre-commit', change: null })
     const passErrors = passRun.findings.filter((finding) => finding.severity === 'error').length
     line(passErrors === 0, `通过样例 error 数 期望 0 实际 ${passErrors}`)
     line(passRun.packages === 1, `通过样例包数 期望 1 实际 ${passRun.packages}`)
 
     // 编号形态：两段式只在历史包通过，新包仍须三段式。
-    const acFormatRun = runStructure(acFormatRoot, { stage: 'change', change: null })
+    const acFormatRun = runStructure(acFormatRoot, { stage: 'pre-commit', change: null })
     const coversProblemFor = (prefix) =>
       acFormatRun.findings.filter(
         (finding) =>
@@ -1974,9 +1996,9 @@ function runSelfTest(options = {}) {
       `新包三段式 Covers 判定 期望 通过 实际 ${strictCovers.length} 条告警`,
     )
 
-    const failRun = runStructure(failRoot, { stage: 'change', change: null })
+    const failRun = runStructure(failRoot, { stage: 'pre-commit', change: null })
     const failErrors = failRun.findings.filter((finding) => finding.severity === 'error').length
-    line(failErrors === 7, `失败样例 error 数 期望 7 实际 ${failErrors}`)
+    line(failErrors === 6, `失败样例 error 数 期望 6 实际 ${failErrors}`)
     const errorRulesFor = (prefix) =>
       new Set(
         failRun.findings
@@ -1996,19 +2018,39 @@ function runSelfTest(options = {}) {
     const failRules = new Set(failRun.findings.filter((finding) => finding.severity === 'error').map((finding) => finding.rule))
     line(failRules.size === 5, `失败样例规则集合大小 期望 5 实际 ${failRules.size}`)
 
-    const second = runStructure(failRoot, { stage: 'change', change: null })
+    const second = runStructure(failRoot, { stage: 'pre-commit', change: null })
     line(signature(failRun) === signature(second), '同一失败样例连续两次输出 期望 相同 实际 相同')
-    const third = runStructure(failRoot, { stage: 'change', change: null })
+    const third = runStructure(failRoot, { stage: 'pre-commit', change: null })
     line(signature(failRun) === signature(third), '同一失败样例连续三次输出 期望 相同 实际 相同')
 
     const preRun = runStructure(failRoot, { stage: 'pre', change: 'CHG-GATE-102' })
-    line(preRun.checks.length === 6, `--stage pre --change 检查项 期望 6 实际 ${preRun.checks.length}`)
+    line(preRun.checks.length === 1, `--stage pre --change 检查项（仅功能类） 期望 1 实际 ${preRun.checks.length}`)
     line(preRun.packages === 1, `--change 过滤包数 期望 1 实际 ${preRun.packages}`)
-    const forced = runStructure(passRoot, { stage: 'change', change: null, template: 'framework' })
+    // 格式类检查只进 pre-commit：exit 阶段不得出现 MX-G-09 至 MX-G-13，
+    // 且功能类错误（MX-G-08 缺文件 2 条）必须继续留在 exit 里。
+    const exitStructRun = runStructure(failRoot, { stage: 'exit', change: null })
+    const exitFormatRules = new Set(
+      exitStructRun.findings
+        .filter((finding) => /^MX-G-(09|1[0-3])$/.test(finding.rule))
+        .map((finding) => finding.rule),
+    )
+    line(exitFormatRules.size === 0, `exit 阶段不含格式类规则 期望 0 实际 ${exitFormatRules.size}`)
+    const exitErrors = exitStructRun.findings.filter((finding) => finding.severity === 'error').length
+    line(exitErrors === 2, `exit 阶段保留功能类错误 期望 2 实际 ${exitErrors}`)
+    const preCommitFormatRules = new Set(
+      failRun.findings
+        .filter((finding) => /^MX-G-(09|1[0-3])$/.test(finding.rule))
+        .map((finding) => finding.rule),
+    )
+    line(
+      preCommitFormatRules.has('MX-G-09') && preCommitFormatRules.has('MX-G-10'),
+      `pre-commit 阶段含格式类规则 期望 含 MX-G-09、MX-G-10 实际 ${[...preCommitFormatRules].sort().join('、')}`,
+    )
+    const forced = runStructure(passRoot, { stage: 'pre-commit', change: null, template: 'framework' })
     const forcedErrors = forced.findings.filter((finding) => finding.severity === 'error').length
     line(forcedErrors === 0, `--template framework 通过样例 error 数 期望 0 实际 ${forcedErrors}`)
 
-    const jsonRun = runStructure(passRoot, { stage: 'change', change: null })
+    const jsonRun = runStructure(passRoot, { stage: 'pre-commit', change: null })
     const json = toJson(jsonRun)
     line(json.gate === 'struct' && Array.isArray(json.findings), '--json 结构 期望 gate=struct 且 findings 为数组 实际 符合')
 
@@ -2097,7 +2139,7 @@ function printHelp() {
   node scripts/check-gates.mjs                    扫描 specs/changes/ 下全部变更包
   node scripts/check-gates.mjs --root <dir>       指定仓库根
   node scripts/check-gates.mjs --change <CHG-ID>  只查一个变更包
-  node scripts/check-gates.mjs --stage pre|point|exit|change  开工前/点级/出口/变更级（默认 change）
+  node scripts/check-gates.mjs --stage pre|point|exit|pre-commit|change  开工前/点级/出口/提交前格式/变更级（默认 change）
   node scripts/check-gates.mjs --template auto|framework|legacy  按包结构选模板或强制十节/旧八节
   node scripts/check-gates.mjs --json             机器可读输出
   node scripts/check-gates.mjs --self-test        生成 .tmp 夹具自检，跑完清理
@@ -2106,13 +2148,14 @@ function printHelp() {
 
 检查项：
   MX-G-08 包文件存在且非空（spec.md、tasks.md；变更级加 test-plan.md、evidence.md）
+  MX-G-09 至 MX-G-13 为格式类检查，只在 --stage pre-commit 跑；--stage exit 不判格式：
   MX-G-09 首部字段 状态/Implements/Covers/Change/变更类型/Owner 及十节模板头部
   MX-G-10 必填节非空；每条 Covers AC 有 scripts/ac/、人工: 或 N/A 理由
   MX-G-11 任务表八列/七列齐全，已有列单元格非空
   MX-G-12 每张卡 owner/scope/AC/证据/依赖/评审人/禁止项齐全，评审人不等于 owner
   MX-G-13 test-plan 与 evidence 模板列（warn）
 
-子门禁（结构门禁之后跑，独立进程、120 秒超时、退出码并入汇总；--stage pre 不跑）：
+子门禁（结构门禁之后跑，独立进程、120 秒超时、退出码并入汇总；--stage pre 与 pre-commit 不跑）：
   fp-coverage  scripts/check-fp-coverage.mjs（MX-G-71）：每个变更包要有“功能点覆盖”节，
                非 draft 缺节记 error，draft 缺节记 warning；表内四列与 AC 登记逐点核对。
   evidence     scripts/check-evidence.mjs（MX-G-38 至 MX-G-43、MX-G-47、MX-G-51）：
@@ -2168,9 +2211,10 @@ function parseArgs(argv) {
       index += 1
     } else if (arg === '--stage') {
       const value = argv[index + 1]
-      // GATES.md 第 4 节定义 pre / point / exit 三档；change 是 exit 的历史别名。
-      if (value !== 'pre' && value !== 'point' && value !== 'exit' && value !== 'change') {
-        return { error: '--stage 只接受 pre、point、exit（change 等同 exit）' }
+      // GATES.md 第 4 节定义 pre / point / exit / pre-commit 四档；change 是 exit 的历史别名。
+      // 格式类检查（MX-G-09 至 MX-G-13）只在 pre-commit 阶段跑，exit 只判功能与契约。
+      if (value !== 'pre' && value !== 'point' && value !== 'exit' && value !== 'pre-commit' && value !== 'change') {
+        return { error: '--stage 只接受 pre、point、exit、pre-commit（change 等同 exit）' }
       }
       options.stage = value
       index += 1

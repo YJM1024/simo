@@ -1,5 +1,7 @@
 # 框架 v2 回滚演练记录
 
+> 2026-11-27 文书削减：原 `docs/framework/v2/IMPLEMENT.md` 已并入 `docs/framework/v2/DESIGN.md` 的「怎么实施」节；本文引用该文件时保留原节号与行号，副本在 `E:\dsh_home\trash\pending-delete\fw-cut-20261127\docs\framework\v2\IMPLEMENT.md`。
+
 演练日期：2026-11-27 05:52 至 05:54（Asia/Shanghai）。执行人：`v2-cmd-close`（Lead 委派）。复核人：尚未指派独立子智能体复跑，本记录只有执行人输出，复核签字待补。起点版本 `v2.0.0`，回滚点 `docs/framework/archive/v1.7.5/`。演练目录 `.tmp/v2-cmd-close/drill/`，真实 `docs/framework/` 只作只读来源，未做任何写入。
 
 环境：Windows PowerShell 5.1，`robocopy` 可用；本会话 `git` 不在 PATH，路径一与路径三的 Git 命令本次未实测。
@@ -80,7 +82,7 @@ V6 v2-docs=9 sources=7
 
 归档缺 `templates/` 与 `adapters/` 的 v1.7.5 副本。这两个目录在 v1.7.5 已存在，回滚包却没有基线，文件级回滚对 31 份模板中的 6 份改写（`change.md`、`task-card.md`、`contract-table.md`、`evidence-index.md`、`review.md`、`visual-baseline.md`）与适配层 2 份无法完成。有 Git 历史时按 `ROLLBACK.md` 第 5 节的 `git restore --source` 恢复；没有 Git 时保留 v2 版本并在 `JOURNAL.md` 登记“模板 6 份未回退”的残留。补归档需要从 Git 历史导出旧副本，不能在当前工作区重造，已登记 `docs/framework/v2/BACKLOG.md`。
 
-`templates/` 实有 31 份，比 `IMPLEMENT.md` 第 2.2 节计划的 35 份少 4 份待建（`linkage.md`、`point.md`、`rule-card.md`、`change-record.md`），回滚只处理实有部分。
+`templates/` 实有 31 份，比 `DESIGN.md` 的「怎么实施」节 第 2.2 节计划的 35 份少 4 份待建（`linkage.md`、`point.md`、`rule-card.md`、`change-record.md`），回滚只处理实有部分。
 
 Git 路径未实测。路径一的 `git restore`、路径三的 `git reset --soft` 与 `git revert` 本次都只做了文本核对，没有在真实仓库执行；下一次有 Git 环境时应补一次同路径演练，并把输出补进本文件。
 

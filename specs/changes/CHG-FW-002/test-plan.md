@@ -7,7 +7,7 @@ Covers: AC-CHG-FW-002-01、AC-CHG-FW-002-02、AC-CHG-FW-002-03、AC-CHG-FW-002-0
 
 ## 1. 用例、AC 与证据
 
-六条变更级 AC 与 `TC-FW-001..006` 一一对应，判据正文在 `specs/changes/CHG-FW-002/spec.md` 第 4 节，证据行在 `specs/changes/CHG-FW-002/evidence.md` 第 9 节。结果列按当前实测状态回填：AC-01 为 P0 已完成的归档复核，判 pass；AC-02 至 AC-06 对应的 P1 至 P5 尚未开工，断言脚本与产物未落盘，判 missing 并写解除条件，结论以 `evidence.md` 为准。
+六条变更级 AC 与 `TC-FW-001..006` 一一对应，判据正文在 `specs/changes/CHG-FW-002/proposal.md` 第 11 节，证据行在 `specs/changes/CHG-FW-002/evidence.md` 第 9 节。结果列按当前实测状态回填：AC-01 为 P0 已完成的归档复核，判 pass；AC-02 至 AC-06 对应的 P1 至 P5 尚未开工，断言脚本与产物未落盘，判 missing 并写解除条件，结论以 `evidence.md` 为准。
 
 | 用例 | AC | 测试落点 | 层级 | 期望 | 结果 | 证据 |
 | --- | --- | --- | --- | --- | --- | --- |

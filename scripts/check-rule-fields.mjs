@@ -43,12 +43,15 @@ const RULES = [
   'MXV2-6-11',
   'MXV2-6-17',
 ];
-const FIELD_NAMES = ['规则', '判据', '执行', '层级', '依据', '适用'];
+const FIELD_NAMES = ['规则', '判据', '执行', '依据'];
 const LEVELS = ['L1', 'L2', 'L3', 'L4'];
 const ROLES = ['需求方', '调研员', '判定员', '架构师', '撰写员', '验收员', '发布员'];
 const BANNED_CRITERIA = ['见上文', '按规范执行', '同上', '见相关章节', '略'];
 const BANNED_REVIEW = ['可能误判', '酌情', '视情况', '注意'];
-const FIELD_RE = /^-\s*(规则|判据|执行|层级|依据|适用)：(.*)$/;
+const FIELD_RE = /^-\s*(规则|判据|执行|依据)：(.*)$/;
+const LEGACY_FIELD_RE = /^-\s*(层级|适用)：(.*)$/;
+const LEVEL_INLINE_RE = /(?:^|；)\s*层级\s*(L\d+)(?=；|$)/;
+const APPLY_INLINE_RE = /(?:^|；)\s*适用\s*([^；]+)/;
 const RULE_HEAD_RE = /^###\s+(MXV2-\d-\d{2})\s+(.+?)\s*$/;
 
 function splitLines(text) {
@@ -72,6 +75,7 @@ export function parseRules(text) {
         fields: {},
         order: [],
         stray: [],
+        legacy: [],
         duplicates: [],
       };
       rules.push(cur);
@@ -93,7 +97,9 @@ export function parseRules(text) {
       cur.lastFieldLine = i + 1;
     } else if (line.trim() && cur.lastFieldLine !== undefined) {
       // 六字段之后的表格属于本节，不算插入；字段之间出现其它内容才算顺序破坏。
-      if (cur.order.length < FIELD_NAMES.length) cur.stray.push({ line: i + 1, text: line.trim() });
+      const lm = line.match(LEGACY_FIELD_RE);
+      if (lm) cur.legacy.push({ key: lm[1], line: i + 1 });
+      else if (cur.order.length < FIELD_NAMES.length) cur.stray.push({ line: i + 1, text: line.trim() });
     }
   }
   return rules;
@@ -169,7 +175,8 @@ function loadScriptRules(ctx, rel) {
 }
 
 function parseScriptExec(value) {
-  const cmd = value.replace(/^`|`$/g, '').trim();
+  const stripped = value.replace(/；层级\s*L\d+[\s\S]*$/, '').trim();
+  const cmd = stripped.replace(/^`|`$/g, '').trim();
   const m = cmd.match(/^script:(\S+\.mjs)\s+--rule\s+(MXV2-\d-\d{2})\s+期望退出码\s+0\s*$/);
   return { cmd, match: m };
 }
@@ -202,6 +209,9 @@ function checkFields(ctx) {
       else if (!r.fields[name]) issues.push({ rule: 'MXV2-6-01', file: ctx.fileRel, line: r.line, msg: `${r.id} 字段「${name}」为空` });
     }
     for (const d of r.duplicates) issues.push({ rule: 'MXV2-6-01', file: ctx.fileRel, line: d.line, msg: `${r.id} 字段「${d.key}」重复出现` });
+    const exec = r.fields['执行'] ?? '';
+    if (exec && !LEVEL_INLINE_RE.test(exec)) issues.push({ rule: 'MXV2-6-01', file: ctx.fileRel, line: r.line, msg: `${r.id} 执行行未写层级（应为「；层级 L1 至 L4」）` });
+    if (exec && !APPLY_INLINE_RE.test(exec)) issues.push({ rule: 'MXV2-6-01', file: ctx.fileRel, line: r.line, msg: `${r.id} 执行行未写适用` });
     if (!r.title.trim()) issues.push({ rule: 'MXV2-6-01', file: ctx.fileRel, line: r.line, msg: `${r.id} 标题行缺陈述` });
     const crit = r.fields['判据'];
     if (crit && crit.length < 20 && BANNED_CRITERIA.some((p) => crit.includes(p))) {
@@ -253,7 +263,8 @@ function checkLevels(ctx) {
   const counts = new Map(LEVELS.map((l) => [l, 0]));
   for (const r of ctx.rules) {
     checks++;
-    const lv = r.fields['层级'];
+    const exec = r.fields['执行'] ?? '';
+    const lv = (exec.match(LEVEL_INLINE_RE) ?? [])[1];
     if (lv === undefined) continue;
     if (!LEVELS.includes(lv)) {
       issues.push({ rule: 'MXV2-6-03', file: ctx.fileRel, line: r.line, msg: `${r.id} 层级取值「${lv}」不在 L1 至 L4` });
@@ -356,6 +367,7 @@ function checkFieldOrder(ctx) {
       issues.push({ rule: 'MXV2-6-11', file: ctx.fileRel, line: r.line, msg: `${r.id} 字段顺序是 ${got.join('/')}，应为 ${FIELD_NAMES.join('/')}` });
     }
     for (const s of r.stray) issues.push({ rule: 'MXV2-6-11', file: ctx.fileRel, line: s.line, msg: `${r.id} 字段之间夹了非字段行：「${s.text}」` });
+    for (const s of r.legacy ?? []) issues.push({ rule: 'MXV2-6-11', file: ctx.fileRel, line: s.line, msg: `${r.id} 残留旧字段行「${s.key}」，层级与适用应并入执行行` });
   }
   return { checks, issues };
 }
@@ -464,21 +476,22 @@ function selfTest() {
     const out = ['# 测试总册', '', '- 版本：v2.0.0', '', '## 附录 A 至 D 的位置与用途', '', '附录 D 收录六条：D-01、D-02、D-03、D-04、D-05、MX-1-13。六条的 owner 为判定员，补判据期限写在收口材料。', ''];
     out.push('表 6-1 层级取值与后果', '| 层级 | 含义 | 违反后果 | 记录位置 |', '|---|---|---|---|', '| L1 | 框架级 | 记事故 | 事故文件 |', '| L2 | 章级 | 退回重写 | 产物 |', '| L3 | 门禁级 | 阻断 | 门禁输出 |', '| L4 | 附录级 | 提示 | 附录 D |', '');
     for (const [id, title, exec, level] of blocks) {
+      const execLine = mut === 'exec' && id === 'MXV2-1-01' ? 'script:scripts/check-demo.mjs --rule MXV2-1-02 期望退出码 0' : exec;
+      const lv = mut === 'level' && id === 'MXV2-1-01' ? 'L5' : level;
       const b = [
         `### ${id} ${title}`,
         `- 规则：${title}。`,
         `- 判据：${mut === 'criteria' && id === 'MXV2-1-01' ? '见上文' : '可观察的判据一句。'}`,
-        `- 执行：${mut === 'exec' && id === 'MXV2-1-01' ? 'script:scripts/check-demo.mjs --rule MXV2-1-02 期望退出码 0' : exec}`,
-        `- 层级：${mut === 'level' && id === 'MXV2-1-01' ? 'L5' : level}`,
+        `- 执行：${execLine}；层级 ${lv}；适用 任何改动。`,
         `- 依据：MX-1-01`,
-        `- 适用：任何改动。`,
       ];
       if (mut === 'order' && id === 'MXV2-1-01') {
         b[1] = '- 判据：可观察的判据一句。';
         b[2] = '- 规则：纳入变更包。';
       }
-      if (mut === 'no-basis' && id === 'MXV2-1-01') b[5] = '- 适用：任何改动。';
-      if (mut === 'review' && id === 'MXV2-1-02') b[3] = '- 执行：ai-review:核对六项；谁判：判定员；误放行：可能误判';
+      if (mut === 'no-basis' && id === 'MXV2-1-01') b.splice(4, 1);
+      if (mut === 'legacy' && id === 'MXV2-1-01') b.push('- 适用：任何改动。');
+      if (mut === 'review' && id === 'MXV2-1-02') b[3] = '- 执行：ai-review:核对六项；谁判：判定员；误放行：可能误判；层级 L2；适用 受理时。';
       out.push(...b, '');
     }
     if (mut === 'numbering') out[out.indexOf('### MXV2-2-01 编号写入首部')] = '### MXV2-2-03 编号写入首部';
@@ -514,6 +527,7 @@ function selfTest() {
     ['exec', 'MXV2-6-07', '与所在规则不一致'],
     ['review', 'MXV2-6-08', '缺「误拦截」'],
     ['order', 'MXV2-6-11', '字段顺序'],
+    ['legacy', 'MXV2-6-11', '残留旧字段'],
   ];
   for (const [mut, rule, needle] of cases) {
     const r = evaluate(write(mut));
