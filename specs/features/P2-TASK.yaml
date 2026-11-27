@@ -1,0 +1,89 @@
+# P2 任务域功能点 → 端到端场景 / 截图 映射。
+# verify-all 读取本文件：功能点缺场景、场景缺脚本文件、截图缺产物，任一即失败。
+version: 1
+features:
+  - featureId: PRD-TASK-001
+    title: 任务概览、任务标签与分页
+    scenarios:
+      - AC-TASK-001-01
+      - AC-TASK-001-02
+      - AC-TASK-001-03
+      - AC-TASK-001-04
+      - AC-TASK-001-05
+      - AC-TASK-001-06
+    screenshots: [overview-1280x900.png, overview-768x900.png, mobile-overview-375x812.png]
+    realMachine: false
+  - featureId: PRD-TASK-002
+    title: 任务卡状态与操作
+    scenarios:
+      - AC-TASK-002-01
+      - AC-TASK-002-02
+      - AC-TASK-002-03
+      - AC-TASK-002-04
+    screenshots: [task-list-1280x900.png, task-list-768x900.png, mobile-overview-375x812.png]
+    realMachine: false
+  - featureId: PRD-TASK-003
+    title: 对话出方案、确认后建任务
+    scenarios:
+      - AC-TASK-003-01
+      - AC-TASK-003-02
+      - AC-TASK-003-03
+      - AC-TASK-003-04
+      - AC-TASK-003-05
+      - AC-TASK-003-06
+    screenshots: [inspector-1280x900.png, inspector-768x900.png, mobile-overview-375x812.png]
+    realMachine: true
+  - featureId: PRD-TASK-004
+    title: 任务执行进度与消息
+    scenarios:
+      - AC-TASK-004-01
+      - AC-TASK-004-02
+      - AC-TASK-004-03
+      - AC-TASK-004-04
+    screenshots: [overview-1280x900.png, overview-768x900.png, mobile-overview-375x812.png]
+    realMachine: false
+  - featureId: PRD-TASK-005
+    title: 产物与交付物
+    scenarios:
+      - AC-TASK-005-01
+      - AC-TASK-005-02
+      - AC-TASK-005-03
+      - AC-TASK-005-04
+    screenshots: [task-list-1280x900.png, task-list-768x900.png, mobile-overview-375x812.png]
+    realMachine: false
+  - featureId: PRD-TASK-006
+    title: 取消、失败与静默窗口
+    scenarios:
+      - AC-TASK-006-01
+      - AC-TASK-006-02
+      - AC-TASK-006-03
+      - AC-TASK-006-04
+      - AC-TASK-006-05
+      - AC-TASK-006-06
+      - AC-TASK-006-07
+    screenshots: [inspector-1280x900.png, inspector-768x900.png, mobile-overview-375x812.png]
+    realMachine: true
+
+# 变异抽查：verify-all 按顺序取前 3 条，改坏实现后跑指定测试，测试不变红即整轮失败。
+mutations:
+  - id: MUT-001
+    featureId: PRD-TASK-001
+    target: frontend/src/components/tasks.tsx
+    find: "all: '全部'"
+    replace: "all: '所有'"
+    layer: frontend
+    test: src/components/TaskPanel.test.tsx
+  - id: MUT-002
+    featureId: PRD-TASK-003
+    target: backend/internal/modules/tasks/conv_http.go
+    find: 'newConvError(400, "invalid_task_limit", "limit 必须在 1..100")'
+    replace: 'newConvError(400, "invalid_limit", "limit 必须在 1..100")'
+    layer: backend
+    test: ./internal/modules/tasks -run TestConvHTTPErrorEnvelopes -count=1
+  - id: MUT-003
+    featureId: PRD-TASK-001
+    target: frontend/src/components/library.tsx
+    find: '还有 {moreTasks} 个'
+    replace: '还有 {moreTasks} 条'
+    layer: frontend
+    test: src/components/RightPanel.test.tsx

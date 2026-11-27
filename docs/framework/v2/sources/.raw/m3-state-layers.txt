@@ -1,0 +1,209 @@
+Title: States – Material Design 3
+
+URL Source: https://m3.material.io/foundations/interaction/states/state-layers
+
+Published Time: Tue, 01 Jan 1980 00:00:01 GMT
+
+Markdown Content:
+[Skip to main content](https://m3.material.io/foundations/interaction/states/state-layers#main_content)[search](https://m3.material.io/search.html)[material_design Home](https://m3.material.io/)[apps Get started](https://m3.material.io/get-started)[code Develop](https://m3.material.io/develop)[book Foundations](https://m3.material.io/foundations)[palette Styles](https://m3.material.io/styles)[add_circle Components](https://m3.material.io/components)[pages Blog](https://m3.material.io/blog)
+
+ play_arrow 
+
+ pause 
+
+ dark_mode 
+
+ light_mode 
+
+[](https://m3.material.io/foundations)
+
+[](https://m3.material.io/foundations/overview)[](https://m3.material.io/foundations/designing)[](https://m3.material.io/foundations/writing)
+
+[](https://m3.material.io/foundations/building-for-all)
+
+[](https://m3.material.io/foundations/content-design/overview)[](https://m3.material.io/foundations/content-design/alt-text)[](https://m3.material.io/foundations/content-design/global-writing)[](https://m3.material.io/foundations/content-design/notifications)[](https://m3.material.io/foundations/content-design/style-guide)
+
+[](https://m3.material.io/foundations/customization)
+
+[](https://m3.material.io/foundations/desktop)[](https://m3.material.io/foundations/watches)
+
+[](https://m3.material.io/foundations/xr/design)[](https://m3.material.io/foundations/xr/components)
+
+[](https://m3.material.io/foundations/design-tokens)
+
+[](https://m3.material.io/foundations/interaction/gestures)[](https://m3.material.io/foundations/interaction/inputs)[](https://m3.material.io/foundations/interaction/selection)[](https://m3.material.io/foundations/interaction/states)
+
+[](https://m3.material.io/foundations/layout/layout-overview)[](https://m3.material.io/foundations/layout/scaffold)[](https://m3.material.io/foundations/layout/grids-spacing)[](https://m3.material.io/foundations/layout/breakpoints)[](https://m3.material.io/foundations/layout/bidirectionality-rtl)[](https://m3.material.io/foundations/layout/canonical-examples)
+
+[](https://m3.material.io/foundations/usability)[](https://m3.material.io/foundations/glossary)
+
+# States
+
+States show the interaction status of a component or UI element
+
+[Overview](https://m3.material.io/foundations/interaction/states/overview)[State layers](https://m3.material.io/foundations/interaction/states/state-layers)[Applying states](https://m3.material.io/foundations/interaction/states/applying-states)
+
+On this page
+
+*   [State layers](https://m3.material.io/)
+
+link
+
+Copy link Link copied
+
+## State layers
+
+link
+
+Copy link Link copied
+
+A state layer is a semi-transparent covering on an element that indicates its state. State layers provide a systematic approach to visualizing states by using opacity. A layer can be applied to an entire element or in a circular shape and only one state layer can be applied at a given time.
+
+link
+
+Copy link Link copied
+
+To transition from an enabled style to a stateful style requires the addition of a state layer.
+
+The state layer is an overlay with a fixed opacity for each state and uses the same color as the content.
+
+For example, if the enabled style uses the **secondary container** color for the container and **on secondary container** for content, the state layer will be an overlay using the **on secondary container** color.
+
+If the enabled style uses the **surface** color for the container and the **primary** color role for content, then the state layer will be an overlay using the **primary** color.
+
+![Image 1: State layer sandwiched between the container and content.](https://firebasestorage.googleapis.com/v0/b/design-spec/o/projects%2Fgoogle-material-3%2Fimages%2Fly2qh1yi-1p_State%20Layers_1.png?alt=media)
+
+1.   Container
+2.   State layer
+3.   Content
+
+link
+
+Copy link Link copied
+
+The size of state layers is 40dp while the interactive target size is 48dp.
+
+![Image 2: Interaction target is larger than the state layer.](https://firebasestorage.googleapis.com/v0/b/design-spec/o/projects%2Fgoogle-material-3%2Fimages%2Fly2qhye4-1p_State%20Layers_2.png?alt=media)
+
+1.   State layer
+2.   Interactive target
+
+link
+
+Copy link Link copied
+
+### On colors
+
+By default, a component’s state layer color is derived from the color of its content, either the color of an icon or label text if no icon is present.
+
+An[on color](https://m3.material.io/m3/pages/color-roles#19e75989-7485-4f5b-a769-940c4e4364bc)is a color role used by the content. Each container color has its own corresponding on color.  
+  
+For example, if a container color is **secondary container**, the content will use the **on secondary container** color role.
+
+![Image 3: State layer sandwiched between  the content and container.](https://firebasestorage.googleapis.com/v0/b/design-spec/o/projects%2Fgoogle-material-3%2Fimages%2Fly2qisol-1p_on_colors.png?alt=media)
+
+Order of surface layers shows the state layer (2) between the container (1) and content (3) layers
+
+link
+
+Copy link Link copied
+
+### State layer tokens & values
+
+The state layer uses a fixed percentage for the opacity for each state. A state layer uses the color used by content (usually the [on color](https://m3.material.io/m3/pages/color-roles#19e75989-7485-4f5b-a769-940c4e4364bc)) and the percentage opacity for its respective state.
+
+link
+
+Copy link Link copied
+
+![Image 4: The opacity values of four overlay states.](https://firebasestorage.googleapis.com/v0/b/design-spec/o/projects%2Fgoogle-material-3%2Fimages%2Fly2qnx2g-1p_state_layer_tokens%26value.png?alt=media)
+
+Four overlay states and their values:
+
+1.   Hover +8% opacity
+2.   Focus +10% opacity
+3.   Press +10% opacity
+4.   Drag +16% opacity
+
+link
+
+Copy link Link copied
+
+ State opacities arrow_drop_down
+
+search
+
+view_list
+
+0.16
+
+ Dragged state layer opacity 
+
+0.1
+
+ Pressed state layer opacity 
+
+0.1
+
+ Focus state layer opacity 
+
+0.08
+
+ Hover state layer opacity 
+
+0.38
+
+ Disabled state layer opacity 
+
+Close
+
+[arrow_left_alt Previous States: Overview](https://m3.material.io/foundations/interaction/states/overview)[Up next arrow_right_alt States: Applying states](https://m3.material.io/foundations/interaction/states/applying-states)
+
+vertical_align_top
+
+[material_design](https://m3.material.io/)
+Material Design is an adaptable system of guidelines, components, and tools that support the best practices of user interface design. Backed by open-source code, Material Design streamlines collaboration between designers and developers, and helps teams quickly build beautiful products.
+
+*   Social
+
+*   [GitHub](https://www.github.com/material-components)
+*   [X](https://x.com/googledesign)
+*   [YouTube](https://www.youtube.com/@googledesign)
+*   [Blog RSS](https://material.io/feed.xml)
+
+*   Libraries
+
+*   [Android](https://m3.material.io/develop/android/mdc-android)
+*   [Compose](https://m3.material.io/develop/android/jetpack-compose)
+*   [Flutter](https://m3.material.io/develop/flutter)
+*   [Web](https://m3.material.io/develop/web)
+
+*   More Google sites
+
+*   [Google Design](https://design.google/?home=)
+
+*   Archived versions
+
+*   [Material Design 1](https://m1.material.io/)
+*   [Material Design 2](https://m2.material.io/)
+
+[](https://www.google.com/)
+
+*   [Privacy Policy](https://policies.google.com/privacy)
+*   [Terms of Service](https://policies.google.com/terms)
+*   [Join research studies](https://google.qualtrics.com/jfe/form/SV_3NMIMtX0F2zkakR?utm_source=Website&Q_Language=en&utm_campaign=Q2&campaignDate=June2022&referral_code=UXRgbtM2422655&productTag=b2d)
+*   [Feedback](javascript:void(0))
+
+Switch to list view
+
+Dragged state layer opacity
+
+Pressed state layer opacity
+
+Focus state layer opacity
+
+Hover state layer opacity
+
+Disabled state layer opacity
+
+State opacities

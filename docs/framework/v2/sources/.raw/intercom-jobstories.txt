@@ -1,0 +1,261 @@
+
+Designing Features Using Job Stories - Inside Intercom
+Log in
+Contact sales
+View demo
+Start free trial
+Fin AI Agent
+→
+Product
+Explore all products
+Intercom helpdesk
+Fin AI Agent
+↗
+Platform
+Channels
+Integrations
+Safety & security
+Intercom capabilities
+Inbox
+Copilot
+Tickets
+Help Center
+Reporting
+Outbound
+Knowledge Hub
+Customers
+Meet our customers
+→
+The world's most AI-forward companies run on Intercom
+Intercom for industries: 
+Technology
+, 
+Ecommerce
+, 
+Fintech
+, 
+Gaming
+Intercom for scale: 
+Startups
+, 
+Small business
+, 
+Enterprise
+Resources
+Learn
+Why choose Intercom?
+Early Stage
+Intercom blog
+↗
+Webinars & events
+↗
+Academy
+↗
+2026 Transformation Report
+↗
+AI Agent Blueprint
+↗
+Support
+Help center
+↗
+Product updates
+↗
+Community
+↗
+Company
+About
+↗
+Careers
+↗
+Pricing
+Log in
+Contact sales
+View demo
+Start free trial
+Fin AI Agent
+→
+Our AI Agent and AI architecture trained specifically for customer service
+Blog
+Product & Design
+Designing features using Job Stories
+Alan Klement
+23 December 2013
+Reading time:
+7 min
+Contents
+How Personas fail
+How User Stories fail
+Enter the Job Story
+Designing A Profile View
+Design For Real People, Design For Causality
+Share article
+Personas and User Stories made sense when customers and product teams were far from each other. That’s no longer the case.
+This is a guest post from Alan Klement describing how one team used the design technique of Job Stories to design a profile page in a product.
+Traditionally, who the customer was and what they needed fell within the responsibility of marketing, business development, or even sales. After this information was gathered, it would be synthesized into a portable format and then pitched over the fence to a product development team, who was responsible for building the product.
+The casualties of this waterfall process are the subtleties which it is necessary to understand when creating great products: causality, anxieties, and motivations. As development teams recognize that they need to be close to customers, it’s also appropriate to consider better ways of leveraging customer empathy to create products.
+This philosophy of focusing on causality, anxieties, and motivations is called 
+Jobs To Be Done
+, and a granular way to bring this concept into a product is to use Job Stories to design features, UI, and UX.
+How Personas fail
+The biggest and most pertinent problem with Personas is this:
+Personas are imaginary customers defined by attributes that don’t acknowledge causality.
+These attributes, generally in the form of demographics, do not bring a team closer to understanding a customer’s consumption, or non-consumption, of a product. The characteristics of a Persona (someone’s age, sex, race, and weekend habits) does not explain why they ate that Snickers bar; having 30 seconds to buy and eat something which will stave off hunger for 30 minutes 
+does
+ explain why.
+How User Stories fail
+As a user, I can indicate folders not to backup so that my backup drive isn’t filled up with things I don’t need saved.
+User Stories, such as the one above, have three big problems:
+They use Personas.
+They couple implementation with motivations and outcomes.
+They ignore context, situations, and anxieties.
+Often, a feature or UX will fail. If it was defined by a User Story, then discovering why it failed will be difficult, because implementation was coupled with motivations and outcomes. Because of the coupling, how can anyone know what was wrong? Was the implementation wrong, or were the assumptions about motivations wrong?
+Learn more about 
+the challenges of User Stories here
+.
+Enter the Job Story
+First mentioned by Paul Adams 
+here on the Intercom blog
+, and 
+developed here
+, Job Stories are a different way of thinking about defining features, UI, and UX. Job stories are a powerful way to facilitate team conversation and discovery when designing products. But how does a team implement them into their workflow?
+Here is one approach:
+Start with the high level job.
+Identify a smaller job or jobs which help resolve the higher level job.
+Observe 
+how people solve the problem now
+ (which job do they currently use).
+Come up with a Job Story, or Job Stories, that investigate the causality, anxieties, and motivations of what they do now.
+Create a solution (usually in the form of a feature or UI change) which resolves that Job Story.
+To demonstrate how this can work, consider how a team crafted a Profile View’s UX and UI for a product that helps car salespeople get loans for people wanting to buy a car.
+Designing A Profile View
+It was early in the design process. The team was discussing what the Dashboard/Home View would look like and what features should exist there.
+At some point Joe, a team member, stands up and draws a simple wireframe on the whiteboard. He pointed to a box and said:
+This is the salesperson’s profile.
+The team listens to his rationale for the profile view but are not immediately convinced. They asks a series of “whys” for each particular part and circumstance for the profile view. Even after all of these questions, the team wasn’t coalescing for or against the idea.
+At this point, the question was asked:
+Why should the product have a profile view? Why should it be in one place or another? What information should it display? What situations is it resolving? What job is this profile view doing?
+To resolve this, the feature was reframed in a process with Job Stories.
+Note: For brevity, this article will focus on just one job story for the Profile View; in reality there were several job stories related to the Profile View.
+1. Start with the high level job.
+The high level job for this product is to help a car salesperson 
+secure a car loan
+ when someone buys a car from them. Currently, the buyer has to fill out a lot of difficult paperwork along with the car salesperson.
+2. Identify a smaller job or jobs which help resolve the higher level job.
+In order to get the loan application filled out correctly, the salesperson and buyer need to enter a lot of information about the car and the terms of loan, as well as the buyer’s sensitive financial information. Because the information is sensitive, the buyer needs to feel she can trust that her personal information is safe with the car salesperson.
+3. Observe how people solve the problem now (i.e. which job do they currently use).
+Currently, when filling out this type of information, the buyer analyzes (usually visually) the salesperson and car dealership and deduces if they are reputable and can be trusted. They also generally fill in their sensitive information in close physical proximity, on a piece of paper, with the salesperson. This helps them feel confident that the information is filled out correctly, and won’t get passed around to people who shouldn’t be looking at it.
+4. Come up with a Job Story, or Job Stories, that investigate the causality, anxieties, and motivations of what they do now.
+When car salespeople and their customers interact with each other via the product…
+…customers are going to want to feel like they can trust the organization, process, and the salesperson.
+Salespeople are going to want to be confident that their process makes their customers feel comfortable…
+…so that clients will feel safe entering their financial information into a process.
+The above frames the situation into a Job Story. It can be fleshed out more by providing more situational context—such as when and where it’s being filled out (e.g. at home or at the dealership)—and anxieties each party will have about having and viewing a profile. 
+More tips on creating Job Stories are here
+.
+5. Create a solution (usually in the form of a feature or UI change) which resolves that Job Story.
+To resolve the above job, the team then decided on what features the Profile View should have and how it should be presented. Too little information and the Profile View won’t solve the original job, and too much information could have negative effects. So we decided:
+When the customer uses the product, the salesperson’s profile view would always be visible (to ease customer’s anxieties about not being physically with the salesperson).
+The profile would have a picture of the salesperson, job title, cars sold and years at the company (to ease customers’ anxieties about whether the salesperson is reputable and can be trusted).
+The profile view will enable easy ways for the customer to get in touch with the salesperson. Examples are their phone number, email address, and a button that says “Ask [salesperson] a question” (eases customers’ anxieties about filling out the form themselves and getting something wrong).
+Here is an example of a solution:
+Here is a breakdown of the UI, the job each UI element is doing, and what situation(s) it’s resolving.
+With the UI complete, we now have a UX in which every element can be traced back to resolving a job: ensuring the customer feels safe when exposing personal information.
+Design For Real People, Design For Causality
+Designing successful products means observing how real people solve problems now, exploring the context of the situation they are in, and then understanding causality, anxieties and, motivations.
+Abstracted attributes and coupling implementation with motivations and outcomes are distractions for a team. If the team digs deep and learns about a customer’s Job To Be Done, they can then more effectively craft solutions. Using Job Stories to design features, UI, and UX is one way to do it.
+More from Alan
+Alan is a product designer and engineer who loves to create and grow products. Keep tabs on him either though 
+Medium
+, Twitter or 
+his homepage
+.
+Our fourth book, 
+Intercom on Jobs-to-be-Done
+, is a collection of our best thoughts and ideas on the topic. The goal: help you understand what needs customers meet with your product, and how to ultimately improve upon that experience.
+Helpdesk features
+Inbox
+Live Chat
+Copilot
+Tickets
+Omnichannel
+Help Center
+Apps & Integrations
+Reporting
+Knowledge Hub
+Outbound
+Fin features
+Fin overview
+Capabilities
+AI Engine
+Pricing
+Intercom pricing
+Fin pricing
+Solutions
+Technology
+Ecommerce
+Fintech
+Gaming
+Learn
+Events
+Intercom blog
+Academy
+YouTube
+AI Agent Blueprint
+Learning Center
+2026 Transformation Report
+Evaluate
+Why choose Intercom
+Safety & security
+ROI calculator
+Customer case studies
+Support
+Changes
+Help Center
+Developer hub
+Intercom community
+Status
+Company
+About
+Careers
+Contact Press
+Programs
+Solution partner
+Technology partner
+Early stage
+Intercom in action
+View demo
+Free trial
+Contact sales
+Sign in
+Language
+English
+Français
+Español (Latinoamérica)
+Deutsch
+Português (Brasil)
+Helpdesk features
+▼
+Fin features
+▼
+Pricing
+▼
+Solutions
+▼
+Learn
+▼
+Evaluate
+▼
+Support
+▼
+Company
+▼
+Programs
+▼
+Intercom in action
+▼
+Language
+▼
+Terms
+Privacy
+Security
+Your Privacy Choices
