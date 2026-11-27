@@ -1,4 +1,4 @@
-> 本文件已停止使用，执行以 [墨线框架](../framework/MOXIAN.md) 为准；历史内容保留供追溯。
+> 本文件已停止使用，执行以 [墨线框架](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 为准；历史内容保留供追溯。
 
 # 司墨开发框架 v0（草案，待确认）
 

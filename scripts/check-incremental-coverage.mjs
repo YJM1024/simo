@@ -3,6 +3,7 @@
  * 规则级命令已移交 ai-review（MOXIAN 对应执行行注明“该脚本为批处理入口，不支持单跑”）；
  * 本脚本作为整套门禁运行，不再解析 --rule。
  * check-incremental-coverage.mjs — 增量覆盖率门禁（零依赖，只读）
+ * 框架正文是外部依赖：正文在 SIMO_FRAMEWORK_ROOT（默认同级目录 ../moxian-framework）下的 docs/framework；本脚本只在注释与提示文案里引用该路径，不读框架文件。
  *
  * 依据 docs/framework/GATES.md 第 3.5 节。输入是本次改动涉及的文件清单，逐项判断
  * 源文件有没有测试映射；映射缺失按 error，覆盖率阈值与报告缺失按 warn。

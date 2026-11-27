@@ -49,5 +49,5 @@
 - spec：`spec.md`
 - design：`design.md`
 - tasks：`tasks.md`
-- 任务类型：`docs/framework/TASK-MATRIX.md`
-- 角色：`docs/framework/ROLES.md`
+- 任务类型：[`TASK-MATRIX.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/TASK-MATRIX.md)
+- 角色：[`ROLES.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/ROLES.md)

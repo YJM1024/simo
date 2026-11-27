@@ -27,6 +27,7 @@ import {
   fixtureDir,
   createAsserter,
 } from './lib/v2-rule-mode.mjs';
+import { frameworkDir } from './lib/framework-root.mjs';
 
 const NAME = 'check-visual-baseline';
 const RULES = ['MXV2-7-08', 'MXV2-8-11'];
@@ -69,13 +70,17 @@ export function loadCtx(root, opts = {}) {
     }
   }
   const signatures = [];
-  for (const dir of ['docs/framework/accept', 'docs/testing']) {
-    const d = join(root, dir);
-    if (!existsSync(d)) continue;
-    for (const f of readdirSync(d)) {
+  // 框架正文是外部依赖：读 SIMO_FRAMEWORK_ROOT（默认同级目录 ../moxian-framework）下的 docs/framework。
+  const fw = frameworkDir(root);
+  for (const [dir, label] of [
+    [join(fw, 'accept'), 'docs/framework/accept'],
+    [join(root, 'docs/testing'), 'docs/testing'],
+  ]) {
+    if (!existsSync(dir)) continue;
+    for (const f of readdirSync(dir)) {
       if (!f.endsWith('.md')) continue;
-      const text = readTextSafe(join(d, f)) ?? '';
-      if (/用户签字[：:]\s*\S+/.test(text)) signatures.push({ rel: `${dir}/${f}`, text });
+      const text = readTextSafe(join(dir, f)) ?? '';
+      if (/用户签字[：:]\s*\S+/.test(text)) signatures.push({ rel: `${label}/${f}`, text });
     }
   }
   let manifest = null;

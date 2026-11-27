@@ -12,13 +12,16 @@
  *   node scripts/check-format.mjs --json .out/evidence/format-health.json
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
-import { dirname, join, relative } from 'node:path'
+import { dirname, isAbsolute, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { frameworkDir } from './lib/framework-root.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(HERE, '..')
 const CHANGE = 'specs/changes/CHG-FW-002/proposal.md'
-const BOOK = 'docs/framework/MOXIAN.md'
+// 框架正文是外部依赖：读 SIMO_FRAMEWORK_ROOT（默认同级目录 ../moxian-framework）下的 docs/framework。
+const BOOK = join(frameworkDir(ROOT), 'MOXIAN.md')
+const BOOK_LABEL = 'docs/framework/MOXIAN.md'
 
 const HEADER_FIELDS = ['状态', 'Implements', 'Covers', 'Change', '变更类型', 'Owner', '变更号', '标题', '负责人', '判级', '创建日期', '关闭日期']
 const STATUS = ['草稿', '已冻结', '实现中', '通过']
@@ -28,7 +31,8 @@ const TASK_COLUMNS = ['卡号', '任务', 'Owner', '写作用域', '依赖', 'AC
 const AC_SECTION = '验收判据'
 
 function read(rel) {
-  return readFileSync(join(ROOT, rel), 'utf8').split(/\r?\n/)
+  const full = isAbsolute(rel) ? rel : join(ROOT, rel)
+  return readFileSync(full, 'utf8').split(/\r?\n/)
 }
 
 function issuesForProposal() {
@@ -98,12 +102,12 @@ function issuesForBook() {
     if (/^#{1,3}\s/.test(line) && cur && !/^###\s+MXV2-/.test(line)) cur = null
     if (cur && /^-\s*(规则|判据|执行|依据|层级|适用)：/.test(line)) cur.fields.push({ line: index + 1, text: line })
   })
-  if (blocks.length !== 158) issues.push({ file: BOOK, line: 1, kind: '数量', message: `规则块 ${blocks.length} 个，约定 158 个` })
+  if (blocks.length !== 158) issues.push({ file: BOOK_LABEL, line: 1, kind: '数量', message: `规则块 ${blocks.length} 个，约定 158 个` })
   for (const block of blocks) {
     const labels = block.fields.map((field) => /^-\s*([^：]+)：/.exec(field.text)[1])
-    if (labels.join('|') !== '规则|判据|执行|依据') issues.push({ file: BOOK, line: block.line, kind: '字段顺序', message: `${block.id} 字段为 ${labels.join('/') || '空'}，约定 规则/判据/执行/依据` })
+    if (labels.join('|') !== '规则|判据|执行|依据') issues.push({ file: BOOK_LABEL, line: block.line, kind: '字段顺序', message: `${block.id} 字段为 ${labels.join('/') || '空'}，约定 规则/判据/执行/依据` })
     for (const field of block.fields.filter((item) => /^-\s*(层级|适用)：/.test(item.text))) {
-      issues.push({ file: BOOK, line: field.line, kind: '旧字段', message: `${block.id} 残留旧字段行 ${field.text.slice(0, 12)}` })
+      issues.push({ file: BOOK_LABEL, line: field.line, kind: '旧字段', message: `${block.id} 残留旧字段行 ${field.text.slice(0, 12)}` })
     }
   }
   const byChapter = new Map()
@@ -113,7 +117,7 @@ function issuesForBook() {
   }
   for (const [chapter, list] of byChapter) {
     list.forEach((block, index) => {
-      if (block.num !== index + 1) issues.push({ file: BOOK, line: block.line, kind: '编号顺序', message: `第 ${chapter} 章第 ${index + 1} 条编号为 ${block.id}` })
+      if (block.num !== index + 1) issues.push({ file: BOOK_LABEL, line: block.line, kind: '编号顺序', message: `第 ${chapter} 章第 ${index + 1} 条编号为 ${block.id}` })
     })
   }
   return issues

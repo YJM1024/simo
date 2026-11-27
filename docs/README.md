@@ -1,7 +1,7 @@
 # 司墨文档索引
 
 > **项目记录与续接入口：[`CONTINUITY.md`](CONTINUITY.md)**（项目定位、先读顺序、当前真实状态、下一项工作流程、文档当天落盘规则）。
-> 产品功能树：[`product/TREE.md`](product/TREE.md) · 规格索引：[`../specs/README.md`](../specs/README.md) · 执行框架：[`framework/README.md`](framework/README.md)（规则正文 [`framework/MOXIAN.md`](framework/MOXIAN.md)）。
+> 产品功能树：[`product/TREE.md`](product/TREE.md) · 规格索引：[`../specs/README.md`](../specs/README.md) · 执行框架：[`framework/README.md`](framework/README.md)（指针；规则正文在独立仓 [MOXIAN.md](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md)）。
 >
 > 本目录是产品、设计、流程、任务与契约文档的统一入口；**文档是事实来源，聊天只用于沟通**。
 > 当前阶段与验收状态：先读 [`CONTINUITY.md`](CONTINUITY.md) §4；[`tasks/STATUS.md`](tasks/STATUS.md) 最后更新 2026-11-20，以 CONTINUITY 与执行证据为准。
@@ -55,8 +55,8 @@
 
 | 文档 | 内容 | 生效日期 | 签字人 |
 |---|---|---|---|
-| [`framework/README.md`](framework/README.md) | 墨线框架入口：定位、目录结构、使用顺序与维护规则，规则正文在 [`framework/MOXIAN.md`](framework/MOXIAN.md) | 待补 | 待补 |
-| [`framework/TASK-MATRIX.md`](framework/TASK-MATRIX.md) | 八类任务判级、必做项与阶段出口；角色职责见 [`framework/ROLES.md`](framework/ROLES.md) | 待补 | 待补 |
+| [`framework/README.md`](framework/README.md) | 框架已迁至独立仓的指针：仓库链接、版本、获取方式与脚本查找规则；规则正文在 [MOXIAN.md](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) | 待补 | 待补 |
+| [TASK-MATRIX.md（独立仓）](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/TASK-MATRIX.md) | 八类任务判级、必做项与阶段出口；角色职责见 [ROLES.md（独立仓）](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/ROLES.md) | 待补 | 待补 |
 | [`process/standards/README.md`](process/standards/README.md) | 通用规范仓库内快照：spec 工作流 / Agent 开发规范（canonical 在 `$DSH_HOME/rules/`） | 待补 | 待补 |
 | [`process/component-system.md`](process/component-system.md) | 组件系统与画廊门禁规则 | 待补 | 待补 |
 | [`process/research/`](process/research/) | 产品/前端/后端/组件库/Spec/测试/Storybook 调研（7 份） | 待补 | 待补 |
@@ -107,9 +107,9 @@
 
 | 路径 | 用途 | 状态 | 生效日期 | 签字人 | 备注 |
 |---|---|---|---|---|---|
-| [`process/RUNBOOK.md`](process/RUNBOOK.md) | 变更执行手册：七个阶段的入口条件、步骤、产出物与门禁 | superseded（由 docs/framework/MOXIAN.md 第 5、10、11、13 章取代，历史内容供追溯） | 2026-11-24 | 维护人 Lead（代行） | 批准人：用户，待签 |
+| [`process/RUNBOOK.md`](process/RUNBOOK.md) | 变更执行手册：七个阶段的入口条件、步骤、产出物与门禁 | superseded（由独立仓 [MOXIAN.md](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 第 5、10、11、13 章取代，历史内容供追溯） | 2026-11-24 | 维护人 Lead（代行） | 批准人：用户，待签 |
 
-> RUNBOOK 首行标注已停止使用，执行以 [`framework/MOXIAN.md`](framework/MOXIAN.md) 为准；取代范围见 [`framework/ADOPTION.md`](framework/ADOPTION.md)。
+> RUNBOOK 首行标注已停止使用，执行以 [MOXIAN.md（独立仓）](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 为准；取代范围见 [ADOPTION.md（独立仓）](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/ADOPTION.md)。
 
 ## 7. 维护约定
 

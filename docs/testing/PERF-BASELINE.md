@@ -2,7 +2,7 @@
 
 版本：v0.1，2026-11-24。状态：active，随第二批压测补缺建立。
 定位：本文件是跨变更复用的性能基线库，一行一次测量结论。变更内的原始输出留在变更包，本文件只登记可比较的中位数与测量条件。
-依据：`docs/framework/TASK-MATRIX.md` 第 3 节性能优化行与第 2 节性能基线门，`docs/framework/MOXIAN.md` MX-7-20、MX-9-24，`docs/framework/domains/testing.md` 第 5 节性能测量口径。
+依据：[`TASK-MATRIX.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/TASK-MATRIX.md) 第 3 节性能优化行与第 2 节性能基线门，[`MOXIAN.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) MX-7-20、MX-9-24，[`domains/testing.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/domains/testing.md) 第 5 节性能测量口径。
 落点：`docs/testing/PERF-BASELINE.md`，由测试 owner 维护，验收复核。
 
 ## 1 基线字段

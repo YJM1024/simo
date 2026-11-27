@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
  * measure-perf.mjs — 性能层测量与阈值判定（零依赖，Node 原生 http/https）
+ * 框架正文是外部依赖：正文在 SIMO_FRAMEWORK_ROOT（默认同级目录 ../moxian-framework）下的 docs/framework；本脚本只在注释与提示文案里引用该路径，不读框架文件。
  *
  * 依据 docs/framework/MOXIAN.md 的 MX-9-24 与表 9-1 的性能层：对目标 HTTP(S)
  * 端点施加固定请求数与并发数，逐次记录耗时，输出 JSON 与一行人类可读摘要，

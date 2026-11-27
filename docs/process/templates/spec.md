@@ -45,4 +45,4 @@
 ## 7. 链接
 
 - proposal/design/tasks/test-plan/evidence
-- 角色/任务类型：`docs/framework/ROLES.md`、`docs/framework/TASK-MATRIX.md`
+- 角色/任务类型：[`ROLES.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/ROLES.md)、[`TASK-MATRIX.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/TASK-MATRIX.md)

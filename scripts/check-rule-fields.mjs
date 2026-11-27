@@ -21,7 +21,8 @@
  *   node scripts/check-rule-fields.mjs --file docs/framework/MOXIAN.md --json
  */
 import { readFileSync, readdirSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { isAbsolute, join, relative } from 'node:path';
+import { frameworkDir } from './lib/framework-root.mjs';
 import {
   parseArgs,
   resolveRuleMode,
@@ -132,24 +133,27 @@ function readTextSafe(path) {
   }
 }
 
-/** 读取并解析全部输入，供检查函数共用。 */
+/** 读取并解析全部输入，供检查函数共用。框架正文是外部依赖：读 SIMO_FRAMEWORK_ROOT（默认同级目录 ../moxian-framework）下的 docs/framework。 */
 export function loadCtx(root, opts = {}) {
-  const file = join(root, opts.file ?? 'docs/framework/MOXIAN.md');
+  const fw = frameworkDir(root);
+  const asked = opts.file ?? 'docs/framework/MOXIAN.md';
+  const file = isAbsolute(asked) ? asked : join(fw, asked.replace(/^docs\/framework\//, ''));
+  const fileRel = isAbsolute(asked) ? relative(root, file).replaceAll('\\', '/') : asked;
   const text = readTextSafe(file);
   if (text === null) {
-    const err = new Error(`找不到规则文件 ${relative(root, file) || file}`);
+    const err = new Error(`找不到规则文件 ${fileRel}`);
     err.preflight = true;
     throw err;
   }
   const rules = parseRules(text);
-  const version = (readTextSafe(join(root, 'docs/framework/VERSION')) ?? '').trim();
-  const appendixC = readTextSafe(join(root, 'docs/framework/v2/APPENDIX-C.md'));
-  const appendixD = readTextSafe(join(root, 'docs/framework/v2/APPENDIX-D.md'));
-  const sources = readTextSafe(join(root, 'docs/framework/v2/SOURCES.md'));
+  const version = (readTextSafe(join(fw, 'VERSION')) ?? '').trim();
+  const appendixC = readTextSafe(join(fw, 'v2/APPENDIX-C.md'));
+  const appendixD = readTextSafe(join(fw, 'v2/APPENDIX-D.md'));
+  const sources = readTextSafe(join(fw, 'v2/SOURCES.md'));
   return {
     root,
     file,
-    fileRel: relative(root, file).replaceAll('\\', '/'),
+    fileRel,
     text,
     rules,
     version,

@@ -47,6 +47,7 @@ import {
 } from 'node:fs'
 import { dirname, join, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { frameworkDir } from './lib/framework-root.mjs'
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 const DEFAULT_ROOT = resolve(SCRIPT_DIR, '..')
@@ -208,8 +209,15 @@ function toPosix(path) {
   return path.split(sep).join('/')
 }
 
+// 框架正文是外部依赖：读 SIMO_FRAMEWORK_ROOT（默认同级目录 ../moxian-framework）下的 docs/framework。
+function resolveInput(root, relativePath) {
+  if (relativePath === 'docs/framework') return frameworkDir(root)
+  if (!relativePath.startsWith('docs/framework/')) return join(root, relativePath)
+  return join(frameworkDir(root), relativePath.slice('docs/framework/'.length))
+}
+
 function readRequired(root, relativePath) {
-  const absolutePath = join(root, relativePath)
+  const absolutePath = resolveInput(root, relativePath)
   if (!existsSync(absolutePath)) {
     throw new PreflightError(`缺少必需文件 ${relativePath}`)
   }
@@ -221,7 +229,7 @@ function readRequired(root, relativePath) {
 }
 
 function readOptional(root, relativePath) {
-  const absolutePath = join(root, relativePath)
+  const absolutePath = resolveInput(root, relativePath)
   if (!existsSync(absolutePath)) return null
   try {
     return readFileSync(absolutePath, 'utf8')
@@ -666,7 +674,7 @@ function collectRules(root, moxianText, gatesText) {
   addRuleIds(rules, gatesText, GATES_REL)
   const rolesText = readOptional(root, ROLES_REL)
   if (rolesText) addRuleIds(rules, rolesText, ROLES_REL)
-  const domainsPath = join(root, DOMAINS_REL)
+  const domainsPath = resolveInput(root, DOMAINS_REL)
   if (existsSync(domainsPath)) {
     for (const file of readdirSync(domainsPath).filter((name) => name.endsWith('.md')).sort()) {
       const relativePath = toPosix(join(DOMAINS_REL, file))
@@ -774,7 +782,7 @@ function validateTemplates(cell, context, stats) {
     const file = resolveTemplateFile(name, context.templates)
     if (file) {
       stats.templates.total += 1
-      if (!existsSync(join(context.root, file))) {
+      if (!existsSync(resolveInput(context.root, file))) {
         stats.templates.invalid += 1
         addProblem(cell, 'template-file-missing', `模板「${name}」指向 ${file}，文件不存在`)
       } else {
@@ -787,10 +795,10 @@ function validateTemplates(cell, context, stats) {
     const artifact = ARTIFACT_TEMPLATES.get(name)
     if (artifact) {
       stats.templates.total += 1
-      const definitionExists = existsSync(join(context.root, artifact.definitionPath))
+      const definitionExists = existsSync(resolveInput(context.root, artifact.definitionPath))
       const ruleExists = context.rules.has(artifact.rule)
       const canonicalExists =
-        artifact.canonicalFile === null || existsSync(join(context.root, artifact.canonicalFile))
+        artifact.canonicalFile === null || existsSync(resolveInput(context.root, artifact.canonicalFile))
       if (!definitionExists || !ruleExists || !canonicalExists) {
         stats.templates.invalid += 1
         const missing = []
@@ -1031,7 +1039,7 @@ function run(root, overrides = null) {
   const moxianText = readRequired(root, MOXIAN_REL)
   const gatesText = readRequired(root, GATES_REL)
 
-  const availableTemplateDirs = TEMPLATE_DIRS.filter((dir) => existsSync(join(root, dir)))
+  const availableTemplateDirs = TEMPLATE_DIRS.filter((dir) => existsSync(resolveInput(root, dir)))
   if (availableTemplateDirs.length === 0) {
     throw new PreflightError(`模板目录不存在：${TEMPLATE_DIRS.join('、')}`)
   }

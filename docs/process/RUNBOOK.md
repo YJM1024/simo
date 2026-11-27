@@ -1,18 +1,18 @@
-> 本文件已停止使用，执行以 [墨线框架](../framework/MOXIAN.md) 为准；历史内容保留供追溯。
-> 本文件为 v0.9 之前的操作手册，现行规则看 [MOXIAN.md](../framework/MOXIAN.md) 与 [GATES.md](../framework/GATES.md)。
+> 本文件已停止使用，执行以 [墨线框架](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 为准；历史内容保留供追溯。
+> 本文件为 v0.9 之前的操作手册，现行规则看 [MOXIAN.md](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 与 [GATES.md](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/GATES.md)。
 > 七个阶段与 `R-1` 至 `R-7` 是旧划分，已被 MOXIAN 第 5、10、11、13 章与 GATES 的阶段门禁、特有门禁取代，执行以这两份文件为准。
 > §10 的门禁脚本表不再维护，只作历史记录。
 
 # 变更执行手册（RUNBOOK）
 
-> 状态：`superseded`（由 docs/framework/MOXIAN.md 第 5、10、11、13 章取代，历史内容供追溯），2026-11-24。适用范围：本工作区每一个变更包（`CHG-<主域>-<NNN>`）从立项到关闭的全过程。
+> 状态：`superseded`（由独立仓 [MOXIAN.md](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 第 5、10、11、13 章取代，历史内容供追溯），2026-11-24。适用范围：本工作区每一个变更包（`CHG-<主域>-<NNN>`）从立项到关闭的全过程。
 > 用法：按七个阶段顺序走。每个阶段只做四件事，读入口条件、按编号步骤做、交产出物、过门禁，过了门禁才进下一阶段。
-> 本文件不判断流程好坏，六维基线见全局 `AGENTS.md`；状态与异常出口的定义在 [`MOXIAN.md`](../framework/MOXIAN.md) 第 5 章与第 12 章。
+> 本文件不判断流程好坏，六维基线见全局 `AGENTS.md`；状态与异常出口的定义在 [`MOXIAN.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 第 5 章与第 12 章。
 > 步骤编号 `R-<阶段序号>.<步骤序号>`，引用时写全号。门禁未实现的脚本在每阶段标注"待补"，当前按人工核对并留证据。
 
 ## 1 主线与阶段
 
-一条线走完一个变更包，依次是立项与范围、产品 spec、设计 spec、前端/后端 spec、实现、测试与验收、复盘与关闭。七个阶段与变更包七个状态的对应关系如下，状态定义见 [`MOXIAN.md`](../framework/MOXIAN.md) 表 5-3。
+一条线走完一个变更包，依次是立项与范围、产品 spec、设计 spec、前端/后端 spec、实现、测试与验收、复盘与关闭。七个阶段与变更包七个状态的对应关系如下，状态定义见 [`MOXIAN.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 表 5-3。
 
 | 阶段 | 步骤号段 | 进入时状态 | 退出时状态 | 谁推进 |
 |---|---|---|---|---|
@@ -24,7 +24,7 @@
 | 6 测试与验收 | `R-6.1`–`R-6.7` | `待验收` | `已验收` 或 `异常` | 实现者提交，验收、用户签字 |
 | 7 复盘与关闭 | `R-7.1`–`R-7.6` | `已验收` 或 `已回滚` | `已关闭` | owner、验收核，Lead 关闭 |
 
-任一阶段门禁红了，按 [`MOXIAN.md`](../framework/MOXIAN.md) 第 12 章登记异常，处理好回到被卡的那一步继续，不回到阶段 1 重来。
+任一阶段门禁红了，按 [`MOXIAN.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 第 12 章登记异常，处理好回到被卡的那一步继续，不回到阶段 1 重来。
 
 ## 2 阶段 1 · 立项与范围
 
@@ -150,7 +150,7 @@
 1. `R-5.1` 按任务卡改代码，改动文件不超出 `Scope`。
 2. `R-5.2` 每完成一条 AC 就运行对应断言与相关测试，命令与输出贴进 `evidence.md`。
 3. `R-5.3` 前端在 dev server 上过一遍状态矩阵并截图；后端只跑改动包及其直接依赖包测试。
-4. `R-5.4` 同步更新 OpenAPI 与组件登记；现状与 spec 不符时先停工记录，按 [`MOXIAN.md`](../framework/MOXIAN.md) 第 12 章登记。
+4. `R-5.4` 同步更新 OpenAPI 与组件登记；现状与 spec 不符时先停工记录，按 [`MOXIAN.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 第 12 章登记。
 5. `R-5.5` 自验结论写 `pass`、`partial`、`fail` 并附证据，不写"应该没问题"。
 6. `R-5.6` 每完成一步按 3 行向派单方汇报，派单方按批汇总对外汇报；检查点在每步完成与停下时更新，写已完成、未完成、下一步；交付时同步提交自验结论。
 
@@ -187,7 +187,7 @@
 2. `R-6.2` 跑点级增量用例，全绿后把状态从 `进行中` 改为 `待验收`，写提交时间。
 3. `R-6.3` 变更级跑一次全量回归与一次重建，数字写进证据簿；跑两次以上时说明原因。
 4. `R-6.4` 验收做变更级验收，抽查 3 至 5 条关键 AC，其余沿用上一轮证据并注明轮次。
-5. `R-6.5` 不通过按两种处理：点级不过，打回原实现者走查修验循环；变更级或出口级不过，按 [`MOXIAN.md`](../framework/MOXIAN.md) 第 12 章登记异常。
+5. `R-6.5` 不通过按两种处理：点级不过，打回原实现者走查修验循环；变更级或出口级不过，按 [`MOXIAN.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 第 12 章登记异常。
 6. `R-6.6` 签字：验收签后端契约、迁移与流程门禁；用户签前端效果。签字写日期与证据链接。
 7. `R-6.7` 状态改 `已验收`，未跑项与豁免在验收报告单列，写明批准人与批准时间。
 
@@ -216,14 +216,14 @@
 2. `R-7.2` 成本账取 `acp_cache`，写请求数、总输入、平均每次输入、估算金额与除式。
 3. `R-7.3` 回写长期 spec，补丁 10 至 20 行；更新 `docs/product/TRACEABILITY.md`。
 4. `R-7.4` 需要新口径的写进 `docs/plan/DECISIONS.md`，新条不改旧条。
-5. `R-7.5` 验收核复盘七节；本次有流程改动时，在 [`MOXIAN.md`](../framework/MOXIAN.md) 附录 D.2 写一行版本记录。
+5. `R-7.5` 验收核复盘七节；本次有流程改动时，在 [`MOXIAN.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 附录 D.2 写一行版本记录。
 6. `R-7.6` 状态改 `已关闭`，写关闭时间与复盘链接；有异常登记时与登记文件互相链接。
 
 产出物：
 
 - 复盘文件（七节齐全）；
 - 长期 spec 补丁与追溯矩阵更新；
-- `DECISIONS.md` 新条（如有）、[`MOXIAN.md`](../framework/MOXIAN.md) 附录 D.2 版本记录行（如有流程改动）。
+- `DECISIONS.md` 新条（如有）、[`MOXIAN.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 附录 D.2 版本记录行（如有流程改动）。
 
 门禁：
 
@@ -232,13 +232,13 @@
 
 ## 9 异常接入
 
-任一阶段门禁红、验收不通过或超时未交付，停在被卡的那一步，按 [`MOXIAN.md`](../framework/MOXIAN.md) 第 12 章在 24 小时内建 `docs/plan/FAIL-<CHG-ID>-<NN>.md`，用 [`templates/FAILURE.md`](templates/FAILURE.md) 填字段。裁决后按选定的出口执行：回滚到绿回阶段 5 重做，前向修契约回阶段 3 改设计再往下，缩范围回阶段 1 重定范围。执行完回到被卡的步骤继续，状态按 [`MOXIAN.md`](../framework/MOXIAN.md) 表 5-3 的合法迁移推进。
+任一阶段门禁红、验收不通过或超时未交付，停在被卡的那一步，按 [`MOXIAN.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 第 12 章在 24 小时内建 `docs/plan/FAIL-<CHG-ID>-<NN>.md`，用 [`templates/FAILURE.md`](templates/FAILURE.md) 填字段。裁决后按选定的出口执行：回滚到绿回阶段 5 重做，前向修契约回阶段 3 改设计再往下，缩范围回阶段 1 重定范围。执行完回到被卡的步骤继续，状态按 [`MOXIAN.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 表 5-3 的合法迁移推进。
 
 ## 10 门禁脚本落地情况
 
-以下门禁的脚本落地情况按 2026-11-25 的文件核对；尚未实现的部分仍按人工核对并留文字证据，不视为已通过。脚本补齐后把本表对应行改为已实现，并在 [`MOXIAN.md`](../framework/MOXIAN.md) 附录 D.2 记一行。
+以下门禁的脚本落地情况按 2026-11-25 的文件核对；尚未实现的部分仍按人工核对并留文字证据，不视为已通过。脚本补齐后把本表对应行改为已实现，并在 [`MOXIAN.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 附录 D.2 记一行。
 
-> 本表为 v0.9 之前的记录，不再维护；现行门禁以 [`GATES.md`](../framework/GATES.md) 为准，执行以 [`MOXIAN.md`](../framework/MOXIAN.md) 为准。
+> 本表为 v0.9 之前的记录，不再维护；现行门禁以 [`GATES.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/GATES.md) 为准，执行以 [`MOXIAN.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 为准。
 
 | 门禁 | 缺什么 | 当前替代做法 | owner | 目标日期 |
 |---|---|---|---|---|

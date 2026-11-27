@@ -55,7 +55,7 @@
 
 | 编号 | 改进内容 | 落到哪个文件、门禁或脚本 | 预期收益 |
 |---|---|---|---|
-| P01 | <动作> | `docs/framework/MOXIAN.md` 第 13 章 / `scripts/<name>.mjs` | <小时或金额> |
+| P01 | <动作> | [`MOXIAN.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 第 13 章 / `scripts/<name>.mjs` | <小时或金额> |
 | L01 | <动作> | `docs/process/templates/<name>.md` | <小时或金额> |
 
 示例：P01 的改进落到 `scripts/probe-cdp.mjs` 与派单门禁，预期省 8.6 小时。

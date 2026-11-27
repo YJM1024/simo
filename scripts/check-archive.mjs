@@ -19,6 +19,7 @@
 import { readFileSync, existsSync, readdirSync, statSync, mkdirSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, relative } from 'node:path';
+import { frameworkDir } from './lib/framework-root.mjs';
 import {
   parseArgs,
   resolveRuleMode,
@@ -67,12 +68,14 @@ export function parseTables(text) {
 }
 
 export function loadCtx(root, opts = {}) {
+  // 框架正文是外部依赖：读 SIMO_FRAMEWORK_ROOT（默认同级目录 ../moxian-framework）下的 docs/framework。
+  const fw = frameworkDir(root);
   const archive = opts.archive ?? 'docs/framework/archive/v1.7.5';
-  const archiveDir = join(root, archive);
+  const archiveDir = join(fw, archive.replace(/^docs\/framework\//, ''));
   const index = readTextSafe(join(archiveDir, 'INDEX.md'));
-  const appendixD = readTextSafe(join(root, 'docs/framework/v2/APPENDIX-D.md'));
-  const appendixC = readTextSafe(join(root, 'docs/framework/v2/APPENDIX-C.md'));
-  const changelog = readTextSafe(join(root, 'docs/framework/v2/CHANGELOG.md'));
+  const appendixD = readTextSafe(join(fw, 'v2/APPENDIX-D.md'));
+  const appendixC = readTextSafe(join(fw, 'v2/APPENDIX-C.md'));
+  const changelog = readTextSafe(join(fw, 'v2/CHANGELOG.md'));
   const retros = [];
   const planDir = join(root, 'docs/plan');
   if (existsSync(planDir)) {
@@ -121,6 +124,7 @@ export function loadCtx(root, opts = {}) {
   }
   return {
     root,
+    fw,
     archive,
     archiveDir,
     index,
@@ -146,7 +150,7 @@ function checkAppendixD(ctx) {
   if (!ctx.appendixD) {
     ctx.notes.push('附录 D 本体未发布，修订登记按 MOXIAN 附录节的六条登记核对');
     checks++;
-    const moxian = readTextSafe(join(ctx.root, 'docs/framework/MOXIAN.md')) ?? '';
+    const moxian = readTextSafe(join(ctx.fw, 'MOXIAN.md')) ?? '';
     const body = moxian.slice(moxian.indexOf('## 附录 A 至 D'));
     if (!/D-01/.test(body)) issues.push({ rule: 'MXV2-1-11', file: 'docs/framework/MOXIAN.md', msg: '附录节没有 D-01 条目登记' });
     return { checks, issues };
@@ -170,7 +174,7 @@ function checkRoleCard(ctx) {
   const issues = [];
   let checks = 0;
   checks++;
-  if (!existsSync(join(ctx.root, 'docs/framework/ROLES.md'))) {
+  if (!existsSync(join(ctx.fw, 'ROLES.md'))) {
     issues.push({ rule: 'MXV2-3-13', file: 'docs/framework/ROLES.md', msg: '角色卡正文文件不存在' });
   }
   if (ctx.appendixD) {
@@ -178,7 +182,7 @@ function checkRoleCard(ctx) {
     checks++;
     if (!hasRole) issues.push({ rule: 'MXV2-3-13', file: 'docs/framework/v2/APPENDIX-D.md', msg: '附录 D 没有角色卡修订行' });
   }
-  const dir = join(ctx.root, 'docs/framework');
+  const dir = ctx.fw;
   if (existsSync(dir)) {
     for (const f of readdirSync(dir)) {
       if (!f.endsWith('.md') || f === 'ROLES.md') continue;

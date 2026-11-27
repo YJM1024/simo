@@ -1,85 +1,21 @@
-﻿# 墨线框架入口
+# 框架已迁至独立仓
 
-框架版本 `v2.0.0`，版本号以 `VERSION` 为准，本页不重复写数字。这一页回答三个问题：每个文件管什么，门禁怎么跑，出问题怎么回滚。
+墨线框架（MOXIAN）正文自 2026-11-27 起由独立仓维护，主仓 simo 不再保存框架正文。本目录只留这一份指针，条文、模板、角色卡与门禁判据都不在这里。当前版本 `v2.0.0`。
 
-## 1 目录与职责
+| 项 | 值 |
+|---|---|
+| 仓库 | [YJM1024/moxian-framework](https://github.com/YJM1024/moxian-framework) |
+| 克隆（SSH） | `git clone git@github.com:YJM1024/moxian-framework.git` |
+| 克隆（HTTPS） | `git clone https://github.com/YJM1024/moxian-framework.git` |
+| 仓内路径 | `docs/framework/`，与本仓迁出前的相对结构一致 |
+| 旧版副本 | `docs/framework/archive/v1.7.3/` 与 `docs/framework/archive/v1.7.5/`，只读 |
 
-框架顶层九个文件，各自只有一个职责，条文只在 `MOXIAN.md` 写一次。
-
-表 1-1 九个文件
-
-| 文件 | 职责 | 什么时候读 |
-|---|---|---|
-| `MOXIAN.md` | 九章一百五十八条规则，范围、术语、角色、流程、任务类型、规则格式、门禁、验收、异常与回滚 | 任何需要判据与条文的时候 |
-| `TASK-MATRIX.md` | 八类任务乘六个阶段的取值、动作、模板与门禁，附六十六格映射 | 任务开工前判类型与取动作 |
-| `ROLES.md` | 七个角色的可写范围、禁止事项与交接要求 | 派单、交接、签字前 |
-| `EFFORT.md` | 四档投入、四十八格档位表、取档与降档规则 | 派单写档位时 |
-| `GATES.md` | 门禁条目、规则归位、脚本对应、二十四条人工判据与未决项 | 跑门禁、核对判据时 |
-| `ADOPTION.md` | 存量项目迁移到 v2 的步骤与判据 | 接入既有项目时 |
-| `VERSION` | 当前版本号，一行 | 任何引用版本的地方 |
-| `v2/CHANGELOG.md` | 版本变更记录与差异摘要 | 升级、回滚、对外说明时 |
-| `README.md` | 本页，入口与导航 | 第一次进入框架时 |
-
-子目录五个：`v2/` 放设计（施工步骤在 `DESIGN.md` 的「怎么实施」节）、日志、回滚与来源，索引见 `v2/README.md`；`adapters/` 放适配层；`domains/` 放各域增量；`templates/` 放模板；`archive/` 放历史版本副本。
-
-九个文件的关系是引用关系，不是复制关系。矩阵、角色、档位与门禁都指向 `MOXIAN.md` 的规则位，改条文只改一处。
-
-## 2 九章一览
-
-| 章 | 主题 | 条数 |
-|---|---|---|
-| 第 1 章 | 目的、范围与自证 | 12 |
-| 第 2 章 | 术语、编号与状态 | 14 |
-| 第 3 章 | 角色与授权 | 16 |
-| 第 4 章 | 流程点链与流转 | 24 |
-| 第 5 章 | 任务类型与规格分层 | 18 |
-| 第 6 章 | 规则格式与判定 | 18 |
-| 第 7 章 | 门禁与证据 | 22 |
-| 第 8 章 | 验收与发布 | 18 |
-| 第 9 章 | 异常、回滚与复盘 | 16 |
-| 附录 A 至附录 D | 模板索引、旧号索引、修订登记、未决项 | 不计入条数 |
-
-合计一百五十八条。附录 D 的六条是暂不立规的机制条款，单独计数，不与正文混算。
-
-## 3 怎么跑门禁
-
-门禁按三个时机跑，命令只有一条汇总入口，单门禁可以单独跑。
+获取方式是在本仓同级目录克隆，保持默认目录名 `moxian-framework`：
 
 ```
-node scripts/verify-all.mjs --stage pre     # 提交前：结构、追溯、语言、契约、规则卡、册内自证
-node scripts/verify-all.mjs --stage point   # 点级：pre 全部加增量覆盖与证据门
-node scripts/verify-all.mjs --stage exit    # 出口级：全部门禁加真机与安装路径
+git clone git@github.com:YJM1024/moxian-framework.git ../moxian-framework
 ```
 
-单门禁示例：
+门禁脚本按环境变量 `SIMO_FRAMEWORK_ROOT` 找框架正文，变量指向框架仓根目录，默认取同级目录 `../moxian-framework`。变量未设置且同级目录也不存在时，脚本再找本仓子目录 `moxian-framework/`。脚本读的是 `$SIMO_FRAMEWORK_ROOT/docs/framework/` 下的文件，不在本仓恢复副本。
 
-```
-node scripts/check-gates.mjs --stage pre --change CHG-FW-002
-```
-
-退出码 0 为通过，非 0 为阻断。失败时先看第一个非 0 的门禁，修完再跑整条，不在多个失败之间来回跳。
-
-脚本一组十八个，全部已建并可跑：`check-mapping.mjs`、`check-points.mjs`、`check-rule-fields.mjs`、`check-archive.mjs`、`check-docs.mjs`、`check-visual-baseline.mjs`、`check-spec-language.mjs`、`check-trace.mjs`、`check-gates.mjs`、`check-evidence.mjs`、`ac-coverage.mjs`、`check-matrix-coverage.mjs`、`check-contract.mjs`、`measure-perf.mjs`、`run-ac.mjs`、`check-incremental-coverage.mjs`、`check-fp-coverage.mjs`、`probe-cdp.mjs`。总册一百五十八条按执行手段分为 script 四十五条与 ai-review 一百一十三条，人工判定按下一段四要素记录，清单见 `GATES.md` 第 2 节。
-
-ai-review 一百一十三条的判定人、判据落点与旧号归宿见 `GATES.md` 第 3 节。人工判定记录写四要素：规则位、判据、结论、核对人与时间，结论只写通过或待补。
-
-## 4 怎么回滚
-
-回滚分四类，先看改动处在哪一层，再选动作。用户可感知的回滚以恢复可用为准，不以恢复文件为准。
-
-未提交的单文件改动，用 `git restore -- <文件>` 恢复。已提交未推送，用 `git revert <提交号>` 生成反向提交。已推送同样用 `git revert`，不改写历史。运行时开关引起的故障，先关开关再回滚代码，关闭前写五项：开关名、影响范围、关闭后的降级行为、验证方式、恢复条件。
-
-回滚之后做三步：跑一次复验命令，确认指标回到基线；把回滚原因、影响面、恢复时间写进异常记录；把结论回写到变更包、证据索引、复盘与决策记录四处。禁止 `git reset --hard`、`git clean -fdx` 与 `git push --force`（MXV2-9-01）。回滚点、回滚命令与复验输出三项必须可查，缺一项按回滚不可用处理。
-
-## 5 怎么用
-
-1. 查 `TASK-MATRIX.md` 判任务类型与六个阶段的动作，档位按 `EFFORT.md` 取。
-2. 按 `MOXIAN.md` 第 4 章建变更包、拆点链、写派单卡，按 `ROLES.md` 找 owner。
-3. 按第 7 章跑门禁，按第 8 章验收与放行，出问题按第 9 章回滚与复盘。
-
-## 6 版本与维护
-
-版本号只有 `VERSION` 一处，变更记录只有 `v2/CHANGELOG.md` 一处，条数与门禁计数只有 `MOXIAN.md` 一处（MXV2-1-09）。改条文登记附录 D，改规则卡登记附录 C，改角色卡登记附录 D。新增规则先写判据，再写执行手段，写不出判据的进附录 D，不硬凑条目。
-
-旧版 v1.7.5 的副本在 `archive/v1.7.5/`，只读。旧号到新位的索引在 `MOXIAN.md` 附录 B，查历史引用时用索引，不在正文恢复旧号。
-
+主仓内与框架有关的改动，例如规则修订、模板调整与门禁判据变更，一律提到独立仓，走独立仓的变更包与门禁；本仓的引用只保留链接与版本号。迁移前的完整副本按只读归档放在删除区 `E:\dsh_home\trash\pending-delete\framework-out-20261127\docs\framework\`，用于追溯，不再随本仓演进。

@@ -31,6 +31,7 @@ import {
   fixtureDir,
   createAsserter,
 } from './lib/v2-rule-mode.mjs';
+import { frameworkDir } from './lib/framework-root.mjs';
 
 const NAME = 'check-mapping';
 const RULES = [
@@ -113,13 +114,16 @@ export function loadCtx(root, opts = {}) {
     };
     return { id, dir, rel, exists: existsSync(dir), files, mtime, notes: [] };
   });
+  // 框架正文是外部依赖：读 SIMO_FRAMEWORK_ROOT（默认同级目录 ../moxian-framework）下的 docs/framework。
+  const fw = frameworkDir(root);
   return {
     root,
+    fw,
     packages,
     notes: [],
     trace: readTextSafe(join(root, 'docs/product/TRACEABILITY.md')),
-    moxian: readTextSafe(join(root, 'docs/framework/MOXIAN.md')),
-    archiveMoxian: readTextSafe(join(root, 'docs/framework/archive/v1.7.5/MOXIAN.md')),
+    moxian: readTextSafe(join(fw, 'MOXIAN.md')),
+    archiveMoxian: readTextSafe(join(fw, 'archive/v1.7.5/MOXIAN.md')),
   };
 }
 
@@ -446,7 +450,7 @@ ${mut === 'dup' ? '| REQ-1.1 | 已冻结 | 重复行 |\n' : ''}| REQ-1.2 | 已�
     mkdirSync(chg, { recursive: true });
     mkdirSync(join(base, 'docs/product'), { recursive: true });
     mkdirSync(join(base, 'docs/framework'), { recursive: true });
-    writeFileSync(join(chg, 'proposal.md'), proposal(mut));
+    if (mut !== 'noproposal') writeFileSync(join(chg, 'proposal.md'), proposal(mut));
     if (mut !== 'nospec') writeFileSync(join(chg, 'spec.md'), '# 规格 · CHG-TST-001\n');
     writeFileSync(join(chg, 'change.md'), change(mut));
     writeFileSync(join(chg, 'LINKAGE.md'), linkage(mut));
@@ -463,7 +467,7 @@ ${mut === 'dup' ? '| REQ-1.1 | 已冻结 | 重复行 |\n' : ''}| REQ-1.2 | 已�
   a.assert(good.count >= 12, `检查项数覆盖九类检查（实际 ${good.count}）`);
 
   const cases = [
-    ['nospec', 'MXV2-1-01', '缺 spec.md'],
+    ['noproposal', 'MXV2-1-01', '缺 proposal.md'],
     ['intake', 'MXV2-4-02', '受理六项缺'],
     ['na', 'MXV2-4-05', 'N/A 理由'],
     ['link7', 'MXV2-4-11', '应八列'],

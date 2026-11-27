@@ -48,4 +48,4 @@
 
 ## 7. 链接
 
-- spec/evidence；`docs/framework/GATES.md` 测试门禁。
+- spec/evidence；[`GATES.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/GATES.md) 测试门禁。

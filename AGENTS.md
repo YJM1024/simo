@@ -38,16 +38,17 @@ baseline: 5518EE4A04E0
 ## 规格与流程
 
 - **全局规则**：动手前读 `$DSH_HOME/rules/spec-workflow.md`（spec 分层/六类产物/门禁）与 `$DSH_HOME/rules/agent-development.md`（角色/交接/测试/验收）；本文件只做项目索引，不复制细则。
-- **执行框架**：项目执行框架见 [`docs/framework/MOXIAN.md`](docs/framework/MOXIAN.md)，入口说明见 [`docs/framework/README.md`](docs/framework/README.md)。
+- **框架正文在独立仓**：墨线框架（MOXIAN）正文自 2026-11-27 起由独立仓 [YJM1024/moxian-framework](https://github.com/YJM1024/moxian-framework) 维护，版本 `v2.0.0`，仓内路径 `docs/framework/`；本仓只留指针 [`docs/framework/README.md`](docs/framework/README.md)，不再保存条文、模板与角色卡。脚本按环境变量 `SIMO_FRAMEWORK_ROOT` 查找框架，未设置时取同级目录 `../moxian-framework`。
+- **执行框架**：项目执行框架见 [MOXIAN.md（独立仓）](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md)，入口说明见 [`docs/framework/README.md`](docs/framework/README.md)。
 - **项目事实**：功能树 [`docs/product/TREE.md`](docs/product/TREE.md)；ID 规范 [`docs/product/ID-SPEC.md`](docs/product/ID-SPEC.md)；追溯 [`docs/product/TRACEABILITY.md`](docs/product/TRACEABILITY.md)；缺口 [`docs/product/SPEC-GAP.md`](docs/product/SPEC-GAP.md)。
-- **变更入口**：任何需求先建 `specs/changes/<CHG-ID>/proposal.md`，立项字段写 proposal.md，契约索引与 AC 判据写同一变更包的 `spec.md`，两份文件同批建立，建域也走变更包。域已存在时读长期 spec 写增量，域不存在时在同一次变更里建四列；两种关系可以并存，见 [`docs/framework/MOXIAN.md`](docs/framework/MOXIAN.md) 第 5 章。
+- **变更入口**：任何需求先建 `specs/changes/<CHG-ID>/proposal.md`，立项字段写 proposal.md，契约索引与 AC 判据写同一变更包的 `spec.md`，两份文件同批建立，建域也走变更包。域已存在时读长期 spec 写增量，域不存在时在同一次变更里建四列；两种关系可以并存，见 [MOXIAN.md（独立仓）](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 第 5 章。
 - **六类产物**：产品 spec、前端开发 spec、后端开发 spec、组件 spec（如适用）、任务卡、测试 spec；不涉及写 `N/A + 理由`。
 - **测试同步**：用例加到 `specs/test/<域>/test-plan.md`，不新建“每功能一测试 spec”；证据缺失写 `missing`，不得写“通过”。
-- **按 ROLES 交接**：按 [`docs/framework/ROLES.md`](docs/framework/ROLES.md) 的 owner/评审/交接物执行，不跨写作用域；实现者不改别人的 scope。
+- **按 ROLES 交接**：按 [ROLES.md（独立仓）](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/ROLES.md) 的 owner/评审/交接物执行，不跨写作用域；实现者不改别人的 scope。
 - **任务五要素**：每个任务必须写清 **owner / scope / 验收标准 / 证据 / 禁止项**；缺一不可派发。
 - **不得自签**：实现者不得给自己的视觉/功能签字；视觉/功能签字由**验收 Agent** 独立完成。
 - **用户验收边界**：用户只验收**前端效果**（视觉/交互/可用性）；后端契约、数据迁移、流程门禁由**验收 Agent** 签字。
-- **任务判级**：先按 [`docs/framework/TASK-MATRIX.md`](docs/framework/TASK-MATRIX.md) 判定八类任务，再按主 skill 执行；通用门禁见 [`docs/framework/GATES.md`](docs/framework/GATES.md)；模板见 [`docs/framework/templates/`](docs/framework/templates/) 与 [`docs/process/templates/`](docs/process/templates/)。
+- **任务判级**：先按 [TASK-MATRIX.md（独立仓）](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/TASK-MATRIX.md) 判定八类任务，再按主 skill 执行；通用门禁见 [GATES.md（独立仓）](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/GATES.md)；模板见 [`templates/`（独立仓）](https://github.com/YJM1024/moxian-framework/tree/main/docs/framework/templates) 与 [`docs/process/templates/`](docs/process/templates/)。
 
 ## 时间类验收（2026-11-25 起）
 
@@ -68,14 +69,14 @@ baseline: 5518EE4A04E0
 
 ## 流程投影（2026-11-22 起，本工作区生效）
 
-流程总纲见 [`docs/framework/MOXIAN.md`](docs/framework/MOXIAN.md)，语言标准见 [`docs/process/SPEC-STANDARD.md`](docs/process/SPEC-STANDARD.md)。本节只写执行口径的投影，定义以这两份文件为准。
+流程总纲见 [MOXIAN.md（独立仓）](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md)，语言标准见 [`docs/process/SPEC-STANDARD.md`](docs/process/SPEC-STANDARD.md)。本节只写执行口径的投影，定义以这两份文件为准。
 
 - **唯一入口**：变更 spec 是唯一入口，建域型变更也在变更包里登记；长期 spec 与变更只有读、写两种关系。
 - **组织方式**：需求点树是唯一组织方式，点编号 `REQ-x.y`，每点四件套（契约、前端、后端、断言），缺一件不算点。
 - **交付单元**：点做完、增量测试过、自验过即交付，不等整线。
 - **判据冻结**：点开工前 AC 必须有脚本或人工判据，否则不开工。
 - **验收层级**：点级跑增量，变更级做一次全量回归与一次重建，出口级做一次真机。
-- **每需求必复盘**：点完成写 `docs/plan/RETRO-<YYYYMMDD>-<需求点ID>.md`，变更完成写 `docs/plan/RETRO-CHG-<CHG-ID>.md`，建域型变更另写证据文件；七节骨架与填写口径见 [`docs/framework/MOXIAN.md`](docs/framework/MOXIAN.md) 第 13 章与 [`templates/RETRO.md`](docs/process/templates/RETRO.md)，复盘缺失视为该需求未完成。
+- **每需求必复盘**：点完成写 `docs/plan/RETRO-<YYYYMMDD>-<需求点ID>.md`，变更完成写 `docs/plan/RETRO-CHG-<CHG-ID>.md`，建域型变更另写证据文件；七节骨架与填写口径见 [MOXIAN.md（独立仓）](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 第 13 章与 [`templates/RETRO.md`](docs/process/templates/RETRO.md)，复盘缺失视为该需求未完成。
 - **汇报顺序**：先讲用户能感知的结果与变化，再讲还差什么；需求点树、每点档位与卡点只在用户问进度时给，具体改动放在末尾一节。
 
 ## 当前阶段与下一步（2026-11-22）
@@ -83,14 +84,14 @@ baseline: 5518EE4A04E0
 - 阶段 1 会话域已收口：P1 会话域 12 个 PRD 全部 `covered`，33 条 AC 全部 pass，验收报告 [`ACCEPT-CONV-10-20261122.md`](docs/testing/ACCEPT-CONV-10-20261122.md) 整线签字；`AC-CONV-005-02` 因厂商接口 403 不可达，改按机制判据（假上游证明 context 取消、delta 归零、不落库、回 idle），证据是 [`stop_upstream_test.go`](backend/internal/modules/chat/stop_upstream_test.go)。
 - 组件签字：5 个组件 spec 全部 `accepted`（`COMP-message-colors`、`COMP-timeline-groups`、`COMP-timeline-tip`、`COMP-composer-send-mode`、`COMP-conversation-panel`），签收记录见 [`COMP-SIGN-20261121.md`](docs/testing/COMP-SIGN-20261121.md) 的复签节与 [`COMP-SIGN-3-20261122.md`](docs/testing/COMP-SIGN-3-20261122.md)。
 - 部署基线：`backend/simo-8787-final10.exe`（buildId `mwrpos0p-d8dkh`）由主会话后台 job 持有，`/api/health` 返回 200。
-- 流程文件：总纲 [`docs/framework/MOXIAN.md`](docs/framework/MOXIAN.md) 十三章与附录 A 至附录 D、语言标准 [`SPEC-STANDARD.md`](docs/process/SPEC-STANDARD.md) 216 行、模板 [`RETRO.md`](docs/process/templates/RETRO.md)、[`DECISIONS.md`](docs/plan/DECISIONS.md) 的 DEC-11 至 DEC-31 均已落盘。
-- 入仓：本地 `main` 当前为 `f47818537c067d43719c7ed2f374d748ccd600b7`，`origin/main` 为 `165887cca3cb2c32292089ba8d3c26cca67a13f7`，本地比远端多一次提交且尚未推送；后续用 Git CLI，推送时需现场提供 token（代理对 github 返回 403，SSH 在沙箱不可用）；回滚按 [`MOXIAN.md`](docs/framework/MOXIAN.md) 第 12 章的 MX-12-01 执行，未提交的单文件改动用 `git restore -- <文件>`，已推送的提交用 `git revert <提交号>`，禁止 `git reset --hard`、`git clean -fdx` 与 `git push --force`。B1（P2 任务域与 P4 文件域）已 parked，代码保留、文档标注、未提交，重启需用户批准。
+- 流程文件：总纲 [MOXIAN.md（独立仓）](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 十三章与附录 A 至附录 D、语言标准 [`SPEC-STANDARD.md`](docs/process/SPEC-STANDARD.md) 216 行、模板 [`RETRO.md`](docs/process/templates/RETRO.md)、[`DECISIONS.md`](docs/plan/DECISIONS.md) 的 DEC-11 至 DEC-31 均已落盘。
+- 入仓：本地 `main` 当前为 `f47818537c067d43719c7ed2f374d748ccd600b7`，`origin/main` 为 `165887cca3cb2c32292089ba8d3c26cca67a13f7`，本地比远端多一次提交且尚未推送；后续用 Git CLI，推送时需现场提供 token（代理对 github 返回 403，SSH 在沙箱不可用）；回滚按 [MOXIAN.md（独立仓）](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 第 12 章的 MX-12-01 执行，未提交的单文件改动用 `git restore -- <文件>`，已推送的提交用 `git revert <提交号>`，禁止 `git reset --hard`、`git clean -fdx` 与 `git push --force`。B1（P2 任务域与 P4 文件域）已 parked，代码保留、文档标注、未提交，重启需用户批准。
 
 下阶段按顺序推进，未获用户确认不开工。
 
 1. 六个脚本已落地：`scripts/check-spec-language.mjs`、`scripts/ac/<AC-ID>.mjs` 与 `scripts/run-ac.mjs`、`scripts/probe-cdp.mjs`、`scripts/ac-coverage.mjs`、`scripts/serve.ps1` 与汇总脚本 `scripts/check-gates.mjs`。门禁扩展规则尚未实现的部分是 `MX-G-14` 至 `MX-G-19` 与 `MX-G-21` 至 `MX-G-25`，当前按人工判据执行，登记见 `GATES.md` 第 4 节与第 6 节、总册附录 B 与 U-12。
 2. 把 33 条 AC 按 [`SPEC-STANDARD.md`](docs/process/SPEC-STANDARD.md) 第 2.6 节五步迁移到新语言并补断言，先做“已有测试映射版”，用实测校准建域成本。
-3. 扩写 [`docs/framework/MOXIAN.md`](docs/framework/MOXIAN.md) 第 8.2 节的并发规则：现有 MX-8-08 至 MX-8-10 只覆盖接口形状与前后端并行，AC 与判据冻结、四列长期 spec 并行、断言按 HTTP、单元组件与 CDP 三组并行（CDP 组排队）、数据库迁移串行与变更级一次全量回归仍待写入；现行并行与串行约束按第 7 章 MX-7-07 与表 7-3 执行。
+3. 扩写 [MOXIAN.md（独立仓）](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/MOXIAN.md) 第 8.2 节的并发规则：现有 MX-8-08 至 MX-8-10 只覆盖接口形状与前后端并行，AC 与判据冻结、四列长期 spec 并行、断言按 HTTP、单元组件与 CDP 三组并行（CDP 组排队）、数据库迁移串行与变更级一次全量回归仍待写入；现行并行与串行约束按第 7 章 MX-7-07 与表 7-3 执行。
 4. 下一批从 P2 至 P10 九域里选，选哪一批等用户定；[`TREE-FULL.md`](docs/product/TREE-FULL.md) 有十域 71 个功能点与四批划分（B1 核心闭环、B2 权限与配置底座、B3 能力扩展、B4 完善与洞察），B1 当前 parked。
 
 ## 任务拆分与 Agent 派发

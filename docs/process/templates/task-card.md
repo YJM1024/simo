@@ -56,4 +56,4 @@
 ## 8. 链接
 
 - spec/design/test-plan
-- 角色：`docs/framework/ROLES.md`
+- 角色：[`ROLES.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/ROLES.md)

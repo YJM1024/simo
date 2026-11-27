@@ -3,6 +3,7 @@
  * 规则级命令已移交 ai-review（MOXIAN 对应执行行注明“该脚本为批处理入口，不支持单跑”）；
  * 本脚本作为整套门禁运行，不再解析 --rule。
  * check-evidence.mjs — 证据完整性门禁（零依赖，只读）
+ * 框架正文是外部依赖：正文在 SIMO_FRAMEWORK_ROOT（默认同级目录 ../moxian-framework）下的 docs/framework；本脚本只在注释与提示文案里引用该路径，不读框架文件。
  *
  * 依据 docs/framework/GATES.md 第 3.6 节与 docs/framework/templates/evidence-index.md。
  * 输入是本轮 AC 清单、证据索引与夹具清单，检查每条 AC 是否有证据行、判定值是否合法、
@@ -82,6 +83,7 @@ import {
 import { createHash } from 'node:crypto'
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { frameworkDir } from './lib/framework-root.mjs'
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = resolve(SCRIPT_DIR, '..')
@@ -620,6 +622,17 @@ function isPlaceholderPath(value) {
   return PLACEHOLDER_PATH.test(String(value ?? '').trim())
 }
 
+/** 证据路径里的 docs/framework/... 指向外部框架仓（SIMO_FRAMEWORK_ROOT，默认 ../moxian-framework）。 */
+function resolveEvidencePath(root, target) {
+  if (isAbsolute(target)) return target
+  const rel = normalizePath(target)
+  if (rel === 'docs/framework') return frameworkDir(root)
+  if (rel.startsWith('docs/framework/')) {
+    return join(frameworkDir(root), ...rel.slice('docs/framework/'.length).split('/'))
+  }
+  return join(root, ...rel.split('/'))
+}
+
 function checkPath(root, value, result) {
   const raw = String(value ?? '').trim()
   if (isPlaceholderPath(raw)) {
@@ -637,7 +650,8 @@ function checkPath(root, value, result) {
   }
   // 路径列允许带节锚点（如 `.../evidence.md §1`），锚点不是路径的一部分。
   const target = raw.replace(/\s*§\s*\d+(?:\.\d+)*\s*$/, '')
-  const abs = isAbsolute(target) ? target : join(root, ...normalizePath(target).split('/'))
+  // 框架正文是外部依赖：docs/framework/... 指向独立仓（SIMO_FRAMEWORK_ROOT，默认 ../moxian-framework）。
+  const abs = resolveEvidencePath(root, target)
   if (!existsSync(abs)) return { status: 'FAIL', detail: `路径不存在：${raw}` }
   let stats
   try {

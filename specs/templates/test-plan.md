@@ -28,7 +28,7 @@
 > 每个用例必须写：对应 PRD、前置、步骤、断言、层级、当前证据。
 > 证据只能是：`missing`、`skipped（原因/owner）`、`命令 + 通过/失败 + 日期`、截图/日志路径。
 > 不得把“测试计划文件存在”当作 `passed`。
-> 时间类用例须写明推进量与推进方式，并写清推进后期望发生与不期望发生的行为；判据写法见 `docs/framework/domains/testing.md` 的 MX-QA-70。
+> 时间类用例须写明推进量与推进方式，并写清推进后期望发生与不期望发生的行为；判据写法见 [`domains/testing.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/domains/testing.md) 的 MX-QA-70。
 
 ### PRD-<DOM>-001 · <功能点名称>
 

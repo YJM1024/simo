@@ -16,7 +16,7 @@
 | [`docs/CONTINUITY.md`](docs/CONTINUITY.md) | **项目完整记录与续接入口**（当前状态、未完成项、工作流程） |
 | [`docs/product/TREE.md`](docs/product/TREE.md) | 产品功能树：P1–P10 能力域、71 个 PRD、状态与 spec/测试链接 |
 | [`specs/README.md`](specs/README.md) | 规格总索引：产品域 / 变更包 / 域测试计划 / COMP / 模板 |
-| [`docs/framework/README.md`](docs/framework/README.md) | 墨线 SDD 框架入口：定位、目录、使用顺序与维护规则 |
+| [`docs/framework/README.md`](docs/framework/README.md) | 指针：框架正文已迁至独立仓 [moxian-framework](https://github.com/YJM1024/moxian-framework)（v2.0.0），含获取方式与脚本查找规则 |
 
 ## 30 秒启动
 

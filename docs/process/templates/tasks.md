@@ -25,4 +25,4 @@
 ## 链接
 
 - `task-card.md`（单卡模板）
-- `docs/framework/ROLES.md` 角色交接
+- [`ROLES.md`](https://github.com/YJM1024/moxian-framework/blob/main/docs/framework/ROLES.md) 角色交接

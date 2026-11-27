@@ -3,6 +3,7 @@
  * 规则级命令已移交 ai-review（MOXIAN 对应执行行注明“该脚本为批处理入口，不支持单跑”）；
  * 本脚本作为整套门禁运行，不再解析 --rule。
  * check-contract.mjs — 墨线契约一致性门禁（零依赖，只读真实仓库；自检只写 .tmp 夹具）
+ * 框架正文是外部依赖：正文在 SIMO_FRAMEWORK_ROOT（默认同级目录 ../moxian-framework）下的 docs/framework；本脚本只在注释与提示文案里引用该路径，不读框架文件。
  *
  * 依据：docs/framework/GATES.md 第 3.4 节 MX-G-26 至 MX-G-31，
  *       契约表字段见 docs/framework/templates/contract-table.md，

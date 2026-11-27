@@ -15,6 +15,7 @@
  */
 import { readFileSync, existsSync, readdirSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { frameworkDir } from './lib/framework-root.mjs';
 import {
   parseArgs,
   resolveRuleMode,
@@ -39,14 +40,17 @@ function readTextSafe(path) {
 
 export function loadCtx(root) {
   const read = (rel) => readTextSafe(join(root, rel));
+  // 框架正文是外部依赖：读 SIMO_FRAMEWORK_ROOT（默认同级目录 ../moxian-framework）下的 docs/framework。
+  const fw = frameworkDir(root);
+  const fwRead = (rel) => readTextSafe(join(fw, rel));
   return {
     root,
-    version: read('docs/framework/VERSION')?.trim() ?? null,
-    moxian: read('docs/framework/MOXIAN.md'),
+    version: fwRead('VERSION')?.trim() ?? null,
+    moxian: fwRead('MOXIAN.md'),
     readme: read('README.md'),
-    frameworkReadme: read('docs/framework/README.md'),
-    gates: read('docs/framework/GATES.md'),
-    acceptDir: join(root, 'docs/framework/accept'),
+    frameworkReadme: fwRead('README.md'),
+    gates: fwRead('GATES.md'),
+    acceptDir: join(fw, 'accept'),
     notes: [],
   };
 }
