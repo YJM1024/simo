@@ -45,17 +45,17 @@
 
 | ID | 规则 | 验收标准 | 测试 |
 |---|---|---|---|
-| M0 | 迁移范围由智能体智能判断（用户可显式指定覆盖） | 智能体决定哪些消息/数据随迁；用户给出范围时按用户；不确定先问 | 评测：`eval-m0-migrate-scope` |
-| M1 | 智能体可在任意时刻判断需要新子会话 | 创建子会话成功 | 后端：`TestSessionSplitCreate` |
-| M2 | 回溯范围按语义，不按固定条数；支持任意消息 id 集合 | 可迁移任意消息列表；用户指定优先 | 后端：`TestMessageMigrateArbitraryIDs` |
-| M3 | 用户与智能体消息成对迁移，顺序保持 | 迁移后顺序与原顺序一致 | 后端：`TestMessageMigrateOrder` |
-| M4 | 内容不变：正文/时间戳/附件/卡片/引用 | 字段逐一相等（除归属） | 后端：`TestMessageMigratePreservesContent` |
-| M5 | 归属重写：目标会话 + 可选目标智能体 | sessionId/agentId 正确，原会话移除 | 后端：`TestMessageMigrateOwnership` |
-| M6 | 来源可追溯：`migratedFrom` + 审计事件 | 迁移记录可查，内容不被改写 | 后端：`TestMessageMigrateProvenance` |
-| M7 | 单事务、幂等：重复迁移不重复 | 同一批重复执行结果一致 | 后端：`TestMessageMigrateIdempotent` |
-| M8 | 不产生任何系统/提示消息 | 迁移后消息数 = 原消息数（目标） | 后端：`TestMessageMigrateNoSyntheticMessages` |
-| M9 | 跨智能体迁移遵守人格/权限 | 非授权智能体不能迁；负责人可迁 | 后端：`TestMessageMigrateAgentPermission` |
-| M10 | 可回滚：按 migratedFrom 移回 | 回滚后原会话/原智能体恢复 | 后端：`TestMessageMigrateRollback` |
+| 迁移-0 | 迁移范围由智能体智能判断（用户可显式指定覆盖） | 智能体决定哪些消息/数据随迁；用户给出范围时按用户；不确定先问 | 评测：`eval-m0-migrate-scope` |
+| 迁移-1 | 智能体可在任意时刻判断需要新子会话 | 创建子会话成功 | 后端：`TestSessionSplitCreate` |
+| 迁移-2 | 回溯范围按语义，不按固定条数；支持任意消息 id 集合 | 可迁移任意消息列表；用户指定优先 | 后端：`TestMessageMigrateArbitraryIDs` |
+| 迁移-3 | 用户与智能体消息成对迁移，顺序保持 | 迁移后顺序与原顺序一致 | 后端：`TestMessageMigrateOrder` |
+| 迁移-4 | 内容不变：正文/时间戳/附件/卡片/引用 | 字段逐一相等（除归属） | 后端：`TestMessageMigratePreservesContent` |
+| 迁移-5 | 归属重写：目标会话 + 可选目标智能体 | sessionId/agentId 正确，原会话移除 | 后端：`TestMessageMigrateOwnership` |
+| 迁移-6 | 来源可追溯：`migratedFrom` + 审计事件 | 迁移记录可查，内容不被改写 | 后端：`TestMessageMigrateProvenance` |
+| 迁移-7 | 单事务、幂等：重复迁移不重复 | 同一批重复执行结果一致 | 后端：`TestMessageMigrateIdempotent` |
+| 迁移-8 | 不产生任何系统/提示消息 | 迁移后消息数 = 原消息数（目标） | 后端：`TestMessageMigrateNoSyntheticMessages` |
+| 迁移-9 | 跨智能体迁移遵守人格/权限 | 非授权智能体不能迁；负责人可迁 | 后端：`TestMessageMigrateAgentPermission` |
+| 迁移-10 | 可回滚：按 migratedFrom 移回 | 回滚后原会话/原智能体恢复 | 后端：`TestMessageMigrateRollback` |
 
 ## 4. 记忆随迁移
 

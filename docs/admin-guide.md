@@ -1,4 +1,4 @@
-# 司墨管理员指南（M41 完成态）
+# 司墨管理员指南
 
 > 面向部署/维护者：安装、配置、数据目录、日志、Key 安全、外部依赖、定时任务、备份迁移与故障排查。
 > 可执行文件名为 **`simo.exe`**（司墨）；内部 Go module 仍叫 `simo`（源码路径/构建包名不变，不影响运行与使用）。
@@ -197,7 +197,7 @@ $env:SIMO_REASONING_DEFAULT = "low"
 
 ## 5. 外部依赖：Chrome / Python（PDF、Office 与 run_python）
 
-M12 起支持生成 PDF / Word / Excel / PPT / 图片；M17 起支持通用 `run_python`；都依赖本机外部程序。**缺失时工具会返回明确错误**，不会静默降级。
+生成 PDF / Word / Excel / PPT / 图片与通用 `run_python` 都依赖本机外部程序。**缺失时工具会返回明确错误**，不会静默降级。
 
 ### 5.1 PDF（Chrome / Edge）
 
@@ -231,13 +231,13 @@ $env:SIMO_PYTHON = "<python.exe 路径>"
 <python.exe> -m pip install python-docx openpyxl python-pptx Pillow
 ```
 
-#### `run_python`（M17，通用 Python 执行）
+#### `run_python`（通用 Python 执行）
 
 - 工具参数：`code`（直接给代码）或 `path`（workspace 内 `.py` 脚本）、`args`（字符串数组）、`timeout_ms`（1000–120000，默认 120s）；
 - 执行目录固定为会话 **workspace**；stdout/stderr 合并，末尾 `[exit code: N]`；
 - 输出超过 64KB 落盘（`artifacts/spill/`），聊天里显示摘要 + 路径；
 - **环境白名单**：只传必要变量（如 `SIMO_HOME`、PATH），**不继承 API Key**；`PYTHONUTF8=1`；
-- **审批**：执行类风险 `R2`，走 M9 审批；`read-only` 沙盒直接 `sandbox_denied`，`never` 策略直接拒绝；
+- **审批**：执行类风险 `R2`，走统一审批；`read-only` 沙盒直接 `sandbox_denied`，`never` 策略直接拒绝；
 - 超时会杀**进程树**；路径越界拒绝；找不到 Python 返回 `python_missing`；
 - **不是完整 OS 级沙箱**：Python 代码本身仍可执行其语言能力；只运行可信代码，生产上建议配合低权限账户/容器隔离。
 
@@ -311,9 +311,9 @@ curl.exe -sS "http://127.0.0.1:8787/api/stats?metric=tokens&granularity=day&from
 
 > UI-1 的“智能体/负责人头像”数据来自该目录；后端目录接口未就绪时前端会按会话 id 做确定性兜底。
 
-### 6.6 M18 表结构升级（sessions v6）
+### 6.6 表结构升级（sessions v6）
 
-M18 把 Spec 从“状态/验收键”扩展为执行内核；启动时自动迁移，**迁移前先停服务并备份整个 `SIMO_HOME`**：
+这次升级把 Spec 从“状态/验收键”扩展为执行内核；启动时自动迁移，**迁移前先停服务并备份整个 `SIMO_HOME`**：
 
 - `sessions` 模块 **v6**：`specs` 增加 `goal/constraints/current/plan/executor_agent_id/state_reason/reopened_count/last_injected_version`；
 - 新增 `spec_transitions`（Spec 状态迁移 append-only 审计：from/to/version/reason/actor/at）；
@@ -325,28 +325,28 @@ M18 把 Spec 从“状态/验收键”扩展为执行内核；启动时自动迁
 
 > 这些表属于内部执行层，**不对用户开放 API/UI**；概览仍只展示目标/约束/现状/事项/时间线。排障用 §8 的 `-debug` 只读钩子。
 
-### 6.7 M21–M33 迁移：memory / recall / team / views / consolidation
+### 6.7 记忆、召回、团队、视图与巩固的迁移
 
-> M21–M33 的迁移版本段为 **v2–v15**（按模块实际：memory v2→v6、chat v13→v15）；启动时自动执行，失败不进入服务。升级前停服务并备份整个 `SIMO_HOME`。
+> 这些模块的迁移版本段为 **v2–v15**（按模块实际：memory v2→v6、chat v13→v15）；启动时自动执行，失败不进入服务。升级前停服务并备份整个 `SIMO_HOME`。
 
 | 模块 | 版本 | 内容 |
 |---|---|---|
-| memory | v2 | M21 记忆 v0.3：entities/relations/memories/canonical/mentions/conflicts/pyramid/raw 等表；旧 `memory_items` 兼容镜像 |
-| memory | v3 | M22 召回派生层（实体/关系索引、recall trace 等） |
+| memory | v2 | 记忆 v0.3：entities/relations/memories/canonical/mentions/conflicts/pyramid/raw 等表；旧 `memory_items` 兼容镜像 |
+| memory | v3 | 召回派生层（实体/关系索引、recall trace 等） |
 | memory | v4 | 智能体品牌名规范化（旧数据兼容） |
-| memory | v5 | M30 自动巩固：`memory_consolidation_jobs` / `memory_consolidation_state` / `memory_writeback_audit` |
-| memory | v6 | M32 本地 TF-IDF 向量：`recall_vectors(kind,ref_id,vector_json,norm,updated_at)` / `recall_vector_terms(term,df,updated_at)` |
-| chat | v13 | M24 团队 V1：`teams`/`team_members`/`team_messages`/`team_triggers`/`team_deliverables` |
-| chat | v14 | M25 团队 V2：`team_templates`/`team_template_roles`/`team_member_roles` + `teams.template_id/version` |
-| chat | v15 | M26 视图 Schema：`view_pages`（当前页/软删）、`view_versions`（不可变版本） |
+| memory | v5 | 自动巩固：`memory_consolidation_jobs` / `memory_consolidation_state` / `memory_writeback_audit` |
+| memory | v6 | 本地 TF-IDF 向量：`recall_vectors(kind,ref_id,vector_json,norm,updated_at)` / `recall_vector_terms(term,df,updated_at)` |
+| chat | v13 | 团队 V1：`teams`/`team_members`/`team_messages`/`team_triggers`/`team_deliverables` |
+| chat | v14 | 团队 V2：`team_templates`/`team_template_roles`/`team_member_roles` + `teams.template_id/version` |
+| chat | v15 | 视图 Schema：`view_pages`（当前页/软删）、`view_versions`（不可变版本） |
 
 - `SIMO_MEMORY_V3` 默认开；设为 `0/false/off/v2` 时记忆读路径回退旧表，用于排障/回滚（写路径与旧表兼容策略见 m21 契约）；
-- **M31 团队 WS 事件已上线**：`team.*` 已加入用户 WS 允许表（团队页实时刷新）；仍只投影状态/摘要，不显示成员内部消息正文；团队页另有 8s REST 轮询降级；
-- 视图事件 `view.updated/view.render/view.binding.failed/view.renderer.error` 属于用户 WS 允许表；视图 schema 版本不可变，回滚生成新版本；M28 受控编辑器只提交白名单 patch；
-- 召回 R2（M27）默认开 2 跳+agentic；`SIMO_RECALL_VECTOR` 默认关（M32 本地字符 n-gram TF-IDF；需 rebuild 索引，未启用/未重建时降级）；
+- **团队 WS 事件已上线**：`team.*` 已加入用户 WS 允许表（团队页实时刷新）；仍只投影状态/摘要，不显示成员内部消息正文；团队页另有 8s REST 轮询降级；
+- 视图事件 `view.updated/view.render/view.binding.failed/view.renderer.error` 属于用户 WS 允许表；视图 schema 版本不可变，回滚生成新版本；受控编辑器只提交白名单 patch；
+- 召回 R2 默认开 2 跳+agentic；`SIMO_RECALL_VECTOR` 默认关（本地字符 n-gram TF-IDF；需 rebuild 索引，未启用/未重建时降级）；
 - **不要手改表结构**；迁移失败恢复备份再启动；旧二进制回滚需同时回滚数据备份。
 
-### 6.8 M21–M41 主要 API（只读/动作）
+### 6.8 主要 API（只读/动作）
 
 | 能力 | 入口 |
 |---|---|
@@ -354,17 +354,17 @@ M18 把 Spec 从“状态/验收键”扩展为执行内核；启动时自动迁
 | 召回 | 仅 `-debug` 本机：`GET/POST /api/debug/recall`、`POST /api/debug/recall/seed|rebuild`；R2 由 `SIMO_RECALL_R2` 控制；rebuild 会同时重建 `recall_vectors`/`recall_vector_terms` 并返回 vectors 统计 |
 | 自动巩固 | 仅 `-debug` 本机：`POST /api/debug/memory/consolidate`、`GET /api/debug/memory/consolidation`；默认由后台阈值/定时触发 |
 | 团队 | `GET /api/sessions/{id}/team`、`GET /api/teams/{id}`、`/members`、`/messages`、`/deliverables`、`/triggers`；写操作走 `team.*` 动作 |
-| 视图 | `GET /api/views?sessionId=`、`GET /api/views/{id}`、`/versions`、`/versions/{v}`、`/render-state`；生成/回滚走 `ui.set_view`/`ui.view.rollback` 动作；M28 编辑器调同一动作 |
+| 视图 | `GET /api/views?sessionId=`、`GET /api/views/{id}`、`/versions`、`/versions/{v}`、`/render-state`；生成/回滚走 `ui.set_view`/`ui.view.rollback` 动作；视图编辑器调同一动作 |
 | 并发 | 任务列表/运行时接口会显示并发/排队原因；配置见 §3.2 的 `SIMO_*_CONCURRENCY` |
 
-> 以上均为只读展示/动作层入口；不要用 curl 直接改表。团队/记忆/视图页面没有编辑控件（M28 视图编辑器除外），写操作通过对话或动作层并审计。
+> 以上均为只读展示/动作层入口；不要用 curl 直接改表。团队/记忆/视图页面没有编辑控件（视图编辑器除外），写操作通过对话或动作层并审计。
 
-### 6.9 M41 交互卡片（存储/API/安全）
+### 6.9 交互卡片（存储/API/安全）
 
 - 契约：[`docs/m41-card-contract.md`](m41-card-contract.md)；cards 挂在普通 agent 消息上（不新增消息类型）；
 - chat migration v16：`message_cards`（当前版本/状态/submission/fallback）、`card_versions`（不可变版本）、`card_action_receipts`（幂等/审计）；
 - 动作 `chat.send_card`；API：`GET /api/cards/{id}`、`/versions`、`PATCH /api/cards/{id}`（`baseVersion` 409）、`POST /api/cards/{id}/actions/{actionId}`（route=agent/action）；WS `card.updated`；
-- **权限/审批**：route=action 沿用 M20 风险/审批；R3+ 必须审批；R4 由卡片发起直接拒绝（`DENIED_R4`），不能提权/绕过；route=agent 只写用户动作消息并触发 turn；
+- **权限/审批**：route=action 沿用统一风险/审批；R3+ 必须审批；R4 由卡片发起直接拒绝（`DENIED_R4`），不能提权/绕过；route=agent 只写用户动作消息并触发 turn；
 - **持久/恢复**：卡片/版本/提交/幂等 receipt 全落库；重启后 active 保持、提交中按结果对账，未知副作用不自动重试；
 - **安全**：禁 HTML/脚本/内联样式/事件属性；fallbackText 必需并清洗；跨会话拒绝；卡片不直接改业务状态。
 
@@ -404,12 +404,12 @@ M18 把 Spec 从“状态/验收键”扩展为执行内核；启动时自动迁
   | `POST /api/debug/spec/transition` | 手动触发状态迁移（仅排障；非法迁移 409） |
   | `POST /api/debug/spec/reopen` | reopen 已终结 Spec（仅排障） |
   | `POST /api/debug/spec/executor` | 设置子任务执行者（`agent:task-npc` / `agent:simo`） |
-  | `GET /api/debug/runtime`、`POST /api/debug/runtime/config` | M19 运行时配置/状态预览（仅 debug + 本机） |
+  | `GET /api/debug/runtime`、`POST /api/debug/runtime/config` | 运行时配置/状态预览（仅 debug + 本机） |
   | `GET /api/debug/goroutines` | goroutine 栈摘要 |
 
-### 8.1 M19 runtime API（预告）
+### 8.1 runtime API（预告）
 
-M19（长程运行时）已有预览 API，**不是完整 M19 交付**；字段/行为可能继续调整：
+长程运行时已有预览 API，**不是完整交付**；字段/行为可能继续调整：
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
@@ -419,7 +419,7 @@ M19（长程运行时）已有预览 API，**不是完整 M19 交付**；字段/
 | POST | `/api/debug/runtime/config` | **仅 debug**：stallWarnMs/stallPauseMs/workflowTokenBudget/approvalTtlMs/fakeNowMs |
 
 - 这些是运行时**可观测性**接口，不替代任务/工作流 API；`recovering`、`remaining` 等字段当前可能是占位值，不能当作完整恢复/预算承诺；
-- 完整心跳、幂等、强一致恢复、预算硬上限与失败接管仍按 M19 后续实现；当前排障以事件日志/检查点为准。
+- 完整心跳、幂等、强一致恢复、预算硬上限与失败接管仍待后续实现；当前排障以事件日志/检查点为准。
 
 ---
 
@@ -561,7 +561,7 @@ Get-Process -Id <OwningProcess>
 
 ---
 
-## 12. CI、容器与 Docker（M35/M36）
+## 12. CI、容器与 Docker
 
 ### 12.1 CI
 

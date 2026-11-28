@@ -2,7 +2,7 @@
 
 状态：**唯一事实源（2026-11-15 修订；只文档，未实现）**
 定位：统一“做多小的动作、要不要建任务/会话、要不要方案消息、要不要确认”的口径；替代旧 K2“所有任务都必须先描述方案”的绝对表述。
-关联：[`session-core-spec.md`](session-core-spec.md) K/C 规则、[`tasks/product.md`](tasks/product.md) P4/P5、[`tasks/backend.md`](tasks/backend.md) B3。
+关联：[`session-core-spec.md`](session-core-spec.md) K/C 规则、[`tasks/product.md`](tasks/product.md) P4/P5、[`tasks/backend.md`](tasks/backend.md)。
 
 > **旧 K2 冲突已解决**：旧 K2 写“所有任务执行前都必须先描述方案”，与 C0/C1 冲突。本修订把 K2 改为按 C 级：**C0 无方案消息；C1 先复述（不等待确认）；C2+ 先方案、C2+ 确认后执行**。任何仍引用“所有任务必须先方案”的旧文案，以本文件为准。
 
@@ -100,7 +100,7 @@
 | K5 执行时机 | K5 | C1 复述后直接执行；C2+ 确认后执行 |
 | C1 确认判断 | C1 | C0 直接；C1 复述后直接；C2+ 方案确认；高危仍强制 |
 | 任务开始/结束消息 | K5/C9/B3.3/B3.4 | 与交互循环解耦；C2 当前会话 Task；C3/C4 子会话内 Task |
-| 子会话 | C3/C4 + B4 | 自动创建；总量/深度不设硬上限，限制活跃/预算/速率 |
+| 子会话 | C3/C4 | 自动创建；总量/深度不设硬上限，限制活跃/预算/速率 |
 
 ## 6. 验收 A1–A10
 

@@ -143,7 +143,7 @@
 - 71 个 PRD 中 **0 个 covered**；48 个 partial 仍缺完整 AC/权限/异常/前端证据；23 个 gap（含 16 个 unimplemented）。
 - 10 份产品域 spec 是骨架；10 份域 test-plan 已回写 115 单测 / 19 CDP E2E / 246 后端测试的实际证据，但尚无按域执行的产品 AC 系统测试报告，不能据此升级 covered。
 - 真实模型长程、团队隔离、调度失败、权限 fail-closed、文件上传/预览/PDF/Office 等高风险项仍缺当前 build 证据；CDP E2E 07 只验证了交付物可见与下载，不覆盖预览/上传。
-- `tasks/frontend.md` 仍写“前端只做对话、工作台”，与后端能力面不一致；`docs/frontend-feature-map.md` 是 M67 前旧布局，不能当现状。以 `TREE.md`、产品域 spec 与当前代码为准。
+- `tasks/frontend.md` 仍写“前端只做对话、工作台”，与后端能力面不一致；`docs/frontend-feature-map.md` 是旧布局，不能当现状。以 `TREE.md`、产品域 spec 与当前代码为准。
 - 容器/Docker 本机未实测；`deploy/INSTALL.md` 部分步骤未完整实测；不得把未验证能力写成已交付。
 
 ## 5. 如何开始下一项工作（强制流程）

@@ -136,8 +136,8 @@ specs/<CHANGE-ID>/
 ## 6. 实施路线
 
 - **P0（现在）**：确认本框架；补齐 FE-001 的 proposal/evidence；Spec Review；
-- **P1**：用 FE-001 跑第一轮 SDD；产出 React 重构；
-- **P2**：后端 B2.4/B3 建 spec，跑后端试点；
+- **P1**：用 FE-001 跑首轮 SDD；产出 React 重构；
+- **P2**：后端建 spec，跑后端试点；
 - **P3**：组件 manifest + check:gallery + Playwright 基线；
 - **P4**：DTCG JSON token 源、Radix 评估、Ladle 评估。
 

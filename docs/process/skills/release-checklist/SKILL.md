@@ -53,7 +53,7 @@
 
 ## 示例
 
-> M41 发布：冻结范围 → 144 evals 131/131 + 13 PENDING（12 脚本）/real-smoke 41,524 → 包 `simo-M41-win-x64.zip` 11.61MB/SHA256 → smoke 8787 健康/关键路径 → 回滚包与备份 → 归档 release notes/evidence。
+> 最近一次发布：冻结范围 → 144 evals 131/131 + 13 PENDING（12 脚本）/real-smoke 41,524 → 包 `simo-M41-win-x64.zip` 11.61MB/SHA256 → smoke 8787 健康/关键路径 → 回滚包与备份 → 归档 release notes/evidence。
 
 ## 链接
 
