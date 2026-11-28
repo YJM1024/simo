@@ -12,7 +12,7 @@ P1-CONV 的 33 条 AC 在这一轮里暴露了两类问题。同一条判据在�
 
 产品 spec 的 PRD 继续讲为什么与做什么，AC 讲怎么判，本文件不改 PRD 的叙述方式。变更包里的 AC 用同一套语言，不另立格式。
 
-存量 188 条 AC 定义按第 2.6 节分批改写，改写期间编号不变。不通过本文件检查的 AC 不进入点开工，见 [`PROCESS.md`](PROCESS.md) 第 4 节。
+存量 188 条 AC 定义按第 2.6 节分批改写，改写期间编号不变。不通过本文件检查的 AC 不进入点开工，见 [`PROCESS.md`](PROCESS.md) 的“三级验收”一节。
 
 ## 2 可判定语言标准
 
@@ -23,7 +23,7 @@ P1-CONV 的 33 条 AC 在这一轮里暴露了两类问题。同一条判据在�
 1. **事实**：现状，可验证。写法用 `文件:行` 或命令输出。例：`specs/product/P1-CONV/spec.md:163` 记轨道实测 44×662.95。禁止“目前基本可用”“大部分已实现”。
 2. **约束**：主语、属性、比较符、数值、单位、采样点、容差，七项缺一不可。例：`.tl-track` 的 `getBoundingClientRect().width` ≥ `44px`，采样点为轨道元素，容差 `0`。
 3. **契约**：输入、输出、错误码、副作用，四段按序写。例：`POST /api/sessions/main/archive` 输入空体；输出 `204`；错误 `409 main_session_protected`；副作用为不写库、不广播。
-4. **断言**：Trigger、Observe、Criterion、Script、Owner，五段缺一不可。模板见第 2.3 节的产品表。
+4. **断言**：Trigger、Observe、Criterion、Script、Owner，五段缺一不可。写法见第 2.3 节的测试断言一段。
 5. **引用**：只写指向唯一来源的 ID，不重述内容。例：`见 AC-CONV-001-05`。复制口径原文再改几个字，会造出第二个来源。
 
 一条 AC 出现两类陈述时，按“事实加断言”拆成两条，事实在前，断言在后。引用与约束也可以并排出现，引用只占一句，不复制被引用条目的正文。
@@ -53,76 +53,63 @@ P1-CONV 的 33 条 AC 在这一轮里暴露了两类问题。同一条判据在�
 
 主语一律用 ID：`PRD-`、`AC-`、CSS 选择器、端点路径。禁止“该按钮”“这个列表”“上面说的”“相关模块”。
 
-每条 AC 必须有判定人与脚本路径。判定人写 `自动` 或 `人工:<动作>`；脚本写 `scripts/ac/<AC-ID>.mjs`，人工项写 `N/A：<理由>`。
+每条 AC 必须有 Owner 与脚本路径。Owner 写 `自动` 或 `人工:<动作>`；脚本写 `scripts/ac/<AC-ID>.mjs`，人工项写 `N/A：<理由>`。
 
-状态词只用封闭集合 `pass`、`partial`、`missing`、`blocked`。覆盖判定只用 `covered`、`partial`、`conditional`、`gap`。两组不混用，不自造“基本通过”“待观察”。
+状态词只有 `pass`、`fail` 两个值；`partial`、`missing`、`blocked` 三种旧值已废止，不再使用。覆盖判定另按 [`TRACEABILITY.md`](../product/TRACEABILITY.md) 的定义，不与状态词混用，也不自造“基本通过”“待观察”。
 
 改写时先删形容词，再考虑加限定语。删掉后句子仍然成立，说明那个词本来没有信息。
 
-### 2.3 五列模板
+### 2.3 契约三段
 
-五张表直接复制到 spec 里填。字段留空等于没写，不适用写 `N/A：<理由>`。
+契约由类型定义、接口签名、测试断言三段承担。三段分别落在代码与测试里，验收报告第 2 节只登记产物路径与汇总判定，不复制断言与用例表。某一段不适用时写 `N/A：<理由>`，不留空。
 
-**产品**
+**类型定义**
 
-| 字段 | 必填 | 写法 |
-|---|---|---|
-| 触发 | 是 | 启动场景的事件，例 `pointerup` on `.tl-track` |
-| 前置 | 是 | 可构造的数据与视口，例 `main` 会话加 2 个子会话 |
-| 动作 | 是 | 一次操作或一条请求 |
-| 可见结果 | 是 | 用户能看到的状态变化，对应断言里的 Observe |
-| Trigger | 是 | 断言五段式的触发条件 |
-| Observe | 是 | 可测量的对象与取值，例 `.session-count` 文本 |
-| Criterion | 是 | 比较符、数值、单位、容差 |
-| Script | 是 | `scripts/ac/<AC-ID>.mjs`，或 `N/A：<理由>` |
-| Owner | 是 | `自动` 或 `人工:<动作>` |
+类型定义写字段名、类型、可空性、取值约束，整段读下来就能构造请求与判断响应。示例取自 `backend/internal/core/session/session.go:7`：
 
-**设计**
+```go
+type Session struct {
+	ID           string    `json:"id"`
+	ParentID     string    `json:"parentId"`
+	Title        string    `json:"title"`
+	CreatedAt    int64     `json:"createdAt"`
+	Archived     int64     `json:"archived"` // 0 可写，1 只读
+	Pinned       bool      `json:"pinned"`
+	OwnerAgentID string    `json:"ownerAgentId,omitempty"`
+	Children     []Session `json:"children,omitempty"`
+	HasUnread    bool      `json:"hasUnread"`
+}
+```
 
-| 字段 | 必填 | 写法 |
-|---|---|---|
-| 选择器 | 是 | 稳定锚点，优先 `data-*`，禁止 `nth-child` |
-| 属性 | 是 | `width`、`opacity`、`gap` 等 |
-| 数值 | 是 | 数字加单位，禁止“较大” |
-| 档位 | 是 | 断点，例 `≤1180` 或 `>1180`；全档写“全档” |
-| 容差 | 是 | `±1px` 或 `0` |
-| token | 是 | 引名不引值，例 `--sp-2`，不写 `8px` |
-| 状态矩阵 | 是 | default、hover、focus、active、disabled、loading、empty、error 与元素交叉，逐格写值或 `N/A` |
+Session 是会话投影，`ParentID` 为空表示根会话，`Children` 只在树形查询里返回，`HasUnread` 为 false 时也输出。字段的可空性、默认值与约束写进注释或紧随其后的句子，读的人不需要翻实现。
 
-**前端**
+**接口签名**
 
-| 字段 | 必填 | 写法 |
-|---|---|---|
-| 组件与 props | 是 | 类型表：名称、类型、默认值、是否必填 |
-| 状态转移 | 是 | `状态 A --事件--> 状态 B`，列全 |
-| 事件到状态 | 是 | 事件名、派发者、目标状态 |
-| DOM 锚点 | 是 | `data-*` 属性与取值，供断言定位 |
-| 错误态 | 是 | 每个请求失败的可见反馈与重试入口 |
-| 无障碍 | 是 | role、aria-label、焦点顺序；不适用写 `N/A：<理由>` |
+接口签名写方法、路径、请求、响应、错误码与副作用。示例为会话归档端点，注册位置 `backend/internal/modules/sessions/http.go:23`，handler 为 `handleArchive`（同文件 :226）：
 
-**后端**
+`POST /api/sessions/{id}/archive` 请求空体；成功返回 `200`，响应体 `{"ok":true,"session":{...}}`；错误码 `404` 表示会话不存在，`400` 表示标题不能为空，`409` 表示会话已归档、归档被拒绝或 `main_session_protected`（blockers 为 `["主会话不可归档"]`），`500` 表示会话操作失败；副作用是执行 `UPDATE sessions SET archived = 1`，不删除也不复制消息与交付物。
 
-| 字段 | 必填 | 写法 |
-|---|---|---|
-| method 与 path | 是 | `POST /api/sessions/:id/pin` |
-| 鉴权 | 是 | 本机无鉴权写 `N/A：仅 127.0.0.1`，否则写角色 |
-| 请求字段 | 是 | 名称、类型、必填、边界 |
-| 响应字段 | 是 | 名称、类型、示例值 |
-| 错误码 | 是 | HTTP 状态与 `code` 字段成对写 |
-| 并发与幂等 | 是 | 幂等键、重放语义、冲突返回 |
-| 存储不变量 | 是 | 表、列、约束，例 `sessions.pinned ∈ {0,1}` |
+**测试断言**
 
-**测试**
+一条 AC 对应一个脚本，断言写触发、观察点、比较符、数值与容差。`AC-CONV-009-13` 验任务图：打开任务图弹窗后 `aria-modal` 为 `true`，8 个节点全为 `button` 且尺寸为 `156×64`，`pending`、`running`、`failed`、`done` 四态齐全，节点 `d` 为 `failed`，`d` 到 `h` 的边 `data-style` 为 `dashed` 且 `dasharray` 不少于 2，下游 `h` 保持 `pending` 且文案为“未开始”；点击 `d` 后弹窗关闭，打开 `section.task-detail[data-task-id="d"]`，写请求数为 0。脚本在 `scripts/ac/AC-CONV-009-13.mjs:24`。
 
-| 字段 | 必填 | 写法 |
-|---|---|---|
-| AC ID | 是 | 一条 TC 只覆盖一条 AC |
-| 前置 | 是 | 可构造、可清理 |
-| 步骤 | 是 | 编号步骤，每步一个动作 |
-| 断言 | 是 | 引用 AC 的 Criterion，不另写一套 |
-| 证据文件 | 是 | `.tmp/ac/<AC-ID>-<case>.json` |
-| 判定人 | 是 | `自动` 或 `人工:<动作>` |
-| 环境 | 是 | base URL、浏览器版本、构建号 |
+这条 AC 在 `specs/changes/<CHG-ID>/test.md` 第 3 节的用例清单里落成一行，列名取自 `spec-test.md`：
+
+| TC | AC | 场景 | 命令 | 预期结果 |
+|---|---|---|---|---|
+| TC-CONV-009-13 | AC-CONV-009-13 | 打开任务图弹窗，核对节点、边与四态，点击节点 `d` | `node scripts/ac/AC-CONV-009-13.mjs` | 8 个节点全为 `button` 且 156×64，四态齐全，`d` 到 `h` 的边为虚线，下游 `h` 保持 `pending`，点 `d` 后打开详情且写请求为 0 |
+
+断言正文与预期值落在脚本 `scripts/ac/AC-CONV-009-13.mjs:24`，用例表只记场景、命令与预期，不复制断言全文。验收报告第 2 节只登记产物路径与汇总判定，不复制用例表。
+
+**反例**
+
+下面三段都缺少可复跑的取值：
+
+类型写 `Message map[string]any`，字段、类型与约束都没有；接口只写“会话归档接口”，方法、路径、响应与错误码都没有；断言写“消息结构合理、归档功能正常、测试通过”，没有观察点与阈值，结果写“基本通过”。
+
+改法逐段对应：类型写成带字段、类型与约束的结构体；接口写成带方法、路径、请求、响应、错误码与副作用的签名；断言写成带触发、观察点、比较符、数值与容差的句子，结果只用 `pass`、`fail` 两个值。
+
+三段各自的落点是类型声明行、路由注册行与脚本行，`test.md` 第 3 节的用例表用 TC 与 AC 把它们连起来。某一段不适用时写 `N/A：<理由>`；运行中暴露的问题登记到验收报告第 3 节问题与处置。
 
 ### 2.4 三组改写对照
 
@@ -132,15 +119,15 @@ P1-CONV 的 33 条 AC 在这一轮里暴露了两类问题。同一条判据在�
 
 改后：`AC-CONV-007-02` 把命中面定成整条 `.tl-track`，宽 `44px`；轨道内任意点映射到纵向最近刻度；点击后 `900ms` 采样，目标消息进入视口且 active 等于被点刻度；18 点矩阵偏差 `0`，19 点扫描死区 `0`。出处 `specs/product/P1-CONV/spec.md:163`。
 
-脚本：`scripts/ac/AC-CONV-007-02.mjs`（待实现），用例为主路径整列命中、主路径最近刻度、负路径列外 1px。判定人写 `自动`；刻度条粗细另加 `人工:目视`。
+脚本：`scripts/ac/AC-CONV-007-02.mjs`（待实现），用例为主路径整列命中、主路径最近刻度、负路径列外 1px。Owner 写 `自动`；刻度条粗细另加 `人工:目视`。
 
 **未读时机**
 
-原写法：“新消息到了未读点要及时出现。”问题在“及时”没有起始事件与阈值，第 1 轮判 `partial`、第 3 轮判 `pass`，取样口径不同（P04）。
+原写法：“新消息到了未读点要及时出现。”问题在“及时”没有起始事件与阈值，第 1 轮判 `fail`、第 3 轮判 `pass`，取样口径不同（P04）。
 
 改后：agent 消息落库后 `500ms` 内，WS 下发 `session_unread` 帧，且列表该行出现 `data-unread="true"`。计时起点取后端落库时间，终点取 CDP 收到帧并完成 DOM 更新的时间戳。第 1 轮补测记录 441ms（`docs/plan/RETRO-20261122.md:28`），阈值留有余量。
 
-脚本：`scripts/ac/AC-SYNC-004-01.mjs`（待实现），监听 WS 帧与 DOM 变更。判定人写 `自动`。
+脚本：`scripts/ac/AC-SYNC-004-01.mjs`（待实现），监听 WS 帧与 DOM 变更。Owner 写 `自动`。
 
 **会话行数字**
 
@@ -148,7 +135,7 @@ P1-CONV 的 33 条 AC 在这一轮里暴露了两类问题。同一条判据在�
 
 改后：行内 `.session-count` 文本等于 `GET /api/sessions` 返回的该会话 `messageCount`；底部汇总文本等于全部会话 `messageCount` 之和；样例取第 10 轮 `main=85`、底部 `229`（`docs/plan/RETRO-20261122.md:27`）；切换会话后行内数字变化，底部不变。
 
-脚本：`scripts/ac/AC-CONV-001-05.mjs`（待实现），断言两数。现有承载在 `frontend/src/App.integration.test.tsx:227`。判定人写 `自动`。
+脚本：`scripts/ac/AC-CONV-001-05.mjs`（待实现），断言两数。现有承载在 `frontend/src/App.integration.test.tsx:227`。Owner 写 `自动`。
 
 三组反例的共同点是取值来源没写死：命中区没说量哪一层，未读没说计时起止，“消息数”没说是哪个范围。改写动作都是把来源、取值与容差写进同一条陈述，脚本因此可以直接生成。
 
@@ -161,7 +148,7 @@ P1-CONV 的 33 条 AC 在这一轮里暴露了两类问题。同一条判据在�
 | R1 禁用词 | AC 行命中词表任一 | error |
 | R2 数字无比较符 | 数字前后无比较符或单位 | warning |
 | R3 无脚本且未写人工 | 行内无 `scripts/ac/` 且无 `N/A：` | error |
-| R4 非法状态词 | 出现四值之外的判定词 | error |
+| R4 非法状态词 | 出现 `pass`、`fail` 之外的判定词 | error |
 | R5 主语缺失 | 行首为“该”“这个”“上述”“相关”，或整行无 ID | warning |
 | R6 超长 | 定义行超过 240 字符，或跨超过 2 行 | warning |
 | R7 重复 AC ID | 同文件或跨文件 ID 重复 | error |
@@ -180,12 +167,12 @@ P1-CONV 的 33 条 AC 在这一轮里暴露了两类问题。同一条判据在�
 每批按五步走。
 
 1. 导出：`node scripts/spec-slice.mjs specs/product/P1-CONV/spec.md --prd PRD-CONV-007`，输出带原始行号。
-2. 逐条改写：按 2.1 选陈述类型，按 2.3 补字段。语义有歧义回 PRD 裁决，不在 AC 里猜。
+2. 逐条改写：按 2.1 选陈述类型，按 2.3 写契约三段。语义有歧义回 PRD 裁决，不在 AC 里猜。
 3. 跑 lint：`node scripts/check-spec-language.mjs`（待实现）。error 清零，warning 逐条登记原因。
 4. 跑断言：`node scripts/ac/<AC-ID>.mjs --base-url http://127.0.0.1:8787`。没有脚本的写 `人工:<动作>` 与 `N/A：<理由>`。
-5. 回写状态：`specs/test/<域>/test-plan.md` 写四值状态与证据路径，lint 与断言输出存 `.tmp/ac/<AC-ID>.json`。
+5. 回写状态：`specs/test/<域>/test-plan.md` 写 `pass` 或 `fail` 与证据路径，lint 与断言输出存 `.tmp/ac/<AC-ID>.json`。
 
-第一批完成判据：33 条 error 为 0；每条有脚本或人工判据；`check-sdd.mjs` 同口径通过。迁移不重编号，不放宽断言。
+首轮迁移完成标准：33 条 error 为 0；每条有脚本或人工标准；`check-sdd.mjs` 同口径通过。迁移不重编号，不放宽断言。
 
 ## 3 断言脚本契约
 
@@ -195,9 +182,9 @@ P1-CONV 的 33 条 AC 在这一轮里暴露了两类问题。同一条判据在�
 
 stdout 输出一行 JSON：`{"ac":"AC-CONV-007-02","pass":true,"detail":"18/18 点偏差 0","evidence":".tmp/ac/AC-CONV-007-02.json"}`。
 
-退出码 0 通过、1 失败、2 参数或环境错误。`skipped` 不算通过。失败写证据文件，不吞异常；网络错误重试 2 次后判 `blocked`。
+退出码 0 通过、1 失败、2 参数或环境错误。跳过不算通过。失败写证据文件，不吞异常；网络错误重试 2 次后判 `fail`，证据里写明环境不可达。
 
-证据文件写命令、参数、时间、原始输出摘要，长度不超过 8KB。实现者可以自验，自验记录与判定人分开写，避免同一行既是断言又是签字。
+证据文件写命令、参数、时间、原始输出摘要，长度不超过 8KB。实现者可以自验，自验记录与 AC 的 Owner 字段分开写，避免同一行既是对断言的描述又是自证记录。
 
 ## 4 建域与变更的顺序
 

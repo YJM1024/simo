@@ -13,7 +13,7 @@
 - 域级变更包：**10/10**（`CHG-LEGACY-P1-CONV`…`CHG-LEGACY-P10-METRIC`，P1–P10 各 1 包，每包 7 件套）；P1–P4/P10 为 2026-11-20 补齐的 legacy 归档包，只登记真实实现/证据/缺口，不升级 covered。
 - E2E 测试计划：**1/1**（[`../../specs/test/e2e/README.md`](../../specs/test/e2e/README.md)）；CDP runner 11/11 PASS、连续 5 次，Playwright Test/CI 仍未接通。
 - 覆盖：**covered 13、partial 37、gap 22**（共 72；2026-11-22 收口并移除 `PRD-SYNC-005`，2026-11-26 补交付 `PRD-CONV-009`，P1 为 13 covered / 0 not covered / 0 gap，33 条既有 AC 全 pass、`PRD-CONV-009` 的 26 条 AC 全 pass）。测试计划文件存在或局部用例跑过，不足以升级覆盖；必须六类产物 + 完整 AC 证据。
-- 未实现项（`unimplemented`）：15 个（含 `PRD-TOOL-003`，按后端无实现/测试口径）；逐项见各域 spec 的“当前实现状态”与 TREE。
+- 未实现项（`unimplemented`）：12 个（含 `PRD-TOOL-003`，按后端无实现/测试口径）；逐项见各域 spec 的“当前实现状态”与 TREE。
 - 历史 FE/COMP：10 个 FE + 5 个 COMP，已映射为 `CHG-LEGACY-*` / `COMP-LEGACY-*`，不重命名、不删除。
 - 文件规模：10 产品 spec + 10 域测试计划 + 1 E2E 计划 + 5 COMP + 10 历史 FE + 模板；不按 72 个功能点各建文件。
 
@@ -42,7 +42,7 @@
 
 ### 0.3 条目关闭记录（2026-11-22，P1 收口后）
 
-- `CONV-005`（TREE 行 [`PRD-CONV-005`](TREE.md)）：关闭。停止机制按与厂商无关的判据判定，证据 `backend/internal/modules/chat/stop_upstream_test.go` + [`STOP-UPSTREAM-EVIDENCE-20261122.md`](../testing/STOP-UPSTREAM-EVIDENCE-20261122.md)；真实厂商 403 归环境限制。
+- `CONV-005`（TREE 行 [`PRD-CONV-005`](TREE.md)）：关闭。停止机制按与厂商无关的标准判定，证据 `backend/internal/modules/chat/stop_upstream_test.go` + [`STOP-UPSTREAM-EVIDENCE-20261122.md`](../testing/STOP-UPSTREAM-EVIDENCE-20261122.md)；真实厂商 403 归环境限制。
 - `CONV-006`（TREE 行 [`PRD-CONV-006`](TREE.md)）：关闭。`AC-CONV-006-02` 由 [`IME-EVIDENCE-20261122.md`](../testing/IME-EVIDENCE-20261122.md) 的 CDP 合成组合态五点验证转 pass；物理输入法未覆盖，记录在 `specs/test/P1-CONV/test-plan.md` §15 M-05。
 - `SYNC-001`（WS 连接与重连）：关闭。产品 AC 与测试已在 P1-CONV 域内闭环（`specs/product/P1-CONV/spec.md`、`specs/test/P1-CONV/test-plan.md` TC-P1-CONV-020/021），不再另建 `specs/product/SYNC/`。
 - `SYNC-003`（发送模式/设置跨标签同步）：关闭。证据 `Composer.test.tsx:144/178/198/219` 与 E2E 13，归 P1-CONV 域。
@@ -86,15 +86,17 @@
 
 <a id="domain-task"></a>
 
-- 功能点：6；已签/已实现 0、部分 3、设计 3、未实现/规划 0。
-- 产品 spec：**待建**（目标：`specs/product/TASK/spec.md`）。
-- 域测试计划：**待建**（目标：`specs/test/TASK/test-plan.md`）。
+- 功能点：6；已实现 4、部分 2、设计 0、未实现 0。
+- 产品 spec：`specs/product/P2-TASK/spec.md` 已建（6 个 PRD、31 条 AC）。
+- 域测试计划：`specs/test/P2-TASK/test-plan.md` 已建（31 条 AC；R5 批次 31/31 pass、542 条断言）。
 - 主要缺口：
-  - `PRD-TASK-001` 任务生命周期与执行组：后端 tasks 路由存在，但无产品 spec、无前端执行组完整契约、无域测试计划。
-  - `PRD-TASK-002` 任务概览与进度：右栏/概览已有部分展示；无 PRD、无 AC、无进度口径与测试。
-  - `PRD-TASK-003` 长任务异步与开始/结束消息：仅有 m19 契约；异步开始/结束消息、解耦与恢复未实现验收。
-  - `PRD-TASK-004` 复杂度分级与确认门禁：C0–C4 已写入 docs/task-complexity.md，但无产品 spec、无实现、无测试。
-- 下一步：先写产品域 spec 的 `PRD-TASK-001`、`PRD-TASK-002` 章节与 AC；再把已有 FE/COMP 测试归并到域测试计划。
+  - `PRD-TASK-001` 任务生命周期与执行组：已实现（6 条 AC、96 条断言）；前端任务执行组与跨会话归属已覆盖。
+  - `PRD-TASK-002` 任务概览与进度：已实现（4 条 AC、61 条断言）；AC-002-03 已断言 5 秒内进度刷新且不刷新页面。
+  - `PRD-TASK-003` 长任务异步与开始/结束消息：已实现（6 条 AC、114 条断言）；开始/结束消息由 `backend/internal/modules/tasks/notice.go:18-72,75-119` 实现。
+  - `PRD-TASK-004` 复杂度分级与确认门禁：部分实现（4 条 AC 脚本、102 条断言）；AC-TASK-004-01 仍以请求体 flag 直接建方案，C3/C4 经 `/api/chat` 的对话分级证据缺失，C4 无集成测试。
+  - `PRD-TASK-005` 子会话与任务归属：已实现（4 条 AC、81 条断言）；子会话归属见 `backend/internal/modules/tasks/child_sessions.go:16-81`。
+  - `PRD-TASK-006` 取消·重试·预算·恢复：部分实现（7 条 AC、88 条断言）；`/api/tasks/{id}/runtime` 预算仍硬编码（`backend/internal/modules/chat/runtime.go:306`）。
+- 下一步：补 PRD-TASK-004 的 C3/C4 对话分级断言与 C4 集成测试；接通 PRD-TASK-006 的 `/runtime` 真实预算。
 
 ### WORK · 工作台与视图
 
@@ -241,9 +243,9 @@
 ## 5. 已知不一致与风险
 
 - `docs/tasks/frontend.md` 写“前端只做对话、工作台；任务/智能体/团队/记忆暂不恢复”，与后端能力面不一致；本树按“后端有能力、前端无入口”记 `partial`，不把后端接口当产品完成。
-- `docs/tasks/STATUS.md` 最近更新 2026-11-13，`acceptance.md` 最后签字 2026-11-14；没有 M34+ 验收记录。M34–M40 相关能力不能凭旧签字算 `accepted`。
+- `docs/tasks/STATUS.md` 最近更新 2026-11-13，`acceptance.md` 最后签字 2026-11-14；没有后续版本的验收记录，相关能力不能凭旧签字算 `accepted`。
 - `specs/README.md` 旧索引状态滞后（FE-007/008 写“未实现”，STATUS 已签）；已在 [`../../specs/README.md`](../../specs/README.md) 重写为类型索引 + 历史映射。
-- `docs/frontend-feature-map.md` 描述 M67 前旧布局与更多页面，不能当现状；本树只认 `frontend/src` 实际页面与可运行证据。
+- `docs/frontend-feature-map.md` 描述旧布局与更多页面，不能当现状；本树只认 `frontend/src` 实际页面与可运行证据。
 - `check-sdd` 当前会把任何 `specs/<dir>/spec.md` 当旧式 spec 检查（目标/需求 R/验收 A/非目标 + 同目录 test-plan/evidence）。**在检查器迁移前，直接创建 `specs/product/*/spec.md` 会破坏门禁**；产品域 spec 首批文件需与检查器升级同批落地，或先在 `specs/templates` 维护模板。此约束已写入 [`../../specs/README.md`](../../specs/README.md)。
 - 本轮只做文档与规范，未改代码、未跑前端测试；所有“已签/已实现”均引用现有文档/STATUS，不新增未验证结论。
 
